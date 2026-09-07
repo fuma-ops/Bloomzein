@@ -106,14 +106,18 @@ body.mode-reel .canvas{padding-bottom:12px}
 #notice{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:200;display:flex;align-items:flex-start;gap:12px;
   max-width:min(92vw,520px);padding:12px 14px;border-radius:11px;background:var(--ink);color:#fff;
   box-shadow:var(--shadow);font-size:12px;font-weight:600;line-height:1.45}
-#notice button{flex:none;font:inherit;font-weight:800;color:#fff;opacity:.7;background:transparent;padding:0 2px}
-#notice button:hover{opacity:1}
-#notice a.act{flex:none;font:inherit;font-weight:800;color:#fff;background:var(--hot);text-decoration:none;
-  padding:7px 11px;border-radius:8px;white-space:nowrap}
-#notice a.act:hover{filter:brightness(1.08)}
-.framedhint{display:none;align-items:center;gap:6px;font-size:10.5px;font-weight:700;color:var(--muted)}
+#notice .body{display:flex;flex-direction:column;gap:9px;flex:1;min-width:0}
+#notice button.x{flex:none;font:inherit;font-weight:800;color:#fff;opacity:.7;background:transparent;padding:0 2px}
+#notice button.x:hover{opacity:1}
+#notice .urlrow{display:flex;gap:6px}
+#notice .urlrow input{flex:1;min-width:0;font:inherit;font-weight:600;font-size:11px;color:#fff;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:7px;padding:6px 8px}
+#notice .urlrow .copybtn{flex:none;font:inherit;font-weight:800;color:#fff;background:var(--hot);
+  padding:6px 11px;border-radius:7px;white-space:nowrap}
+#notice .urlrow .copybtn:hover{filter:brightness(1.08)}
+.framedhint{display:none;align-items:center;gap:5px;font-size:10.5px;font-weight:700;color:var(--muted)}
 body.framed .framedhint{display:flex}
-.framedhint a{color:var(--hot);font-weight:800}
+.framedhint button{font:inherit;font-weight:800;color:var(--hot);background:transparent;text-decoration:underline;padding:0}
 .scene{flex:none;width:96px;border-radius:11px;border:1px solid var(--line-soft);background:#fff;
   box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
 .scene:hover{transform:translateY(-2px)}
@@ -775,7 +779,7 @@ body.counting .count{display:grid}
         <button class="ghost" id="playReelBtn">
           <svg width="14" height="14"><use href="#i-rec"/></svg>Play reel
         </button>
-        <span class="framedhint">Export needs its own tab — <a id="openTabLink" target="_blank" rel="noopener">open there</a></span>
+        <span class="framedhint">Export needs its own browser tab <button type="button" id="framedWhy">how?</button></span>
         <button class="rec" id="exportReelBtn">
           <svg width="14" height="14" style="color:#fff"><use href="#i-grid"/></svg>Export &amp; download
         </button>
@@ -2133,28 +2137,45 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && document.b
 /* An in-page notice rather than alert(): a sandboxed embed can have modals
    switched off entirely, and a blocked alert() is how "the export button
    does nothing" looks from the outside — no dialog, no file, no reason.
-   `action` adds a real <a target="_blank">, not a scripted window.open,
-   because a genuine link click is what survives a sandboxed frame. */
-function notice(msg, ms = 7000, action = null) {
+   `url` shows the page address as SELECTABLE TEXT with a copy button, not
+   as a link: an embed sandboxed without allow-popups blocks target="_blank"
+   and window.open alike, so a link here is a button that does nothing.
+   Copy-and-paste into the address bar is the one route out that always
+   works, so that is what the notice offers. */
+function notice(msg, ms = 7000, url = null) {
   $("#notice")?.remove();
   const el = document.createElement("div");
   el.id = "notice";
-  el.innerHTML = `<span></span>${action ? `<a class="act" target="_blank" rel="noopener"></a>` : ""}<button type="button" aria-label="Dismiss">✕</button>`;
+  el.innerHTML = `<div class="body"><span></span>${url ? `<div class="urlrow"><input type="text" readonly spellcheck="false"><button type="button" class="copybtn">Copy</button></div>` : ""}</div>
+    <button type="button" class="x" aria-label="Dismiss">✕</button>`;
   $("span", el).textContent = msg;
-  if (action) { const a = $("a.act", el); a.href = action.href; a.textContent = action.label; }
-  $("button", el).addEventListener("click", () => el.remove());
+  if (url) {
+    const input = $("input", el);
+    input.value = url;
+    input.addEventListener("focus", () => input.select());
+    input.addEventListener("click", () => input.select());
+    $(".copybtn", el).addEventListener("click", async e => {
+      const btn = e.currentTarget;
+      input.select();
+      let ok = false;
+      try { await navigator.clipboard.writeText(url); ok = true; }
+      catch (err) { try { ok = document.execCommand("copy"); } catch (err2) { ok = false; } }
+      btn.textContent = ok ? "Copied" : "Select & copy";
+    });
+  }
+  $(".x", el).addEventListener("click", () => el.remove());
   document.body.appendChild(el);
   if (ms) setTimeout(() => el.remove(), ms);
 }
 
 /* Recording captures the browser tab, which a framed page is not allowed to
-   do — inside an embed the picker never even opens. That is a dead end the
-   app can't code around, so detect it and hand over the one thing that does
-   work: opening this page top-level, in its own tab. */
+   do — inside an embed the picker never even opens. The app cannot code
+   around that, and it cannot open a tab for you either (see notice()), so
+   all it can do is hand over the address to paste somewhere it will work.
+   A blob:/data:/srcdoc frame has no address worth pasting — say so instead
+   of offering a URL that leads nowhere. */
 const isFramed = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
-function openTopLevelAction() {
-  return isFramed ? { label: "Open in a new tab", href: location.href } : null;
-}
+const topLevelURL = /^https?:$/.test(location.protocol) ? location.href : null;
 
 /* Inside the claude.ai artifact viewer a plain <a download> — blob: URLs
    included — is inert: a page only ever hands the viewer a file through the
@@ -2203,9 +2224,11 @@ async function runReel({ record = false } = {}) {
   if (record) {
     if (!navigator.mediaDevices?.getDisplayMedia) {
       notice(isFramed
-        ? "Video export can't run inside this preview frame — screen capture is blocked here. Open the page in its own tab and the Export button will work."
+        ? (topLevelURL
+          ? "Video export can't run inside this preview — screen capture is blocked in an embedded frame. Copy this address, paste it into a new browser tab, and Export works there."
+          : "Video export can't run inside this preview — screen capture is blocked in an embedded frame. Save this page as an .html file and open it in Chrome, and Export works there.")
         : "This browser can't capture video. Recording needs Chrome, Edge or Firefox.",
-        14000, openTopLevelAction());
+        0, isFramed ? topLevelURL : null);
       return;
     }
     // Ask for the capture FIRST, while the click that started this still
@@ -2217,12 +2240,15 @@ async function runReel({ record = false } = {}) {
         preferCurrentTab: true, selfBrowserSurface: "include", surfaceSwitching: "exclude",
       });
     } catch (e) {
-      const why = e?.name !== "NotAllowedError"
+      const blocked = e?.name === "NotAllowedError";
+      const why = !blocked
         ? "Couldn't start screen capture (" + (e?.name || "unknown error") + ")."
         : isFramed
-          ? "No screen-capture picker can open inside this preview frame — that's why nothing happened. Open the page in its own tab, then Export works: choose \"This tab\" in the picker, and tick \"Also share tab audio\" if you want your music in the file."
+          ? (topLevelURL
+            ? "No screen-capture picker can open inside this preview — that's why nothing happened. Copy this address and paste it into a new browser tab; there, Export opens the picker: choose \"This tab\" and tick \"Also share tab audio\" for your music."
+            : "No screen-capture picker can open inside this preview — that's why nothing happened. Save this page as an .html file, open it in Chrome, and Export works there: choose \"This tab\" in the picker and tick \"Also share tab audio\" for your music.")
           : "Screen capture was dismissed. Click Export again, choose \"This tab\" in the picker, and tick \"Also share tab audio\" if you want your music in the file.";
-      notice(why, 16000, e?.name === "NotAllowedError" ? openTopLevelAction() : null);
+      notice(why, blocked && isFramed ? 0 : 16000, blocked && isFramed ? topLevelURL : null);
       return;
     }
     track = stream.getVideoTracks()[0];
@@ -2336,8 +2362,13 @@ safeBoot("crop drag", wireCropDragGlobal);
 safeBoot("framed-embed hint", () => {
   if (!isFramed) return;
   document.body.classList.add("framed");
-  $("#openTabLink").href = location.href;
-  $("#exportReelBtn").title = "Screen capture can't run inside an embedded frame — open this page in its own tab to export.";
+  $("#exportReelBtn").title = "Screen capture can't run inside an embedded frame — open this page in its own browser tab to export.";
+  $("#framedWhy").addEventListener("click", () => {
+    notice(topLevelURL
+      ? "Recording the screen isn't allowed inside an embedded preview, and this frame can't open a tab for you either. Copy this address, paste it into a new browser tab, and Export works there."
+      : "Recording the screen isn't allowed inside an embedded preview. Save this page as an .html file and open it in Chrome — Export works there.",
+      0, topLevelURL);
+  });
 });
 if (bootFailed) showBootBanner();
 </script>
