@@ -769,10 +769,10 @@ body.counting .count{display:grid}
             <option value="cut">Hard cut</option>
           </select>
         </label>
-        <label class="reel-opt">Export
+        <label class="reel-opt">Quality
           <select id="resSel">
-            <option value="1080">1080 × 1920 (HD)</option>
-            <option value="2160">2160 × 3840 (Ultra HD)</option>
+            <option value="max">Maximum</option>
+            <option value="balanced">Balanced (smaller file)</option>
           </select>
         </label>
         <button class="ghost" id="playReelBtn">
@@ -1209,7 +1209,9 @@ const blank = () => ({
   sceneState: {},     // { [sceneId]: {text,frames,media,copy} } — one instance per scene
   activeScene: null,
   transition: "fade", // fade | slideL | slideU | cut
-  exportRes: 1080,
+  /* quality, not resolution: the recording's pixel count comes from the
+     screen, so the only thing this can honestly control is the bitrate */
+  exportQ: "max",
 });
 let S = blank();
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(blank(), JSON.parse(raw)); } catch (e) { }
@@ -2105,6 +2107,7 @@ $("#guidesBtn").addEventListener("click", e => {
 $("#replayBtn").addEventListener("click", () => { renderStage(); blip(820, .1); });
 
 function exitRecord() {
+  exitFullscreen();
   document.body.classList.remove("rec-mode", "counting", "reel-playing");
   stopMusic();
   $$(".tpl [data-t]", stage).forEach(el => el.setAttribute("contenteditable", "plaintext-only"));
@@ -2348,6 +2351,20 @@ async function cropToStage(track) {
   return false;
 }
 
+/* The capture can only contain pixels the screen actually rendered, so the
+   one honest lever on quality is making the post physically bigger before
+   recording: fullscreen gives it the whole display height at native device
+   pixel ratio. On a 4K screen that turns a 9:16 post into ~1215x2160 of
+   real detail instead of ~600x1080 in a window. */
+const FS_SETTLE = 450;
+function enterFullscreen() {
+  try { return document.documentElement.requestFullscreen?.({ navigationUI: "hide" })?.catch(() => { }); }
+  catch (e) { return null; }
+}
+function exitFullscreen() {
+  try { if (document.fullscreenElement) document.exitFullscreen?.().catch(() => { }); } catch (e) { }
+}
+
 let reelAbort = null;
 async function runReel({ record = false } = {}) {
   if (!S.reel.length) { notice("Add at least one scene to your reel first — click a template on the left to add it."); return; }
@@ -2363,11 +2380,15 @@ async function runReel({ record = false } = {}) {
     // counts as user activation — behind the 3s countdown the activation has
     // long expired and the browser rejects the request outright.
     try {
+      // both started inside the one click: awaiting fullscreen first would
+      // spend the transient activation that getDisplayMedia also requires
+      enterFullscreen();
       stream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: 30 }, audio: true,
         preferCurrentTab: true, selfBrowserSurface: "include", surfaceSwitching: "exclude",
       });
     } catch (e) {
+      exitFullscreen();
       const blocked = e?.name === "NotAllowedError";
       // A picker that never opened is the page being refused permission; a
       // picker the viewer closed is a dismissal. Only the first needs the file.
@@ -2381,17 +2402,28 @@ async function runReel({ record = false } = {}) {
       return;
     }
     track = stream.getVideoTracks()[0];
+    // Fullscreen first, and let layout settle, so the post is rendered as
+    // large as the display allows BEFORE the capture geometry is read: the
+    // capture can only ever contain the pixels the screen actually drew, so
+    // real estate here is the only thing that adds real detail.
+    await sleep(FS_SETTLE).catch(() => { });
     const cropped = await cropToStage(track);
-    // then ask for the chosen export size; the browser scales the cropped
-    // region up to it where it can, and quietly ignores it where it can't
-    const h = +S.exportRes >= 2160 ? 3840 : 1920;
-    const ratio = { "9x16": 9 / 16, "4x5": 4 / 5, "1x1": 1 }[S.fmt] || 9 / 16;
-    try { await track.applyConstraints({ height: { ideal: h }, width: { ideal: Math.round(h * ratio) }, frameRate: 30 }); } catch (e) { }
+    // Deliberately NOT upscaled. Asking the track for 2160x3840 does not
+    // re-render anything — it stretches whatever was captured, so a small
+    // region becomes a soft 4K file that looks worse than the sharp native
+    // one and burns the bitrate carrying the blur. Record true pixels.
+    try { await track.applyConstraints({ frameRate: 30 }); } catch (e) { }
     if (!cropped) notice("Heads up: this browser can't crop the capture to the post, so the file will be the whole window. Chrome or Edge crops it to a clean vertical video.", 9000);
 
+    const set = track.getSettings?.() || {};
+    const px = (set.width || 1080) * (set.height || 1920);
+    // ~0.13 bits per pixel per frame, floor 12 Mbps, ceiling 60 Mbps — scaled
+    // to what is actually being encoded rather than to a nominal label
+    const bpp = S.exportQ === "balanced" ? 0.07 : 0.13;
+    const bitrate = Math.max(S.exportQ === "balanced" ? 6e6 : 12e6, Math.min(60e6, Math.round(px * 30 * bpp)));
     const mime = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp9", "video/webm"].find(m => window.MediaRecorder?.isTypeSupported(m)) || "video/webm";
     try {
-      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: +S.exportRes >= 2160 ? 45_000_000 : 16_000_000 });
+      recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: bitrate });
     } catch (e) { recorder = new MediaRecorder(stream); }
     recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     track.addEventListener("ended", () => reelAbort?.abort());
@@ -2425,9 +2457,11 @@ async function runReel({ record = false } = {}) {
     } else {
       const blob = new Blob(chunks, { type: "video/webm" });
       const res = await deliverFile(blob, `bloomzein-reel-${Date.now()}.webm`);
-      const size = settings.width && settings.height ? `${settings.width}×${settings.height}` : "";
-      if (res.ok) notice(`Reel exported${size ? " at " + size : ""} · ${(blob.size / 1048576).toFixed(1)} MB (WebM).`, 9000);
-      else notice(res.msg, 10000);
+      const w = settings.width || 0, h = settings.height || 0;
+      const size = w && h ? `${w}×${h}` : "";
+      if (!res.ok) notice(res.msg, 10000);
+      else if (h && h < 1600) notice(`Reel exported at ${size} · ${(blob.size / 1048576).toFixed(1)} MB. That's the real pixel count your screen drew — the recording can't contain more than the display shows. For a sharper file, record on a larger or higher-resolution screen; the post is already given the full screen height.`, 0);
+      else notice(`Reel exported${size ? " at " + size : ""} · ${(blob.size / 1048576).toFixed(1)} MB (WebM).`, 9000);
     }
   } else {
     exitRecord();
@@ -2440,7 +2474,7 @@ $("#exportReelBtn").addEventListener("click", () => runReel({ record: true }));
 /* ────────────────────────── mode & reel controls ──────────────────────── */
 $$("#modeTabs button").forEach(b => b.addEventListener("click", () => { setMode(b.dataset.mode); blip(700, .1); }));
 $("#transitionSel").addEventListener("change", e => { S.transition = e.target.value; save(); });
-$("#resSel").addEventListener("change", e => { S.exportRes = +e.target.value; save(); });
+$("#resSel").addEventListener("change", e => { S.exportQ = e.target.value; save(); });
 
 /* ───────────────────────────────── boot ──────────────────────────────── */
 /* A returning visitor's saved project (localStorage) survives every future
@@ -2486,7 +2520,8 @@ async function boot() {
   $$("#modeTabs button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mode === S.mode)));
   document.body.classList.toggle("mode-reel", S.mode === "reel");
   $("#transitionSel").value = S.transition || "fade";
-  $("#resSel").value = String(S.exportRes || 1080);
+  if (S.exportQ !== "balanced") S.exportQ = "max";
+  $("#resSel").value = S.exportQ;
 });
   safeBoot("thumbnails", buildThumbs);
   safeBoot("reel filmstrip", renderFilmstrip);
