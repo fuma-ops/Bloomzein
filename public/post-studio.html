@@ -270,14 +270,34 @@ body.counting .count{display:grid}
   background-size:170px 170px;animation:grainShift .5s steps(4) infinite}
 .filmfx .vignette{position:absolute;inset:0;
   background:radial-gradient(120% 85% at 50% 50%,rgba(0,0,0,0) 56%,rgba(0,0,0,.4) 100%)}
-.filmfx .reclabel{position:absolute;top:calc(var(--safe-t) + 2%);right:5%;display:flex;align-items:center;gap:calc(.55*var(--u));
-  font-family:"Courier New",monospace;font-weight:700;font-size:calc(2.3*var(--u));color:#fff;
-  text-shadow:0 1px 4px rgba(0,0,0,.65);letter-spacing:.05em}
-.filmfx .reclabel .dot{width:calc(1.6*var(--u));height:calc(1.6*var(--u));border-radius:50%;background:#ff3b3b;flex:none;
+/* top-right, not top-left like the reference — several templates already
+   anchor their own badge/pill in the top-left of the safe zone (e.g. the
+   POV label), and REC landing right on top of that read as visual clutter
+   in testing; top-right stays clear across every template */
+.filmfx .reclabel{position:absolute;top:calc(var(--safe-t) + 2%);right:6%;display:flex;align-items:center;gap:calc(.6*var(--u));
+  font-family:Quicksand,sans-serif;font-weight:700;font-size:calc(2.4*var(--u));color:#fff;
+  text-shadow:0 1px 4px rgba(0,0,0,.65);letter-spacing:.12em}
+.filmfx .reclabel .dot{width:calc(1.5*var(--u));height:calc(1.5*var(--u));border-radius:50%;background:#ff3b3b;flex:none;
   box-shadow:0 0 calc(1.2*var(--u)) rgba(255,59,59,.9);animation:recBlink 1s steps(1) infinite}
-.filmfx .reclabel b{font-weight:700;opacity:.85;margin-left:calc(.15*var(--u))}
 @keyframes recBlink{0%,49%{opacity:1}50%,100%{opacity:.25}}
 @keyframes grainShift{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,-1%)}100%{transform:translate(0,0)}}
+/* a quick autofocus snap plays once as the shot opens, camcorder-style: the
+   reticle overshoots, "hunts" back, then settles and fades — then it's gone,
+   never distracting from the actual reveal choreography that follows */
+.filmfx .focusbox{position:absolute;left:50%;top:44%;width:30cqw;height:30cqw;transform:translate(-50%,-50%);
+  border:calc(.16*var(--u)) solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);
+  animation:focusSnap .9s cubic-bezier(.3,.9,.4,1) both}
+.filmfx .focusbox .dot{position:absolute;left:50%;top:50%;width:calc(1.2*var(--u));height:calc(1.2*var(--u));
+  border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
+@keyframes focusSnap{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(1.55)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}
+  34%{opacity:1;transform:translate(-50%,-50%) scale(.92)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}
+  65%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  85%{opacity:1}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
 .t{display:block;outline:none;text-wrap:balance}
 .t[contenteditable="true"]:hover{box-shadow:inset 0 -calc(.35*var(--u)) 0 rgba(230,0,126,.45)}
 .t[contenteditable="true"]:focus{box-shadow:inset 0 -calc(.35*var(--u)) 0 var(--hot)}
@@ -725,6 +745,7 @@ body.counting .count{display:grid}
         <label class="reel-opt">Transition
           <select id="transitionSel">
             <option value="fade">Crossfade</option>
+            <option value="dissolve">Slow dissolve</option>
             <option value="slideL">Slide · right to left</option>
             <option value="slideR">Slide · left to right</option>
             <option value="slideU">Slide · bottom to top</option>
@@ -1311,28 +1332,23 @@ function applyFx(root, st) {
 }
 
 /* ───────────────────────── filming / record effect ────────────────────── */
-/* a light camcorder overlay — grain + vignette + a blinking REC label with a
-   timecode — layered above the media but below the copy, so it reads as
-   part of the shot rather than a sticker on top of the text */
-function filmTimecode(st) {
-  if (S.mode === "reel") {
-    const idx = S.reel.findIndex(sc => sceneState(sc.id) === st);
-    if (idx >= 0) {
-      const secs = S.reel.slice(0, idx).reduce((a, s) => a + (s.duration || 4), 0);
-      const m = Math.floor(secs / 60), s = Math.floor(secs % 60);
-      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-    }
-  }
-  return "00:00";
-}
+/* a camcorder overlay — grain + vignette + a blinking REC label, plus a
+   quick autofocus snap that plays once as the shot opens — layered above
+   the media but below the copy, so it reads as part of the shot itself */
 function applyFilmFx(root, st, mode) {
   root.querySelector(":scope > .filmfx")?.remove();
   if (!st.fx?.film) return;
   const el = document.createElement("div");
   el.className = "filmfx";
   el.innerHTML = `<div class="grain"></div><div class="vignette"></div>
-    <div class="reclabel"><i class="dot"></i>REC<b>${filmTimecode(st)}</b></div>`;
-  if (mode === "thumb") $(".grain", el).style.display = "none";
+    <div class="focusbox"><i class="dot"></i></div>
+    <div class="reclabel">REC<i class="dot"></i></div>`;
+  if (mode === "thumb") {
+    // a thumbnail is a frozen preview, not a playing shot — the grain and the
+    // once-only autofocus snap are motion that has nothing to focus on there
+    $(".grain", el).style.display = "none";
+    $(".focusbox", el).style.display = "none";
+  }
   // appended last and z-indexed between the photo and the copy text (never
   // guessing DOM order across 15 differently-structured templates) so the
   // grain/vignette always sits over the shot but never covers the words
@@ -1393,15 +1409,23 @@ function wordSplit(el) {
 
 /* ── crossfade / slide swap between two `.tpl` roots — used on every template
    switch and to cut between scenes when a reel plays or exports ── */
+// per-type timing: "dissolve" is deliberately longer with an ease-in-out
+// curve that lingers at the start — the outgoing clip fades out gradually
+// while the next one gathers in underneath it, both moving at once, rather
+// than the snappier default crossfade's quick, even blend
+const TRANSITION_TIMING = {
+  dissolve: { dur: 1100, easing: "cubic-bezier(.65,0,.35,1)" },
+};
 function crossTransition(fromEl, toEl, type) {
   if (!fromEl) return Promise.resolve();
   if (type === "cut" || !("animate" in fromEl)) { fromEl.remove(); return Promise.resolve(); }
-  const dur = 550, easing = "cubic-bezier(.22,.75,.2,1)";
+  const { dur, easing } = TRANSITION_TIMING[type] || { dur: 550, easing: "cubic-bezier(.22,.75,.2,1)" };
   // slideL/slideR are mirror images (right-to-left vs left-to-right), same for
   // slideU/slideD (bottom-to-top vs top-to-bottom) — each pair shares the same
   // motion, just negated, so the new clip always enters from the named edge
   const OUT = {
     fade: [{ opacity: 1 }, { opacity: 0 }],
+    dissolve: [{ opacity: 1 }, { opacity: 0 }],
     slideL: [{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(-5%)" }],
     slideR: [{ opacity: 1, transform: "translateX(0)" }, { opacity: 0, transform: "translateX(5%)" }],
     slideU: [{ opacity: 1, transform: "translateY(0)" }, { opacity: 0, transform: "translateY(-5%)" }],
@@ -1409,6 +1433,7 @@ function crossTransition(fromEl, toEl, type) {
   }[type] || [{ opacity: 1 }, { opacity: 0 }];
   const IN = {
     fade: [{ opacity: 0 }, { opacity: 1 }],
+    dissolve: [{ opacity: 0 }, { opacity: 1 }],
     slideL: [{ opacity: 0, transform: "translateX(5%)" }, { opacity: 1, transform: "translateX(0)" }],
     slideR: [{ opacity: 0, transform: "translateX(-5%)" }, { opacity: 1, transform: "translateX(0)" }],
     slideU: [{ opacity: 0, transform: "translateY(5%)" }, { opacity: 1, transform: "translateY(0)" }],
