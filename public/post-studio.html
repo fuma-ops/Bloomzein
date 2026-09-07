@@ -2181,39 +2181,93 @@ function captureAllowed() {
    plus this project's text, layout and clips baked in — which opens as an
    ordinary local page where recording is allowed and the reel exports
    normally. */
-async function collectSeed() {
+/* Packing must never build the whole file as one JS string. A clip becomes
+   a base64 string ~1.37x its size, and a JS string is UTF-16, so a handful
+   of phone videos turned into "one big string, stringified, replaced, then
+   Blob'd" is several copies of hundreds of megabytes — which is exactly how
+   this crashed the tab. Instead each clip is encoded on its own and folded
+   straight into a Blob part, so the big strings become garbage immediately
+   and the JS heap only ever holds one clip at a time. */
+const SEED_LIMIT = 1.2e9; /* refuse rather than crash */
+function blobToDataURL(blob) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result); r.onerror = () => res(null);
+    r.readAsDataURL(blob);
+  });
+}
+function projectMediaRecords() {
   const wanted = new Map();
   const scan = st => { for (const m of Object.values(st?.media || {})) if (m?.id) wanted.set(m.id, m); };
   Object.values(S.t || {}).forEach(scan);
   Object.values(S.sceneState || {}).forEach(scan);
   if (S.music?.id) wanted.set(S.music.id, { id: S.music.id, kind: "audio", name: S.music.name });
-  const media = [];
-  for (const [id, m] of wanted) {
-    const rec = await DB.get(id);
-    if (!rec?.blob) continue;
-    const dataURL = await new Promise(res => {
-      const r = new FileReader();
-      r.onload = () => res(r.result); r.onerror = () => res(null);
-      r.readAsDataURL(rec.blob);
-    });
-    if (dataURL) media.push({ id, kind: rec.kind || m.kind || "image", name: rec.name || m.name || "", dataURL });
-  }
-  return { state: S, media };
+  return wanted;
 }
-async function saveStandaloneCopy(btn) {
-  if (btn) { btn.disabled = true; btn.textContent = "Packing…"; }
-  let src = "";
-  try { src = await (await fetch(location.href, { cache: "no-store" })).text(); } catch (e) { }
-  if (!/<\/body>/i.test(src)) src = "<!doctype html>\n" + document.documentElement.outerHTML;
-  const seed = await collectSeed();
-  // "</" is escaped so a filename or caption can never close this script early
-  const tag = `<script>window.__BZ_SEED__=${JSON.stringify(seed).replace(/<\//g, "<\\/")}<\/script>`;
-  const out = src.replace(/<body([^>]*)>/i, m => m + "\n" + tag);
-  const blob = new Blob([out], { type: "text/html" });
-  const res = await deliverFile(blob, "bloomzein-post-studio.html");
-  if (res.ok) notice(`Saved bloomzein-post-studio.html (${(blob.size / 1048576).toFixed(1)} MB) — your clips and text are inside it. Open that file in Chrome and Export works there.`, 0);
-  else notice(res.msg, 10000);
-  if (btn) { btn.disabled = false; btn.textContent = "Save studio as a file"; }
+async function saveStandaloneCopy(btn, skipMedia = false) {
+  const label = t => { if (btn) btn.textContent = t; };
+  if (btn) btn.disabled = true;
+  const done = () => { if (btn) { btn.disabled = false; btn.textContent = "Save studio as a file"; } };
+  try {
+    label("Reading page…");
+    let src = "";
+    try { src = await (await fetch(location.href, { cache: "no-store" })).text(); } catch (e) { }
+    // Anchor on the doctype at the very start of the file, never on <body>:
+    // this page has no literal <body> tag, so a /<body[^>]*>/ search matches
+    // THIS function's own regex literal further down and injects the seed
+    // into the middle of the script. Anchored at ^, nothing in the code can
+    // match, and sitting right after the doctype keeps standards mode while
+    // guaranteeing the seed runs before the app's own scripts.
+    if (!/^\s*<!doctype/i.test(src)) src = "<!doctype html>\n" + document.documentElement.outerHTML;
+    const doctype = /^\s*<!doctype[^>]*>/i.exec(src);
+    const cut = doctype[0].length;
+    const parts = [src.slice(0, cut), "\n<script>window.__BZ_SEED__={\"state\":",
+      JSON.stringify(S).replace(/<\//g, "<\\/"), ",\"media\":["];
+    const tailHTML = src.slice(cut);
+
+    const wanted = skipMedia ? new Map() : projectMediaRecords();
+    const recs = [];
+    let total = 0;
+    for (const [id, meta] of wanted) {
+      const rec = await DB.get(id);
+      if (rec?.blob) { recs.push({ id, rec, meta }); total += rec.blob.size; }
+    }
+    if (total > SEED_LIMIT) {
+      done();
+      notice(`This project's clips come to ${(total / 1048576).toFixed(0)} MB — too much to fold into one file without running the browser out of memory. Save it without the clips and re-add them in the saved copy, or trim the reel down first.`, 0,
+        { label: "Save without clips", run: b => saveStandaloneCopy(b, true) });
+      return;
+    }
+
+    let i = 0;
+    for (const { id, rec, meta } of recs) {
+      label(`Packing ${++i} of ${recs.length}…`);
+      const dataURL = await blobToDataURL(rec.blob);
+      if (dataURL) {
+        // stringified per clip and handed straight to a Blob, so both the
+        // base64 and the JSON copy of it are collectable before the next one
+        parts.push(new Blob([(i > 1 ? "," : "") + JSON.stringify({
+          id, kind: rec.kind || meta.kind || "image",
+          name: String(rec.name || meta.name || "").replace(/[<>]/g, ""),
+          dataURL,
+        })]));
+      }
+      await new Promise(r => setTimeout(r, 0));
+    }
+    parts.push("]};<\/script>", tailHTML);
+
+    label("Saving…");
+    const blob = new Blob(parts, { type: "text/html" });
+    const res = await deliverFile(blob, "bloomzein-post-studio.html");
+    done();
+    if (res.ok) notice(skipMedia
+      ? `Saved bloomzein-post-studio.html (${(blob.size / 1048576).toFixed(1)} MB) with your text and reel, but WITHOUT the clips — re-add those in the saved copy, then Export there.`
+      : `Saved bloomzein-post-studio.html (${(blob.size / 1048576).toFixed(1)} MB) — your text, reel and clips are inside it. Open that file in Chrome and Export works there.`, 0);
+    else notice(res.msg, 10000);
+  } catch (e) {
+    done();
+    notice("Couldn't pack the project into a file (" + (e?.message || e) + "). If it has large video clips, try trimming the reel down first.", 12000);
+  }
 }
 const saveCopyAction = { label: "Save studio as a file", run: saveStandaloneCopy };
 
