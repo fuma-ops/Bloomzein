@@ -3,6 +3,7 @@ import {
   ChevronLeft, ArrowRight, Heart, Dumbbell, Salad, Fish, Beef, Sprout, Utensils,
   Footprints, BarChart3, Star, Scale, Ruler, Cake, Minus, Plus, Check, Bell, Clock,
   Smartphone, Tablet, Laptop, Pill, Sparkles, CalendarHeart, ChevronRight, Circle,
+  Moon, CalendarDays,
 } from "lucide-react";
 import { BloomFlower } from "../BloomFlower";
 import { useAuth } from "@/contexts/AuthContext";
@@ -353,29 +354,79 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
 
   const go = (s: string) => { setStage(s); try { window.scrollTo(0, 0); } catch { /* ignore */ } };
 
-  // ── WELCOME ───────────────────────────────────────────────────────────────
+  // ── WELCOME (custom full-bleed hero, its own layout) ──────────────────────
   if (stage === "welcome") {
-    const bullets = [
-      { Icon: Heart, t: "Personalized plans", s: "Nutrition, workouts & more" },
-      { Icon: CalendarHeart, t: "In sync with your cycle", s: "Because your needs change" },
-      { Icon: Sparkles, t: "Tools for your everyday life", s: "Simple, beautiful & all in one place" },
-      { Icon: Sprout, t: "A softer, happier you", s: "Small steps, big changes" },
+    const tools = [
+      { Icon: Moon, l: "Cycle" }, { Icon: Dumbbell, l: "Workout" }, { Icon: Salad, l: "Meals" },
+      { Icon: Heart, l: "Mind" }, { Icon: CalendarDays, l: "Life" },
+    ];
+    const checks = [
+      "Personalized to your cycle", "Practical and easy to follow",
+      "Tailored to your goals", "Made for real life",
+      "All in one place", "You can always adjust later",
     ];
     return (
-      <Shell step={null} total={total} footer="A better you every day">
-        <Eyebrow>Your all-in-one wellness companion</Eyebrow>
-        <Title serif="Let's make" script="Bloomzein yours" />
-        <Sub>A few little questions, then we'll build your personalized world — tailored to your cycle, body, goals and lifestyle.</Sub>
-        <div className="mt-5 space-y-2.5">
-          {bullets.map((b) => (
-            <div key={b.t} className="flex items-center gap-3 rounded-2xl bg-white/60 p-2.5">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-hotpink/10"><b.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /></span>
-              <div><p className="text-[15px] font-extrabold text-hotpink leading-tight">{b.t}</p><p className="text-[12px] text-rose/70">{b.s}</p></div>
-            </div>
-          ))}
+      <div className="fixed inset-0 z-[95] overflow-y-auto"
+        style={{ background: "radial-gradient(120% 70% at 50% 100%, #FCC7E1 0%, #FFDCEE 45%, #FFF0F7 100%)" }}>
+        {/* hero image (from Today) softly blended top-right */}
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden">
+          <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
+          {/* scrim: readable on the left, dissolves into the pink page at the bottom */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
+          <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
         </div>
-        <ContinueBtn onClick={() => go("cycle")} label="Let's get started" />
-      </Shell>
+
+        <div className="relative mx-auto w-full max-w-md px-5 pb-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
+          {/* wordmark (left) */}
+          <div className="inline-flex items-center gap-1.5">
+            <span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span>
+            <BloomFlower size={22} petal="#EC4899" center="#FFFFFF" />
+          </div>
+          <p className="mt-0.5 text-[13px] font-bold text-hotpink/85">stay soft, bloom on.</p>
+
+          {/* headline */}
+          <h1 className="mt-6 leading-[0.9]">
+            <span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span>
+            <span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>
+              this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} />
+            </span>
+          </h1>
+          <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f]">
+            A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.
+          </p>
+
+          {/* tool circles */}
+          <div className="mt-8 flex justify-between gap-1">
+            {tools.map((t) => (
+              <div key={t.l} className="flex flex-col items-center gap-1.5">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70">
+                  <t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} />
+                </span>
+                <span className="font-script text-[15px] text-hotpink">{t.l}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* checklist card */}
+          <div className="mt-6 rounded-[1.6rem] bg-white/70 p-4 shadow-[0_12px_34px_rgba(236,72,153,0.14)] ring-1 ring-white/70">
+            <p className="inline-flex items-center gap-1.5 font-script text-[1.4rem] text-hotpink leading-none">A life that feels like you <Heart className="h-5 w-5 text-hotpink" strokeWidth={2.4} /></p>
+            <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">
+              {checks.map((c) => (
+                <div key={c} className="flex items-start gap-1.5">
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/15"><Check className="h-3 w-3 text-hotpink" strokeWidth={4} /></span>
+                  <span className="text-[13px] font-semibold leading-snug text-rose/85">{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA */}
+          <button onClick={() => go("cycle")} className="bloom-luxury-btn animate-cta-bounce mt-6 flex w-full items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white">
+            <Sparkles className="h-5 w-5" /> Let's bloom <ArrowRight className="h-5 w-5" />
+          </button>
+          <p className="mt-2.5 text-center text-[12px] font-semibold text-hotpink/70">Takes about 2 minutes • You can change everything later</p>
+        </div>
+      </div>
     );
   }
 
