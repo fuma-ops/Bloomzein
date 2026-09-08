@@ -88,7 +88,7 @@ const HERO_FEATURES: { icon: LucideIcon; title: string; sub: string }[] = [
   { icon: Flower2, title: "Yoga", sub: "Flows for your cycle" },
   { icon: Salad, title: "Meal Plans", sub: "Healthy & delicious" },
   { icon: Moon, title: "Cycle Tracking", sub: "Understand your body" },
-  { icon: Heart, title: "A Happier You", sub: "Mind, body & life" },
+  { icon: Utensils, title: "Diet", sub: "Calories & macros" },
   { icon: Wallet, title: "Budget", sub: "Glow, stress-free" },
 ];
 const NAV: { label: string; href: string }[] = [
@@ -246,7 +246,7 @@ export default function Landing() {
             </p>
             <h1 className="m-0 flex flex-col">
               <Words text="A happier," className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" stagger={70} />
-              <span className="bzl-serif bzl-grad bzl-fade text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" style={{ animationDelay: "300ms" }}>
+              <span className="bzl-serif bzl-grad bzl-fade pb-[0.14em] text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" style={{ animationDelay: "300ms" }}>
                 healthier you
               </span>
               <span className="bzl-fade mt-1 flex items-center gap-2 whitespace-nowrap md:mt-2" style={{ animationDelay: "480ms" }}>
