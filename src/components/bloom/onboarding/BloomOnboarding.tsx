@@ -92,20 +92,55 @@ const MOODS: { key: string; label: string; Icon: typeof Heart }[] = [
 
 const QUESTION_STEPS = ["cycle", "about", "goal", "food", "fitness", "prefs", "checkin"] as const;
 
-// ══ shared chrome (centered as a soft card on large screens) ════════════════
+// ══ shared chrome ══════════════════════════════════════════════════════════
+// Motifs behind everything (fixed, full-bleed on every breakpoint).
+function Motifs() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+      {[["8%", "18%", 26, 0.10], ["86%", "30%", 34, 0.09], ["12%", "72%", 30, 0.08], ["90%", "82%", 22, 0.10]].map(([l, t, s, o], i) => (
+        <Heart key={i} className="absolute" fill="#EC4899"
+          style={{ left: l as string, top: t as string, width: s as number, height: s as number, opacity: o as number, transform: `rotate(${i * 24 - 20}deg)` }} />
+      ))}
+    </div>
+  );
+}
+// Desktop-only left hero panel — turns the onboarding into a large, screen-
+// filling two-panel frame on laptop (like the welcome), while phone/tablet keep
+// the single-column layout untouched (everything here is `lg:`-only).
+function HeroPanel({ tagline }: { tagline: string }) {
+  return (
+    <div className="hidden lg:relative lg:flex lg:w-[42%] lg:flex-col lg:justify-end lg:overflow-hidden lg:p-9">
+      <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[62%_18%]" />
+      <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,236,246,0.15) 0%, rgba(160,20,90,0.15) 45%, rgba(140,15,80,0.5) 100%)" }} />
+      <div className="relative">
+        <div className="inline-flex items-center gap-2"><span className="font-script text-[2.4rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={26} petal="#FFFFFF" center="#EC4899" /></div>
+        <p className="mt-1 text-[14px] font-bold text-white/90 drop-shadow">stay soft, bloom on.</p>
+        <p className="mt-5 font-script text-[1.9rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
+      </div>
+    </div>
+  );
+}
+// The screen frame: single scrolling column on phone/tablet; a big centered
+// two-panel card (hero + content) on laptop.
+function Frame({ children }: { children: ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center lg:items-center lg:overflow-hidden"
+      style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
+      <Motifs />
+      <div className="relative flex min-h-full w-full max-w-md flex-col lg:min-h-0 lg:h-[88vh] lg:max-h-[760px] lg:w-[min(60rem,94vw)] lg:max-w-none lg:flex-row lg:overflow-hidden lg:rounded-[2.5rem] lg:bg-white/45 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function Shell({ step, total, onBack, footer, children }: {
   step: number | null; total: number; onBack?: () => void; footer: string; children: ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center"
-      style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
-      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-        {[["8%", "18%", 26, 0.10], ["86%", "30%", 34, 0.09], ["12%", "72%", 30, 0.08], ["90%", "82%", 22, 0.10]].map(([l, t, s, o], i) => (
-          <Heart key={i} className="absolute" fill="#EC4899"
-            style={{ left: l as string, top: t as string, width: s as number, height: s as number, opacity: o as number, transform: `rotate(${i * 24 - 20}deg)` }} />
-        ))}
-      </div>
-      <div className="relative flex min-h-full w-full max-w-md flex-col px-5 pb-8 lg:my-6 lg:self-center lg:min-h-0 lg:rounded-[2.5rem] lg:bg-white/35 lg:px-7 lg:pt-2 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm"
+    <Frame>
+      <HeroPanel tagline="A few little steps to a life that feels like you" />
+      <div className="relative flex flex-1 flex-col px-5 pb-8 lg:overflow-y-auto lg:px-9 lg:py-5"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between py-2">
           {onBack ? <button onClick={onBack} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95 transition"><ChevronLeft className="h-5 w-5" /> Back</button> : <span className="w-14" />}
@@ -130,10 +165,10 @@ function Shell({ step, total, onBack, footer, children }: {
         <div className="flex-1">{children}</div>
         <div className="mt-6 flex items-end justify-between">
           <p className="font-script text-lg text-hotpink/80 leading-tight max-w-[9rem]">{footer} ♡</p>
-          <div className="inline-flex items-center gap-1.5"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</span></div>
+          <div className="inline-flex items-center gap-1.5 lg:hidden"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</span></div>
         </div>
       </div>
-    </div>
+    </Frame>
   );
 }
 
@@ -252,19 +287,21 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     const tools = [{ Icon: Moon, l: "Cycle" }, { Icon: Dumbbell, l: "Workout" }, { Icon: Salad, l: "Meals" }, { Icon: Heart, l: "Mind" }, { Icon: CalendarDays, l: "Life" }];
     const checks = ["Personalized to your cycle", "Practical and easy to follow", "Tailored to your goals", "Made for real life", "All in one place", "You can always adjust later"];
     return (
-      <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center" style={{ background: "radial-gradient(120% 70% at 50% 100%, #FCC7E1 0%, #FFDCEE 45%, #FFF0F7 100%)" }}>
-        <div className="relative w-full max-w-md lg:my-6 lg:self-center lg:rounded-[2.5rem] lg:overflow-hidden lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60">
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden lg:rounded-t-[2.5rem]">
+      <Frame>
+        <HeroPanel tagline="A life that feels like you" />
+        <div className="relative flex flex-1 flex-col lg:overflow-y-auto">
+          {/* mobile/tablet hero band — replaced by the left HeroPanel on laptop */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden lg:hidden">
             <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
             <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
           </div>
-          <div className="relative px-5 pb-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
-            <div className="inline-flex items-center gap-1.5"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
-            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85">stay soft, bloom on.</p>
-            <h1 className="mt-6 leading-[0.9]"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
-            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f]">A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.</p>
-            <div className="mt-8 flex justify-between gap-1">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{t.l}</span></div>))}</div>
+          <div className="relative px-5 pb-8 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
+            <div className="inline-flex items-center gap-1.5 lg:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
+            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85 lg:hidden">stay soft, bloom on.</p>
+            <h1 className="mt-6 leading-[0.9] lg:mt-0"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
+            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f] lg:max-w-none">A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.</p>
+            <div className="mt-8 flex justify-between gap-1 lg:mt-6">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{t.l}</span></div>))}</div>
             <div className="mt-6 rounded-[1.6rem] bg-white/70 p-4 shadow-[0_12px_34px_rgba(236,72,153,0.14)] ring-1 ring-white/70">
               <p className="inline-flex items-center gap-1.5 font-script text-[1.4rem] text-hotpink leading-none">A life that feels like you <Heart className="h-5 w-5 text-hotpink" strokeWidth={2.4} /></p>
               <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">{checks.map((c) => (<div key={c} className="flex items-start gap-1.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/15"><Check className="h-3 w-3 text-hotpink" strokeWidth={4} /></span><span className="text-[13px] font-semibold leading-snug text-rose/85">{c}</span></div>))}</div>
@@ -273,7 +310,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
             <p className="mt-2.5 text-center text-[12px] font-semibold text-hotpink/70">Takes about 2 minutes • You can change everything later</p>
           </div>
         </div>
-      </div>
+      </Frame>
     );
   }
 
@@ -442,8 +479,9 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       </button>
     );
     return (
-      <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center" style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
-        <div className="relative w-full max-w-md px-5 pb-6 lg:my-6 lg:self-center lg:rounded-[2.5rem] lg:bg-white/35 lg:px-7 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+      <Frame>
+        <HeroPanel tagline="Your whole world, unlocked" />
+        <div className="relative flex flex-1 flex-col px-5 pb-6 lg:overflow-y-auto lg:px-9 lg:py-6" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={() => go("previews")} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
           <div className="mt-2 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Sparkles className="h-6 w-6" /></span>
@@ -460,7 +498,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           <button onClick={finish} className="mt-2 w-full rounded-2xl border border-hotpink/30 bg-white/60 py-2.5 text-[14px] font-bold text-hotpink active:scale-[0.99] transition">Continue with the free version</button>
           <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 3-day free trial · cancel anytime · no hidden fees</p>
         </div>
-      </div>
+      </Frame>
     );
   }
 
