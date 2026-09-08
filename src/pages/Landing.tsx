@@ -64,19 +64,19 @@ function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; 
 /* ───────── flagship features (big alternating rows) ───────── */
 type Feat = { icon: LucideIcon; kicker: string; title: string; body: string; img: string; href: string };
 const FLAGSHIP: Feat[] = [
-  { icon: HeartPulse, kicker: "Cycle sync", title: "Know your body like never before.", body: "Track your cycle once and watch every tool adapt to your phase — automatically. Your energy, cravings and mood, finally decoded.", img: "/images/cycle-insight-hero.webp", href: "/app/tools/cycle" },
-  { icon: Flower2, kicker: "Yoga studio", title: "Flows that meet you where you are.", body: "Cycle-aware yoga, guided and beautiful — from 5-minute resets to full classes that soften cramps or wake up your glow.", img: "/images/pose-childs-pose.webp", href: "/app/tools/yoga" },
-  { icon: Dumbbell, kicker: "Workouts", title: "Move with your energy, not against it.", body: "Strength, HIIT and mobility that rise when you're powerful and rest when you're not — perfectly matched to your phase.", img: "/images/pose-boat.webp", href: "/app/tools/workout" },
-  { icon: Utensils, kicker: "Meals & recipes", title: "Eat exactly what your body's asking for.", body: "Phase-smart recipes and a weekly meal plan that writes itself — nourishing, gorgeous, and effortless.", img: "/images/meals-hero-new.webp", href: "/app/tools/meals" },
+  { icon: HeartPulse, kicker: "Cycle sync", title: "Know your body like never before.", body: "Track your cycle once and watch every tool adapt to your phase — automatically. Your energy, cravings and mood, finally decoded.", img: "/images/flagship-cycle.webp", href: "/app/tools/cycle" },
+  { icon: Flower2, kicker: "Yoga studio", title: "Flows that meet you where you are.", body: "Cycle-aware yoga, guided and beautiful — from 5-minute resets to full classes that soften cramps or wake up your glow.", img: "/images/flagship-yoga.webp", href: "/app/tools/yoga" },
+  { icon: Dumbbell, kicker: "Workouts", title: "Move with your energy, not against it.", body: "Strength, HIIT and mobility that rise when you're powerful and rest when you're not — perfectly matched to your phase.", img: "/images/flagship-workout.webp", href: "/app/tools/workout" },
+  { icon: Utensils, kicker: "Meals & recipes", title: "Eat exactly what your body's asking for.", body: "Phase-smart recipes and a weekly meal plan that writes itself — nourishing, gorgeous, and effortless.", img: "/images/flagship-meals.webp", href: "/app/tools/meals" },
 ];
 
 /* ───────── the rest (illustrated grid) ───────── */
 const GRID: Feat[] = [
-  { icon: Sun, kicker: "Today", title: "Your day, already planned.", body: "One calm home screen that pulls it all together each morning.", img: "/images/page-bg-today-morning.webp", href: START },
-  { icon: CalendarHeart, kicker: "Calendar", title: "Your whole month, at a glance.", body: "Every phase, symptom and plan on one gorgeous calendar.", img: "/images/calendar-hero.webp", href: "/app/calendar" },
-  { icon: Salad, kicker: "Diet & nutrition", title: "Your numbers, finally making sense.", body: "Calorie & macro targets that flex with your training and phase.", img: "/images/goal-path-bloom.webp", href: "/app/tools/diet" },
-  { icon: BookHeart, kicker: "Dreamy diary", title: "A soft place for every feeling.", body: "Journal your mood and let gentle patterns reveal themselves.", img: "/images/diary-hero.webp", href: "/app/tools/diary" },
-  { icon: NotebookPen, kicker: "Notes & reminders", title: "Never drop a thing.", body: "Gentle nudges for water, meds, movement and me-time.", img: "/images/notes-hero.webp", href: "/app/tools/notes" },
+  { icon: Sun, kicker: "Today", title: "Your day, already planned.", body: "One calm home screen that pulls it all together each morning.", img: "/images/grid-today.webp", href: START },
+  { icon: CalendarHeart, kicker: "Calendar", title: "Your whole month, at a glance.", body: "Every phase, symptom and plan on one gorgeous calendar.", img: "/images/grid-calendar.webp", href: "/app/calendar" },
+  { icon: Salad, kicker: "Diet & nutrition", title: "Your numbers, finally making sense.", body: "Calorie & macro targets that flex with your training and phase.", img: "/images/grid-diet.webp", href: "/app/tools/diet" },
+  { icon: BookHeart, kicker: "Dreamy diary", title: "A soft place for every feeling.", body: "Journal your mood and let gentle patterns reveal themselves.", img: "/images/grid-diary.webp", href: "/app/tools/diary" },
+  { icon: NotebookPen, kicker: "Notes & reminders", title: "Never drop a thing.", body: "Gentle nudges for water, meds, movement and me-time.", img: "/images/grid-notes.webp", href: "/app/tools/notes" },
   { icon: Wallet, kicker: "Budget", title: "Glow without the money stress.", body: "A calm, cute budget that keeps your self-care sustainable.", img: "/images/budget-hero.webp", href: "/budget" },
   { icon: MessageCircleHeart, kicker: "Bloom coach", title: "A wise friend in your pocket.", body: "Personalized guidance that connects every tool for you.", img: "/images/coach-bloom-hero.webp", href: "/app/today" },
   { icon: BookOpen, kicker: "Read", title: "Wellness wisdom, beautifully written.", body: "A magazine of cycle, beauty, sleep & mind reads.", img: "/images/read-CY001.webp", href: "/app/read" },
@@ -173,30 +173,23 @@ export default function Landing() {
         .bzl-kenburns{animation:bzl-kenburns 22s ease-in-out infinite alternate}
         @keyframes bzl-kenburns{from{transform:scale(1.04)}to{transform:scale(1.12)}}
         @media (prefers-reduced-motion:reduce){.bzl-kenburns{animation:none}}
+        /* soft glow so text stays readable floating over the photo */
+        .bzl-halo{text-shadow:0 1px 12px rgba(255,247,251,.95),0 0 3px rgba(255,247,251,.85)}
       `}</style>
 
       {/* ═════════════ HERO ═════════════ */}
-      <section id="top" className="relative overflow-hidden">
-        {/* full-bleed photo on the right (desktop only) — the IMAGE ITSELF is masked
-            so it melts into the page with no hard vertical seam. Starts below the top
-            bar so the nav reads as its own bar. */}
-        <div className="pointer-events-none absolute bottom-0 right-0 top-[4.6rem] hidden w-[54%] lg:block xl:w-[52%]" aria-hidden>
-          <img src="/images/landing-hero-happier.webp" alt="" className="bzl-kenburns h-full w-full object-cover object-[62%_center]"
-            style={{
-              WebkitMaskImage: "linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 4%,rgba(0,0,0,.5) 22%,#000 46%),linear-gradient(180deg,#000 0%,#000 82%,rgba(0,0,0,0) 100%)",
-              maskImage: "linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 4%,rgba(0,0,0,.5) 22%,#000 46%),linear-gradient(180deg,#000 0%,#000 82%,rgba(0,0,0,0) 100%)",
-              WebkitMaskComposite: "source-in",
-              maskComposite: "intersect",
-            }} />
-          <span className="absolute left-7 top-[13%] text-left bzl-script bzl-float text-3xl leading-tight xl:text-[2.6rem]"
-            style={{ color: "var(--hot)", textShadow: "0 2px 18px rgba(255,255,255,.95)" }}>
-            Invest in a<br />stronger you <Heart className="inline h-6 w-6 fill-current align-baseline" />
-          </span>
-        </div>
+      <section id="top" className="relative flex min-h-[100svh] flex-col overflow-hidden">
+        {/* full-bleed background photo — sits behind everything */}
+        <img src="/images/landing-hero-happier.webp" alt="A woman practising cycle-synced yoga at home"
+          className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[58%_center] lg:object-[64%_center]" />
+        {/* overlay behind the text — a soft light area on the left that melts into the
+            photo on the right (like the reference), plus a gentle top/bottom wash */}
+        <div className="absolute inset-0" aria-hidden style={{ background:
+          "linear-gradient(96deg,rgba(255,246,251,.97) 0%,rgba(255,246,251,.95) 38%,rgba(255,246,251,.74) 52%,rgba(255,246,251,.32) 66%,rgba(255,246,251,0) 84%),linear-gradient(180deg,rgba(255,246,251,.5) 0%,rgba(255,246,251,0) 26%,rgba(255,246,251,0) 64%,rgba(251,211,230,.65) 100%)" }} />
 
         {/* ── top nav bar (full-width, frosted) ── */}
         <div className="relative z-30 w-full border-b"
-          style={{ background: "rgba(255,246,250,.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderColor: "rgba(236,72,153,.12)" }}>
+          style={{ background: "rgba(255,246,250,.72)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderColor: "rgba(236,72,153,.12)" }}>
           <header className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
             <BloomLogo />
             <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
@@ -214,14 +207,14 @@ export default function Landing() {
                 </a>
               </span>
               <button onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}
-                className="grid h-10 w-10 place-items-center rounded-full border-2 lg:hidden" style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
+                className="grid h-10 w-10 place-items-center rounded-full border-2 bg-white/60 lg:hidden" style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
                 {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
           </header>
         </div>
         {menuOpen && (
-          <div className="relative z-30 mx-4 mt-1 flex flex-col gap-1 rounded-2xl border border-white bg-white/90 p-3 shadow-xl backdrop-blur lg:hidden">
+          <div className="relative z-30 mx-4 mt-1 flex flex-col gap-1 rounded-2xl border border-white bg-white/95 p-3 shadow-xl backdrop-blur lg:hidden">
             {NAV.map((n) => (
               <a key={n.label} href={n.href} onClick={() => setMenuOpen(false)}
                 className="rounded-xl px-3 py-2 text-sm font-bold transition hover:bg-blush" style={{ color: "var(--ink)" }}>
@@ -234,28 +227,27 @@ export default function Landing() {
           </div>
         )}
 
-        {/* ── content ── */}
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-12 pt-4 sm:px-8 lg:grid-cols-2 lg:gap-6 lg:pb-16 lg:pt-6">
-          {/* LEFT — copy */}
-          <div className="max-w-xl">
-            <p className="bzl-kicker mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "150ms" }}>
+        {/* ── content ── single column, text on a soft frosted panel so it stays readable over the photo ── */}
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10">
+          <div className="w-full max-w-xl lg:max-w-2xl">
+            <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
             </p>
             <h1 className="m-0 flex flex-col">
-              <Words text="A happier," className="bzl-serif text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" stagger={70} />
-              <span className="bzl-serif bzl-grad bzl-fade text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" style={{ animationDelay: "300ms" }}>
+              <Words text="A happier," className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl lg:text-6xl" stagger={70} />
+              <span className="bzl-serif bzl-grad bzl-fade text-[2.5rem] leading-[1.03] sm:text-5xl lg:text-6xl" style={{ animationDelay: "300ms" }}>
                 healthier you
               </span>
               <span className="bzl-sheen bzl-fade mt-1 inline-flex items-center gap-2" style={{ animationDelay: "480ms" }}>
-                <span className="bzl-script text-4xl sm:text-5xl lg:text-6xl">in every phase</span>
-                <Heart className="h-7 w-7 fill-current lg:h-9 lg:w-9" style={{ color: "var(--hot)" }} />
+                <span className="bzl-script bzl-halo text-[2.2rem] sm:text-4xl lg:text-5xl">in every phase</span>
+                <Heart className="h-7 w-7 fill-current lg:h-8 lg:w-8" style={{ color: "var(--hot)" }} />
               </span>
             </h1>
-            <p className="bzl-fade mt-5 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
+            <p className="bzl-fade bzl-halo mt-4 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
               Workouts, yoga, meal plans, cycle tracking, journaling and more — all in one
               beautifully simple app.
             </p>
-            <div className="bzl-fade mt-7 flex flex-wrap items-center gap-x-5 gap-y-4" style={{ animationDelay: "780ms" }}>
+            <div className="bzl-fade mt-6 flex flex-wrap items-center gap-x-5 gap-y-4" style={{ animationDelay: "780ms" }}>
               <a href={START} onClick={() => trackEvent("get_started_click", { location: "hero" })}
                 className="bzl-cta px-7 py-3.5 text-base">
                 Start Blooming — free <ArrowRight className="h-4 w-4" />
@@ -272,7 +264,7 @@ export default function Landing() {
             </div>
 
             {/* feature chips */}
-            <div className="bzl-fade mt-9 grid max-w-lg grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5" style={{ animationDelay: "920ms" }}>
+            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5" style={{ animationDelay: "920ms" }}>
               {HERO_FEATURES.map((f) => {
                 const Icon = f.icon;
                 return (
@@ -280,39 +272,28 @@ export default function Landing() {
                     <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl shadow-sm transition hover:-translate-y-0.5" style={{ background: "linear-gradient(180deg,#FFE4F1,#FBD0E6)" }}>
                       <Icon className="h-5 w-5" style={{ color: "var(--hot)" }} />
                     </span>
-                    <p className="text-[12.5px] font-extrabold leading-tight" style={{ color: "var(--plum)" }}>{f.title}</p>
-                    <p className="text-[10.5px] font-medium leading-tight" style={{ color: "var(--muted)" }}>{f.sub}</p>
+                    <p className="bzl-halo text-[12.5px] font-extrabold leading-tight" style={{ color: "var(--plum)" }}>{f.title}</p>
+                    <p className="bzl-halo text-[10.5px] font-medium leading-tight" style={{ color: "var(--muted)" }}>{f.sub}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* script sign-off */}
-            <div className="bzl-fade mt-9 flex items-center gap-4" style={{ animationDelay: "1050ms" }}>
-              <p className="bzl-script text-3xl leading-[0.95] sm:text-4xl" style={{ color: "var(--hot)" }}>
+            <div className="bzl-fade mt-7 flex items-center gap-4" style={{ animationDelay: "1050ms" }}>
+              <p className="bzl-script bzl-halo text-3xl leading-[0.95] sm:text-4xl" style={{ color: "var(--hot)" }}>
                 Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current" />
               </p>
               <span className="h-11 w-px shrink-0" style={{ background: "var(--petal)" }} />
-              <p className="text-[13px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+              <p className="bzl-halo text-[13px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
                 More energy. A calmer mind.<br />A stronger, happier you.
               </p>
             </div>
           </div>
-
-          {/* RIGHT — photo (mobile / tablet only; desktop uses the bleed above) */}
-          <div className="relative -mx-1 lg:hidden">
-            <div className="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-2xl" style={{ boxShadow: "0 30px 70px -34px rgba(150,30,80,.5)" }}>
-              <img src="/images/landing-hero-happier.webp" alt="A woman practising cycle-synced yoga at home" className="bzl-kenburns aspect-[16/11] w-full object-cover object-[60%_center] sm:aspect-[16/9]" />
-              <span className="pointer-events-none absolute left-4 top-3 text-left bzl-script text-2xl leading-tight sm:text-3xl"
-                style={{ color: "var(--hot)", textShadow: "0 2px 14px rgba(255,255,255,.95)" }}>
-                Invest in a<br />stronger you <Heart className="inline h-5 w-5 fill-current" />
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* scroll hint (mobile) */}
-        <div className="relative z-10 pb-5 text-center lg:hidden">
+        {/* scroll hint */}
+        <div className="relative z-10 pb-5 text-center">
           <ChevronDown className="mx-auto h-6 w-6 animate-bounce" style={{ color: "var(--deep)" }} />
         </div>
       </section>
