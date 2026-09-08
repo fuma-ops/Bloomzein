@@ -180,7 +180,7 @@ export default function Landing() {
         {/* full-bleed photo on the right (desktop only) — the IMAGE ITSELF is masked
             so it melts into the page with no hard vertical seam. Starts below the top
             bar so the nav reads as its own bar. */}
-        <div className="pointer-events-none absolute bottom-0 right-0 top-[4.6rem] hidden w-[54%] lg:block xl:w-[52%]" aria-hidden>
+        <div className="pointer-events-none absolute bottom-0 right-0 top-[4.6rem] hidden w-[44%] md:block lg:w-[54%] xl:w-[52%]" aria-hidden>
           <img src="/images/landing-hero-happier.webp" alt="" className="bzl-kenburns h-full w-full object-cover object-[62%_center]"
             style={{
               WebkitMaskImage: "linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 4%,rgba(0,0,0,.5) 22%,#000 46%),linear-gradient(180deg,#000 0%,#000 82%,rgba(0,0,0,0) 100%)",
@@ -235,20 +235,20 @@ export default function Landing() {
         )}
 
         {/* ── content ── */}
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-12 pt-4 sm:px-8 lg:grid-cols-2 lg:gap-6 lg:pb-16 lg:pt-6">
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-12 pt-4 sm:px-8 md:grid-cols-[1.3fr_1fr] md:gap-5 md:pt-5 lg:grid-cols-2 lg:gap-6 lg:pb-16 lg:pt-6">
           {/* LEFT — copy */}
           <div className="max-w-xl">
             <p className="bzl-kicker mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
             </p>
             <h1 className="m-0 flex flex-col">
-              <Words text="A happier," className="bzl-serif text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" stagger={70} />
-              <span className="bzl-serif bzl-grad bzl-fade text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" style={{ animationDelay: "300ms" }}>
+              <Words text="A happier," className="bzl-serif text-[2.6rem] leading-[1.03] sm:text-6xl md:text-[2.8rem] lg:text-5xl xl:text-[4rem]" stagger={70} />
+              <span className="bzl-serif bzl-grad bzl-fade text-[2.6rem] leading-[1.03] sm:text-6xl md:text-[2.8rem] lg:text-5xl xl:text-[4rem]" style={{ animationDelay: "300ms" }}>
                 healthier you
               </span>
               <span className="bzl-sheen bzl-fade mt-1 inline-flex items-center gap-2" style={{ animationDelay: "480ms" }}>
-                <span className="bzl-script text-4xl sm:text-5xl lg:text-6xl">in every phase</span>
-                <Heart className="h-7 w-7 fill-current lg:h-9 lg:w-9" style={{ color: "var(--hot)" }} />
+                <span className="bzl-script text-4xl sm:text-5xl md:text-[2.6rem] lg:text-5xl xl:text-6xl">in every phase</span>
+                <Heart className="h-7 w-7 fill-current xl:h-9 xl:w-9" style={{ color: "var(--hot)" }} />
               </span>
             </h1>
             <p className="bzl-fade mt-5 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
@@ -272,7 +272,7 @@ export default function Landing() {
             </div>
 
             {/* feature chips */}
-            <div className="bzl-fade mt-9 grid max-w-lg grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5" style={{ animationDelay: "920ms" }}>
+            <div className="bzl-fade mt-8 grid max-w-lg grid-cols-3 gap-x-3 gap-y-5 md:mt-7 lg:grid-cols-5" style={{ animationDelay: "920ms" }}>
               {HERO_FEATURES.map((f) => {
                 const Icon = f.icon;
                 return (
@@ -288,7 +288,7 @@ export default function Landing() {
             </div>
 
             {/* script sign-off */}
-            <div className="bzl-fade mt-9 flex items-center gap-4" style={{ animationDelay: "1050ms" }}>
+            <div className="bzl-fade mt-8 flex items-center gap-4 md:mt-7" style={{ animationDelay: "1050ms" }}>
               <p className="bzl-script text-3xl leading-[0.95] sm:text-4xl" style={{ color: "var(--hot)" }}>
                 Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current" />
               </p>
@@ -299,8 +299,8 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* RIGHT — photo (mobile / tablet only; desktop uses the bleed above) */}
-          <div className="relative -mx-1 lg:hidden">
+          {/* RIGHT — photo (mobile only; tablet & desktop use the bleed above) */}
+          <div className="relative -mx-1 md:hidden">
             <div className="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-2xl" style={{ boxShadow: "0 30px 70px -34px rgba(150,30,80,.5)" }}>
               <img src="/images/landing-hero-happier.webp" alt="A woman practising cycle-synced yoga at home" className="bzl-kenburns aspect-[16/11] w-full object-cover object-[60%_center] sm:aspect-[16/9]" />
               <span className="pointer-events-none absolute left-4 top-3 text-left bzl-script text-2xl leading-tight sm:text-3xl"
