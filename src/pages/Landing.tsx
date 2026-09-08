@@ -1,7 +1,7 @@
 import {
   ArrowRight, Download, Instagram, Youtube, Facebook, Mail, X, Heart, Sparkles,
   Flower2, Dumbbell, Utensils, Salad, CalendarHeart, BookHeart, NotebookPen,
-  Wallet, MessageCircleHeart, BookOpen, Sun, HeartPulse, ChevronDown,
+  Wallet, MessageCircleHeart, BookOpen, Sun, Moon, Menu, HeartPulse, ChevronDown,
   type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
@@ -82,10 +82,27 @@ const GRID: Feat[] = [
   { icon: BookOpen, kicker: "Read", title: "Wellness wisdom, beautifully written.", body: "A magazine of cycle, beauty, sleep & mind reads.", img: "/images/read-CY001.webp", href: "/app/read" },
 ];
 
+/* ───────── hero feature chips + top nav ───────── */
+const HERO_FEATURES: { icon: LucideIcon; title: string; sub: string }[] = [
+  { icon: Dumbbell, title: "Workouts", sub: "At home, for your level" },
+  { icon: Flower2, title: "Yoga", sub: "Flows for your cycle" },
+  { icon: Salad, title: "Meal Plans", sub: "Healthy & delicious" },
+  { icon: Moon, title: "Cycle Tracking", sub: "Understand your body" },
+  { icon: Heart, title: "A Happier You", sub: "Mind, body & life" },
+];
+const NAV: { label: string; href: string }[] = [
+  { label: "Home", href: "#top" },
+  { label: "Features", href: "#features" },
+  { label: "How It Works", href: "#how" },
+  { label: "Plans", href: "/pricing" },
+  { label: "About", href: "#contact" },
+];
+
 export default function Landing() {
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [showBar, setShowBar] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!iosHint) return;
@@ -149,58 +166,144 @@ export default function Landing() {
         @keyframes bzl-sweep{to{transform:translateX(120%)}}
         .bzl-float{animation:bzl-float 6s ease-in-out infinite}
         @keyframes bzl-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        /* headline word gradient (dark plum → hot pink) */
+        .bzl-grad{background:linear-gradient(100deg,var(--plum) 0%,var(--hot) 92%);
+          -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+        /* the hero photo is a still — keep it quietly alive */
+        .bzl-kenburns{animation:bzl-kenburns 22s ease-in-out infinite alternate}
+        @keyframes bzl-kenburns{from{transform:scale(1.04)}to{transform:scale(1.12)}}
+        @media (prefers-reduced-motion:reduce){.bzl-kenburns{animation:none}}
       `}</style>
 
       {/* ═════════════ HERO ═════════════ */}
-      <section className="relative flex min-h-[100svh] flex-col overflow-hidden">
-        <video className="absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="auto" poster="/images/landing-hero.webp" aria-hidden>
-          <source src="/videos/entry-1.mp4" type="video/mp4" />
-        </video>
-        {/* welcome-style scrim: soft on the left/bottom so text is legible + the woman shows through */}
-        <div className="absolute inset-0" aria-hidden style={{ background:
-          "linear-gradient(90deg,rgba(255,245,250,.92) 0%,rgba(255,245,250,.7) 26%,rgba(255,245,250,.2) 50%,rgba(255,245,250,0) 66%),linear-gradient(180deg,rgba(255,247,241,.4) 0%,rgba(255,240,246,0) 30%,rgba(255,240,246,0) 66%,rgba(107,18,56,.5) 100%)" }} />
+      <section id="top" className="relative overflow-hidden">
+        {/* full-bleed photo on the right (desktop only) — blends into the light panel */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[54%] lg:block xl:w-[52%]" aria-hidden>
+          <img src="/images/landing-hero-happier.webp" alt="" className="bzl-kenburns h-full w-full object-cover object-[62%_center]" />
+          <div className="absolute inset-0" style={{ background:
+            "linear-gradient(90deg,#FFF3F8 0%,rgba(255,243,248,.82) 14%,rgba(255,243,248,.18) 38%,rgba(255,243,248,0) 56%),linear-gradient(180deg,rgba(255,243,248,0) 66%,rgba(251,211,230,.5) 100%)" }} />
+          <span className="absolute left-6 top-[15%] text-left bzl-script bzl-float text-3xl leading-tight xl:text-[2.6rem]"
+            style={{ color: "var(--hot)", textShadow: "0 2px 18px rgba(255,255,255,.95)" }}>
+            Invest in a<br />stronger you <Heart className="inline h-6 w-6 fill-current align-baseline" />
+          </span>
+        </div>
 
-        <header className="relative z-20 mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+        {/* ── top nav ── */}
+        <header className="relative z-30 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <BloomLogo />
-          <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
-            className="hover-scale inline-flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-sm font-bold transition"
-            style={{ borderColor: "var(--hot)", color: "var(--hot)" }}>
-            Start Blooming <ArrowRight className="h-3.5 w-3.5" />
-          </a>
+          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+            {NAV.map((n) => (
+              <a key={n.label} href={n.href} className="text-sm font-bold transition hover:text-hotpink" style={{ color: "var(--ink)" }}>
+                {n.label}
+              </a>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline-block">
+              <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
+                className="bzl-cta px-5 py-2.5 text-sm">
+                Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+              </a>
+            </span>
+            <button onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}
+              className="grid h-10 w-10 place-items-center rounded-full border-2 lg:hidden" style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </header>
+        {menuOpen && (
+          <div className="relative z-30 mx-4 mt-1 flex flex-col gap-1 rounded-2xl border border-white bg-white/90 p-3 shadow-xl backdrop-blur lg:hidden">
+            {NAV.map((n) => (
+              <a key={n.label} href={n.href} onClick={() => setMenuOpen(false)}
+                className="rounded-xl px-3 py-2 text-sm font-bold transition hover:bg-blush" style={{ color: "var(--ink)" }}>
+                {n.label}
+              </a>
+            ))}
+            <a href={START} onClick={() => setMenuOpen(false)} className="bzl-cta mt-1 justify-center px-5 py-3 text-sm">
+              Start Blooming — free <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        )}
 
-        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 pb-20 sm:px-8">
-          <div className="max-w-[38rem]">
-            <p className="bzl-kicker mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "200ms" }}>
+        {/* ── content ── */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 px-6 pb-12 pt-4 sm:px-8 lg:grid-cols-2 lg:gap-6 lg:pb-16 lg:pt-6">
+          {/* LEFT — copy */}
+          <div className="max-w-xl">
+            <p className="bzl-kicker mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
             </p>
-            <h1 className="m-0 flex flex-col gap-1">
-              <Words text="One app for your body, mind & cycle." className="bzl-serif text-2xl leading-tight sm:text-4xl lg:text-[2.7rem]" stagger={70} />
-              <span className="bzl-sheen">
-                <Words text="Welcome to your Bloom." className="bzl-script text-5xl sm:text-7xl lg:text-8xl" delay={520} stagger={110} />
+            <h1 className="m-0 flex flex-col">
+              <Words text="A happier," className="bzl-serif text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" stagger={70} />
+              <span className="bzl-serif bzl-grad bzl-fade text-[2.6rem] leading-[1.03] sm:text-6xl lg:text-[4rem]" style={{ animationDelay: "300ms" }}>
+                healthier you
+              </span>
+              <span className="bzl-sheen bzl-fade mt-1 inline-flex items-center gap-2" style={{ animationDelay: "480ms" }}>
+                <span className="bzl-script text-4xl sm:text-5xl lg:text-6xl">in every phase</span>
+                <Heart className="h-7 w-7 fill-current lg:h-9 lg:w-9" style={{ color: "var(--hot)" }} />
               </span>
             </h1>
-            <p className="bzl-fade mt-5 max-w-lg text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "1300ms" }}>
-              Yoga, workouts, meals, cycle tracking, journaling & more — all synced to your
-              phase, all in one breathtakingly simple place.
+            <p className="bzl-fade mt-5 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
+              Workouts, yoga, meal plans, cycle tracking, journaling and more — all in one
+              beautifully simple app.
             </p>
-            <div className="bzl-fade mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center" style={{ animationDelay: "1500ms" }}>
+            <div className="bzl-fade mt-7 flex flex-wrap items-center gap-x-5 gap-y-4" style={{ animationDelay: "780ms" }}>
               <a href={START} onClick={() => trackEvent("get_started_click", { location: "hero" })}
-                className="bzl-cta px-8 py-3.5 text-base">
+                className="bzl-cta px-7 py-3.5 text-base">
                 Start Blooming — free <ArrowRight className="h-4 w-4" />
               </a>
               <button onClick={handleDownload} disabled={installing}
-                className="hover-scale inline-flex items-center gap-2 rounded-full border-2 bg-white/60 px-6 py-3.5 text-sm font-bold backdrop-blur transition disabled:opacity-70"
-                style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
-                {installing ? "Preparing…" : "Get the app"} <Download className="h-4 w-4" />
+                className="group inline-flex items-center gap-3 disabled:opacity-70" aria-label="Download the app">
+                <span className="grid h-12 w-12 place-items-center rounded-full border-2 bg-white/70 backdrop-blur transition group-hover:scale-105 group-active:scale-95" style={{ borderColor: "var(--petal)" }}>
+                  <Download className="h-5 w-5" style={{ color: "var(--hot)" }} />
+                </span>
+                <span className="text-sm font-extrabold" style={{ color: "var(--hot)" }}>
+                  {installing ? "Preparing…" : "Download App"}
+                </span>
               </button>
             </div>
-            <p className="bzl-fade mt-4 text-xs font-semibold" style={{ color: "var(--muted)", animationDelay: "1700ms" }}>
-              No credit card · Made for your body · Loved by women like you
-            </p>
+
+            {/* feature chips */}
+            <div className="bzl-fade mt-9 grid max-w-lg grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-5" style={{ animationDelay: "920ms" }}>
+              {HERO_FEATURES.map((f) => {
+                const Icon = f.icon;
+                return (
+                  <div key={f.title} className="flex flex-col items-center text-center sm:items-start sm:text-left">
+                    <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl shadow-sm transition hover:-translate-y-0.5" style={{ background: "linear-gradient(180deg,#FFE4F1,#FBD0E6)" }}>
+                      <Icon className="h-5 w-5" style={{ color: "var(--hot)" }} />
+                    </span>
+                    <p className="text-[12.5px] font-extrabold leading-tight" style={{ color: "var(--plum)" }}>{f.title}</p>
+                    <p className="text-[10.5px] font-medium leading-tight" style={{ color: "var(--muted)" }}>{f.sub}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* script sign-off */}
+            <div className="bzl-fade mt-9 flex items-center gap-4" style={{ animationDelay: "1050ms" }}>
+              <p className="bzl-script text-3xl leading-[0.95] sm:text-4xl" style={{ color: "var(--hot)" }}>
+                Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current" />
+              </p>
+              <span className="h-11 w-px shrink-0" style={{ background: "var(--petal)" }} />
+              <p className="text-[13px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+                More energy. A calmer mind.<br />A stronger, happier you.
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT — photo (mobile / tablet only; desktop uses the bleed above) */}
+          <div className="relative -mx-1 lg:hidden">
+            <div className="relative overflow-hidden rounded-[2rem] border-4 border-white shadow-2xl" style={{ boxShadow: "0 30px 70px -34px rgba(150,30,80,.5)" }}>
+              <img src="/images/landing-hero-happier.webp" alt="A woman practising cycle-synced yoga at home" className="bzl-kenburns aspect-[16/11] w-full object-cover object-[60%_center] sm:aspect-[16/9]" />
+              <span className="pointer-events-none absolute left-4 top-3 text-left bzl-script text-2xl leading-tight sm:text-3xl"
+                style={{ color: "var(--hot)", textShadow: "0 2px 14px rgba(255,255,255,.95)" }}>
+                Invest in a<br />stronger you <Heart className="inline h-5 w-5 fill-current" />
+              </span>
+            </div>
           </div>
         </div>
-        <div className="relative z-10 pb-6 text-center">
+
+        {/* scroll hint (mobile) */}
+        <div className="relative z-10 pb-5 text-center lg:hidden">
           <ChevronDown className="mx-auto h-6 w-6 animate-bounce" style={{ color: "var(--deep)" }} />
         </div>
       </section>
@@ -218,7 +321,7 @@ export default function Landing() {
       </section>
 
       {/* ═════════════ FLAGSHIP ROWS ═════════════ */}
-      <section className="mx-auto max-w-6xl space-y-16 px-6 pb-8 sm:space-y-24 sm:px-8">
+      <section id="features" className="mx-auto max-w-6xl space-y-16 px-6 pb-8 sm:space-y-24 sm:px-8 scroll-mt-20">
         {FLAGSHIP.map((f, i) => {
           const Icon = f.icon;
           const flip = i % 2 === 1;
@@ -248,7 +351,7 @@ export default function Landing() {
       </section>
 
       {/* ═════════════ GRID — the rest ═════════════ */}
-      <section className="relative mt-16 px-6 py-16 sm:px-8 sm:py-24" style={{ background: "linear-gradient(180deg,transparent,#FDE7F2 22%,#FBD3E6 100%)" }}>
+      <section id="how" className="relative mt-16 px-6 py-16 sm:px-8 sm:py-24 scroll-mt-20" style={{ background: "linear-gradient(180deg,transparent,#FDE7F2 22%,#FBD3E6 100%)" }}>
         <Reveal className="mx-auto max-w-2xl text-center">
           <p className="bzl-kicker mb-3 text-xs">And so much more</p>
           <h2 className="bzl-script text-4xl sm:text-6xl">Your whole life, in bloom.</h2>
