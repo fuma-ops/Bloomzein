@@ -109,13 +109,13 @@ function Motifs() {
 // the single-column layout untouched (everything here is `lg:`-only).
 function HeroPanel({ tagline }: { tagline: string }) {
   return (
-    <div className="hidden lg:relative lg:flex lg:flex-1 lg:min-h-[34rem] lg:flex-col lg:justify-end lg:overflow-hidden lg:p-9 xl:p-12">
+    <div className="hidden md:relative md:flex md:flex-1 md:min-h-[30rem] lg:min-h-[34rem] md:flex-col md:justify-end md:overflow-hidden md:p-7 lg:p-9 xl:p-12">
       <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[62%_18%]" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,236,246,0.15) 0%, rgba(160,20,90,0.15) 45%, rgba(140,15,80,0.5) 100%)" }} />
       <div className="relative">
-        <div className="inline-flex items-center gap-2"><span className="font-script text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
+        <div className="inline-flex items-center gap-2"><span className="font-script text-[2rem] lg:text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
         <p className="mt-1 text-[14px] xl:text-[16px] font-bold text-white/90 drop-shadow">stay soft, bloom on.</p>
-        <p className="mt-5 font-script text-[1.9rem] xl:text-[2.5rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
+        <p className="mt-5 font-script text-[1.5rem] lg:text-[1.9rem] xl:text-[2.5rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
       </div>
     </div>
   );
@@ -124,12 +124,13 @@ function HeroPanel({ tagline }: { tagline: string }) {
 // two-panel card (hero + content) on laptop.
 function Frame({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center lg:items-start"
+    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center md:items-center lg:items-start"
       style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
       <Motifs />
-      {/* laptop: a big two-panel card whose HEIGHT follows the content (no inner
-          scrollbar), grows with the screen, and puts the photo on the right. */}
-      <div className="relative flex min-h-full w-full max-w-md flex-col lg:min-h-0 lg:my-[4vh] lg:h-auto lg:w-[92vw] lg:max-w-[82rem] xl:max-w-[94rem] 2xl:max-w-[108rem] lg:flex-row-reverse lg:overflow-hidden lg:rounded-[2.5rem] lg:bg-white/45 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm">
+      {/* tablet & laptop: a centered two-panel card whose HEIGHT follows the content
+          (no inner scrollbar), grows with the screen, and puts the photo on the right.
+          Phone keeps the single full-bleed scrolling column. */}
+      <div className="relative flex min-h-full w-full max-w-md flex-col md:min-h-0 md:my-[4vh] md:h-auto md:w-[92vw] md:max-w-[50rem] lg:max-w-[82rem] xl:max-w-[94rem] 2xl:max-w-[108rem] md:flex-row-reverse md:overflow-hidden md:rounded-[2.5rem] md:bg-white/45 md:shadow-[0_30px_90px_rgba(236,72,153,0.22)] md:ring-1 md:ring-white/60 md:backdrop-blur-sm">
         {children}
       </div>
     </div>
@@ -142,7 +143,7 @@ function Shell({ step, total, onBack, footer, children }: {
   return (
     <Frame>
       <HeroPanel tagline="A few little steps to a life that feels like you" />
-      <div className="relative flex flex-1 flex-col px-5 pb-8 lg:flex-none lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9"
+      <div className="relative flex flex-1 flex-col px-5 pb-8 md:flex-none md:w-[26rem] md:px-8 md:py-8 lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between py-2">
           {onBack ? <button onClick={onBack} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95 transition"><ChevronLeft className="h-5 w-5" /> Back</button> : <span className="w-14" />}
@@ -167,7 +168,7 @@ function Shell({ step, total, onBack, footer, children }: {
         <div className="flex-1">{children}</div>
         <div className="mt-6 flex items-end justify-between">
           <p className="font-script text-lg text-hotpink/80 leading-tight max-w-[9rem]">{footer} ♡</p>
-          <div className="inline-flex items-center gap-1.5 lg:hidden"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</span></div>
+          <div className="inline-flex items-center gap-1.5 md:hidden"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</span></div>
         </div>
       </div>
     </Frame>
@@ -291,19 +292,19 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <Frame>
         <HeroPanel tagline="A life that feels like you" />
-        <div className="relative flex flex-1 flex-col lg:flex-none lg:w-[38rem] xl:w-[42rem]">
-          {/* mobile/tablet hero band — replaced by the left HeroPanel on laptop */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden lg:hidden">
+        <div className="relative flex flex-1 flex-col md:flex-none md:w-[26rem] lg:w-[38rem] xl:w-[42rem]">
+          {/* phone-only hero band — replaced by the left HeroPanel on tablet & laptop */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden md:hidden">
             <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
             <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
           </div>
-          <div className="relative px-5 pb-8 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
-            <div className="inline-flex items-center gap-1.5 lg:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
-            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85 lg:hidden">stay soft, bloom on.</p>
-            <h1 className="mt-6 leading-[0.9] lg:mt-0"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
-            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f] lg:max-w-none">A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.</p>
-            <div className="mt-8 flex justify-between gap-1 lg:mt-6">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{t.l}</span></div>))}</div>
+          <div className="relative px-5 pb-8 md:px-8 md:py-7 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
+            <div className="inline-flex items-center gap-1.5 md:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
+            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85 md:hidden">stay soft, bloom on.</p>
+            <h1 className="mt-6 leading-[0.9] md:mt-0"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
+            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f] md:max-w-none">A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.</p>
+            <div className="mt-8 flex justify-between gap-1 md:mt-6">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{t.l}</span></div>))}</div>
             <div className="mt-6 rounded-[1.6rem] bg-white/70 p-4 shadow-[0_12px_34px_rgba(236,72,153,0.14)] ring-1 ring-white/70">
               <p className="inline-flex items-center gap-1.5 font-script text-[1.4rem] text-hotpink leading-none">A life that feels like you <Heart className="h-5 w-5 text-hotpink" strokeWidth={2.4} /></p>
               <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">{checks.map((c) => (<div key={c} className="flex items-start gap-1.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/15"><Check className="h-3 w-3 text-hotpink" strokeWidth={4} /></span><span className="text-[13px] font-semibold leading-snug text-rose/85">{c}</span></div>))}</div>
@@ -483,7 +484,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <Frame>
         <HeroPanel tagline="Your whole world, unlocked" />
-        <div className="relative flex flex-1 flex-col px-5 pb-6 lg:flex-none lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="relative flex flex-1 flex-col px-5 pb-6 md:flex-none md:w-[26rem] md:px-8 md:py-8 lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={() => go("previews")} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
           <div className="mt-2 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Sparkles className="h-6 w-6" /></span>
