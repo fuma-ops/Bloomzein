@@ -58,6 +58,7 @@ import { AppShell } from "./components/bloom/AppShell";
 import { InstallPrompt } from "./components/bloom/InstallPrompt";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { hasCycleSettings } from "./components/bloom/cyclePhase";
+import { hasMealPlan, hasMovementPlan } from "./lib/crossToolData";
 import { isGuided, isOnboarded } from "./lib/guidedSetup";
 import { AuthGate } from "./components/bloom/AuthGate";
 import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
@@ -280,10 +281,13 @@ function AppContent() {
     const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
 
     // ── New-user ONBOARDING ──────────────────────────────────────────────────
-    // The full "Let's make Bloomzein yours" flow. Runs once for a signed-in user
-    // who hasn't set up her cycle yet, and sets up EVERY tool from her answers —
-    // so there's no separate Today setup afterwards.
-    if (isProtected && user && !isOnboarded() && !hasCycleSettings()) {
+    // The full "Let's make Bloomzein yours" flow. Runs for a signed-in user
+    // whose tools aren't fully set up yet (not just a missing cycle) — so an
+    // account that has, say, a cycle but no diet/meals/movement still gets the
+    // onboarding and comes out fully set up, replacing the old Today checklist.
+    const dietSetup = (() => { try { return localStorage.getItem("bloom:diet-setup-complete") === "true"; } catch { return false; } })();
+    const allCoreSetup = hasCycleSettings() && dietSetup && hasMealPlan() && hasMovementPlan();
+    if (isProtected && user && !isOnboarded() && !allCoreSetup) {
       return (
         <Suspense fallback={<PageLoader />}>
           <BloomOnboarding onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); window.scrollTo(0, 0); }} />
