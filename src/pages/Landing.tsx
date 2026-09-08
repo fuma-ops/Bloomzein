@@ -177,40 +177,49 @@ export default function Landing() {
 
       {/* ═════════════ HERO ═════════════ */}
       <section id="top" className="relative overflow-hidden">
-        {/* full-bleed photo on the right (desktop only) — blends into the light panel */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[54%] lg:block xl:w-[52%]" aria-hidden>
-          <img src="/images/landing-hero-happier.webp" alt="" className="bzl-kenburns h-full w-full object-cover object-[62%_center]" />
-          <div className="absolute inset-0" style={{ background:
-            "linear-gradient(90deg,#FFF3F8 0%,rgba(255,243,248,.82) 14%,rgba(255,243,248,.18) 38%,rgba(255,243,248,0) 56%),linear-gradient(180deg,rgba(255,243,248,0) 66%,rgba(251,211,230,.5) 100%)" }} />
-          <span className="absolute left-6 top-[15%] text-left bzl-script bzl-float text-3xl leading-tight xl:text-[2.6rem]"
+        {/* full-bleed photo on the right (desktop only) — the IMAGE ITSELF is masked
+            so it melts into the page with no hard vertical seam. Starts below the top
+            bar so the nav reads as its own bar. */}
+        <div className="pointer-events-none absolute bottom-0 right-0 top-[4.6rem] hidden w-[54%] lg:block xl:w-[52%]" aria-hidden>
+          <img src="/images/landing-hero-happier.webp" alt="" className="bzl-kenburns h-full w-full object-cover object-[62%_center]"
+            style={{
+              WebkitMaskImage: "linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 4%,rgba(0,0,0,.5) 22%,#000 46%),linear-gradient(180deg,#000 0%,#000 82%,rgba(0,0,0,0) 100%)",
+              maskImage: "linear-gradient(90deg,rgba(0,0,0,0) 0%,rgba(0,0,0,0) 4%,rgba(0,0,0,.5) 22%,#000 46%),linear-gradient(180deg,#000 0%,#000 82%,rgba(0,0,0,0) 100%)",
+              WebkitMaskComposite: "source-in",
+              maskComposite: "intersect",
+            }} />
+          <span className="absolute left-7 top-[13%] text-left bzl-script bzl-float text-3xl leading-tight xl:text-[2.6rem]"
             style={{ color: "var(--hot)", textShadow: "0 2px 18px rgba(255,255,255,.95)" }}>
             Invest in a<br />stronger you <Heart className="inline h-6 w-6 fill-current align-baseline" />
           </span>
         </div>
 
-        {/* ── top nav ── */}
-        <header className="relative z-30 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <BloomLogo />
-          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
-            {NAV.map((n) => (
-              <a key={n.label} href={n.href} className="text-sm font-bold transition hover:text-hotpink" style={{ color: "var(--ink)" }}>
-                {n.label}
-              </a>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <span className="hidden sm:inline-block">
-              <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
-                className="bzl-cta px-5 py-2.5 text-sm">
-                Start Blooming <ArrowRight className="h-3.5 w-3.5" />
-              </a>
-            </span>
-            <button onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}
-              className="grid h-10 w-10 place-items-center rounded-full border-2 lg:hidden" style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
-              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </header>
+        {/* ── top nav bar (full-width, frosted) ── */}
+        <div className="relative z-30 w-full border-b"
+          style={{ background: "rgba(255,246,250,.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderColor: "rgba(236,72,153,.12)" }}>
+          <header className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+            <BloomLogo />
+            <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
+              {NAV.map((n) => (
+                <a key={n.label} href={n.href} className="text-sm font-bold transition hover:text-hotpink" style={{ color: "var(--ink)" }}>
+                  {n.label}
+                </a>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2">
+              <span className="hidden sm:inline-block">
+                <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
+                  className="bzl-cta px-5 py-2.5 text-sm">
+                  Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              </span>
+              <button onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}
+                className="grid h-10 w-10 place-items-center rounded-full border-2 lg:hidden" style={{ borderColor: "var(--petal)", color: "var(--hot)" }}>
+                {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
+          </header>
+        </div>
         {menuOpen && (
           <div className="relative z-30 mx-4 mt-1 flex flex-col gap-1 rounded-2xl border border-white bg-white/90 p-3 shadow-xl backdrop-blur lg:hidden">
             {NAV.map((n) => (
