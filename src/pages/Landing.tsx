@@ -235,62 +235,62 @@ export default function Landing() {
         {/* ── content ── single column, text on a soft frosted panel so it stays readable over the photo ── */}
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 max-sm:py-4">
           <div className="w-full max-w-xl lg:max-w-2xl">
-            <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs bzl-fade" style={{ animationDelay: "150ms" }}>
+            <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs md:mb-4 md:text-[13px] bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
             </p>
             <h1 className="m-0 flex flex-col">
-              <Words text="A happier," className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl lg:text-6xl" stagger={70} />
-              <span className="bzl-serif bzl-grad bzl-fade text-[2.5rem] leading-[1.03] sm:text-5xl lg:text-6xl" style={{ animationDelay: "300ms" }}>
+              <Words text="A happier," className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" stagger={70} />
+              <span className="bzl-serif bzl-grad bzl-fade text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" style={{ animationDelay: "300ms" }}>
                 healthier you
               </span>
-              <span className="bzl-fade mt-1 flex items-center gap-2 whitespace-nowrap" style={{ animationDelay: "480ms" }}>
-                <span className="bzl-sheen bzl-script bzl-halo text-[2.2rem] sm:text-4xl lg:text-5xl">in every phase</span>
-                <Heart className="h-6 w-6 shrink-0 fill-current sm:h-7 sm:w-7 lg:h-8 lg:w-8" style={{ color: "var(--hot)" }} />
+              <span className="bzl-fade mt-1 flex items-center gap-2 whitespace-nowrap md:mt-2" style={{ animationDelay: "480ms" }}>
+                <span className="bzl-sheen bzl-script bzl-halo text-[2.2rem] sm:text-4xl md:text-[3rem] lg:text-5xl">in every phase</span>
+                <Heart className="h-6 w-6 shrink-0 fill-current sm:h-7 sm:w-7 md:h-9 md:w-9 lg:h-8 lg:w-8" style={{ color: "var(--hot)" }} />
               </span>
             </h1>
-            <p className="bzl-fade bzl-halo mt-4 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg max-sm:mt-3 max-sm:max-w-[80%]" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
+            <p className="bzl-fade bzl-halo mt-4 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg md:mt-6 md:max-w-lg md:text-xl max-sm:mt-3 max-sm:max-w-[80%]" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
               Workouts, yoga, meal plans, cycle tracking, journaling and more — all in one
               beautifully simple app.
             </p>
-            <div className="bzl-fade mt-6 flex flex-wrap items-center gap-x-5 gap-y-4 max-sm:mt-4 max-sm:max-w-[66%]" style={{ animationDelay: "780ms" }}>
+            <div className="bzl-fade mt-6 flex flex-wrap items-center gap-x-5 gap-y-4 md:mt-8 md:gap-x-6 max-sm:mt-4 max-sm:max-w-[66%]" style={{ animationDelay: "780ms" }}>
               <a href={START} onClick={() => trackEvent("get_started_click", { location: "hero" })}
-                className="bzl-cta whitespace-nowrap px-7 py-3.5 text-base max-sm:px-5 max-sm:text-[15px]">
-                Start Blooming — free <ArrowRight className="h-4 w-4" />
+                className="bzl-cta whitespace-nowrap px-7 py-3.5 text-base md:px-8 md:py-4 md:text-lg max-sm:px-5 max-sm:text-[15px]">
+                Start Blooming — free <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
               </a>
               <button onClick={handleDownload} disabled={installing}
                 className="group inline-flex items-center gap-3 disabled:opacity-70" aria-label="Download the app">
-                <span className="grid h-12 w-12 place-items-center rounded-full border-2 bg-white/70 backdrop-blur transition group-hover:scale-105 group-active:scale-95" style={{ borderColor: "var(--petal)" }}>
-                  <Download className="h-5 w-5" style={{ color: "var(--hot)" }} />
+                <span className="grid h-12 w-12 place-items-center rounded-full border-2 bg-white/70 backdrop-blur transition group-hover:scale-105 group-active:scale-95 md:h-14 md:w-14" style={{ borderColor: "var(--petal)" }}>
+                  <Download className="h-5 w-5 md:h-6 md:w-6" style={{ color: "var(--hot)" }} />
                 </span>
-                <span className="text-sm font-extrabold" style={{ color: "var(--hot)" }}>
+                <span className="text-sm font-extrabold md:text-base" style={{ color: "var(--hot)" }}>
                   {installing ? "Preparing…" : "Download App"}
                 </span>
               </button>
             </div>
 
             {/* feature chips */}
-            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-5 max-sm:mt-5 max-sm:max-w-[78%]" style={{ animationDelay: "920ms" }}>
+            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-5 md:mt-10 md:gap-x-4 md:gap-y-6 max-sm:mt-5 max-sm:max-w-[78%]" style={{ animationDelay: "920ms" }}>
               {HERO_FEATURES.map((f) => {
                 const Icon = f.icon;
                 return (
                   <div key={f.title} className="flex flex-col items-center text-center sm:items-start sm:text-left">
-                    <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl shadow-sm transition hover:-translate-y-0.5" style={{ background: "linear-gradient(180deg,#FFE4F1,#FBD0E6)" }}>
-                      <Icon className="h-5 w-5" style={{ color: "var(--hot)" }} />
+                    <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl shadow-sm transition hover:-translate-y-0.5 md:mb-3 md:h-14 md:w-14 md:rounded-[1.25rem]" style={{ background: "linear-gradient(180deg,#FFE4F1,#FBD0E6)" }}>
+                      <Icon className="h-5 w-5 md:h-6 md:w-6" style={{ color: "var(--hot)" }} />
                     </span>
-                    <p className="bzl-halo text-[12.5px] font-extrabold leading-tight" style={{ color: "var(--plum)" }}>{f.title}</p>
-                    <p className="bzl-halo text-[10.5px] font-medium leading-tight max-sm:hidden" style={{ color: "var(--muted)" }}>{f.sub}</p>
+                    <p className="bzl-halo text-[12.5px] font-extrabold leading-tight md:text-sm" style={{ color: "var(--plum)" }}>{f.title}</p>
+                    <p className="bzl-halo text-[10.5px] font-medium leading-tight md:text-xs max-sm:hidden" style={{ color: "var(--muted)" }}>{f.sub}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* script sign-off */}
-            <div className="bzl-fade mt-7 flex items-center gap-4 max-sm:mt-5" style={{ animationDelay: "1050ms" }}>
-              <p className="bzl-script bzl-halo text-3xl leading-[0.95] sm:text-4xl" style={{ color: "var(--hot)" }}>
-                Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current" />
+            <div className="bzl-fade mt-7 flex items-center gap-4 md:mt-10 md:gap-6 max-sm:mt-5" style={{ animationDelay: "1050ms" }}>
+              <p className="bzl-script bzl-halo text-3xl leading-[0.95] sm:text-4xl md:text-[2.7rem]" style={{ color: "var(--hot)" }}>
+                Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current md:h-6 md:w-6" />
               </p>
-              <span className="h-11 w-px shrink-0" style={{ background: "var(--petal)" }} />
-              <p className="bzl-halo text-[13px] font-semibold leading-snug" style={{ color: "var(--ink)" }}>
+              <span className="h-11 w-px shrink-0 md:h-14" style={{ background: "var(--petal)" }} />
+              <p className="bzl-halo text-[13px] font-semibold leading-snug md:text-[15px]" style={{ color: "var(--ink)" }}>
                 More energy. A calmer mind.<br />A stronger, happier you.
               </p>
             </div>
