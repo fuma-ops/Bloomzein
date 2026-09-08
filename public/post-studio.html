@@ -2134,6 +2134,17 @@ $("#recBtn").addEventListener("click", async () => {
 });
 $("#exitBtn").addEventListener("click", exitRecord);
 document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("rec-mode")) { reelAbort?.abort(); exitRecord(); } });
+/* Esc is the stop control, but recording now runs fullscreen — and the Esc
+   that leaves fullscreen is consumed by the browser, never delivered here.
+   Without this, stopping a recording would drop out of fullscreen and leave
+   the reel playing in record mode with no way out but another Esc. Treat
+   leaving fullscreen during a recording as the stop it was meant to be. */
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement && document.body.classList.contains("rec-mode")) {
+    reelAbort?.abort();
+    exitRecord();
+  }
+});
 
 /* ══════════════════════════ reel playback & export ════════════════════════ */
 /* An in-page notice rather than alert(): a sandboxed embed can have modals
