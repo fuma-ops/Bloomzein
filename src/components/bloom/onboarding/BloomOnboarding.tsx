@@ -1,9 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ChevronLeft, ArrowRight, Heart, Dumbbell, Salad, Fish, Beef, Sprout, Utensils,
   Footprints, BarChart3, Star, Scale, Ruler, Cake, Minus, Plus, Check, Bell, Clock,
   Smartphone, Tablet, Laptop, Pill, Sparkles, CalendarHeart, ChevronRight, Circle,
   Moon, CalendarDays, Cloud, Smile, CloudRain, Battery, Droplets, Lock, Flower2, Flame,
+  Play, Brain, Zap, Pencil,
 } from "lucide-react";
 import { BloomFlower } from "../BloomFlower";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,7 +61,6 @@ const FOOD_MAP: Record<FoodStyle, { dietType: DietType; regime: DietRegime }> = 
   flexible: { dietType: "omnivore", regime: "balanced" },
 };
 const GOAL_TO_WORKOUT: Record<DietGoal, WorkoutGoal> = { lose: "tonify", maintain: "energy", gain: "strengthen" };
-const PROGRAM_NAME: Record<DietGoal, string> = { lose: "Lean & Tone · 6 weeks", maintain: "Full-Body Flow · 4 weeks", gain: "8-Week Glute Builder" };
 const YOGA_SEED: Record<string, string | null> = {
   Mon: "Cycle sync", Tue: null, Wed: "Stress relief", Thu: null, Fri: "Full-body flow", Sat: null, Sun: "Sleep prep",
 };
@@ -89,6 +89,34 @@ const MOODS: { key: string; label: string; Icon: typeof Heart }[] = [
   { key: "energetic", label: "Energetic", Icon: Sparkles }, { key: "sensitive", label: "Sensitive", Icon: Heart },
   { key: "sad", label: "Sad", Icon: CloudRain }, { key: "tired", label: "Tired", Icon: Battery },
 ];
+
+// per-phase copy for the personalized plan reveal
+const PHASE_INFO: Record<string, { title: string; blurb: string; feels: { Icon: typeof Heart; l: string }[]; quote: string }> = {
+  menstrual: {
+    title: "Menstrual Phase",
+    blurb: "Your body is resting and renewing. Honour it with gentle movement, warmth and nourishing food — rest is productive too.",
+    feels: [{ Icon: Battery, l: "Low Energy" }, { Icon: Heart, l: "Reflective" }, { Icon: Moon, l: "Need Rest" }, { Icon: Droplets, l: "Cramps" }],
+    quote: "This is your reset week — slow down, keep warm and be extra kind to yourself.",
+  },
+  follicular: {
+    title: "Follicular Phase",
+    blurb: "Your energy is rising, your mood is brighter and your body is ready to build. It's the perfect time to focus on strength, healthy habits and progress towards your goals.",
+    feels: [{ Icon: Zap, l: "High Energy" }, { Icon: Smile, l: "Positive Mood" }, { Icon: Brain, l: "Better Focus" }, { Icon: Heart, l: "Rising Libido" }],
+    quote: "This week, you're likely to feel more motivated, confident and productive. Use this energy to move your body, nourish yourself and go after your goals!",
+  },
+  ovulatory: {
+    title: "Ovulatory Phase",
+    blurb: "You're at your peak — energy, confidence and strength are high. Channel it into your boldest workouts and your brightest social days.",
+    feels: [{ Icon: Flame, l: "Peak Energy" }, { Icon: Smile, l: "Confident" }, { Icon: Sparkles, l: "Social" }, { Icon: Heart, l: "High Libido" }],
+    quote: "You're glowing this week — take on challenges, connect with people and enjoy feeling your strongest.",
+  },
+  luteal: {
+    title: "Luteal Phase",
+    blurb: "Your energy is winding down as your body prepares to rest. Focus on steady movement, magnesium-rich food and calming self-care.",
+    feels: [{ Icon: Battery, l: "Winding Down" }, { Icon: CloudRain, l: "Moodier" }, { Icon: Droplets, l: "Cravings" }, { Icon: Moon, l: "Slower" }],
+    quote: "Be gentle with yourself this week — steady habits, cozy self-care and good food keep you balanced.",
+  },
+};
 
 const QUESTION_STEPS = ["cycle", "about", "goal", "food", "fitness", "prefs", "checkin"] as const;
 
@@ -243,14 +271,6 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   const qIndex = QUESTION_STEPS.indexOf(stage as typeof QUESTION_STEPS[number]);
   const total = QUESTION_STEPS.length;
   const go = (s: string) => { setStage(s); try { window.scrollTo(0, 0); } catch { /* ignore */ } };
-
-  // real recipe thumbnails for the sneak-peek meal card
-  const mealThumbs = useMemo(() => {
-    const pick = (t: string) => RECIPES.find((r) => r.mealType === t);
-    return [
-      { label: "Breakfast", r: pick("breakfast") }, { label: "Lunch", r: pick("lunch") }, { label: "Dinner", r: pick("dinner") },
-    ].filter((x) => x.r);
-  }, []);
 
   // ── save EVERYTHING (this is the whole point) ──────────────────────────────
   async function applySetup() {
@@ -425,35 +445,166 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     </Shell>
   );
 
-  // ── SNEAK PEEK previews ────────────────────────────────────────────────────
+  // ── PERSONALIZED PLAN reveal (full-width dashboard) ────────────────────────
   if (stage === "previews") {
-    const wThumbs = [{ img: "/images/workout-hip-thrust.webp", tag: "3 sets" }, { img: "/images/workout-glute-bridge.webp", tag: "15 reps" }, { img: "/images/workout-squat.webp", tag: "12 reps" }];
-    const yThumbs = [{ img: YOGA_FOCUS["Sleep prep"].image, tag: "10 min" }, { img: YOGA_FOCUS["Stress relief"].image, tag: "15 min" }, { img: YOGA_FOCUS["Cycle sync"].image, tag: "20 min" }];
-    const Card = ({ Icon, title, blurb, plan, thumbs }: { Icon: typeof Heart; title: string; blurb: string; plan: string; thumbs: { img: string; tag: string; label?: string }[] }) => (
-      <div className="rounded-[1.6rem] bg-white/75 p-3.5 shadow-[0_10px_28px_rgba(236,72,153,0.12)] ring-1 ring-white/70">
-        <div className="flex items-start gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-hotpink/12"><Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><div className="min-w-0 flex-1"><p className="text-[19px] font-extrabold text-hotpink leading-tight">{title}</p><p className="mt-0.5 text-[12.5px] leading-snug text-rose/75">{blurb}</p></div></div>
-        <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-hotpink/10 px-3 py-1"><Sparkles className="h-3.5 w-3.5 text-hotpink" /><span className="text-[12px] font-extrabold text-hotpink">{plan}</span></div>
-        <div className="mt-3 grid grid-cols-3 gap-2">{thumbs.map((t, i) => (<div key={i} className="relative aspect-square overflow-hidden rounded-xl ring-1 ring-white/70"><img src={t.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute inset-x-1 bottom-1 rounded-md bg-white/90 py-0.5 text-center text-[10px] font-extrabold text-hotpink">{t.label ?? t.tag}</span></div>))}</div>
+    // cycle phase (real when set; computed in the write-free preview)
+    const compPhase = (() => {
+      const day0 = Math.floor((Date.now() - a.lastPeriod.getTime()) / 864e5);
+      const d = (((day0 % a.cycleLength) + a.cycleLength) % a.cycleLength) + 1;
+      const ov = Math.round(a.cycleLength / 2);
+      return { key: d <= a.periodLength ? "menstrual" : d < ov - 1 ? "follicular" : d <= ov + 1 ? "ovulatory" : "luteal", day: d };
+    })();
+    const phaseKey = ((readCyclePhase() as string | null) ?? compPhase.key) as keyof typeof PHASE_INFO;
+    const info = PHASE_INFO[phaseKey] ?? PHASE_INFO.follicular;
+    const fmt = (dt: Date) => dt.toLocaleString("en-US", { month: "short", day: "numeric" });
+    const range = `${fmt(new Date())} – ${fmt(new Date(Date.now() + 6 * 864e5))}`;
+    // goal
+    const goalLabel = a.goal === "lose" ? "Lose weight" : a.goal === "gain" ? "Gain & tone" : "Maintain";
+    const goalWeight = a.goal === "lose" ? a.weight - 4 : a.goal === "gain" ? a.weight + 4 : a.weight;
+    const diffKg = Math.abs(a.weight - goalWeight);
+    const weeks = Math.max(1, Math.ceil(diffKg / 0.5));
+    // nutrition
+    const kcal = summary.kcal || 1500;
+    const carbs = Math.round((kcal * 0.4) / 4), protein = Math.round((kcal * 0.3) / 4), fats = Math.round((kcal * 0.3) / 9);
+    // meals
+    const pickMeal = (t: string) => RECIPES.find((r) => r.mealType === t);
+    const meals = [
+      { label: "Breakfast", r: pickMeal("breakfast") }, { label: "Lunch", r: pickMeal("lunch") },
+      { label: "Snack", r: pickMeal("snack") }, { label: "Dinner", r: pickMeal("dinner") },
+    ].filter((m) => m.r);
+    const workouts = [
+      { img: "/images/workout-hero-session.webp", name: "Full Body Strength", min: "30 min" },
+      { img: "/images/workout-hero-program.webp", name: "Glutes & Core", min: "25 min" },
+      { img: "/images/workout-hero-bestshape.webp", name: "Pilates Flow", min: "20 min" },
+    ];
+    const yoga = [
+      { img: YOGA_FOCUS["Full-body flow"]?.image, name: "Energizing Flow", min: "15 min" },
+      { img: YOGA_FOCUS["Stress relief"]?.image, name: "Upper Body Stretch", min: "10 min" },
+      { img: YOGA_FOCUS["Cycle sync"]?.image, name: "Hip Opener", min: "12 min" },
+    ];
+    const todaysFocus = ["Nourish your body with whole foods", "Do your yoga flow", "Drink at least 2L of water", "Take your vitamins", "Be kind to yourself ♡"];
+    const selfCare = ["5 min morning journal", "Breathing exercise", "Skincare routine", "Quality sleep (7–8h)", "Gratitude practice"];
+    const CARD = "rounded-[1.5rem] bg-white/72 p-4 shadow-[0_12px_30px_rgba(236,72,153,0.12)] ring-1 ring-white/70 backdrop-blur-sm sm:p-5";
+    const LINK = "inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1.5 text-[12.5px] font-extrabold text-hotpink";
+    const Tick = () => <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink"><Check className="h-3 w-3 text-white" strokeWidth={4} /></span>;
+    const VideoThumb = ({ img, name, min }: { img?: string; name: string; min: string }) => (
+      <div className="min-w-0">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-2xl ring-1 ring-white/70">
+          {img && <img src={img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+          <span className="absolute inset-0 grid place-items-center"><span className="grid h-9 w-9 place-items-center rounded-full bg-white/85 shadow"><Play className="h-4 w-4 translate-x-[1px] fill-hotpink text-hotpink" /></span></span>
+        </div>
+        <p className="mt-1.5 truncate text-[13px] font-extrabold text-rose">{name}</p>
+        <p className="text-[11.5px] font-semibold text-hotpink/70">{min}</p>
       </div>
     );
-    const phaseLabel = (readCyclePhase() ?? "follicular");
+
     return (
-      <Shell step={null} total={total} onBack={() => go("checkin")} footer="Small steps Big results">
-        <Eyebrow>A sneak peek</Eyebrow><Title serif="Here's what's inside" script="your personalized plan" />
-        <Sub>A preview of the workouts, yoga flows and meal ideas you'll unlock. Everything is tailored to you!</Sub>
-        <div className="mt-3 space-y-2.5">
-          <Card Icon={Dumbbell} title="Workouts" blurb="Effective at-home workouts, tailored to your level and goals." plan={PROGRAM_NAME[a.goal]} thumbs={wThumbs} />
-          <Card Icon={Flower2} title="Yoga" blurb="Calming and energizing flows for every phase of your cycle." plan="Period Cramps · PMS Relief · Energy" thumbs={yThumbs} />
-          <div className="rounded-[1.6rem] bg-white/75 p-3.5 shadow-[0_10px_28px_rgba(236,72,153,0.12)] ring-1 ring-white/70">
-            <div className="flex items-start gap-3"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-hotpink/12"><Salad className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><div className="min-w-0 flex-1"><p className="text-[19px] font-extrabold text-hotpink leading-tight">Meals</p><p className="mt-0.5 text-[12.5px] leading-snug text-rose/75">A full week of nutritious recipes to fuel your body and reach your goals.</p></div></div>
-            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-hotpink/10 px-3 py-1"><Sparkles className="h-3.5 w-3.5 text-hotpink" /><span className="text-[12px] font-extrabold text-hotpink">{summary.meals || 28} meals · synced to your {phaseLabel} phase</span></div>
-            <div className="mt-3 grid grid-cols-3 gap-2">{mealThumbs.map((m) => (<div key={m.label} className="relative aspect-square overflow-hidden rounded-xl ring-1 ring-white/70"><img src={recipeImageSrc(m.r!)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute inset-x-1 bottom-1 rounded-md bg-white/90 py-0.5 text-center text-[10px] font-extrabold text-hotpink">{m.label}</span></div>))}</div>
-            {summary.sample.length > 0 && <p className="mt-2.5 text-[12px] leading-snug text-rose/70">Like <b className="text-hotpink">{summary.sample.slice(0, 3).join(" · ")}</b> — portioned to your {summary.kcal ? `${summary.kcal.toLocaleString()} kcal` : "daily"} target.</p>}
+      <div className="fixed inset-0 z-[95] overflow-y-auto" style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
+        <Motifs />
+        <div className="relative mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:px-8" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+          {/* header */}
+          <div className="flex items-center justify-between gap-3 py-1">
+            <button onClick={() => go("checkin")} className="inline-flex items-center gap-1 font-bold text-hotpink active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
+            <div className="text-center leading-none"><div className="inline-flex items-center gap-1.5"><span className="font-script text-2xl text-hotpink leading-none">Bloomzein</span><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /></div><p className="mt-0.5 text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</p></div>
+            <p className="hidden font-script text-[1.15rem] text-hotpink md:inline-flex md:items-center md:gap-1">A healthier, happier you <Heart className="h-4 w-4 fill-hotpink" /></p>
+          </div>
+
+          {/* title */}
+          <div className="mt-4 lg:mt-6">
+            <h1 className="leading-[0.95]"><span className="block text-[2.2rem] font-bold text-[#7a1247] sm:text-[2.7rem] lg:text-[3.2rem]" style={{ fontFamily: SERIF }}>Here's your</span><span className="inline-flex items-end gap-2 font-script text-[2.4rem] text-hotpink sm:text-[3rem] lg:text-[3.6rem] leading-[0.85]">Personalized Plan <Heart className="mb-1 h-8 w-8 fill-hotpink" /></span></h1>
+            <p className="mt-2 max-w-xl text-[14px] leading-snug text-rose/70 sm:text-[15px]">Tailored to your cycle, your goals and your life. Everything you need to feel your best — body, mind and soul.</p>
+          </div>
+
+          {/* phase + how you might feel */}
+          <div className="mt-5 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+            <div className={CARD}>
+              <div className="flex items-start gap-3">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-hotpink/12"><Sprout className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-bold text-rose/70">You're in your</p>
+                  <p className="font-script text-[1.9rem] leading-none text-hotpink">{info.title}</p>
+                  <p className="mt-1 text-[12.5px] font-extrabold text-hotpink/80">Day {compPhase.day} of {a.cycleLength} · {range}</p>
+                </div>
+                <p className="hidden shrink-0 font-script text-[1.1rem] text-hotpink sm:block">A fresh<br />new you ♡</p>
+              </div>
+              <p className="mt-3 text-[13.5px] leading-snug text-rose/80">{info.blurb}</p>
+              <span className={`${LINK} mt-3`}>Learn more about this phase <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+            <div className={CARD}>
+              <p className="text-[16px] font-extrabold text-hotpink">How you might feel</p>
+              <div className="mt-3 grid grid-cols-4 gap-2">{info.feels.map((f) => (<div key={f.l} className="flex flex-col items-center gap-1.5 text-center"><span className="grid h-11 w-11 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><span className="text-[11.5px] font-bold leading-tight text-rose/80">{f.l}</span></div>))}</div>
+              <div className="mt-3 rounded-2xl bg-hotpink/8 p-3"><p className="text-[12.5px] leading-snug text-rose/80"><span className="font-script text-xl text-hotpink">“</span>{info.quote}</p></div>
+            </div>
+          </div>
+
+          {/* goal · nutrition · today's focus */}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className={CARD}>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Scale className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div><p className="text-[12.5px] font-bold text-rose/60">Your goal</p><p className="text-[17px] font-extrabold text-hotpink leading-tight">{goalLabel}</p></div></div><span className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink/70"><Pencil className="h-3.5 w-3.5" /> Edit</span></div>
+              <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">You're on track! Based on your profile, a healthy pace is 0.5 kg per week.</p>
+              <div className="mt-3 flex items-end justify-between"><p className="text-[22px] font-extrabold leading-none text-hotpink">{diffKg} kg<span className="text-[13px] font-bold text-rose/60"> to {a.goal === "gain" ? "gain" : a.goal === "lose" ? "lose" : "hold"}</span></p><p className="text-right text-[12px] font-semibold text-rose/60">{weeks} weeks to go<br />(estimated)</p></div>
+              <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-hotpink/12"><div className="h-full rounded-full bg-hotpink" style={{ width: "12%" }} /></div>
+              <div className="mt-1.5 flex justify-between text-[12px] font-semibold text-rose/70"><span>Current: {a.weight} kg</span><span>Goal: {goalWeight} kg</span></div>
+            </div>
+            <div className={CARD}>
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Utensils className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div><p className="text-[12.5px] font-bold text-rose/60">Your daily nutrition</p><p className="leading-none"><span className="text-[22px] font-extrabold text-hotpink">{kcal.toLocaleString()}</span> <span className="text-[13px] font-bold text-rose/70">kcal</span></p></div></div>
+              <p className="mt-1 text-[12px] font-semibold text-rose/60">Your recommended intake today</p>
+              <div className="mt-3 flex h-2.5 overflow-hidden rounded-full"><span className="bg-hotpink" style={{ width: "40%" }} /><span className="bg-pink-400" style={{ width: "30%" }} /><span className="bg-rose-300" style={{ width: "30%" }} /></div>
+              <div className="mt-2.5 grid grid-cols-3 divide-x divide-hotpink/15 text-center">
+                {[["40%", "Carbs", `${carbs} g`], ["30%", "Protein", `${protein} g`], ["30%", "Fats", `${fats} g`]].map(([p, l, g]) => (<div key={l} className="px-1"><p className="text-[13px] font-extrabold text-hotpink">{p}</p><p className="text-[11px] font-semibold text-rose/60">{l}</p><p className="text-[14px] font-extrabold text-rose">{g}</p></div>))}
+              </div>
+              <span className={`${LINK} mt-3`}>See why this is right for you <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+            <div className={CARD}>
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Star className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><p className="text-[17px] font-extrabold text-hotpink">Today's focus</p></div>
+              <div className="mt-3 space-y-2">{todaysFocus.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
+            </div>
+          </div>
+
+          {/* meals */}
+          <div className={`${CARD} mt-4`}>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Salad className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div><p className="text-[17px] font-extrabold text-hotpink leading-tight">Your meals for today</p><p className="text-[12px] font-semibold text-rose/65">Delicious, balanced meals — <b className="text-hotpink">{kcal.toLocaleString()} kcal</b> total</p></div></div>
+              <span className={`${LINK} hidden sm:inline-flex`}>View full meal plan <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">{meals.map((m) => (
+              <div key={m.label} className="overflow-hidden rounded-2xl bg-white/70 ring-1 ring-white/70">
+                <div className="relative aspect-[4/3] overflow-hidden"><img src={recipeImageSrc(m.r!)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-extrabold text-hotpink">{m.r!.macros.calories} kcal</span></div>
+                <div className="p-2.5"><p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70">{m.label}</p><p className="text-[13.5px] font-extrabold leading-tight text-rose">{m.r!.name}</p><p className="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-rose/65">{m.r!.ingredients.slice(0, 4).map((i) => i.name).join(", ")}</p><span className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-hotpink">View recipe <ArrowRight className="h-3.5 w-3.5" /></span></div>
+              </div>
+            ))}</div>
+          </div>
+
+          {/* workouts · yoga · mind */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            <div className={CARD}>
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Dumbbell className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your workouts</p><p className="text-[11.5px] font-semibold text-rose/65">3 sessions this week · 30–40 min</p></div></div>
+              <div className="mt-3 grid grid-cols-3 gap-2">{workouts.map((w) => <VideoThumb key={w.name} {...w} />)}</div>
+              <span className={`${LINK} mt-3 w-full justify-center`}>View your weekly plan <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+            <div className={CARD}>
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Flower2 className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your yoga flow</p><p className="text-[11.5px] font-semibold text-rose/65">Recommended for your phase</p></div></div>
+              <div className="mt-3 grid grid-cols-3 gap-2">{yoga.map((y) => <VideoThumb key={y.name} {...y} />)}</div>
+              <span className={`${LINK} mt-3 w-full justify-center`}>View all yoga flows <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+            <div className={CARD}>
+              <div className="flex items-center gap-2.5"><span className="grid h-10 w-10 place-items-center rounded-full bg-hotpink/12"><Heart className="h-5 w-5 fill-hotpink text-hotpink" strokeWidth={2} /></span><p className="text-[16px] font-extrabold text-hotpink">Mind &amp; self-care</p></div>
+              <div className="mt-3 space-y-2">{selfCare.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
+              <span className={`${LINK} mt-3 w-full justify-center`}>Add to my calendar <ArrowRight className="h-3.5 w-3.5" /></span>
+            </div>
+          </div>
+
+          {/* footer CTA */}
+          <div className="mt-7 flex flex-col items-center gap-3">
+            <div className="flex w-full items-center justify-center gap-5">
+              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">Small steps<br />Big results ♡</p>
+              <button onClick={() => go("pricing")} className="bloom-luxury-btn animate-cta-bounce flex w-full max-w-md items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white">Looks amazing! Let's go <ArrowRight className="h-5 w-5" /></button>
+              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">You're doing<br />amazing ♡</p>
+            </div>
+            <p className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-hotpink/70"><Lock className="h-3.5 w-3.5" /> You can always adjust your plan later</p>
           </div>
         </div>
-        <ContinueBtn onClick={() => go("pricing")} label="Looks good! Continue" />
-        <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] font-semibold text-hotpink/70"><Lock className="h-3.5 w-3.5" /> You'll choose your plan on the next step</p>
-      </Shell>
+      </div>
     );
   }
 
