@@ -109,13 +109,13 @@ function Motifs() {
 // the single-column layout untouched (everything here is `lg:`-only).
 function HeroPanel({ tagline }: { tagline: string }) {
   return (
-    <div className="hidden lg:relative lg:flex lg:w-[42%] lg:flex-col lg:justify-end lg:overflow-hidden lg:p-9">
+    <div className="hidden lg:relative lg:flex lg:flex-1 lg:min-h-[34rem] lg:flex-col lg:justify-end lg:overflow-hidden lg:p-9 xl:p-12">
       <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[62%_18%]" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,236,246,0.15) 0%, rgba(160,20,90,0.15) 45%, rgba(140,15,80,0.5) 100%)" }} />
       <div className="relative">
-        <div className="inline-flex items-center gap-2"><span className="font-script text-[2.4rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={26} petal="#FFFFFF" center="#EC4899" /></div>
-        <p className="mt-1 text-[14px] font-bold text-white/90 drop-shadow">stay soft, bloom on.</p>
-        <p className="mt-5 font-script text-[1.9rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
+        <div className="inline-flex items-center gap-2"><span className="font-script text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
+        <p className="mt-1 text-[14px] xl:text-[16px] font-bold text-white/90 drop-shadow">stay soft, bloom on.</p>
+        <p className="mt-5 font-script text-[1.9rem] xl:text-[2.5rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
       </div>
     </div>
   );
@@ -124,10 +124,12 @@ function HeroPanel({ tagline }: { tagline: string }) {
 // two-panel card (hero + content) on laptop.
 function Frame({ children }: { children: ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center lg:items-center lg:overflow-hidden"
+    <div className="fixed inset-0 z-[95] overflow-y-auto flex justify-center lg:items-start"
       style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
       <Motifs />
-      <div className="relative flex min-h-full w-full max-w-md flex-col lg:min-h-0 lg:h-[88vh] lg:max-h-[760px] lg:w-[min(60rem,94vw)] lg:max-w-none lg:flex-row lg:overflow-hidden lg:rounded-[2.5rem] lg:bg-white/45 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm">
+      {/* laptop: a big two-panel card whose HEIGHT follows the content (no inner
+          scrollbar), grows with the screen, and puts the photo on the right. */}
+      <div className="relative flex min-h-full w-full max-w-md flex-col lg:min-h-0 lg:my-[4vh] lg:h-auto lg:w-[92vw] lg:max-w-[82rem] xl:max-w-[94rem] 2xl:max-w-[108rem] lg:flex-row-reverse lg:overflow-hidden lg:rounded-[2.5rem] lg:bg-white/45 lg:shadow-[0_30px_90px_rgba(236,72,153,0.22)] lg:ring-1 lg:ring-white/60 lg:backdrop-blur-sm">
         {children}
       </div>
     </div>
@@ -140,7 +142,7 @@ function Shell({ step, total, onBack, footer, children }: {
   return (
     <Frame>
       <HeroPanel tagline="A few little steps to a life that feels like you" />
-      <div className="relative flex flex-1 flex-col px-5 pb-8 lg:overflow-y-auto lg:px-9 lg:py-5"
+      <div className="relative flex flex-1 flex-col px-5 pb-8 lg:flex-none lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between py-2">
           {onBack ? <button onClick={onBack} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95 transition"><ChevronLeft className="h-5 w-5" /> Back</button> : <span className="w-14" />}
@@ -289,7 +291,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <Frame>
         <HeroPanel tagline="A life that feels like you" />
-        <div className="relative flex flex-1 flex-col lg:overflow-y-auto">
+        <div className="relative flex flex-1 flex-col lg:flex-none lg:w-[38rem] xl:w-[42rem]">
           {/* mobile/tablet hero band — replaced by the left HeroPanel on laptop */}
           <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden lg:hidden">
             <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
@@ -481,7 +483,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <Frame>
         <HeroPanel tagline="Your whole world, unlocked" />
-        <div className="relative flex flex-1 flex-col px-5 pb-6 lg:overflow-y-auto lg:px-9 lg:py-6" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
+        <div className="relative flex flex-1 flex-col px-5 pb-6 lg:flex-none lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           <button onClick={() => go("previews")} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
           <div className="mt-2 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Sparkles className="h-6 w-6" /></span>
