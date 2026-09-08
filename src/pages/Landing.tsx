@@ -179,13 +179,18 @@ export default function Landing() {
 
       {/* ═════════════ HERO ═════════════ */}
       <section id="top" className="relative flex min-h-[100svh] flex-col overflow-hidden">
-        {/* full-bleed background photo — sits behind everything */}
-        <img src="/images/landing-hero-happier.webp" alt="A woman practising cycle-synced yoga at home"
-          className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[58%_center] lg:object-[64%_center]" />
-        {/* overlay behind the text — a soft light area on the left that melts into the
-            photo on the right (like the reference), plus a gentle top/bottom wash */}
-        <div className="absolute inset-0" aria-hidden style={{ background:
+        {/* full-bleed background photo — portrait crop on phone/tablet, landscape on desktop */}
+        <picture>
+          <source media="(min-width:1024px)" srcSet="/images/landing-hero-happier.webp" />
+          <img src="/images/landing-hero-happier-portrait.webp" alt="A woman practising cycle-synced yoga at home"
+            className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[52%_38%] lg:object-[64%_center]" />
+        </picture>
+        {/* overlay — DESKTOP: soft light area on the left for the copy */}
+        <div className="absolute inset-0 hidden lg:block" aria-hidden style={{ background:
           "linear-gradient(96deg,rgba(255,246,251,.97) 0%,rgba(255,246,251,.95) 38%,rgba(255,246,251,.74) 52%,rgba(255,246,251,.32) 66%,rgba(255,246,251,0) 84%),linear-gradient(180deg,rgba(255,246,251,.5) 0%,rgba(255,246,251,0) 26%,rgba(255,246,251,0) 64%,rgba(251,211,230,.65) 100%)" }} />
+        {/* overlay — PHONE/TABLET: keep the photo vivid, only a light top/bottom veil */}
+        <div className="absolute inset-0 lg:hidden" aria-hidden style={{ background:
+          "linear-gradient(180deg,rgba(255,247,251,.82) 0%,rgba(255,247,251,.4) 15%,rgba(255,247,251,.12) 33%,rgba(255,247,251,.06) 55%,rgba(255,247,251,.32) 80%,rgba(251,211,230,.62) 100%)" }} />
 
         {/* ── top nav bar (full-width, frosted) ── */}
         <div className="relative z-30 w-full border-b"
