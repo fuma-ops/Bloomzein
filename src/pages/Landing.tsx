@@ -89,6 +89,7 @@ const HERO_FEATURES: { icon: LucideIcon; title: string; sub: string }[] = [
   { icon: Salad, title: "Meal Plans", sub: "Healthy & delicious" },
   { icon: Moon, title: "Cycle Tracking", sub: "Understand your body" },
   { icon: Heart, title: "A Happier You", sub: "Mind, body & life" },
+  { icon: Wallet, title: "Budget", sub: "Glow, stress-free" },
 ];
 const NAV: { label: string; href: string }[] = [
   { label: "Home", href: "#top" },
@@ -173,8 +174,9 @@ export default function Landing() {
         .bzl-kenburns{animation:bzl-kenburns 22s ease-in-out infinite alternate}
         @keyframes bzl-kenburns{from{transform:scale(1.04)}to{transform:scale(1.12)}}
         @media (prefers-reduced-motion:reduce){.bzl-kenburns{animation:none}}
-        /* soft glow so text stays readable floating over the photo */
-        .bzl-halo{text-shadow:0 1px 12px rgba(255,247,251,.95),0 0 3px rgba(255,247,251,.85)}
+        /* strong soft-white glow so text stays readable over the full-colour photo
+           (no flat overlay needed) */
+        .bzl-halo{text-shadow:0 1px 2px rgba(255,255,255,.95),0 2px 16px rgba(255,248,252,.98),0 0 7px rgba(255,248,252,.92)}
       `}</style>
 
       {/* ═════════════ HERO ═════════════ */}
@@ -185,12 +187,16 @@ export default function Landing() {
           <img src="/images/landing-hero-happier-portrait.webp" alt="A woman practising cycle-synced yoga at home"
             className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[52%_38%] lg:object-[64%_center]" />
         </picture>
-        {/* overlay — DESKTOP: soft light area on the left for the copy */}
+        {/* overlay — DESKTOP: a light-but-not-washed area on the left for the copy;
+            fades off quickly so the photo keeps its colour (copy stays legible via the
+            .bzl-halo glow) */}
         <div className="absolute inset-0 hidden lg:block" aria-hidden style={{ background:
-          "linear-gradient(96deg,rgba(255,246,251,.97) 0%,rgba(255,246,251,.95) 38%,rgba(255,246,251,.74) 52%,rgba(255,246,251,.32) 66%,rgba(255,246,251,0) 84%),linear-gradient(180deg,rgba(255,246,251,.5) 0%,rgba(255,246,251,0) 26%,rgba(255,246,251,0) 64%,rgba(251,211,230,.65) 100%)" }} />
-        {/* overlay — PHONE/TABLET: keep the photo vivid, only a light top/bottom veil */}
+          "linear-gradient(96deg,rgba(255,246,251,.86) 0%,rgba(255,246,251,.66) 32%,rgba(255,246,251,.34) 48%,rgba(255,246,251,.1) 62%,rgba(255,246,251,0) 80%),linear-gradient(180deg,rgba(255,246,251,.28) 0%,rgba(255,246,251,0) 24%,rgba(255,246,251,0) 66%,rgba(251,211,230,.58) 100%)" }} />
+        {/* PHONE/TABLET: NO paling veil — keep the photo at full colour. The copy stays
+            legible via its glow halo (.bzl-halo). Only a soft bottom fade blends the
+            hero into the pink section below. */}
         <div className="absolute inset-0 lg:hidden" aria-hidden style={{ background:
-          "linear-gradient(180deg,rgba(255,247,251,.82) 0%,rgba(255,247,251,.4) 15%,rgba(255,247,251,.12) 33%,rgba(255,247,251,.06) 55%,rgba(255,247,251,.32) 80%,rgba(251,211,230,.62) 100%)" }} />
+          "linear-gradient(180deg,rgba(255,247,251,0) 0%,rgba(255,247,251,0) 74%,rgba(251,211,230,.5) 100%)" }} />
 
         {/* ── top nav bar (full-width, frosted) ── */}
         <div className="relative z-30 w-full border-b"
@@ -233,7 +239,7 @@ export default function Landing() {
         )}
 
         {/* ── content ── single column, text on a soft frosted panel so it stays readable over the photo ── */}
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 max-sm:py-4">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 md:items-start md:py-7 max-sm:py-4">
           <div className="w-full max-w-xl lg:max-w-2xl">
             <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs md:mb-4 md:text-[13px] bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
@@ -269,7 +275,7 @@ export default function Landing() {
             </div>
 
             {/* feature chips */}
-            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-4 sm:grid-cols-5 md:mt-10 md:gap-x-4 md:gap-y-6 max-sm:mt-5 max-sm:max-w-[78%]" style={{ animationDelay: "920ms" }}>
+            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-4 md:mt-8 md:max-w-md md:gap-x-4 md:gap-y-6 max-sm:mt-5 max-sm:max-w-[78%]" style={{ animationDelay: "920ms" }}>
               {HERO_FEATURES.map((f) => {
                 const Icon = f.icon;
                 return (
