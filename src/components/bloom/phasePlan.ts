@@ -32,7 +32,7 @@ export interface PhasePlan {
 export const PHASE_PLAN: Record<Exclude<CyclePhase, "any">, PhasePlan> = {
   period: {
     yoga:    { title: "Restorative Flow", blurb: "Ease cramps with gentle supported poses", image: "/images/pose-childs-pose.webp", time: "18:00", launch: { intention: "stress", durationMin: 20 } },
-    workout: { title: "Gentle mobility",  blurb: "Light, easy movement — no pressure",      image: "/images/zone-core.webp",         time: "16:00", launch: { zone: "core", intention: "recover" } },
+    workout: { title: "Gentle mobility",  blurb: "Light, easy movement — no pressure",      image: "/images/workout-morning-mobility-routine.webp", time: "16:00", launch: { zone: "core", intention: "recover" } },
     meal:    { title: "Iron-rich bowl",   blurb: "Replenish iron and comfort your body",    image: "/images/meal-stew.webp",         time: "12:30" },
     journal: { time: "21:00", prompt: "What is my body asking me for today?" },
   },
@@ -56,7 +56,7 @@ export const PHASE_PLAN: Record<Exclude<CyclePhase, "any">, PhasePlan> = {
   },
   luteal: {
     yoga:    { title: "Calming Flow", blurb: "Grounding poses for mind and body",        image: "/images/pose-legs-up-wall.webp", time: "18:00", launch: { intention: "sleep", durationMin: 20 } },
-    workout: { title: "Light toning", blurb: "Soft, steady toning — honour the fatigue",  image: "/images/zone-back.webp",          time: "16:30", launch: { zone: "back", intention: "tonify" } },
+    workout: { title: "Light toning", blurb: "Soft, steady toning — honour the fatigue",  image: "/images/workout-hero-discover.webp", time: "16:30", launch: { zone: "back", intention: "tonify" } },
     meal:    { title: "Magnesium-rich meal", blurb: "Ease mood dips and cravings gently", image: "/images/meal-oats.webp",          time: "12:30" },
     journal: { time: "21:00", prompt: "What boundary do I need to honour today?" },
   },
