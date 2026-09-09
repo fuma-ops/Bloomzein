@@ -280,7 +280,7 @@ function buildPlanItems(phase: Exclude<CyclePhase, "any">): PlanItem[] {
     { id: "meal",    label: p.meal.title,    time: p.meal.time,    Icon: Heart,     tool: "/app/tools/meals",   image: p.meal.image,    blurb: p.meal.blurb },
     { id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell,  tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } },
     { id: "yoga",    label: p.yoga.title,    time: p.yoga.time,    Icon: Flower2,   tool: "/app/tools/yoga",    image: p.yoga.image,    blurb: p.yoga.blurb,    launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } },
-    { id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
+    { id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
   ];
   return items.sort((a, b) => a.time.localeCompare(b.time));
 }
@@ -775,7 +775,7 @@ export default function TodayPage() {
     items.push(mealItem("snack"));
     if (workoutPlanned) items.push({ id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell, tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } });
     items.push(mealItem("dinner"));
-    items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/cycle-journal-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
+    items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
     return items;
   }, [phase, todayMeals, cycleReady]);
   const moodHint  = MOODS[moodHintIdx];
@@ -1393,11 +1393,22 @@ export default function TodayPage() {
         </section>
       )}
 
-      {/* ── COACH TODAY — your day, gently guided, sitting right under the fuel so
-             the left column stays full and organized. ── */}
+      {/* ── BLOOM INSPIRATION — the "Today's Bloom" guide isn't launched yet, so it
+             sits under the fuel as a blurred "coming soon" teaser. ── */}
       {(cycleReady || mealPlanned) && (
-        <section data-reveal className="mt-4 sm:mt-6">
-          <CoachTodayCompact coach={coach} />
+        <section data-reveal className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem]">
+          <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+            <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Coming soon
+          </span>
+          <div className="pointer-events-none select-none blur-[3px] opacity-80" aria-hidden>
+            <CoachTodayCompact coach={coach} />
+          </div>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/85 text-hotpink shadow-lg shadow-hotpink/20"><Sparkles className="h-6 w-6" strokeWidth={2} /></span>
+            <p className="font-script text-2xl text-hotpink leading-none">Bloom Inspiration</p>
+            <p className="text-[12.5px] font-bold text-[#831843]">Coming soon ✿</p>
+            <p className="max-w-[260px] text-[11px] text-rose/60 leading-snug">Daily inspiration &amp; gentle guidance to keep you blooming — we're putting the finishing touches on it.</p>
+          </div>
         </section>
       )}
 
