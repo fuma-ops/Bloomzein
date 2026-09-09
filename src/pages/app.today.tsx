@@ -1393,6 +1393,14 @@ export default function TodayPage() {
         </section>
       )}
 
+      {/* ── COACH TODAY — your day, gently guided, sitting right under the fuel so
+             the left column stays full and organized. ── */}
+      {(cycleReady || mealPlanned) && (
+        <section data-reveal className="mt-4 sm:mt-6">
+          <CoachTodayCompact coach={coach} />
+        </section>
+      )}
+
       {/* ── 2b. YOUR COACH TODAY + TOMORROW — the emotional daily ritual: how you
              feel, what you need, one little joy, and a soft peek at tomorrow.
              Only once her world is set up (before that, the locked preview
@@ -1587,25 +1595,6 @@ export default function TodayPage() {
 
       </aside>{/* /SMART RIGHT PANEL */}
       </div>{/* /2-column grid */}
-
-      {/* ── BLOOM INSPIRATION — the "Today's Bloom" guide isn't launched yet, so it
-             lives here at the very end as a blurred "coming soon" teaser. ── */}
-      {!isFresh && (
-        <section id="bloom-inspiration" data-reveal className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem]">
-          <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
-            <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Coming soon
-          </span>
-          <div className="pointer-events-none select-none blur-[3px] opacity-80" aria-hidden>
-            <CoachTodayCompact coach={coach} />
-          </div>
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/85 text-hotpink shadow-lg shadow-hotpink/20"><Sparkles className="h-6 w-6" strokeWidth={2} /></span>
-            <p className="font-script text-2xl text-hotpink leading-none">Bloom Inspiration</p>
-            <p className="text-[12.5px] font-bold text-[#831843]">Coming soon ✿</p>
-            <p className="max-w-[260px] text-[11px] text-rose/60 leading-snug">Daily inspiration &amp; gentle guidance to keep you blooming — we're putting the finishing touches on it.</p>
-          </div>
-        </section>
-      )}
 
       {/* ── WATER GOAL MODAL ────────────────────────────────────────────────── */}
       {waterModalOpen && (
