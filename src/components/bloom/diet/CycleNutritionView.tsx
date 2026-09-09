@@ -11,7 +11,7 @@
  * two-up); desktop splits the hero and lower grids into a main column + a sticky
  * "At a Glance" right panel that reacts to the selected phase.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Sparkles,
@@ -283,6 +283,20 @@ function CycleRhythmChart({
   selected: DietPhase;
   onSelect: (p: DietPhase) => void;
 }) {
+  // draw the curves on the first time the chart scrolls into view
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setDrawn(true); io.disconnect(); } },
+      { threshold: 0.3 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   // viewBox geometry — scales fluidly to any width via preserveAspectRatio.
   const W = 720,
     H = 340,
@@ -324,11 +338,28 @@ function CycleRhythmChart({
       </div>
 
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
         aria-label="Line chart of estrogen, progesterone, energy and mood across a 28-day cycle"
       >
+        <defs>
+          <linearGradient id="bz-plot-bg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#FFF6FB" />
+            <stop offset="1" stopColor="#FDECF4" />
+          </linearGradient>
+        </defs>
+        {/* soft plot background */}
+        <rect x={x0} y={yTop} width={x1 - x0} height={yBot - yTop} rx={16} fill="url(#bz-plot-bg)" />
+        {/* faint ribbon bow motif */}
+        <g transform={`translate(${x0 + 6}, ${yTop + 4}) scale(0.42)`} opacity="0.07" stroke="#EC4899" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M60 46 C 34 15,6 30,20 49 C 6 68,42 71,60 46 Z" />
+          <path d="M60 46 C 86 15,114 30,100 49 C 114 68,78 71,60 46 Z" />
+          <path d="M56 50 C 47 66,43 80,39 90" />
+          <path d="M64 50 C 73 66,77 80,81 90" />
+          <ellipse cx="60" cy="47" rx="6.5" ry="9" />
+        </g>
         {/* phase bands — tappable to switch phase */}
         {CYCLE_BANDS.map((b) => {
           const active = b.phase === selected;
@@ -417,16 +448,25 @@ function CycleRhythmChart({
                 d={smoothPath(pts)}
                 fill="none"
                 stroke={c.color}
-                strokeWidth={2.4}
+                strokeWidth={2.7}
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 pathLength={1}
                 strokeDasharray={1}
-                className="animate-draw-line"
-                style={{ animationDelay: `${ci * 160}ms` }}
+                className={drawn ? "animate-draw-line" : ""}
+                style={{ animationDelay: `${ci * 200}ms`, strokeDashoffset: drawn ? undefined : 1, filter: `drop-shadow(0 1px 2px ${c.color}55)` }}
               />
-              {/* marker where the guide meets this curve */}
-              <circle cx={guideX} cy={gy} r={5} fill="white" stroke={c.color} strokeWidth={2.4} />
+              {/* marker where the guide meets this curve — fades in after the draw */}
+              <circle
+                cx={guideX}
+                cy={gy}
+                r={5.5}
+                fill="white"
+                stroke={c.color}
+                strokeWidth={2.6}
+                opacity={drawn ? 1 : 0}
+                style={{ transition: "opacity .5s ease", transitionDelay: `${700 + ci * 120}ms`, filter: `drop-shadow(0 1px 3px ${c.color}66)` }}
+              />
             </g>
           );
         })}
