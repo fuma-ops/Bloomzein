@@ -28,7 +28,7 @@ interface Product {
   bestseller?: boolean;
 }
 
-const PRODUCTS: Product[] = [
+export const PRODUCTS: Product[] = [
   { id: "candle",   name: "Rose Glow Candle",    price: 28,  rating: 4.9, cat: "selfcare",    img: "/images/shop-cat-selfcare.webp",    bestseller: true },
   { id: "mask",     name: "Silk Sleep Mask",     price: 22,  rating: 4.8, cat: "selfcare",    img: "/images/shop-hero.webp" },
   { id: "gloss",    name: "Pillow Lip Gloss",    price: 18,  rating: 4.7, cat: "beauty",      img: "/images/shop-cat-beauty.webp",      bestseller: true },

@@ -17,7 +17,10 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { computeHealthHistory, type HealthHistory } from "@/lib/healthHistory";
 import { useAuth } from "@/contexts/AuthContext";
-import { RECIPES, readDietProfile, updateDietProfile } from "@/components/bloom/recipes/data";
+import { RECIPES, recipeImageSrc, readDietProfile, updateDietProfile } from "@/components/bloom/recipes/data";
+import { articleById } from "@/lib/readsData";
+import { EXERCISES } from "@/components/bloom/workout/data";
+import { PRODUCTS } from "@/pages/app.shop";
 import { todayISO } from "@/lib/localDate";
 import { stampTodayWater } from "@/lib/dailyLog";
 import { seedEmma, clearEmma } from "@/lib/seedEmma";
@@ -83,22 +86,41 @@ const CURATED_READS: FavItem[] = [
   { title: "Soft girl morning ritual", tag: "Lifestyle", img: "/images/read-selfcare.webp", href: "/app/read" },
   { title: "Pink budgeting that works", tag: "Money", img: "/images/read-money.webp", href: "/budget" },
 ];
+const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
+/** Everything she's saved or loved — meals, reads, workouts & shop — each with
+ *  its REAL image, in one organized shelf. */
 function readFavorites(): { items: FavItem[]; isReal: boolean } {
-  const favIds = readJSON<string[]>("bloom:meals-favorites", []);
+  const items: FavItem[] = [];
+
+  // Meals — saved (heart) + loved (rating)
   const ratings = readJSON<Record<string, string>>("bloom:meals-ratings", {});
   const lovedIds = Object.entries(ratings).filter(([, v]) => v === "love").map(([k]) => k);
-  const ids = [...new Set([...(Array.isArray(favIds) ? favIds : []), ...lovedIds])];
-  const recs = ids.map((id) => RECIPES.find((r) => r.id === id)).filter(Boolean) as (typeof RECIPES)[number][];
-  if (!recs.length) return { items: CURATED_READS, isReal: false };
-  return {
-    isReal: true,
-    items: recs.slice(0, 8).map((r) => ({
-      title: r.name,
-      tag: r.mealType,
-      img: r.photo ? `/images/recipes/${r.photo}` : "/images/meal-buddha.webp",
-      href: "/app/tools/meals",
-    })),
-  };
+  const mealIds = [...new Set([...arr(readJSON("bloom:meals-favorites", [])), ...lovedIds])];
+  mealIds.forEach((id) => {
+    const r = RECIPES.find((x) => x.id === id);
+    if (r) items.push({ title: r.name, tag: r.mealType, img: recipeImageSrc(r), href: "/app/tools/meals" });
+  });
+
+  // Reads — saved articles
+  arr(readJSON("bloom:saved-items", [])).forEach((id) => {
+    const a = articleById(id);
+    if (a) items.push({ title: a.title, tag: "Read", img: a.image, href: "/app/read" });
+  });
+
+  // Workouts — saved moves
+  arr(readJSON("bloom:workout-favorites", [])).forEach((slug) => {
+    const e = EXERCISES[slug];
+    if (e) items.push({ title: e.name, tag: "Workout", img: e.poster || e.image, href: "/app/tools/workout" });
+  });
+
+  // Shop — saved products
+  arr(readJSON("bloom:shop-saved", [])).forEach((id) => {
+    const p = PRODUCTS.find((x) => x.id === id);
+    if (p) items.push({ title: p.name, tag: "Shop", img: p.img, href: "/app/shop" });
+  });
+
+  if (!items.length) return { items: CURATED_READS, isReal: false };
+  return { isReal: true, items: items.slice(0, 12) };
 }
 
 type SettingAction = "edit" | "logout" | "replay" | "reset" | "preview-first-time";
@@ -384,11 +406,11 @@ export default function MePage() {
 
       {/* FAVORITES */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <SectionTitle hint={favs.isReal ? "your saved recipes" : "picked for you"}>Favorites & saved</SectionTitle>
+        <SectionTitle hint={favs.isReal ? "everything you've saved" : "picked for you"}>Favorites & saved</SectionTitle>
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
           {favs.items.map((f, i) => (
             <a
-              key={f.title}
+              key={`${f.title}-${i}`}
               href={f.href}
               style={{ animationDelay: `${i * 60}ms` }}
               className="snap-start shrink-0 w-40 sm:w-56 bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl overflow-hidden animate-card-pop-in transition hover:-translate-y-0.5"
