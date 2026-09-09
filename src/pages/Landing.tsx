@@ -99,23 +99,41 @@ const NAV: { label: string; href: string }[] = [
   { label: "About", href: "#contact" },
 ];
 
-/* Barely-there floating flowers & hearts, dispersed across the soft-pink space. */
+/* A cute hand-drawn ribbon bow (line art). */
+function Bow({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <svg viewBox="0 0 120 92" fill="none" className={className} style={style} aria-hidden
+      stroke="currentColor" strokeWidth={3.2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M60 46 C 34 15, 6 30, 20 49 C 6 68, 42 71, 60 46 Z" />
+      <path d="M60 46 C 86 15, 114 30, 100 49 C 114 68, 78 71, 60 46 Z" />
+      <path d="M56 50 C 47 66, 43 80, 39 90" />
+      <path d="M64 50 C 73 66, 77 80, 81 90" />
+      <ellipse cx="60" cy="47" rx="6.5" ry="9" />
+    </svg>
+  );
+}
+
+/* Soft, gentle-pink ribbon bows (a few tiny hearts) floating in the pink space. */
 function Petals() {
-  const items = [
-    { l: "3%", t: "7%", s: 46, o: 0.07, r: -12 }, { l: "93%", t: "12%", s: 30, o: 0.08, r: 18 },
-    { l: "9%", t: "48%", s: 26, o: 0.09, r: 8 }, { l: "95%", t: "56%", s: 42, o: 0.06, r: -18 },
-    { l: "2%", t: "84%", s: 34, o: 0.07, r: 14 }, { l: "90%", t: "86%", s: 22, o: 0.09, r: -6 },
-    { l: "47%", t: "2%", s: 20, o: 0.06, r: 0 }, { l: "73%", t: "38%", s: 18, o: 0.08, r: 10 },
-    { l: "20%", t: "70%", s: 16, o: 0.07, r: -8 }, { l: "82%", t: "66%", s: 24, o: 0.06, r: 12 },
+  const bows = [
+    { l: "2%", t: "6%", s: 70, o: 0.20, r: -14 }, { l: "88%", t: "7%", s: 84, o: 0.18, r: 10 },
+    { l: "0%", t: "40%", s: 74, o: 0.19, r: 18 }, { l: "90%", t: "34%", s: 66, o: 0.18, r: -8 },
+    { l: "5%", t: "80%", s: 58, o: 0.18, r: 12 }, { l: "86%", t: "84%", s: 80, o: 0.19, r: -16 },
+    { l: "70%", t: "62%", s: 52, o: 0.15, r: 8 },
+  ];
+  const hearts = [
+    { l: "4%", t: "22%", s: 22, o: 0.16, r: -8 }, { l: "62%", t: "88%", s: 20, o: 0.16, r: 10 },
   ];
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-      {items.map((p, i) => {
-        const st = { left: p.l, top: p.t, width: p.s, height: p.s, opacity: p.o, transform: `rotate(${p.r}deg)`, animationDelay: `${(i % 5) * 0.7}s`, color: "var(--hot)" } as const;
-        return i % 3 === 0
-          ? <Heart key={i} className="bzl-float absolute" fill="currentColor" style={st} />
-          : <Flower2 key={i} className="bzl-float absolute" strokeWidth={1.4} style={st} />;
-      })}
+      {bows.map((p, i) => (
+        <Bow key={"b" + i} className="bzl-float absolute"
+          style={{ left: p.l, top: p.t, width: p.s, height: p.s * 0.77, opacity: p.o, transform: `rotate(${p.r}deg)`, animationDelay: `${(i % 5) * 0.8}s`, color: "#F4A0C4" }} />
+      ))}
+      {hearts.map((p, i) => (
+        <Heart key={"h" + i} className="bzl-float absolute" fill="currentColor"
+          style={{ left: p.l, top: p.t, width: p.s, height: p.s, opacity: p.o, transform: `rotate(${p.r}deg)`, animationDelay: `${i * 0.9}s`, color: "#F7B8D2" }} />
+      ))}
     </div>
   );
 }

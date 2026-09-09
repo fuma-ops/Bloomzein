@@ -1274,32 +1274,23 @@ export function CycleTracker() {
             {renderSuggestions()}
           </div>
 
-          {/* ── AFFIRMATION CARD ── */}
-          <div className="relative rounded-[22px] overflow-hidden" style={{ minHeight: '120px' }}>
-            <img
-              src="/images/cycle-journal-hero.webp"
-              alt="" aria-hidden loading="lazy" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-center animate-photo-breathe"
-            />
-            {/* Pink gradient overlay — keeps text readable */}
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(252,231,243,.95) 0%, rgba(251,207,232,.88) 55%, rgba(251,207,232,.35) 100%)' }} />
-            <div className="absolute inset-0 bg-gradient-to-bl from-pink-400/25 via-transparent to-transparent" />
-            <div className="relative z-10 p-4 max-w-[260px]">
-              <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>
-                DAILY AFFIRMATION
-              </p>
-              <p className="font-script font-bold" style={{ fontSize: '21px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>
-                {PHASE_AFFIRMATIONS[currentPhase]}
-              </p>
-              <a
-                href="/app/tools/diary"
-                className="inline-flex items-center gap-1.5 animate-cta-bounce"
-                style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px', textDecoration: 'none' }}
-              >
-                <PenLine className="h-3.5 w-3.5" /> Write Entry
-              </a>
+          {/* ── CYCLE NUTRITION CTA (replaces the affirmation photo) ── */}
+          <a href="/app/tools/diet" className="relative block rounded-[22px] overflow-hidden no-underline" style={{ background: 'linear-gradient(135deg,#FFE9F3 0%,#FBD0E6 100%)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 24px rgba(236,72,153,.14)' }}>
+            <Sprout aria-hidden className="absolute -right-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
+            <Sparkles aria-hidden className="absolute right-6 bottom-4 h-4 w-4 text-hotpink opacity-[0.14]" />
+            <div className="relative z-10 p-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1">
+                <Sparkles className="h-3 w-3 text-hotpink" strokeWidth={2} />
+                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>Did you know?</span>
+              </span>
+              <p className="font-script font-bold" style={{ fontSize: '20px', lineHeight: 1.2, marginTop: '9px', color: '#9D174D' }}>What you eat shapes your cycle &amp; hormones.</p>
+              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px', maxWidth: '280px' }}>Iron, magnesium, protein &amp; the right carbs can ease cramps, steady your mood and lift your energy — phase by phase.</p>
+              <span className="inline-flex items-center gap-1.5 animate-cta-bounce" style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px' }}>
+                <Sprout className="h-3.5 w-3.5" /> Explore cycle nutrition
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </span>
             </div>
-          </div>
+          </a>
           </>)}
 
         </div>{/* /lg:col-span-3 */}
@@ -1351,17 +1342,22 @@ export function CycleTracker() {
             </a>
           </div>
 
-          {/* Affirmation */}
-          <div className="relative rounded-[22px] overflow-hidden" style={{ minHeight: '100px' }}>
-            <img src="/images/cycle-journal-hero.webp" alt="" aria-hidden loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover object-center" />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(252,231,243,.95) 0%, rgba(251,207,232,.85) 60%, rgba(251,207,232,.3) 100%)' }} />
+          {/* Cycle Nutrition CTA (replaces the affirmation photo) */}
+          <a href="/app/tools/diet" className="relative block rounded-[22px] overflow-hidden no-underline" style={{ background: 'linear-gradient(135deg,#FFE9F3 0%,#FBD0E6 100%)', border: '1px solid rgba(255,255,255,0.6)' }}>
+            <Sprout aria-hidden className="absolute -right-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
             <div className="relative z-10 p-4">
-              <p style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.07em', color: '#DB2777', textTransform: 'uppercase' }}>DAILY AFFIRMATION</p>
-              <p className="font-script font-bold" style={{ fontSize: '20px', lineHeight: 1.2, marginTop: '6px', color: '#9D174D' }}>
-                {PHASE_AFFIRMATIONS[currentPhase]}
-              </p>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1">
+                <Sparkles className="h-3 w-3 text-hotpink" strokeWidth={2} />
+                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>Did you know?</span>
+              </span>
+              <p className="font-script font-bold" style={{ fontSize: '19px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>What you eat shapes your cycle &amp; hormones.</p>
+              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px' }}>Iron, magnesium &amp; the right carbs ease cramps, steady mood and lift energy — phase by phase.</p>
+              <span className="inline-flex items-center gap-1.5 animate-cta-bounce" style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px' }}>
+                <Sprout className="h-3.5 w-3.5" /> Explore cycle nutrition
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+              </span>
             </div>
-          </div>
+          </a>
         </aside>
         )}
 
