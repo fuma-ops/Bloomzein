@@ -99,6 +99,27 @@ const NAV: { label: string; href: string }[] = [
   { label: "About", href: "#contact" },
 ];
 
+/* Barely-there floating flowers & hearts, dispersed across the soft-pink space. */
+function Petals() {
+  const items = [
+    { l: "3%", t: "7%", s: 46, o: 0.07, r: -12 }, { l: "93%", t: "12%", s: 30, o: 0.08, r: 18 },
+    { l: "9%", t: "48%", s: 26, o: 0.09, r: 8 }, { l: "95%", t: "56%", s: 42, o: 0.06, r: -18 },
+    { l: "2%", t: "84%", s: 34, o: 0.07, r: 14 }, { l: "90%", t: "86%", s: 22, o: 0.09, r: -6 },
+    { l: "47%", t: "2%", s: 20, o: 0.06, r: 0 }, { l: "73%", t: "38%", s: 18, o: 0.08, r: 10 },
+    { l: "20%", t: "70%", s: 16, o: 0.07, r: -8 }, { l: "82%", t: "66%", s: 24, o: 0.06, r: 12 },
+  ];
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      {items.map((p, i) => {
+        const st = { left: p.l, top: p.t, width: p.s, height: p.s, opacity: p.o, transform: `rotate(${p.r}deg)`, animationDelay: `${(i % 5) * 0.7}s`, color: "var(--hot)" } as const;
+        return i % 3 === 0
+          ? <Heart key={i} className="bzl-float absolute" fill="currentColor" style={st} />
+          : <Flower2 key={i} className="bzl-float absolute" strokeWidth={1.4} style={st} />;
+      })}
+    </div>
+  );
+}
+
 export default function Landing() {
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
@@ -309,8 +330,11 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* soft floating flowers & hearts dispersed across the pink space */}
+      <div className="relative isolate">
+      <Petals />
       {/* ═════════════ INTRO LINE ═════════════ */}
-      <section className="mx-auto max-w-3xl px-6 py-16 text-center sm:py-24">
+      <section className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-24">
         <Reveal>
           <p className="bzl-kicker mb-3 text-xs">Everything, connected</p>
           <h2 className="bzl-script text-4xl sm:text-6xl">Ten tools. One you.</h2>
@@ -350,6 +374,7 @@ export default function Landing() {
           );
         })}
       </section>
+      </div>
 
       {/* ═════════════ GRID — the rest ═════════════ */}
       <section id="how" className="relative mt-16 px-6 py-16 sm:px-8 sm:py-24 scroll-mt-20" style={{ background: "linear-gradient(180deg,transparent,#FDE7F2 22%,#FBD3E6 100%)" }}>

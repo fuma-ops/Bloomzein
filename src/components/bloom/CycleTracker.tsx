@@ -89,6 +89,16 @@ const PHASE_SUBTITLE: Record<Exclude<Phase, null>, string> = {
   luteal:     "Wind down gently — rest is your superpower right now.",
 };
 
+// Why each suggestion matters for the phase she's in — so the card teaches,
+// not just shows a generic photo.
+const PHASE_WHY: Record<Exclude<Phase, null>, { yoga: string; workout: string; meal: string; journal: string }> = {
+  period:     { yoga: "Gentle, restorative poses ease cramps and calm your nervous system.", workout: "Keep it light — soft mobility boosts circulation without draining low energy.", meal: "Iron-rich, warming food replaces what your period loses and steadies your energy.", journal: "Rest and reflect — noticing how you feel helps you honour a slower week." },
+  follicular: { yoga: "Flowing, energizing movement matches your naturally rising energy.", workout: "Your body recovers fast now — a perfect time to build strength and try more.", meal: "Fresh, light, protein-rich food fuels growth and your climbing energy.", journal: "Capture new ideas — this is your most creative, motivated phase." },
+  fertile:    { yoga: "Open, heart-lifting flows ride your bright, magnetic energy.", workout: "You're strong and coordinated — great for a fun, challenging session.", meal: "Colourful, antioxidant-rich food supports you as your energy climbs.", journal: "Dream big — your confidence and clarity are high right now." },
+  ovulation:  { yoga: "Dynamic flows channel your peak energy and confidence.", workout: "You're at your strongest — go for your boldest, highest-intensity workout.", meal: "Antioxidant-rich, hydrating food supports your body at its peak.", journal: "Set bold intentions — your focus and drive are highest today." },
+  luteal:     { yoga: "Slow, grounding stretches soothe PMS and a busier mind.", workout: "Steady, moderate movement lifts your mood without over-taxing your body.", meal: "Magnesium & complex carbs ease cravings and keep your mood balanced.", journal: "Slow down and unload — writing calms the pre-period emotional wave." },
+};
+
 const PHASE_TODAY_INSIGHTS: Record<Exclude<Phase, null>, { label: string; value: string; Icon: LucideIcon; color: string; bg: string }[]> = {
   period: [
     { label: "Energy",    value: "Low",            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
@@ -684,10 +694,12 @@ export function CycleTracker() {
   function renderSuggestions() {
     // Same source of truth as the Today page so recommendations always match.
     const sp = SHARED_PHASE_PLAN[selectedPhase];
+    const why = PHASE_WHY[selectedPhase] ?? PHASE_WHY.follicular;
     const items = [
-      { tag: "Yoga",    title: sp.yoga.title,    img: sp.yoga.image,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } },
-      { tag: "Workout", title: sp.workout.title, img: sp.workout.image, href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } },
-      { tag: "Meal",    title: sp.meal.title,    img: sp.meal.image,    href: "/app/tools/diet",    gradFrom: "#F9A8D4", gradTo: "#BE185D", launch: null as null | { key: string; val: unknown } },
+      { tag: "Yoga",    Icon: Flower2,  title: sp.yoga.title,      why: why.yoga,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } as null | { key: string; val: unknown } },
+      { tag: "Workout", Icon: Dumbbell, title: sp.workout.title,   why: why.workout, href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } as null | { key: string; val: unknown } },
+      { tag: "Meal",    Icon: Sprout,   title: sp.meal.title,      why: why.meal,    href: "/app/tools/diet",    gradFrom: "#F9A8D4", gradTo: "#BE185D", launch: null as null | { key: string; val: unknown } },
+      { tag: "Journal", Icon: PenLine,  title: "Reflect on today", why: why.journal, href: "/app/tools/diary",   gradFrom: "#F0ABFC", gradTo: "#DB2777", launch: null as null | { key: string; val: unknown } },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -696,33 +708,25 @@ export function CycleTracker() {
             key={item.tag}
             href={item.href}
             onClick={() => { if (item.launch) writeLaunch(item.launch.key, item.launch.val); }}
-            className="reveal-on-scroll hover-scale flex items-center gap-[13px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
-            data-reveal-delay={`${idx * 130}ms`}
-            style={{ padding: '10px', background: 'rgba(255,245,249,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.45)' }}
+            className="reveal-on-scroll hover-scale flex items-start gap-[12px] rounded-[15px] cursor-pointer no-underline transition-all duration-200 active:scale-95"
+            data-reveal-delay={`${idx * 120}ms`}
+            style={{ padding: '11px', background: 'rgba(255,245,249,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.45)' }}
           >
-            {/* Phase image — big, no icon overlay, just a soft brand tint */}
-            <div
-              className="relative flex-none rounded-[14px] overflow-hidden"
-              style={{
-                width: 68, height: 68,
-                boxShadow: `0 0 18px ${item.gradFrom}55, 0 4px 12px rgba(0,0,0,.12)`,
-                animation: `ctaBreathe ${3 + idx * 0.4}s ease-in-out infinite`,
-              }}
+            {/* phase-coloured icon — no generic photo */}
+            <span
+              className="flex-none grid place-items-center rounded-[13px] text-white"
+              style={{ width: 44, height: 44, background: `linear-gradient(135deg,${item.gradFrom},${item.gradTo})`, boxShadow: `0 4px 14px ${item.gradFrom}55`, animation: `ctaBreathe ${3 + idx * 0.4}s ease-in-out infinite` }}
             >
-              <img src={item.img} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-              {/* Light brand tint — no icon */}
-              <div
-                className="absolute inset-0"
-                style={{ background: `linear-gradient(135deg,${item.gradFrom}28,transparent 65%)` }}
-              />
-            </div>
+              <item.Icon className="h-5 w-5" strokeWidth={2} />
+            </span>
             <div className="flex-1 min-w-0">
-              <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
-              <p style={{ fontWeight: 700, fontSize: '14px', color: '#831843', marginTop: '2px', lineHeight: 1.3 }}>{item.title}</p>
+              <div className="flex items-center justify-between gap-2">
+                <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </div>
+              <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843', lineHeight: 1.25 }}>{item.title}</p>
+              <p style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.35, marginTop: '2px' }}>{item.why}</p>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 6l6 6-6 6"/>
-            </svg>
           </a>
         ))}
       </div>
@@ -1266,7 +1270,7 @@ export function CycleTracker() {
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
           <div data-tour="recommend" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="reveal-on-scroll lg:hidden">
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
-            <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
+            <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.</p>
             {renderSuggestions()}
           </div>
 
@@ -1329,7 +1333,7 @@ export function CycleTracker() {
           {/* Suggestions */}
           <div data-tour="recommend" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
             <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
-            <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>The same yoga, workout & meal proposed on your Today plan — tap to start.</p>
+            <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.</p>
             {renderSuggestions()}
             <a
               href="/app/tools/yoga"

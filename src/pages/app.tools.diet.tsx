@@ -28,6 +28,7 @@ import {
   Info,
   BarChart3,
   Heart,
+  Flower2,
 } from "lucide-react";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { CuteDatePicker } from "@/components/bloom/CuteDatePicker";
@@ -1914,8 +1915,16 @@ function ProfileTab({
 
       {/* Weight & progress — the detail behind your goal path */}
       <div id="diet-weight">
-        <Glass className="p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-2 mb-2">
+        <Glass className="relative isolate overflow-hidden p-4 sm:p-5 bg-gradient-to-br from-blush/50 via-white/70 to-petal/30">
+          {/* soft floating motifs so the card isn't all-white */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <Flower2 className="absolute -right-3 -top-4 h-24 w-24 text-hotpink opacity-[0.06] animate-[spin_34s_linear_infinite]" strokeWidth={1.4} />
+            <Flower2 className="absolute -left-4 bottom-6 h-16 w-16 text-hotpink opacity-[0.07]" strokeWidth={1.4} />
+            <Heart className="absolute right-16 bottom-10 h-5 w-5 text-hotpink opacity-[0.10]" fill="currentColor" />
+            <Heart className="absolute left-1/3 top-6 h-3.5 w-3.5 text-hotpink opacity-[0.09]" fill="currentColor" />
+            <Sparkles className="absolute right-1/3 top-1/2 h-4 w-4 text-hotpink opacity-[0.08]" />
+          </div>
+          <div className="relative flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink">
                 <BookOpen className="h-5 w-5" />
@@ -2027,9 +2036,9 @@ function ProfileTab({
               className={[
                 "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full transition active:scale-95",
                 logged != null
-                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 animate-selected-glow"
+                  ? "bg-hotpink text-white shadow-lg shadow-hotpink/30 animate-selected-glow"
                   : todayLogged
-                    ? "bg-emerald-50 text-emerald-600 border border-emerald-200"
+                    ? "bg-blush text-hotpink border border-petal"
                     : "bloom-luxury-btn text-white",
               ].join(" ")}
             >
@@ -2042,7 +2051,7 @@ function ProfileTab({
                 </>
               ) : todayLogged ? (
                 <>
-                  <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white">
+                  <span className="grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white">
                     <Check className="h-3 w-3" strokeWidth={3.5} />
                   </span>{" "}
                   Weight logged
@@ -2056,14 +2065,14 @@ function ProfileTab({
           </div>
           {/* Confirmation line — a fresh "Saved" flash, or a calm "already logged" note */}
           {logged != null ? (
-            <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-emerald-600 animate-fade-in">
+            <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-hotpink animate-fade-in">
               <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Saved{" "}
               <b className="tabular-nums">{logged} kg</b> for today — your graph &amp; trend just
               updated ✿
             </p>
           ) : todayLogged ? (
             <p className="mt-2 flex items-center gap-1.5 text-[11px] text-rose/55 leading-snug">
-              <Check className="h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={3} /> Today's
+              <Check className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={3} /> Today's
               weight is logged. Change the number above to update it.
             </p>
           ) : null}
