@@ -5,6 +5,7 @@ import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { NotificationHost } from "./NotificationHost";
+import { TrialPreviewHost } from "./TrialPreviewHost";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
 import { PLAN_UPDATED, usePremium } from "@/lib/entitlements";
 
@@ -164,6 +165,9 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
       {/* App-wide in-app notifications (toasts) */}
       <NotificationHost />
+
+      {/* New-user 10-minute Bloom+ preview → end-of-preview choice modal */}
+      <TrialPreviewHost />
 
       {/* ── Phone + Tablet bottom nav — a premium centred floating frosted pill,
              5 primary tabs (Shop lives in the desktop sidebar) ────────────────── */}

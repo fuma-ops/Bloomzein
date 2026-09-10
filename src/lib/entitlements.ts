@@ -31,7 +31,48 @@ export function isOwnerEmail(email: string | null | undefined): boolean {
 export function readPlan(): Plan {
   try { return localStorage.getItem(KEY) === "plus" ? "plus" : "free"; } catch { return "free"; }
 }
-export function isPremium(): boolean { return readPlan() === "plus"; }
+
+/* ── New-user 10-minute Bloom+ preview ──────────────────────────────────────
+ * A brand-new free user gets the whole app unlocked for 10 minutes, then a warm
+ * modal invites her to start a trial / subscribe / stay free (which re-locks the
+ * premium features via the normal paywall). We DON'T touch the stored plan — we
+ * just make isPremium() report true while the preview window is open, so real
+ * billing (refreshEntitlement) never fights it. The window is one-shot: the key
+ * persists even once expired, so it never restarts. */
+const PREVIEW_KEY = "bloom:trial-preview-until";        // ms epoch the window ends
+const PREVIEW_RESOLVED_KEY = "bloom:trial-preview-done"; // "1" once she's chosen
+export const PREVIEW_UPDATED = "bloom:trial-preview-updated";
+
+/** ms epoch the preview ends (0 if never started). */
+export function previewEndsAt(): number {
+  try { return Number(localStorage.getItem(PREVIEW_KEY) || 0) || 0; } catch { return 0; }
+}
+/** True while the 10-minute preview window is currently open. */
+export function previewActive(): boolean { return previewEndsAt() > Date.now(); }
+/** True once the preview has ever been started (even if now expired). */
+export function previewStarted(): boolean { return previewEndsAt() > 0; }
+/** True once she has resolved the end-of-preview choice. */
+export function previewResolved(): boolean {
+  try { return localStorage.getItem(PREVIEW_RESOLVED_KEY) === "1"; } catch { return false; }
+}
+/** Start the one-shot preview. Returns false if it already ran once. */
+export function startTrialPreview(minutes = 10): boolean {
+  try {
+    if (localStorage.getItem(PREVIEW_KEY)) return false;
+    localStorage.setItem(PREVIEW_KEY, String(Date.now() + minutes * 60_000));
+  } catch { return false; }
+  try { window.dispatchEvent(new Event(PLAN_UPDATED)); } catch {}
+  try { window.dispatchEvent(new Event(PREVIEW_UPDATED)); } catch {}
+  return true;
+}
+/** Mark the end-of-preview choice as made, and re-lock (fires PLAN_UPDATED). */
+export function resolvePreview(): void {
+  try { localStorage.setItem(PREVIEW_RESOLVED_KEY, "1"); } catch {}
+  try { window.dispatchEvent(new Event(PLAN_UPDATED)); } catch {}
+  try { window.dispatchEvent(new Event(PREVIEW_UPDATED)); } catch {}
+}
+
+export function isPremium(): boolean { return readPlan() === "plus" || previewActive(); }
 
 /** Flip the plan (dev/testing today; the billing webhook writes this later). */
 export function setPlan(plan: Plan): void {

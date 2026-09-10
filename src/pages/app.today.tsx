@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
+import { TodayNotifications } from "@/components/bloom/TodayNotifications";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useScrollReveal, useInView, useCountUp } from "@/lib/useScrollReveal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1206,6 +1207,10 @@ export default function TodayPage() {
           </button>
         </div>
       </div>
+
+      {/* ── NOTIFICATION CENTRE — everything raised via notify() lives here,
+             right under the blooming-day header. ── */}
+      <TodayNotifications />
 
       {/* ── BUILD YOUR WORLD — rich guided setup cards; disappears once every
              tool is configured. Hidden entirely once she's completed the full
