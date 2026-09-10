@@ -28,7 +28,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const loadProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).single()
+    // maybeSingle (not single) so a missing row resolves to null instead of an error.
+    const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle()
     setProfile(data ?? null)
   }
 
@@ -118,7 +119,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (patch: Partial<Profile>) => {
     if (!user) return { error: "Not signed in" }
-    const { error } = await supabase.from("profiles").update(patch).eq("id", user.id)
+    // Upsert (not a plain update) so the row is CREATED if it's somehow missing.
+    // A bare .update() silently affects 0 rows when no profile exists, which made
+    // onboarding edits vanish for any account whose profile row wasn't created.
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ id: user.id, ...patch }, { onConflict: "id" })
     if (!error) await loadProfile(user.id)
     return { error: error?.message ?? null }
   }
