@@ -4,7 +4,7 @@ import {
   Sparkles, Wallet,
   ChevronRight, Camera, Trash2,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
-  Check, Inbox, Eye,
+  Check, Inbox, Eye, Heart,
 } from "lucide-react";
 
 /** Only this account sees the private admin inbox link. */
@@ -411,9 +411,20 @@ export default function MePage() {
         </div>
       </section>
 
-      {/* FAVORITES */}
+      {/* FAVORITES — only her REAL saved items; never generic placeholders. */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <SectionTitle hint={favs.isReal ? "everything you've saved" : "picked for you"}>Favorites & saved</SectionTitle>
+        <SectionTitle hint={favs.isReal ? "everything you've saved" : ""}>Favorites & saved</SectionTitle>
+        {!favs.isReal ? (
+          <div className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl px-5 py-7 text-center">
+            <span className="mx-auto mb-2.5 grid h-12 w-12 place-items-center rounded-full bg-blush/70">
+              <Heart className="h-6 w-6 text-hotpink" strokeWidth={1.9} />
+            </span>
+            <p className="text-sm font-bold text-[#7a1247]">Nothing saved yet</p>
+            <p className="mx-auto mt-1 max-w-xs text-[12.5px] font-semibold leading-snug text-rose/65">
+              Tap the ♡ on any read, meal, workout, flow or product and it lands right here 🌸
+            </p>
+          </div>
+        ) : (
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
           {favs.items.map((f, i) => (
             <a
@@ -434,6 +445,7 @@ export default function MePage() {
             </a>
           ))}
         </div>
+        )}
       </section>
 
       {/* SETTINGS */}
