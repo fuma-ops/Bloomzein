@@ -281,7 +281,7 @@ export default function Landing() {
         )}
 
         {/* ── content ── single column, text on a soft frosted panel so it stays readable over the photo ── */}
-        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 md:items-start md:py-7 max-sm:py-4">
+        <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 md:items-start md:py-7 max-sm:items-start max-sm:py-4">
           <div className="w-full max-w-xl lg:max-w-2xl">
             <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs md:mb-4 md:text-[13px] bzl-fade" style={{ animationDelay: "150ms" }}>
               Your cycle-synced companion 🌸
@@ -319,7 +319,7 @@ export default function Landing() {
             {/* feature panel — compact, SOLID premium card of circular icon badges
                 (solid so it reads as one clean card over the photo, never a messy
                 see-through overlay; kept narrow on phone so the model stays clear) */}
-            <div className="bzl-fade mt-6 max-w-[19rem] sm:max-w-sm md:mt-8 md:max-w-md max-sm:mt-4" style={{ animationDelay: "920ms" }}>
+            <div className="bzl-fade mt-6 max-w-[19rem] sm:max-w-sm md:mt-8 md:max-w-md max-sm:mt-24" style={{ animationDelay: "920ms" }}>
               <div className="rounded-[1.6rem] border border-white/60 bg-gradient-to-br from-white/55 via-white/40 to-white/30 p-3 shadow-[0_24px_60px_-22px_rgba(219,39,119,0.5)] ring-1 ring-white/40 backdrop-blur-2xl md:rounded-[1.75rem] md:p-5">
                 <div className="mb-2.5 flex items-baseline justify-between gap-2 md:mb-4">
                   <p className="bzl-script leading-none text-[1.25rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
