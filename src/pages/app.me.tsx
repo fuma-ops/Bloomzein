@@ -134,7 +134,7 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
       { Icon: Crown, label: "Bloom Premium", soon: true },
       { Icon: Shield, label: "Privacy & data", href: "/privacy" },
       { Icon: LifeBuoy, label: "Help & support", href: "/help" },
-      { Icon: RotateCcw, label: "Replay welcome tour", action: "replay" },
+      { Icon: RotateCcw, label: "Replay onboarding", action: "replay" },
     ],
   },
   {
@@ -153,7 +153,7 @@ export default function MePage() {
   // Add the private "Messages" inbox link only for the admin account.
   const isAdmin = user?.email === ADMIN_EMAIL;
   // Owner-only (khfuma@gmail.com): a one-tap way to see exactly what a brand-new
-  // user meets — the welcome cinematic + re-triggered onboarding.
+  // user meets — the re-triggered onboarding flow.
   const isOwner = isOwnerEmail(user?.email);
   const ownerItems: SettingItem[] = [
     ...(isAdmin ? [{ Icon: Inbox, label: "Messages", href: "/admin" } as SettingItem] : []),
@@ -166,9 +166,12 @@ export default function MePage() {
       ]
     : settingsGroups;
 
-  // Lets you re-trigger the new-user onboarding popup at any time, for testing.
+  // Lets you re-trigger the new-user onboarding (BloomOnboarding) at any time,
+  // for testing. Clearing `bloom:onboarded` is what makes App.tsx show the
+  // onboarding flow again.
   async function replayOnboarding() {
     try {
+      localStorage.removeItem("bloom:onboarded");
       localStorage.removeItem("bloomzein_onboarding");
       localStorage.removeItem("bloomzein_visited_tools");
     } catch {}
@@ -176,11 +179,13 @@ export default function MePage() {
     window.location.href = "/app/today";
   }
 
-  // Owner preview: replay the brand-new-user first impression — the welcome
-  // cinematic + every tool's onboarding/tour + the "day 1" counter — WITHOUT
-  // deleting real logs. (Use "Start fresh" below for a truly empty world.)
+  // Owner preview: replay the brand-new-user first impression — the full
+  // onboarding flow + every tool's onboarding/tour + the "day 1" counter —
+  // WITHOUT deleting real logs. (Use "Start fresh" below for a truly empty
+  // world.) Clearing `bloom:onboarded` is what re-triggers the onboarding.
   async function previewFirstTime() {
     const flags = [
+      "bloom:onboarded",
       "bloomzein_onboarding", "bloomzein_visited_tools",
       "bloom:first-seen", "bloom:setup-guide",
       "bloom:cycle-onboarded", "bloom:diet-onboarded", "bloom:diet-setup-complete",
@@ -189,7 +194,7 @@ export default function MePage() {
       "bloom:yoga-onboarded", "bloom:yoga-tour-done",
     ];
     try { flags.forEach((k) => localStorage.removeItem(k)); } catch {}
-    await updateProfile({ setup_done: false }); // AuthGate replays the welcome cinematic
+    await updateProfile({ setup_done: false });
     window.location.href = "/app/today";
   }
 
