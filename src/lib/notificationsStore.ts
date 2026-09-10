@@ -16,6 +16,8 @@ export interface StoredNotif {
   body?: string;
   tone?: NotifyTone;
   icon?: string;
+  href?: string;
+  image?: string;
 }
 
 const KEY = "bloom:notifications";
@@ -45,12 +47,29 @@ export function addNotification(opts: NotifyOptions): void {
     body: opts.body,
     tone: opts.tone,
     icon: opts.icon,
+    href: opts.href,
+    image: opts.image,
   };
   write([item, ...readNotifications()]);
 }
 
+/** Add several notifications at once, preserving the given order (first = top). */
+export function addNotifications(list: NotifyOptions[]): void {
+  const now = Date.now();
+  const built: StoredNotif[] = list.map((opts, i) => ({
+    id: `${now.toString(36)}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+    ts: now - i, // keep the given order, newest first
+    read: false,
+    title: opts.title, body: opts.body, tone: opts.tone, icon: opts.icon, href: opts.href, image: opts.image,
+  }));
+  write([...built, ...readNotifications()]);
+}
+
 export function markAllRead(): void {
   write(readNotifications().map((n) => (n.read ? n : { ...n, read: true })));
+}
+export function markRead(id: string): void {
+  write(readNotifications().map((n) => (n.id === id ? { ...n, read: true } : n)));
 }
 export function removeNotification(id: string): void {
   write(readNotifications().filter((n) => n.id !== id));

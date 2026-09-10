@@ -6,6 +6,7 @@ import { BloomBackground } from "./BloomBackground";
 import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { NotificationHost } from "./NotificationHost";
 import { TrialPreviewHost } from "./TrialPreviewHost";
+import { seedDiscoverNotifications } from "@/lib/discoverNotifications";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
 import { PLAN_UPDATED, usePremium } from "@/lib/entitlements";
 
@@ -61,6 +62,9 @@ function TileBadges({ item, free }: { item: NavItem; free: boolean }) {
 export function AppShell({ children, currentPath }: { children: React.ReactNode; currentPath: string }) {
   const isActive = (to: string) => currentPath === to || currentPath.startsWith(to + "/");
   const free = !usePremium();
+
+  // Seed the one-time "discover your tools" notifications for a new (onboarded) user.
+  useEffect(() => { seedDiscoverNotifications(); }, []);
 
   // Living phase theme (Bloom+): tint the app to the current cycle phase.
   useEffect(() => {
