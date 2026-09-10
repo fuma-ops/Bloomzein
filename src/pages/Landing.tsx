@@ -2,7 +2,7 @@ import {
   ArrowRight, Download, Instagram, Youtube, Facebook, Mail, X, Heart, Sparkles,
   Flower2, Dumbbell, Utensils, Salad, CalendarHeart, BookHeart, NotebookPen,
   Wallet, MessageCircleHeart, BookOpen, Sun, Moon, Menu, HeartPulse, ChevronDown,
-  type LucideIcon,
+  Droplet, type LucideIcon,
 } from "lucide-react";
 import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
@@ -83,13 +83,16 @@ const GRID: Feat[] = [
 ];
 
 /* ───────── hero feature chips + top nav ───────── */
-const HERO_FEATURES: { icon: LucideIcon; title: string; sub: string }[] = [
-  { icon: Dumbbell, title: "Workouts", sub: "At home, for your level" },
-  { icon: Flower2, title: "Yoga", sub: "Flows for your cycle" },
-  { icon: Salad, title: "Meal Plans", sub: "Healthy & delicious" },
-  { icon: Moon, title: "Cycle Tracking", sub: "Understand your body" },
-  { icon: Utensils, title: "Diet", sub: "Calories & macros" },
-  { icon: Wallet, title: "Budget", sub: "Glow, stress-free" },
+const HERO_FEATURES: { icon: LucideIcon; title: string }[] = [
+  { icon: Dumbbell, title: "Workouts" },
+  { icon: Flower2, title: "Yoga" },
+  { icon: Salad, title: "Meal Plans" },
+  { icon: Moon, title: "Cycle Tracking" },
+  { icon: BookHeart, title: "Journaling" },
+  { icon: Heart, title: "Habits" },
+  { icon: Droplet, title: "Water" },
+  { icon: Wallet, title: "Budget" },
+  { icon: Sparkles, title: "And More" },
 ];
 const NAV: { label: string; href: string }[] = [
   { label: "Home", href: "#top" },
@@ -313,20 +316,32 @@ export default function Landing() {
               </button>
             </div>
 
-            {/* feature chips */}
-            <div className="bzl-fade mt-7 grid grid-cols-3 gap-x-3 gap-y-4 md:mt-8 md:max-w-md md:gap-x-4 md:gap-y-6 max-sm:mt-5 max-sm:max-w-[78%]" style={{ animationDelay: "920ms" }}>
-              {HERO_FEATURES.map((f) => {
-                const Icon = f.icon;
-                return (
-                  <div key={f.title} className="flex flex-col items-center text-center sm:items-start sm:text-left">
-                    <span className="mb-2 grid h-11 w-11 place-items-center rounded-2xl shadow-sm transition hover:-translate-y-0.5 md:mb-3 md:h-14 md:w-14 md:rounded-[1.25rem]" style={{ background: "linear-gradient(180deg,#FFE4F1,#FBD0E6)" }}>
-                      <Icon className="h-5 w-5 md:h-6 md:w-6" style={{ color: "var(--hot)" }} />
-                    </span>
-                    <p className="bzl-halo text-[12.5px] font-extrabold leading-tight md:text-sm" style={{ color: "var(--plum)" }}>{f.title}</p>
-                    <p className="bzl-halo text-[10.5px] font-medium leading-tight md:text-xs max-sm:hidden" style={{ color: "var(--muted)" }}>{f.sub}</p>
-                  </div>
-                );
-              })}
+            {/* feature panel — premium frosted card of circular icon badges */}
+            <div className="bzl-fade mt-7 md:mt-8 md:max-w-md max-sm:mt-5" style={{ animationDelay: "920ms" }}>
+              <div className="rounded-[1.75rem] border border-white/80 bg-white/90 p-4 shadow-[0_24px_60px_-24px_rgba(219,39,119,0.5)] ring-1 ring-hotpink/5 backdrop-blur-xl md:p-5">
+                <div className="mb-3.5 flex items-baseline justify-between gap-2 md:mb-4">
+                  <p className="bzl-script leading-none text-[1.5rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
+                    Everything you need <Heart className="inline h-4 w-4 fill-current md:h-5 md:w-5" />
+                  </p>
+                  <p className="bzl-kicker shrink-0 text-[9px] md:text-[10px]" style={{ color: "var(--muted)" }}>All in one place</p>
+                </div>
+                <div className="grid grid-cols-3 gap-x-2 gap-y-3.5 md:gap-y-4">
+                  {HERO_FEATURES.map((f) => {
+                    const Icon = f.icon;
+                    return (
+                      <div key={f.title} className="group flex flex-col items-center gap-1.5 text-center">
+                        <span
+                          className="grid h-12 w-12 place-items-center rounded-full ring-1 ring-white/80 shadow-[0_8px_18px_-8px_rgba(219,39,119,0.55)] transition group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_24px_-8px_rgba(219,39,119,0.65)] md:h-14 md:w-14"
+                          style={{ background: "radial-gradient(120% 120% at 30% 22%, #FFF2F8 0%, #FCD6E7 62%, #F7BEDA 100%)" }}
+                        >
+                          <Icon className="h-[22px] w-[22px] md:h-6 md:w-6" strokeWidth={1.8} style={{ color: "var(--hot)" }} />
+                        </span>
+                        <p className="text-[11.5px] font-extrabold leading-tight md:text-[12.5px]" style={{ color: "var(--plum)" }}>{f.title}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* script sign-off */}
