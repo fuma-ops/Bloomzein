@@ -5,6 +5,7 @@ import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { NotificationHost } from "./NotificationHost";
+import { RibbonBackground } from "./RibbonBackground";
 import { TrialPreviewHost } from "./TrialPreviewHost";
 import { seedDiscoverNotifications } from "@/lib/discoverNotifications";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
@@ -158,7 +159,9 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
       {/* ── Main container ───────────────────────────────────────────────────── */}
       <main className="min-h-screen pt-14 pb-28 lg:pt-0 lg:ml-60 lg:pb-10 overflow-x-hidden relative">
-        <div className="mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-w-0">
+        {/* Soft ribbon-bow hero band behind every page (scrolls like Today's hero) */}
+        <RibbonBackground />
+        <div className="relative z-[1] mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-w-0">
           {children}
         </div>
       </main>
