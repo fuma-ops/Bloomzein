@@ -422,7 +422,7 @@ export default function CalendarPage() {
   return (
     <div className="relative isolate animate-fade-in">
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
+      {/* Base wash removed — the app-wide ribbon hero band is the background now. */}
 
       {/* Hero photo as ONE blended page BACKGROUND — same technique as the Today
           page: a full-width image that fades on the left (so the title stays
