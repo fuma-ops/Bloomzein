@@ -164,6 +164,13 @@ export function NotificationBell() {
           className="fixed z-[210] w-[min(93vw,23rem)] overflow-hidden rounded-[1.6rem] border border-white/80 bg-white/95 shadow-[0_34px_70px_-22px_rgba(219,39,119,0.6)] ring-1 ring-hotpink/10 backdrop-blur-xl animate-scale-in"
           style={{ top: pos.top, right: pos.right, transformOrigin: "top right" }}
         >
+          <style>{`
+            .bz-notif-scroll{scrollbar-width:thin;scrollbar-color:#EC4899 rgba(236,72,153,0.12)}
+            .bz-notif-scroll::-webkit-scrollbar{width:8px}
+            .bz-notif-scroll::-webkit-scrollbar-track{background:rgba(236,72,153,0.10);border-radius:999px;margin:6px}
+            .bz-notif-scroll::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#FF7EB6,#EC4899 55%,#DB2777);border-radius:999px;border:2px solid transparent;background-clip:padding-box}
+            .bz-notif-scroll::-webkit-scrollbar-thumb:hover{background:#DB2777}
+          `}</style>
           <div className="flex items-center gap-2 border-b border-petal/25 bg-gradient-to-r from-blush/60 via-white/40 to-petal/40 px-4 py-3">
             <span className="grid h-9 w-9 place-items-center rounded-full text-white shadow-[0_6px_14px_-5px_rgba(219,39,119,0.8)]" style={{ background: PINK_GRAD }}><Bell className="h-4 w-4" strokeWidth={2.2} /></span>
             <div className="flex-1 leading-tight">
@@ -180,7 +187,7 @@ export function NotificationBell() {
               <p className="text-[12.5px] font-semibold text-rose/60">You're all caught up ✿<br />Your nudges &amp; wins will appear here 🌸</p>
             </div>
           ) : (
-            <div className="max-h-[min(70vh,27rem)] overflow-y-auto p-2.5">
+            <div className="bz-notif-scroll max-h-[min(70vh,27rem)] overflow-y-auto p-2.5">
               <ul className="space-y-2">{shown.map((n) => <Row key={n.id} n={n} onNavigate={() => setOpen(false)} />)}</ul>
               <div className="mt-2 flex items-center justify-between px-1">
                 {items.length > 5 ? (

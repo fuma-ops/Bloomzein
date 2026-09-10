@@ -7,7 +7,6 @@
 // opens the tool and marks that notification as viewed (greyed), so unseen ones
 // stay highlighted. Seeded once per device, only after onboarding.
 // =============================================================================
-import { isOnboarded } from "./guidedSetup";
 import { addNotifications } from "./notificationsStore";
 import type { NotifyOptions } from "./notify";
 
@@ -47,10 +46,10 @@ const DISCOVER: NotifyOptions[] = [
   },
 ];
 
-/** Seed the discover notifications once (after onboarding). No-op otherwise. */
+/** Seed the discover notifications once per device — for EVERY user who hasn't
+ *  seen them yet (new and existing alike). No-op after the first time. */
 export function seedDiscoverNotifications(): void {
   try {
-    if (!isOnboarded()) return;
     if (localStorage.getItem(SEEDED_KEY)) return;
     localStorage.setItem(SEEDED_KEY, "1");
   } catch { return; }
