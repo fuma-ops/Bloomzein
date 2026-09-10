@@ -320,7 +320,7 @@ export default function Landing() {
                 (solid so it reads as one clean card over the photo, never a messy
                 see-through overlay; kept narrow on phone so the model stays clear) */}
             <div className="bzl-fade mt-6 max-w-[19rem] sm:max-w-sm md:mt-8 md:max-w-md max-sm:mt-4" style={{ animationDelay: "920ms" }}>
-              <div className="rounded-[1.6rem] border border-white/90 bg-[#FFF6FB] p-3 shadow-[0_24px_60px_-22px_rgba(219,39,119,0.55)] ring-1 ring-hotpink/10 md:rounded-[1.75rem] md:p-5">
+              <div className="rounded-[1.6rem] border border-white/60 bg-gradient-to-br from-white/55 via-white/40 to-white/30 p-3 shadow-[0_24px_60px_-22px_rgba(219,39,119,0.5)] ring-1 ring-white/40 backdrop-blur-2xl md:rounded-[1.75rem] md:p-5">
                 <div className="mb-2.5 flex items-baseline justify-between gap-2 md:mb-4">
                   <p className="bzl-script leading-none text-[1.25rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
                     Everything you need <Heart className="inline h-3.5 w-3.5 fill-current md:h-5 md:w-5" />
