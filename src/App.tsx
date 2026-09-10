@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, useReducer, useRef, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
 import { BloomFlower } from "./components/bloom/BloomFlower";
 import { trackPageView, trackToolOpen } from "./lib/analytics";
@@ -84,6 +84,14 @@ function PageLoader() {
 function AppContent() {
   const [path, setPath] = useState(window.location.pathname);
   const { user, profile } = useAuth();
+
+  // Lets onboarding's onDone force this component to re-render even when it
+  // navigates to the path we're already on (/app/today). Without it,
+  // setPath("/app/today") is a no-op (same value → React bails out, no
+  // re-render), the onboarding gate below never re-evaluates, and the user is
+  // stuck on the "getting ready" screen. onDone calls forceGate() after
+  // setOnboarded() has run, so the gate re-reads isOnboarded() and drops to Today.
+  const [, forceGate] = useReducer((c: number) => c + 1, 0);
 
   // New-user gate: after the welcome, she must set up her Today (her cycle) before
   // any other tool/menu. If she taps into one first, bounce her to Today and raise
@@ -295,7 +303,7 @@ function AppContent() {
     if (isProtected && user && !isOnboarded() && !allCoreSetup) {
       return (
         <Suspense fallback={<PageLoader />}>
-          <BloomOnboarding onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); window.scrollTo(0, 0); }} />
+          <BloomOnboarding onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); forceGate(); window.scrollTo(0, 0); }} />
         </Suspense>
       );
     }

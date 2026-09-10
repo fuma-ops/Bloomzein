@@ -361,6 +361,13 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   // move her into the app — so a tap on the final buttons gives instant feedback
   // (no more "did it register?" while Today lazy-loads).
   const [finishing, setFinishing] = useState(false);
+  // Safety net: if for any reason the soft hand-off doesn't drop us onto Today,
+  // hard-navigate so the flower loader can never become a dead end.
+  useEffect(() => {
+    if (!finishing || preview) return;
+    const t = window.setTimeout(() => { try { window.location.assign("/app/today"); } catch { /* ignore */ } }, 3500);
+    return () => window.clearTimeout(t);
+  }, [finishing, preview]);
   // One-shot "plan ready" celebration: fire the moment the Personalized Plan
   // reveal (stage "previews") first appears, then let it bow out on its own.
   const [celebrate, setCelebrate] = useState(false);
@@ -824,10 +831,12 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     };
     const finish = () => {
       if (preview) { onDone(); return; }
-      setFinishing(true);          // instant flower feedback
-      setOnboarded();
       queueWelcome();
-      window.setTimeout(onDone, 650);
+      setFinishing(true);          // show the flower loader immediately (instant feedback)
+      // Release after a short beat: setOnboarded() flips the gate (it fires
+      // "bloom:guide-updated", which forces App to re-render even though the path
+      // is already /app/today), and onDone scrolls/settles Today.
+      window.setTimeout(() => { setOnboarded(); onDone(); }, 700);
     };
     const startTrial = () => {
       if (preview) { onDone(); return; }
