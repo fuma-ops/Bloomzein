@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
-import { TodayNotifications } from "@/components/bloom/TodayNotifications";
+import { NotificationBell } from "@/components/bloom/NotificationBell";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
 import { useScrollReveal, useInView, useCountUp } from "@/lib/useScrollReveal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -994,6 +994,12 @@ export default function TodayPage() {
             <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
           </div>
 
+          {/* Blooming-day streak — now sits in front of the phase/energy labels */}
+          <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/85 backdrop-blur border border-petal/60 text-hotpink text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
+            <span className="text-[12px] leading-none">✿</span>
+            {bloomDays > 0 ? <>{shownStreak} {bloomDays === 1 ? "day" : "days"} blooming</> : "Fresh start"}
+          </div>
+
           {cycleReady ? (
             <>
               <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
@@ -1034,19 +1040,10 @@ export default function TodayPage() {
 
         </div>
 
-        {/* Streak badge — top-right so it clears the glass cards below */}
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[2] rounded-2xl bg-white/60 backdrop-blur px-2.5 py-1 sm:px-3 sm:py-1.5 text-center border border-white/50 shadow-md">
-          {bloomDays > 0 ? (
-            <>
-              <p className="font-script text-lg sm:text-xl text-hotpink leading-none tabular-nums">{shownStreak}</p>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">{bloomDays === 1 ? "day blooming" : "days blooming"}</p>
-            </>
-          ) : (
-            <>
-              <p className="font-script text-lg sm:text-xl text-hotpink leading-none">✿</p>
-              <p className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/70">fresh start</p>
-            </>
-          )}
+        {/* Notification bell — top-right (where the streak used to be); tap to
+            open the notification centre. The streak now sits by the labels. */}
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[3]">
+          <NotificationBell />
         </div>
 
         {/* QUICK STATS moved below — now sits just above "Build your Bloom world". */}
@@ -1207,10 +1204,6 @@ export default function TodayPage() {
           </button>
         </div>
       </div>
-
-      {/* ── NOTIFICATION CENTRE — everything raised via notify() lives here,
-             right under the blooming-day header. ── */}
-      <TodayNotifications />
 
       {/* ── BUILD YOUR WORLD — rich guided setup cards; disappears once every
              tool is configured. Hidden entirely once she's completed the full
