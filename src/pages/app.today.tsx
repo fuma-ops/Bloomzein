@@ -369,9 +369,6 @@ export default function TodayPage() {
   const revealRef = useRef<HTMLDivElement>(null);
   useScrollReveal(revealRef);
   const { text: hello, Icon: HelloIcon } = useMemo(greeting, []);
-  // Today hero background — soft-pink ribbon-bow wallpaper (kept behind the same
-  // mask + washes as the old photo, so the blend into the page is unchanged).
-  const heroBg = "/images/page-bg-today-ribbon.webp";
   const today           = useMemo(fmtDate, []);
   const phase           = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay        = useMemo(cycleDayNumber, []);
@@ -945,28 +942,8 @@ export default function TodayPage() {
           w-screen (centred) makes it span the full main area so there's no hard
           edge at the container border on desktop; overflow is clipped by the
           shell's overflow-x-hidden. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
-        style={{
-          // Dissolve the whole hero block to true transparency toward the bottom
-          // (a soft alpha mask, NOT an opaque colour band) so the photo melts into
-          // whatever page background is behind it — no hard image/background seam.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-        }}
-      >
-        {/* Frame toward her face (upper-right) so it's never cropped on phones or
-            tablets — pull in a little closer to the right on the narrowest screens,
-            easing back to the full scene on desktop. */}
-        <img src={heroBg} alt="" className="animate-hero-breathe h-full w-full object-cover object-[88%_26%] sm:object-[84%_26%] lg:object-[78%_22%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight behind the greeting (~50% of
-            the width), fading to fully transparent so the rest of the photo shows
-            clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
-        {/* right fade → soft melt into the page edge so there's no hard border */}
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
-      </div>
+      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now
+          (same for every page, so Today matches Calendar/Tools/Read/Me). */}
 
       <BloomBubbles count={10} />
 
