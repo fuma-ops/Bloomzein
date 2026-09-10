@@ -10,7 +10,7 @@ import { createPortal } from "react-dom";
 import { Bell, X, Sparkles } from "lucide-react";
 import { BloomFlower } from "./BloomFlower";
 import {
-  NOTIFS_UPDATED, readNotifications, markAllRead, removeNotification, clearNotifications,
+  NOTIFS_UPDATED, readNotifications, markRead, markAllRead, removeNotification, clearNotifications,
   unreadCount, type StoredNotif,
 } from "@/lib/notificationsStore";
 
@@ -32,24 +32,57 @@ function timeAgo(ts: number): string {
   return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-function Row({ n }: { n: StoredNotif }) {
+function Row({ n, onNavigate }: { n: StoredNotif; onNavigate: () => void }) {
   const grad = TONE[n.tone ?? "bloom"] ?? TONE.bloom;
   const emoji = n.icon ?? EMOJI[n.tone ?? ""];
-  return (
-    <li className={`flex items-start gap-2.5 rounded-2xl px-2.5 py-2.5 transition ${n.read ? "bg-white/40" : "bg-blush/40"}`}>
+  const clickable = !!n.href;
+
+  const Thumb = (
+    n.image ? (
+      <span className="h-11 w-11 shrink-0 overflow-hidden rounded-xl ring-1 ring-white/60 shadow-[0_5px_12px_-5px_rgba(219,39,119,0.7)]">
+        <img src={n.image} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+      </span>
+    ) : (
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-white shadow-[0_6px_14px_-5px_rgba(219,39,119,0.8)]" style={{ background: grad }}>
         {emoji ? <span className="text-[16px] leading-none">{emoji}</span> : <BloomFlower size={17} petal="#FFFFFF" center="#FFE4F0" />}
       </span>
+    )
+  );
+
+  // Viewed items go quietly grey; unseen ones stay pink + carry a dot.
+  const base = `group relative flex items-start gap-2.5 rounded-2xl px-2.5 py-2.5 transition ${
+    n.read ? "bg-black/[0.03] opacity-70" : "bg-blush/45"
+  } ${clickable ? "cursor-pointer hover:bg-blush/60" : ""}`;
+
+  const inner = (
+    <>
+      {!n.read && <span className="absolute left-1 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-hotpink" aria-hidden />}
+      {Thumb}
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className="text-[13.5px] font-extrabold leading-tight text-[#7a1247]">{n.title}</p>
+        <p className={`text-[13.5px] font-extrabold leading-tight ${n.read ? "text-rose/70" : "text-[#7a1247]"}`}>{n.title}</p>
         {n.body && <p className="mt-0.5 text-[12px] font-semibold leading-snug text-rose/70">{n.body}</p>}
-        <p className="mt-0.5 text-[10.5px] font-bold uppercase tracking-wide text-rose/45">{timeAgo(n.ts)}</p>
+        <p className="mt-0.5 flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wide text-rose/45">
+          {timeAgo(n.ts)}{clickable && <span className="text-hotpink/70">· Tap to discover ›</span>}
+        </p>
       </div>
-      <button onClick={() => removeNotification(n.id)} aria-label="Dismiss" className="-mr-0.5 mt-0.5 shrink-0 rounded-full p-1 text-rose/35 transition hover:text-rose/70">
+      <button
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeNotification(n.id); }}
+        aria-label="Dismiss"
+        className="-mr-0.5 mt-0.5 shrink-0 rounded-full p-1 text-rose/35 transition hover:text-rose/70"
+      >
         <X className="h-4 w-4" />
       </button>
-    </li>
+    </>
   );
+
+  if (clickable) {
+    return (
+      <li>
+        <a href={n.href} onClick={() => { markRead(n.id); onNavigate(); }} className={`${base} no-underline`}>{inner}</a>
+      </li>
+    );
+  }
+  return <li className={base}>{inner}</li>;
 }
 
 export function NotificationBell() {
@@ -95,13 +128,9 @@ export function NotificationBell() {
     return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
-  const toggle = () => {
-    setOpen((o) => {
-      const nv = !o;
-      if (nv && unread > 0) markAllRead(); // opening clears the unread badge, like social apps
-      return nv;
-    });
-  };
+  // Opening does NOT mark everything read — each notification greys out only once
+  // she actually taps it (so unseen tools stay highlighted).
+  const toggle = () => setOpen((o) => !o);
 
   const shown = expanded ? items : items.slice(0, 5);
 
@@ -130,6 +159,7 @@ export function NotificationBell() {
           <div className="flex items-center gap-2 border-b border-petal/30 px-4 py-3">
             <span className="grid h-8 w-8 place-items-center rounded-full bg-hotpink/12"><Bell className="h-4 w-4 text-hotpink" strokeWidth={2} /></span>
             <p className="flex-1 text-[15px] font-extrabold text-[#7a1247]">Notifications</p>
+            {unread > 0 && <button onClick={markAllRead} className="text-[11.5px] font-bold text-hotpink transition hover:text-hotpink/70">Mark read</button>}
             {items.length > 0 && <button onClick={clearNotifications} className="text-[11.5px] font-bold text-rose/50 transition hover:text-rose/80">Clear all</button>}
             <button onClick={() => setOpen(false)} aria-label="Close" className="grid h-7 w-7 place-items-center rounded-full text-rose/40 transition hover:bg-rose/10 hover:text-rose/70"><X className="h-4 w-4" /></button>
           </div>
@@ -141,7 +171,7 @@ export function NotificationBell() {
             </div>
           ) : (
             <div className="max-h-[min(70vh,26rem)] overflow-y-auto p-2.5">
-              <ul className="space-y-1.5">{shown.map((n) => <Row key={n.id} n={n} />)}</ul>
+              <ul className="space-y-1.5">{shown.map((n) => <Row key={n.id} n={n} onNavigate={() => setOpen(false)} />)}</ul>
               {items.length > 5 && (
                 <button onClick={() => setExpanded((v) => !v)} className="mt-2 w-full rounded-xl py-1.5 text-[12px] font-extrabold text-hotpink transition hover:bg-hotpink/8">
                   {expanded ? "Show less" : `Show all (${items.length})`}

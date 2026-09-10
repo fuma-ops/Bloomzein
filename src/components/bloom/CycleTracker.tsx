@@ -26,7 +26,6 @@ import {
   Cloud,
   BookOpen,
   CalendarDays,
-  PenLine,
   Pencil,
   Sun,
   Dumbbell,
@@ -696,10 +695,10 @@ export function CycleTracker() {
     const sp = SHARED_PHASE_PLAN[selectedPhase];
     const why = PHASE_WHY[selectedPhase] ?? PHASE_WHY.follicular;
     const items = [
-      { tag: "Yoga",    Icon: Flower2,  title: sp.yoga.title,      why: why.yoga,    href: "/app/tools/yoga",    gradFrom: "#F472B6", gradTo: "#EC4899", launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } as null | { key: string; val: unknown } },
-      { tag: "Workout", Icon: Dumbbell, title: sp.workout.title,   why: why.workout, href: "/app/tools/workout", gradFrom: "#FB7185", gradTo: "#DB2777", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } as null | { key: string; val: unknown } },
-      { tag: "Meal",    Icon: Sprout,   title: sp.meal.title,      why: why.meal,    href: "/app/tools/diet",    gradFrom: "#F9A8D4", gradTo: "#BE185D", launch: null as null | { key: string; val: unknown } },
-      { tag: "Journal", Icon: PenLine,  title: "Reflect on today", why: why.journal, href: "/app/tools/diary",   gradFrom: "#F0ABFC", gradTo: "#DB2777", launch: null as null | { key: string; val: unknown } },
+      { tag: "Yoga",    img: sp.yoga.image,             title: sp.yoga.title,      why: why.yoga,    href: "/app/tools/yoga",    launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } as null | { key: string; val: unknown } },
+      { tag: "Workout", img: sp.workout.image,          title: sp.workout.title,   why: why.workout, href: "/app/tools/workout", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } as null | { key: string; val: unknown } },
+      { tag: "Meal",    img: sp.meal.image,             title: sp.meal.title,      why: why.meal,    href: "/app/tools/diet",    launch: null as null | { key: string; val: unknown } },
+      { tag: "Journal", img: "/images/diary-hero.webp", title: "Reflect on today", why: why.journal, href: "/app/tools/diary",   launch: null as null | { key: string; val: unknown } },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -712,12 +711,12 @@ export function CycleTracker() {
             data-reveal-delay={`${idx * 120}ms`}
             style={{ padding: '11px', background: 'rgba(255,245,249,0.8)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.45)' }}
           >
-            {/* phase-coloured icon — no generic photo */}
+            {/* real program photo for this phase */}
             <span
-              className="flex-none grid place-items-center rounded-[13px] text-white"
-              style={{ width: 44, height: 44, background: `linear-gradient(135deg,${item.gradFrom},${item.gradTo})`, boxShadow: `0 4px 14px ${item.gradFrom}55`, animation: `ctaBreathe ${3 + idx * 0.4}s ease-in-out infinite` }}
+              className="flex-none overflow-hidden rounded-[13px] ring-1 ring-white/60"
+              style={{ width: 52, height: 52, boxShadow: '0 4px 14px rgba(219,39,119,0.28)' }}
             >
-              <item.Icon className="h-5 w-5" strokeWidth={2} />
+              <img src={item.img} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">

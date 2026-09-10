@@ -23,6 +23,10 @@ export interface NotifyOptions {
   duration?: number;
   /** When true, only show the toast — don't record it in the notification centre. */
   transient?: boolean;
+  /** Optional deep-link — tapping the notification row navigates here. */
+  href?: string;
+  /** Optional thumbnail image (real photo) shown instead of the tone badge. */
+  image?: string;
 }
 
 export const NOTIFY_EVENT = "bloom:notify";
