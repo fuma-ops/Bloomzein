@@ -928,22 +928,9 @@ export default function TodayPage() {
 
   return (
     <div ref={revealRef} className="relative isolate">
-      {/* Base pink→fuchsia wash — the top of Today reads as one immersive surface.
-          FULL-BLEED to the whole main area (w-screen, centred) so on a wide
-          laptop the wash fills edge-to-edge instead of stopping at the centred
-          max-w-6xl container and leaving a hard vertical seam. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
-
-      {/* Hero photo as ONE blended page BACKGROUND — a single FULL-WIDTH image so
-          there's no left/right panel seam: she sits on the right, and the same
-          pink (#FFE4F1) fades the left (behind the greeting) and the bottom (into
-          "Build your Bloom world"). One continuous surface, no edges. `isolate`
-          on the root keeps this -z layer from vanishing behind the app shell.
-          w-screen (centred) makes it span the full main area so there's no hard
-          edge at the container border on desktop; overflow is clipped by the
-          shell's overflow-x-hidden. */}
-      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now
-          (same for every page, so Today matches Calendar/Tools/Read/Me). */}
+      {/* Base wash + hero photo removed — the app-wide ribbon hero band (AppShell)
+          is Today's background now, same as every other page. (The old opaque
+          pink base wash was hiding the ribbon behind an isolate stacking context.) */}
 
       <BloomBubbles count={10} />
 
