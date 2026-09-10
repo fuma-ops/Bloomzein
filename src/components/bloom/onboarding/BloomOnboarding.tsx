@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import {
   ChevronLeft, ArrowRight, Heart, Dumbbell, Salad, Fish, Beef, Sprout, Utensils,
   Footprints, BarChart3, Star, Scale, Ruler, Cake, Minus, Plus, Check, Bell, Clock,
@@ -260,6 +260,84 @@ function MiniCalendar({ value, onPick }: { value: Date; onPick: (d: Date) => voi
   );
 }
 
+// ══ "plan ready" celebration ═════════════════════════════════════════════════
+// A one-shot, cute-but-premium moment when the Personalized Plan reveal appears:
+// a soft confetti of hearts & blossoms rains down and a glowing "Waaw — your
+// plan is ready!" notification pops in the centre, then gently bows out. Purely
+// decorative (pointer-events:none), so it never blocks the plan underneath.
+function PlanReadyCelebration() {
+  const GLYPHS = ["♥", "✿", "❀", "✦", "❤"];
+  const COLORS = ["#EC4899", "#DB2777", "#F472B6", "#F9A8D4", "#FBBF24", "#FCA5C4"];
+  const pieces = Array.from({ length: 30 }, (_, i) => ({
+    i,
+    left: Math.round(Math.random() * 100),
+    delay: +(Math.random() * 0.6).toFixed(2),
+    dur: +(2.4 + Math.random() * 1.8).toFixed(2),
+    size: 11 + Math.round(Math.random() * 16),
+    rot: Math.round((Math.random() * 2 - 1) * 540),
+    drift: Math.round((Math.random() * 2 - 1) * 60),
+    color: COLORS[i % COLORS.length],
+    glyph: GLYPHS[i % GLYPHS.length],
+  }));
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[120] overflow-hidden" aria-hidden>
+      <style>{`
+        @keyframes bz-confetti-fall{
+          0%{transform:translate3d(0,-14vh,0) rotate(0);opacity:0}
+          9%{opacity:1}
+          100%{transform:translate3d(var(--bz-dx),112vh,0) rotate(var(--bz-rot));opacity:0}}
+        @keyframes bz-cel-pop{
+          0%{transform:translate(-50%,0) scale(.62);opacity:0}
+          52%{transform:translate(-50%,0) scale(1.06);opacity:1}
+          72%{transform:translate(-50%,0) scale(.99);opacity:1}
+          86%{transform:translate(-50%,0) scale(1);opacity:1}
+          100%{transform:translate(-50%,-14px) scale(.97);opacity:0}}
+        @keyframes bz-cel-badge{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+        @keyframes bz-cel-ring{0%{transform:scale(.5);opacity:.5}100%{transform:scale(2.6);opacity:0}}
+        @keyframes bz-cel-spark{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+        @media (prefers-reduced-motion:reduce){
+          .bz-cel-piece{display:none}
+          .bz-cel-toast{animation:bz-cel-pop .01s forwards!important}}
+      `}</style>
+      {pieces.map((p) => (
+        <span
+          key={p.i}
+          className="bz-cel-piece"
+          style={{
+            position: "absolute", left: `${p.left}%`, top: 0, fontSize: `${p.size}px`,
+            lineHeight: 1, color: p.color, willChange: "transform, opacity",
+            filter: "drop-shadow(0 2px 3px rgba(219,39,119,.25))",
+            ["--bz-dx" as string]: `${p.drift}px`, ["--bz-rot" as string]: `${p.rot}deg`,
+            animation: `bz-confetti-fall ${p.dur}s cubic-bezier(.3,.55,.4,1) ${p.delay}s forwards`,
+          }}
+        >
+          {p.glyph}
+        </span>
+      ))}
+
+      <div
+        className="bz-cel-toast absolute left-1/2 top-[24%] w-[min(88vw,24rem)] rounded-[1.9rem] border border-white/80 bg-white/85 px-6 py-6 text-center shadow-[0_28px_70px_-24px_rgba(219,39,119,.7)] backdrop-blur-md"
+        style={{ animation: "bz-cel-pop 3s cubic-bezier(.16,.7,.2,1) .1s forwards" }}
+      >
+        <span className="relative mx-auto mb-3 grid h-16 w-16 place-items-center">
+          <span className="absolute inset-0 rounded-full bg-hotpink/30" style={{ animation: "bz-cel-ring 1.4s ease-out .15s 2" }} />
+          <span
+            className="relative grid h-16 w-16 place-items-center rounded-full text-white shadow-[0_12px_28px_-8px_rgba(219,39,119,.9)]"
+            style={{ background: "linear-gradient(150deg,#FF7EB6 0%,#EC4899 48%,#DB2777 100%)", animation: "bz-cel-badge 1.8s ease-in-out infinite" }}
+          >
+            <Sparkles className="h-8 w-8" strokeWidth={2} />
+          </span>
+        </span>
+        <p className="font-script text-[2.1rem] leading-none text-hotpink">Waaw!</p>
+        <p className="mt-1.5 text-[1.05rem] font-extrabold text-[#7a1247]">Your plan is ready ✨</p>
+        <p className="mx-auto mt-1 max-w-[17rem] text-[12.5px] font-semibold leading-snug text-rose/70">
+          Everything's set up just for you — your cycle, meals, movement &amp; mind, all in bloom 🌸
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ══ main component ══════════════════════════════════════════════════════════
 export function BloomOnboarding({ onDone, preview = false }: { onDone: () => void; preview?: boolean }) {
   const { user, updateProfile } = useAuth();
@@ -268,6 +346,18 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
   const [summary, setSummary] = useState<{ kcal: number; meals: number; sample: string[] }>({ kcal: 0, meals: 0, sample: [] });
   const [recipe, setRecipe] = useState<(typeof RECIPES)[number] | null>(null);
+  // One-shot "plan ready" celebration: fire the moment the Personalized Plan
+  // reveal (stage "previews") first appears, then let it bow out on its own.
+  const [celebrate, setCelebrate] = useState(false);
+  const [celebrated, setCelebrated] = useState(false);
+  useEffect(() => {
+    if (stage === "previews" && !celebrated) {
+      setCelebrated(true);
+      setCelebrate(true);
+      const t = window.setTimeout(() => setCelebrate(false), 3400);
+      return () => window.clearTimeout(t);
+    }
+  }, [stage, celebrated]);
   const patch = (p: Partial<Answers>) => setA((x) => ({ ...x, ...p }));
   const qIndex = QUESTION_STEPS.indexOf(stage as typeof QUESTION_STEPS[number]);
   const total = QUESTION_STEPS.length;
@@ -516,6 +606,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <div className="fixed inset-0 z-[95] overflow-y-auto" style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
         <Motifs />
+        {celebrate && <PlanReadyCelebration />}
         <div className="relative mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:px-8" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           {/* header */}
           <div className="flex items-center justify-between gap-3 py-1">
