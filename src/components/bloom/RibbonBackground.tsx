@@ -14,8 +14,10 @@ export function RibbonBackground() {
         className="h-full w-full object-cover"
         referrerPolicy="no-referrer"
       />
-      {/* soft blend veil — keeps content readable while the ribbons show through */}
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,240,247,0.55)_0%,rgba(255,236,245,0.62)_45%,rgba(255,238,246,0.72)_100%)]" />
+      {/* Blend veil — like Today's hero: the ribbons stay vivid up top (behind the
+          page header) and softly veil downward so content lower on the page stays
+          readable. */}
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,240,247,0.14)_0%,rgba(255,238,246,0.30)_24%,rgba(255,236,245,0.56)_55%,rgba(255,238,246,0.7)_100%)]" />
     </div>
   );
 }
