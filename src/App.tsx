@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ComponentType } from "react";
 import Landing from "./pages/Landing";
-import { AppIcon } from "./components/bloom/AppIcon";
+import { BloomFlower } from "./components/bloom/BloomFlower";
 import { trackPageView, trackToolOpen } from "./lib/analytics";
 
 // After a deploy, a browser holding a stale index.html may request a chunk
@@ -71,7 +71,12 @@ import { markToolVisited } from "./components/bloom/visitedTools";
 function PageLoader() {
   return (
     <div className="grid min-h-[50vh] place-items-center">
-      <div className="animate-pulse"><AppIcon size={44} /></div>
+      <div className="flex flex-col items-center gap-3">
+        <span className="animate-spin" style={{ animationDuration: "2.4s" }}>
+          <BloomFlower size={44} petal="#EC4899" center="#FFFFFF" />
+        </span>
+        <span className="font-script text-lg text-hotpink/80">blooming…</span>
+      </div>
     </div>
   );
 }

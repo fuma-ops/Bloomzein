@@ -9,6 +9,7 @@ import {
 
 /** Only this account sees the private admin inbox link. */
 const ADMIN_EMAIL = "bloomzeinapp@gmail.com";
+import { notify } from "@/lib/notify";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { DiscoverBloomPlus, ManageSubscription, PlanToggle, PlusLock } from "@/components/bloom/premium/PremiumKit";
@@ -229,6 +230,7 @@ export default function MePage() {
       }
       if (Object.keys(dp).length) updateDietProfile(dp);
     } catch { /* diet sync is best-effort — the account save already succeeded */ }
+    if (!res.error) notify({ title: "Profile updated ✨", body: "Your details are saved.", tone: "success" });
     return res;
   };
 

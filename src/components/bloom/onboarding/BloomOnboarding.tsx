@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import {
   ChevronLeft, ArrowRight, Heart, Dumbbell, Salad, Fish, Beef, Sprout, Utensils,
   Footprints, BarChart3, Star, Scale, Ruler, Cake, Minus, Plus, Check, Bell, Clock,
@@ -25,6 +25,7 @@ import { setSleepQuality, setSleepHours } from "@/lib/sleepLog";
 import { todayISO } from "@/lib/localDate";
 import { openCheckout } from "@/lib/paddle";
 import { setOnboarded, endGuide } from "@/lib/guidedSetup";
+import { WELCOME_TOAST_KEY } from "../NotificationHost";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bloomzein onboarding — the full "Let's make Bloomzein yours" post-signup flow.
@@ -39,6 +40,7 @@ const SERIF = '"Playfair Display", Georgia, serif';
 // ── answer model ────────────────────────────────────────────────────────────
 type FoodStyle = "balanced" | "mediterranean" | "high-protein" | "plant-based" | "flexible";
 interface Answers {
+  name: string;
   lastPeriod: Date; cycleLength: number; periodLength: number;
   weight: number; height: number; age: number; targetWeight: number;
   goal: DietGoal; foodStyle: FoodStyle; level: Level | "custom";
@@ -46,6 +48,7 @@ interface Answers {
   mood: string; symptoms: string[]; sleepQ: number; sleepH: number; water: number;
 }
 const DEFAULT_ANSWERS: Answers = {
+  name: "",
   lastPeriod: new Date(), cycleLength: 28, periodLength: 5,
   weight: 65, height: 165, age: 30, targetWeight: 60,
   goal: "lose", foodStyle: "balanced", level: "Beginner" as Level,
@@ -340,12 +343,24 @@ function PlanReadyCelebration() {
 
 // ══ main component ══════════════════════════════════════════════════════════
 export function BloomOnboarding({ onDone, preview = false }: { onDone: () => void; preview?: boolean }) {
-  const { user, updateProfile } = useAuth();
+  const { user, profile, updateProfile } = useAuth();
   const [a, setA] = useState<Answers>(DEFAULT_ANSWERS);
+  // Prefill the name from her account (Google full name, or a name saved earlier)
+  // so the field is ready — she can still edit it. Runs once when it arrives.
+  const namePrefilled = useRef(false);
+  useEffect(() => {
+    if (namePrefilled.current) return;
+    const n = (profile?.name ?? (user?.user_metadata?.full_name as string | undefined) ?? "").trim();
+    if (n) { namePrefilled.current = true; setA((x) => (x.name ? x : { ...x, name: n })); }
+  }, [profile?.name, user]);
   const [stage, setStage] = useState<string>("welcome");
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
   const [summary, setSummary] = useState<{ kcal: number; meals: number; sample: string[] }>({ kcal: 0, meals: 0, sample: [] });
   const [recipe, setRecipe] = useState<(typeof RECIPES)[number] | null>(null);
+  // Shows the cute flower "getting everything ready" screen while we finish up and
+  // move her into the app — so a tap on the final buttons gives instant feedback
+  // (no more "did it register?" while Today lazy-loads).
+  const [finishing, setFinishing] = useState(false);
   // One-shot "plan ready" celebration: fire the moment the Personalized Plan
   // reveal (stage "previews") first appears, then let it bow out on its own.
   const [celebrate, setCelebrate] = useState(false);
@@ -372,7 +387,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       return;
     }
     writeCycleSettings({ ...DEFAULT_CYCLE_SETTINGS, lastPeriodStart: a.lastPeriod, cycleLength: a.cycleLength, periodLength: a.periodLength, contraceptiveMethod: a.contraceptive, contraceptiveReminder: true, reminderHour: a.reminderTime, deviceNotifications: a.notifications, trackerMode: "protection" });
-    try { await updateProfile({ setup_done: true, age: a.age, weight: a.weight, weight_unit: "kg" }); } catch { /* offline ok */ }
+    const cleanName = a.name.trim();
+    try { await updateProfile({ setup_done: true, ...(cleanName ? { name: cleanName } : {}), age: a.age, weight: a.weight, weight_unit: "kg" }); } catch { /* offline ok */ }
     const food = FOOD_MAP[a.foodStyle];
     updateDietProfile({ goal: a.goal, weight: a.weight, heightCm: a.height, age: a.age, targetWeight: a.goal === "maintain" ? a.weight : a.targetWeight, dietType: food.dietType, regime: food.regime });
     try { localStorage.setItem(DIET_SETUP_KEY, JSON.stringify(true)); } catch { /* ignore */ }
@@ -397,6 +413,24 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   }
 
   // ── WELCOME (custom hero) ──────────────────────────────────────────────────
+  // Getting-ready flower loader — shown the moment she taps a final CTA, so the
+  // tap clearly registers while we hand her over to the app.
+  if (finishing) {
+    return (
+      <div className="fixed inset-0 z-[110] grid place-items-center px-6 text-center"
+           style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
+        <div className="flex flex-col items-center">
+          <span className="relative grid h-20 w-20 place-items-center">
+            <span className="absolute inset-0 animate-ping rounded-full bg-hotpink/20" />
+            <span className="animate-spin" style={{ animationDuration: "2.4s" }}><BloomFlower size={56} petal="#EC4899" center="#FFFFFF" /></span>
+          </span>
+          <p className="mt-6 font-script text-[2rem] leading-none text-hotpink">Getting everything ready…</p>
+          <p className="mt-2 text-[14px] font-semibold text-rose/70">Blooming your personalized world 🌸</p>
+        </div>
+      </div>
+    );
+  }
+
   if (stage === "welcome") {
     const tools = [{ Icon: Moon, l: "Cycle" }, { Icon: Dumbbell, l: "Workout" }, { Icon: Salad, l: "Meals" }, { Icon: Heart, l: "Mind" }, { Icon: CalendarDays, l: "Life" }];
     const checks = ["Personalized to your cycle", "Practical and easy to follow", "Tailored to your goals", "Made for real life", "All in one place", "You can always adjust later"];
@@ -445,6 +479,16 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       <Eyebrow>About you</Eyebrow><Title serif="Tell us a little" script="about you" />
       <Sub>These details help us create a plan that fits your body and your goals.</Sub>
       <div className="mt-3 space-y-2.5">
+        <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5">
+          <label htmlFor="bloom-name" className="flex items-center gap-2 text-[15px] font-extrabold text-hotpink leading-tight">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink/12"><Smile className="h-4 w-4 text-hotpink" strokeWidth={2} /></span>
+            What should we call you?
+          </label>
+          <p className="mb-2.5 mt-1 text-[12px] text-rose/70">We'll use your first name to make Bloomzein feel like yours.</p>
+          <input id="bloom-name" type="text" value={a.name} onChange={(e) => patch({ name: e.target.value })}
+            autoComplete="given-name" maxLength={40} placeholder="Your first name"
+            className="w-full rounded-2xl border border-hotpink/20 bg-white/80 px-4 py-3 text-[16px] font-semibold text-[#7a1247] placeholder:text-rose/40 outline-none transition focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20" />
+        </div>
         <Stepper Icon={Scale} label="What's your weight?" desc="This helps us personalize your nutrition and workout plan." value={a.weight} unit="kg" min={35} max={200} onChange={(v) => patch({ weight: v })} />
         <Stepper Icon={Ruler} label="What's your height?" desc="This helps us calculate your energy needs accurately." value={a.height} unit="cm" min={130} max={210} onChange={(v) => patch({ height: v })} />
         <Stepper Icon={Cake} label="What's your age?" desc="Your age helps us personalize your experience even better." value={a.age} unit="years" min={13} max={90} onChange={(v) => patch({ age: v })} />
@@ -766,10 +810,29 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       { Icon: CalendarDays, t: "A big calendar & life organizer for your month" },
       { Icon: Sparkles, t: "Long-term mood, health & progress insights" },
     ];
-    const finish = () => { if (!preview) setOnboarded(); onDone(); };
+    // Queue the one-time welcome toast for the app shell to raise once it mounts
+    // (firing it here would be lost — the NotificationHost isn't mounted yet).
+    const queueWelcome = () => {
+      const nm = a.name.trim();
+      try {
+        sessionStorage.setItem(WELCOME_TOAST_KEY, JSON.stringify({
+          title: nm ? `Welcome, ${nm}! 🌸` : "Welcome to Bloom 🌸",
+          body: "Your profile's all set — your world is ready ✨",
+          tone: "bloom", duration: 5200,
+        }));
+      } catch { /* ignore */ }
+    };
+    const finish = () => {
+      if (preview) { onDone(); return; }
+      setFinishing(true);          // instant flower feedback
+      setOnboarded();
+      queueWelcome();
+      window.setTimeout(onDone, 650);
+    };
     const startTrial = () => {
       if (preview) { onDone(); return; }
       setOnboarded();
+      queueWelcome();
       openCheckout(billing, { userId: user?.id, email: user?.email }).catch(() => { /* overlay failed — she stays, can Continue free */ });
     };
     const Plan = ({ id, name, price, per, badge }: { id: "monthly" | "annual"; name: string; price: string; per: string; badge?: string }) => (
