@@ -369,15 +369,9 @@ export default function TodayPage() {
   const revealRef = useRef<HTMLDivElement>(null);
   useScrollReveal(revealRef);
   const { text: hello, Icon: HelloIcon } = useMemo(greeting, []);
-  // Time-of-day hero photo — a sunrise "good morning" scene before evening, a
-  // moonlit "good evening" one after ~5pm — matching the greeting above it.
-  const heroBg = useMemo(
-    () =>
-      new Date().getHours() < 17
-        ? "/images/page-bg-today-morning.webp"
-        : "/images/page-bg-today-evening.webp",
-    [],
-  );
+  // Today hero background — soft-pink ribbon-bow wallpaper (kept behind the same
+  // mask + washes as the old photo, so the blend into the page is unchanged).
+  const heroBg = "/images/page-bg-today-ribbon.webp";
   const today           = useMemo(fmtDate, []);
   const phase           = useMemo(() => phaseForDay(new Date(), readCycleSettings()), []);
   const cycleDay        = useMemo(cycleDayNumber, []);
