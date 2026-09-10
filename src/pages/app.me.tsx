@@ -31,11 +31,6 @@ import { readAvatar, setAvatar, fileToAvatarDataUrl, AVATAR_EVENT } from "@/lib/
 
 // Time-of-day hero photo — the same blended scene as the Today page, so Me
 // opens on the same immersive surface.
-function heroBgForNow(): string {
-  return new Date().getHours() < 17
-    ? "/images/page-bg-today-morning.webp"
-    : "/images/page-bg-today-evening.webp";
-}
 
 /**
  * One honest "Overall wellness" score (0–100) from everything she's really
@@ -262,9 +257,8 @@ export default function MePage() {
     }
   };
 
-  // Real hero read-outs — same blended Today background; an honest phase pill and
-  // an "Overall wellness" score composed from everything she's logged.
-  const heroBg = useMemo(heroBgForNow, []);
+  // Real hero read-outs — an honest phase pill and an "Overall wellness" score
+  // composed from everything she's logged.
   const cycleReady = useMemo(hasCycleSettings, []);
   const hist = useMemo(() => computeHealthHistory(8), []);
   const wellness = useMemo(() => wellnessScore(hist), [hist]);
@@ -333,22 +327,7 @@ export default function MePage() {
           wash + a time-of-day photo that alpha-dissolves into the page, with a
           soft left wash keeping the greeting crisp. The avatar photo is replaced
           by the brand's logo flower in strong pink. */}
-      <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[620px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[460px] sm:h-[540px] overflow-hidden"
-        style={{
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-        }}
-      >
-        <img src={heroBg} alt="" className="animate-hero-breathe h-full w-full object-cover object-[88%_26%] sm:object-[84%_26%] lg:object-[78%_22%]" referrerPolicy="no-referrer" />
-        {/* Light left wash only — just enough to soften the corner behind the
-            greeting; every read-out below carries its own frosted backing, so the
-            photo stays clearly visible instead of being washed flat. */}
-        <div className="absolute inset-0 bg-[radial-gradient(115%_110%_at_0%_30%,rgba(255,237,246,0.8)_0%,rgba(255,231,244,0.32)_34%,transparent_56%)] sm:bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.9)_0%,rgba(255,228,241,0.45)_28%,transparent_52%)]" />
-        <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#FFE4F1]/70 to-transparent" />
-      </div>
+      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now. */}
 
       <BloomBubbles count={10} />
 

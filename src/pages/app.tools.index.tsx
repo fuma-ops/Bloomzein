@@ -58,26 +58,7 @@ export default function ToolsIndex() {
       {/* Base pink wash — the top reads as one soft surface behind the hero. */}
       <div aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-20 h-[760px] bg-gradient-to-b from-[#FFD3E8] via-[#FFE4F1] to-transparent" />
 
-      {/* Hero photo as ONE blended page BACKGROUND — same technique as Today &
-          Calendar: a full-width image fading on the left (readable title) and the
-          bottom (melting into the tools below), so there's no card seam/border. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
-        style={{
-          // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
-          // so it melts into the real page background with no hard seam — same tall,
-          // soft blend as the Today page.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-        }}
-      >
-        <img src="/images/tools-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[68%_58%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight behind the title (~50% of the
-            width), fading to fully transparent so the rest of the photo shows
-            clean & vivid (no overlay). */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
-      </div>
+      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now. */}
 
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
       <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[180px] animate-card-pop-in">

@@ -428,24 +428,9 @@ export default function CalendarPage() {
           page: a full-width image that fades on the left (so the title stays
           readable) and the bottom (melting into the calendar below), so there's
           no card seam. `isolate` on the root keeps this -z layer in place. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[640px] overflow-hidden"
-        style={{
-          // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
-          // so it melts into the real page background with no hard seam — same tall,
-          // soft blend as the Today page.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-        }}
-      >
-        <img src="/images/calendar-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_28%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight behind the title, fading to
-            fully transparent so the rest of the photo shows clean & vivid. */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
-      </div>
+      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now. */}
 
-      {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
+      {/* ── HERO — transparent; the ribbon wallpaper shows behind the title. ── */}
       <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[140px] mb-0 sm:mb-1 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-3 pb-2 sm:px-8 sm:pt-6 sm:pb-2">
           {/* Title + subtitle + phase pill. Month navigation lives on the month

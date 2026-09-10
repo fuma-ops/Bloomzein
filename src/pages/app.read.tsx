@@ -209,23 +209,7 @@ export default function ReadPage() {
           Tools, but with LIGHTER fades so the photo stays clearly visible: a soft
           left wash keeps the title readable, a soft bottom wash melts into the
           search + filters below — no card seam/border. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-[120px] sm:-top-8 -z-10 h-[640px] overflow-hidden"
-        style={{
-          // Alpha-dissolve the photo toward the bottom (not an opaque colour band)
-          // so it melts into the real page background with no hard seam — same tall,
-          // soft blend as the Today page.
-          WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-          maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-        }}
-      >
-        {/* Frame toward her face (upper-right) so it's never cropped on phone. */}
-        <img src="/images/read-hero-bloom.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[82%_45%] sm:object-[70%_34%]" referrerPolicy="no-referrer" />
-        {/* left wash ONLY — a soft radial spotlight behind the title, fading to
-            fully transparent so the rest of the photo shows clean & vivid. */}
-        <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_42%,rgba(255,228,241,0.92)_0%,rgba(255,228,241,0.48)_28%,transparent_52%)]" />
-      </div>
+      {/* Hero photo removed — the app-wide ribbon wallpaper is the background now. */}
 
       <BloomBubbles count={10} />
 
