@@ -225,6 +225,12 @@ export function PlusReturn() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("welcome") !== "plus" && params.get("checkout") !== "success") return;
+    // A real Paddle payment is the only thing that lands us on ?checkout=success,
+    // so this is our purchase conversion point. Fire it once (before we strip the
+    // param) — GA4 records it and GTM can convert the Pinterest Tag on it.
+    if (params.get("checkout") === "success") {
+      trackEvent("purchase", { currency: "USD" });
+    }
     // clean the URL so a refresh doesn't re-trigger it
     params.delete("welcome"); params.delete("checkout");
     const clean = window.location.pathname + (params.toString() ? `?${params}` : "");
