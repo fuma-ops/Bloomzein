@@ -316,27 +316,29 @@ export default function Landing() {
               </button>
             </div>
 
-            {/* feature panel — premium frosted card of circular icon badges */}
-            <div className="bzl-fade mt-7 md:mt-8 md:max-w-md max-sm:mt-5" style={{ animationDelay: "920ms" }}>
-              <div className="rounded-[1.75rem] border border-white/80 bg-white/90 p-4 shadow-[0_24px_60px_-24px_rgba(219,39,119,0.5)] ring-1 ring-hotpink/5 backdrop-blur-xl md:p-5">
-                <div className="mb-3.5 flex items-baseline justify-between gap-2 md:mb-4">
-                  <p className="bzl-script leading-none text-[1.5rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
-                    Everything you need <Heart className="inline h-4 w-4 fill-current md:h-5 md:w-5" />
+            {/* feature panel — compact, SOLID premium card of circular icon badges
+                (solid so it reads as one clean card over the photo, never a messy
+                see-through overlay; kept narrow on phone so the model stays clear) */}
+            <div className="bzl-fade mt-6 max-w-[19rem] sm:max-w-sm md:mt-8 md:max-w-md max-sm:mt-4" style={{ animationDelay: "920ms" }}>
+              <div className="rounded-[1.6rem] border border-white/90 bg-[#FFF6FB] p-3 shadow-[0_24px_60px_-22px_rgba(219,39,119,0.55)] ring-1 ring-hotpink/10 md:rounded-[1.75rem] md:p-5">
+                <div className="mb-2.5 flex items-baseline justify-between gap-2 md:mb-4">
+                  <p className="bzl-script leading-none text-[1.25rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
+                    Everything you need <Heart className="inline h-3.5 w-3.5 fill-current md:h-5 md:w-5" />
                   </p>
-                  <p className="bzl-kicker shrink-0 text-[9px] md:text-[10px]" style={{ color: "var(--muted)" }}>All in one place</p>
+                  <p className="bzl-kicker shrink-0 text-[8px] md:text-[10px]" style={{ color: "var(--muted)" }}>All in one place</p>
                 </div>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-3.5 md:gap-y-4">
+                <div className="grid grid-cols-3 gap-x-1.5 gap-y-2.5 md:gap-y-4">
                   {HERO_FEATURES.map((f) => {
                     const Icon = f.icon;
                     return (
-                      <div key={f.title} className="group flex flex-col items-center gap-1.5 text-center">
+                      <div key={f.title} className="group flex flex-col items-center gap-1 text-center md:gap-1.5">
                         <span
-                          className="grid h-12 w-12 place-items-center rounded-full ring-1 ring-white/80 shadow-[0_8px_18px_-8px_rgba(219,39,119,0.55)] transition group-hover:-translate-y-0.5 group-hover:shadow-[0_12px_24px_-8px_rgba(219,39,119,0.65)] md:h-14 md:w-14"
+                          className="grid h-10 w-10 place-items-center rounded-full ring-1 ring-white/80 shadow-[0_6px_14px_-7px_rgba(219,39,119,0.6)] transition group-hover:-translate-y-0.5 md:h-14 md:w-14"
                           style={{ background: "radial-gradient(120% 120% at 30% 22%, #FFF2F8 0%, #FCD6E7 62%, #F7BEDA 100%)" }}
                         >
-                          <Icon className="h-[22px] w-[22px] md:h-6 md:w-6" strokeWidth={1.8} style={{ color: "var(--hot)" }} />
+                          <Icon className="h-[18px] w-[18px] md:h-6 md:w-6" strokeWidth={1.9} style={{ color: "var(--hot)" }} />
                         </span>
-                        <p className="text-[11.5px] font-extrabold leading-tight md:text-[12.5px]" style={{ color: "var(--plum)" }}>{f.title}</p>
+                        <p className="text-[10px] font-extrabold leading-tight md:text-[12.5px]" style={{ color: "var(--plum)" }}>{f.title}</p>
                       </div>
                     );
                   })}
