@@ -100,6 +100,7 @@ const NAV: { label: string; href: string }[] = [
   { label: "Home", href: "#top" },
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how" },
+  { label: "Read", href: "/blog" },
   { label: "Plans", href: "/pricing" },
   { label: "About", href: "#contact" },
 ];
@@ -507,8 +508,9 @@ export default function Landing() {
           </div>
           <nav className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs font-bold" style={{ color: "var(--muted)" }}>
             {[
-              { label: "Pricing", href: "/pricing" }, { label: "Privacy", href: "/privacy" },
-              { label: "Terms", href: "/terms" }, { label: "Refunds", href: "/refund" },
+              { label: "Read", href: "/blog" }, { label: "Pricing", href: "/pricing" },
+              { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" },
+              { label: "Refunds", href: "/refund" },
               { label: "Help", href: "/help" }, { label: "FAQ", href: "/faq" },
             ].map(({ label, href }) => (
               <a key={label} href={href} className="transition hover:text-hotpink">{label}</a>
