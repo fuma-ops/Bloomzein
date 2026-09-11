@@ -62,8 +62,6 @@ import { hasMealPlan, hasMovementPlan } from "./lib/crossToolData";
 import { isGuided, isOnboarded } from "./lib/guidedSetup";
 import { AuthGate } from "./components/bloom/AuthGate";
 import { ErrorBoundary } from "./components/bloom/ErrorBoundary";
-import { PaywallSheet } from "./components/bloom/premium/PremiumKit";
-import { isPremium, isOwnerEmail, PLAN_UPDATED } from "./lib/entitlements";
 import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
@@ -79,26 +77,6 @@ function PageLoader() {
         </span>
         <span className="font-script text-lg text-hotpink/80">blooming…</span>
       </div>
-    </div>
-  );
-}
-
-/** Full-screen mandatory subscribe wall shown to onboarded, non-premium users
- *  before they can enter the app. Reuses the real Bloom+ checkout (PaywallSheet)
- *  and cannot be dismissed — the only way forward is to subscribe. */
-function SubscribeWall() {
-  return (
-    <div className="relative min-h-[70vh]">
-      <div className="grid min-h-[70vh] place-items-center px-6 text-center">
-        <div className="max-w-xs">
-          <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
-            <BloomFlower size={40} petal="#FFFFFF" center="#EC4899" />
-          </span>
-          <h2 className="mt-4 font-script text-3xl text-hotpink">Your world is ready ✿</h2>
-          <p className="mt-2 text-sm text-rose/75">Start your free trial to unlock everything you just set up — your cycle, meals, movement and more.</p>
-        </div>
-      </div>
-      <PaywallSheet feature="general" mandatory onClose={() => { /* mandatory — can't dismiss */ }} />
     </div>
   );
 }
@@ -188,15 +166,6 @@ function AppContent() {
       setPath("/app/today");
     }
   }, [path]);
-
-  // Re-evaluate the paywall gate the instant the plan flips (a completed
-  // subscription fires PLAN_UPDATED), so she drops from the wall into the app.
-  useEffect(() => {
-    const r = () => forceGate();
-    window.addEventListener(PLAN_UPDATED, r);
-    window.addEventListener("storage", r);
-    return () => { window.removeEventListener(PLAN_UPDATED, r); window.removeEventListener("storage", r); };
-  }, []);
 
   // Track which tools the user has opened, so the Tools page can highlight what's still unexplored
   useEffect(() => {
@@ -351,26 +320,17 @@ function AppContent() {
       );
     }
 
-    // ── HARD PAYWALL — subscribe before entering the app ───────────────────────
-    // A signed-in, onboarded user must have Bloom+ (or be a real payment landing
-    // back on ?checkout=success) before any app content renders. Otherwise the
-    // mandatory subscribe wall takes the place of the page. The owner account and
-    // the checkout-return moment bypass it so no one is ever locked out.
-    const checkoutReturning = (() => {
-      try { const sp = new URLSearchParams(window.location.search); return sp.get("checkout") === "success" || sp.get("welcome") === "plus"; } catch { return false; }
-    })();
-    const premiumNow = isPremium() || isOwnerEmail(user?.email) || checkoutReturning;
-    const mustSubscribe = isProtected && !!user && isOnboarded() && !premiumNow;
-
+    // Freemium: after onboarding + the one-time 10-minute Bloom+ preview, a free
+    // (non-paying) user keeps full use of the app — premium-only features simply
+    // show the Bloom+ paywall when tapped (handled per-feature via entitlements),
+    // rather than the whole app being walled off.
     return (
       <>
         <AppShell currentPath={path}>
           {/* key={path} resets the boundary on navigation so one bad page never traps the user */}
           <ErrorBoundary key={path}>
             <Suspense fallback={<PageLoader />}>
-              {isProtected
-                ? <AuthGate>{mustSubscribe ? <SubscribeWall /> : content}</AuthGate>
-                : content}
+              {isProtected ? <AuthGate>{content}</AuthGate> : content}
             </Suspense>
           </ErrorBoundary>
         </AppShell>

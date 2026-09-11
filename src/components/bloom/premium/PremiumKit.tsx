@@ -85,7 +85,7 @@ function InlineCheckout({
 }
 
 /* ─────────────────────────── The paywall sheet ─────────────────────────── */
-export function PaywallSheet({ feature = "general", onClose, mandatory = false }: { feature?: PaywallFeature; onClose: () => void; mandatory?: boolean }) {
+export function PaywallSheet({ feature = "general", onClose }: { feature?: PaywallFeature; onClose: () => void }) {
   const [annual, setAnnual] = useState(true);
   const [done, setDone] = useState(false);
   const [checkout, setCheckout] = useState<"monthly" | "annual" | null>(null);
@@ -136,7 +136,7 @@ export function PaywallSheet({ feature = "general", onClose, mandatory = false }
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={mandatory ? undefined : onClose}>
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
       <div
         onClick={(e) => e.stopPropagation()}
@@ -144,11 +144,9 @@ export function PaywallSheet({ feature = "general", onClose, mandatory = false }
       >
         {/* soft premium header wash */}
         <div className="relative px-6 pt-6 pb-5 text-center" style={{ background: `linear-gradient(160deg, #FFF1F6, #FCE7F3)` }}>
-          {!mandatory && (
-            <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
-              <X className="h-4 w-4" />
-            </button>
-          )}
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
+            <X className="h-4 w-4" />
+          </button>
           <span className="mx-auto mb-2 grid h-14 w-14 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
             <Crown className="h-7 w-7" strokeWidth={1.8} />
           </span>
@@ -191,9 +189,7 @@ export function PaywallSheet({ feature = "general", onClose, mandatory = false }
               <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
             </button>
             <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
-            {!mandatory && (
-              <button onClick={onClose} className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/45 transition hover:text-hotpink">Maybe later</button>
-            )}
+            <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-hotpink/25 bg-white/70 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-hotpink/5 active:scale-[0.99]">Continue with the free version</button>
           </div>
         )}
       </div>
