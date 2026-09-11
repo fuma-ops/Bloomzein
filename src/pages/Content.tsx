@@ -5,7 +5,7 @@ import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
   PiggyBank, Droplets } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
-import { ARTICLES, FILTERS, IMG, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
+import { ARTICLES, FILTERS, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
 import { articleSlug, articleBySlug } from "@/lib/blog";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle } from "@/components/bloom/read/ArticleBody";
@@ -672,17 +672,19 @@ export function BlogIndexPage() {
     <div className="min-h-screen bg-[#FFF0F6] text-rose">
       <BlogTopBar />
       <div className="relative isolate mx-auto max-w-5xl px-3 pb-16 sm:px-6 lg:px-8">
-        {/* Hero photo as a blended full-bleed background — same technique as Read. */}
+        {/* Ribbon wallpaper as a blended full-bleed background — same as the app
+            pages (Today/Calendar/Tools) so the public Read matches the app. */}
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-0 -z-10 h-[540px] w-screen -translate-x-1/2 overflow-hidden"
           style={{
-            WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
-            maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%)",
+            maskImage: "linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%)",
           }}
         >
-          <img src={IMG.featured} alt="" className="animate-hero-breathe h-full w-full object-cover object-[55%_32%] origin-bottom scale-[1.22] sm:scale-100" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/90 via-[#FFE4F1]/25 to-transparent" />
+          <img src="/images/page-bg-today-ribbon.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[60%_20%]" referrerPolicy="no-referrer" />
+          {/* soft left wash behind the title (same as RibbonBackground) */}
+          <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_38%,rgba(255,232,244,0.9)_0%,rgba(255,232,244,0.42)_27%,transparent_52%)]" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]" />
         </div>
 
