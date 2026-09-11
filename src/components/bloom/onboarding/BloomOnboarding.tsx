@@ -138,10 +138,10 @@ function Motifs() {
 // Desktop-only left hero panel — turns the onboarding into a large, screen-
 // filling two-panel frame on laptop (like the welcome), while phone/tablet keep
 // the single-column layout untouched (everything here is `lg:`-only).
-function HeroPanel({ tagline }: { tagline: string }) {
+function HeroPanel({ tagline, image = "/images/page-bg-today-morning.webp" }: { tagline: string; image?: string }) {
   return (
     <div className="hidden md:relative md:flex md:flex-1 md:min-h-[30rem] lg:min-h-[34rem] md:flex-col md:justify-end md:overflow-hidden md:p-7 lg:p-9 xl:p-12">
-      <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[62%_18%]" />
+      <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,236,246,0.15) 0%, rgba(160,20,90,0.15) 45%, rgba(140,15,80,0.5) 100%)" }} />
       <div className="relative">
         <div className="inline-flex items-center gap-2"><span className="font-script text-[2rem] lg:text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
@@ -168,12 +168,12 @@ function Frame({ children }: { children: ReactNode }) {
   );
 }
 
-function Shell({ step, total, onBack, footer, children }: {
-  step: number | null; total: number; onBack?: () => void; footer: string; children: ReactNode;
+function Shell({ step, total, onBack, footer, image, children }: {
+  step: number | null; total: number; onBack?: () => void; footer: string; image?: string; children: ReactNode;
 }) {
   return (
     <Frame>
-      <HeroPanel tagline="A few little steps to a life that feels like you" />
+      <HeroPanel tagline="A few little steps to a life that feels like you" image={image} />
       <div className="relative flex flex-1 flex-col px-5 pb-8 md:flex-none md:w-[26rem] md:px-8 md:py-8 lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between py-2">
@@ -490,7 +490,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   }
 
   if (stage === "cycle") return (
-    <Shell step={qIndex} total={total} onBack={() => go("welcome")} footer="Small steps a brighter you">
+    <Shell step={qIndex} total={total} onBack={() => go("welcome")} footer="Small steps a brighter you" image="/images/flagship-cycle.webp">
       <StageImage src="/images/setup-cycle.webp" />
       <Eyebrow>Your cycle</Eyebrow><Title serif="Let's get to know" script="your cycle" />
       <Sub>A few details to understand your cycle and create a plan that fits you.</Sub>
@@ -525,7 +525,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   );
 
   if (stage === "goal") return (
-    <Shell step={qIndex} total={total} onBack={() => go("about")} footer="Same girl brighter days ahead">
+    <Shell step={qIndex} total={total} onBack={() => go("about")} footer="Same girl brighter days ahead" image="/images/grid-diet.webp">
       <StageImage src="/images/setup-goal.webp" />
       <Eyebrow>Your goal</Eyebrow><Title serif="What are you" script="blooming toward?" />
       <Sub>Choose your main goal so we can create a personalized nutrition and workout plan for you.</Sub>
@@ -547,7 +547,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   );
 
   if (stage === "food") return (
-    <Shell step={qIndex} total={total} onBack={() => go("goal")} footer="Small choices Big changes">
+    <Shell step={qIndex} total={total} onBack={() => go("goal")} footer="Small choices Big changes" image="/images/flagship-meals.webp">
       <StageImage src="/images/setup-meals.webp" />
       <Eyebrow>Your food style</Eyebrow><Title serif="How do you" script="like to eat?" />
       <Sub>Choose the style that fits you best. You can always change this later.</Sub>
@@ -557,7 +557,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   );
 
   if (stage === "fitness") return (
-    <Shell step={qIndex} total={total} onBack={() => go("food")} footer="Small steps Big results">
+    <Shell step={qIndex} total={total} onBack={() => go("food")} footer="Small steps Big results" image="/images/flagship-workout.webp">
       <StageImage src="/images/setup-movement.webp" />
       <Eyebrow>Your fitness</Eyebrow><Title serif="What's your" script="fitness level?" />
       <Sub>This helps us create a workout plan that fits you and your goals.</Sub>
@@ -570,7 +570,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     const methods: { key: ContraceptiveMethod; label: string; Icon: typeof Heart }[] = [{ key: "pill", label: "Pill", Icon: Pill }, { key: "patch", label: "Patch", Icon: Circle }, { key: "ring", label: "Ring", Icon: Circle }];
     const times = ["07:00", "08:00", "12:00", "18:00", "20:00", "21:00"];
     return (
-      <Shell step={qIndex} total={total} onBack={() => go("fitness")} footer="Small choices Big changes">
+      <Shell step={qIndex} total={total} onBack={() => go("fitness")} footer="Small choices Big changes" image="/images/flagship-yoga.webp">
         <Eyebrow>Your cycle</Eyebrow><Title serif="A few" script="preferences" />
         <Sub>Help us personalize your experience with a few more details.</Sub>
         <div className="mt-3 space-y-2.5">
@@ -594,7 +594,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   if (stage === "checkin") {
     const toggleSym = (s: string) => patch({ symptoms: a.symptoms.includes(s) ? a.symptoms.filter((x) => x !== s) : [...a.symptoms, s] });
     return (
-      <Shell step={qIndex} total={total} onBack={() => go("prefs")} footer="Check in, beautifully">
+      <Shell step={qIndex} total={total} onBack={() => go("prefs")} footer="Check in, beautifully" image="/images/page-bg-today-evening.webp">
         <StageImage src="/images/setup-ai.webp" />
         <Eyebrow>Today's check-in</Eyebrow><Title serif="How are you" script="feeling today?" />
         <Sub>One last little check-in — your Today will open already tuned to how you feel.</Sub>
