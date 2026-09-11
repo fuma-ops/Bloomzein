@@ -471,11 +471,11 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     const checks = ["Personalized to your cycle", "Practical and easy to follow", "Tailored to your goals", "Made for real life", "All in one place", "You can always adjust later"];
     return (
       <Frame>
-        <HeroPanel tagline="A life that feels like you" />
+        <HeroPanel tagline="A life that feels like you" image="/images/landing-hero-happier.webp" />
         <div className="relative flex flex-1 flex-col md:flex-none md:w-[26rem] lg:w-[38rem] xl:w-[42rem]">
           {/* phone-only hero band — replaced by the left HeroPanel on tablet & laptop */}
           <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden md:hidden">
-            <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
+            <img src="/images/landing-hero-happier-portrait.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[60%_30%]" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
             <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
           </div>
