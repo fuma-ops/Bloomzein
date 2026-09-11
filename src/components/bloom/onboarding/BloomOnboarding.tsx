@@ -26,6 +26,7 @@ import { todayISO } from "@/lib/localDate";
 import { openCheckout } from "@/lib/paddle";
 import { setOnboarded, endGuide } from "@/lib/guidedSetup";
 import { WELCOME_TOAST_KEY } from "../NotificationHost";
+import { PENDING_PROFILE_KEY, setPendingTrial } from "@/lib/pendingOnboarding";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bloomzein onboarding — the full "Let's make Bloomzein yours" post-signup flow.
@@ -423,7 +424,14 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     }
     writeCycleSettings({ ...DEFAULT_CYCLE_SETTINGS, lastPeriodStart: a.lastPeriod, cycleLength: a.cycleLength, periodLength: a.periodLength, contraceptiveMethod: a.contraceptive, contraceptiveReminder: true, reminderHour: a.reminderTime, deviceNotifications: a.notifications, trackerMode: "protection" });
     const cleanName = a.name.trim();
-    try { await updateProfile({ setup_done: true, ...(cleanName ? { name: cleanName } : {}), age: a.age, weight: a.weight, weight_unit: "kg" }); } catch { /* offline ok */ }
+    const profilePatch = { setup_done: true, ...(cleanName ? { name: cleanName } : {}), age: a.age, weight: a.weight, weight_unit: "kg" as const };
+    if (user) {
+      try { await updateProfile(profilePatch); } catch { /* offline ok */ }
+    } else {
+      // Guest (no account yet): stash the profile so it's applied the moment
+      // they sign up on the plan-result CTA (picked up in AuthGate).
+      try { localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(profilePatch)); } catch { /* ignore */ }
+    }
     const food = FOOD_MAP[a.foodStyle];
     updateDietProfile({ goal: a.goal, weight: a.weight, heightCm: a.height, age: a.age, targetWeight: a.goal === "maintain" ? a.weight : a.targetWeight, dietType: food.dietType, regime: food.regime });
     try { localStorage.setItem(DIET_SETUP_KEY, JSON.stringify(true)); } catch { /* ignore */ }
@@ -473,11 +481,12 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       <Frame>
         <HeroPanel tagline="A life that feels like you" image="/images/landing-hero-happier.webp" />
         <div className="relative flex flex-1 flex-col md:flex-none md:w-[26rem] lg:w-[38rem] xl:w-[42rem]">
-          {/* phone-only hero band — replaced by the left HeroPanel on tablet & laptop */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden md:hidden">
-            <img src="/images/landing-hero-happier-portrait.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[60%_30%]" />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
-            <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
+          {/* phone-only hero backdrop — a tall, full-column image behind the copy
+              (single column on phone). Replaced by the left HeroPanel on tablet+. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
+            <img src="/images/landing-hero-happier-portrait.webp" alt="" className="absolute inset-x-0 top-0 h-[78vh] min-h-[560px] w-full object-cover object-[58%_20%]" />
+            {/* legibility wash: soft over the top copy, opaque pink over the lower cards */}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,240,247,0.62) 0%, rgba(255,236,246,0.30) 22%, rgba(255,224,239,0.10) 40%, rgba(255,231,242,0.72) 62%, #FFE7F2 74%, #FFECF5 100%)" }} />
           </div>
           <div className="relative px-5 pb-8 md:px-8 md:py-7 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
             <div className="inline-flex items-center gap-1.5 md:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
@@ -875,7 +884,10 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       if (preview) { onDone(); return; }
       setOnboarded();
       queueWelcome();
-      openCheckout(billing, { userId: user?.id, email: user?.email }).catch(() => { /* overlay failed — she stays, can Continue free */ });
+      // Guest: they need an account before checkout. Remember the trial intent,
+      // then hand them to sign-up — AuthGate opens checkout once they're in.
+      if (!user) { setPendingTrial(billing); onDone(); return; }
+      openCheckout(billing, { userId: user.id, email: user.email }).catch(() => { /* overlay failed — she stays, can Continue free */ });
     };
     const Plan = ({ id, name, price, per, badge }: { id: "monthly" | "annual"; name: string; price: string; per: string; badge?: string }) => (
       <button onClick={() => setBilling(id)} className={["relative rounded-[1.3rem] p-3 text-center transition active:scale-[0.98]", billing === id ? "bg-white ring-2 ring-hotpink shadow-[0_10px_28px_rgba(236,72,153,0.2)]" : "bg-white/75 ring-1 ring-hotpink/15"].join(" ")}>

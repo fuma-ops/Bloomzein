@@ -186,10 +186,21 @@ function AppContent() {
     return <Suspense fallback={<PageLoader />}><WelcomeScreen /></Suspense>;
   }
 
-  // Standalone DESIGN PREVIEW of the new-user onboarding flow — writes nothing,
-  // for reviewing the screens without resetting an account.
+  // ── ONBOARDING (open to EVERYONE — no account required) ─────────────────────
+  // The value-first funnel: anyone can build their personalized plan before
+  // signing up. Answers persist to localStorage as they go; on the plan result
+  // the CTAs route to sign-up + subscribe, and the saved answers apply once an
+  // account exists (see AuthGate). `?preview=1` keeps the write-free design
+  // preview for reviewing screens without touching an account.
   if (path === "/onboarding") {
-    return <Suspense fallback={<PageLoader />}><BloomOnboarding preview onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); }} /></Suspense>;
+    const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).has("preview");
+    // A signed-in user who's already fully set up doesn't need onboarding again.
+    if (!isPreview && user && isOnboarded()) {
+      window.history.replaceState({}, "", "/app/today");
+      setPath("/app/today");
+      return <PageLoader />;
+    }
+    return <Suspense fallback={<PageLoader />}><BloomOnboarding preview={isPreview} onDone={() => { window.history.replaceState({}, "", "/app/today"); setPath("/app/today"); forceGate(); window.scrollTo(0, 0); }} /></Suspense>;
   }
 
   // Legal pages — public, standalone, no auth (needed before collecting data)
