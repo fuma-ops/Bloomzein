@@ -26,7 +26,7 @@ import { todayISO } from "@/lib/localDate";
 import { openCheckout } from "@/lib/paddle";
 import { setOnboarded, endGuide } from "@/lib/guidedSetup";
 import { WELCOME_TOAST_KEY } from "../NotificationHost";
-import { PENDING_PROFILE_KEY } from "@/lib/pendingOnboarding";
+import { PENDING_PROFILE_KEY, setPendingTrial } from "@/lib/pendingOnboarding";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bloomzein onboarding — the full "Let's make Bloomzein yours" post-signup flow.
@@ -843,13 +843,21 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
         }));
       } catch { /* ignore */ }
     };
+    // "Continue free" — no purchase now. New users still get the 10-minute
+    // Bloom+ preview once they're in the app; after that the subscribe wall.
+    const finish = () => {
+      if (preview) { onDone(); return; }
+      setOnboarded();
+      queueWelcome();
+      onDone();
+    };
     const startTrial = () => {
       if (preview) { onDone(); return; }
       setOnboarded();
       queueWelcome();
-      // Guest: they need an account before checkout. Hand them to sign-up; the
-      // app's mandatory subscribe wall then takes them the rest of the way.
-      if (!user) { onDone(); return; }
+      // Guest: they need an account before checkout. Remember the plan, hand them
+      // to sign-in, and AuthGate opens the real trial checkout once they're in.
+      if (!user) { setPendingTrial(billing); onDone(); return; }
       openCheckout(billing, { userId: user.id, email: user.email }).catch(() => { /* overlay failed — the subscribe wall will catch her */ });
     };
     const Plan = ({ id, name, price, per, badge }: { id: "monthly" | "annual"; name: string; price: string; per: string; badge?: string }) => (
@@ -877,7 +885,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           </div>
           <div className="mt-3 rounded-[1.4rem] bg-white/70 p-3.5 ring-1 ring-white/70"><div className="space-y-2">{features.map((f) => (<div key={f.t} className="flex items-start gap-2.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-3 w-3 text-hotpink" strokeWidth={2.2} /></span><span className="text-[12.5px] font-semibold leading-snug text-rose/85">{f.t}</span></div>))}</div></div>
           <button onClick={startTrial} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2.5 py-3.5 text-[17px] font-bold text-white"><Sparkles className="h-5 w-5" /> Start 3-day free trial</button>
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 3-day free trial · cancel anytime · no hidden fees</p>
+          <button onClick={finish} className="mt-2 w-full rounded-2xl border border-hotpink/30 bg-white/60 py-2.5 text-[14px] font-bold text-hotpink active:scale-[0.99] transition">Continue with the free version</button>
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 10-minute Bloom+ preview · cancel anytime · no hidden fees</p>
         </div>
       </Frame>
     );

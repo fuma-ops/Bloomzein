@@ -2,7 +2,8 @@ import { useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { AuthModal } from "./AuthModal"
 import { AppIcon } from "./AppIcon"
-import { readPendingProfile, clearPendingProfile } from "@/lib/pendingOnboarding"
+import { openCheckout } from "@/lib/paddle"
+import { readPendingProfile, clearPendingProfile, readPendingTrial, clearPendingTrial } from "@/lib/pendingOnboarding"
 
 const Loader = () => (
   <div className="grid min-h-[60vh] place-items-center">
@@ -32,6 +33,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     if (pending) {
       clearPendingProfile()
       updateProfile(pending).catch(() => { /* offline — Today still works from local setup */ })
+    }
+    // A guest who tapped "Start 3-day free trial" before signing in: open the
+    // real Bloom+ checkout now that they have an account.
+    const trial = readPendingTrial()
+    if (trial) {
+      clearPendingTrial()
+      openCheckout(trial.billing, { userId: user.id, email: user.email }).catch(() => { /* she can retry from the wall */ })
     }
   }, [user, profile, updateProfile])
 
