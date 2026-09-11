@@ -218,6 +218,22 @@ export default function Landing() {
         /* strong soft-white glow so text stays readable over the full-colour photo
            (no flat overlay needed) */
         .bzl-halo{text-shadow:0 1px 2px rgba(255,255,255,.95),0 2px 16px rgba(255,248,252,.98),0 0 7px rgba(255,248,252,.92)}
+        /* ─ feature badges: staggered pop-in, gentle breathe, glossy hover shine ─ */
+        .bzl-pop{opacity:0;transform:translateY(12px) scale(.8);animation:bzl-pop .55s cubic-bezier(.2,.9,.3,1.25) forwards}
+        @keyframes bzl-pop{to{opacity:1;transform:none}}
+        .bzl-badge{position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.16,.7,.2,1),box-shadow .35s;
+          animation:bzl-breathe 4.5s ease-in-out infinite}
+        @keyframes bzl-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2.5px) scale(1.02)}}
+        .bzl-badge::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+          background:radial-gradient(65% 45% at 32% 20%,rgba(255,255,255,.9),transparent 62%)}
+        .bzl-badge::after{content:"";position:absolute;top:0;left:-60%;width:48%;height:100%;pointer-events:none;
+          background:linear-gradient(105deg,transparent,rgba(255,255,255,.9),transparent);transform:skewX(-18deg);opacity:0}
+        .bzl-badge svg{position:relative;z-index:1;transition:transform .35s cubic-bezier(.16,.7,.2,1)}
+        .group:hover .bzl-badge{transform:translateY(-5px) scale(1.1);box-shadow:0 16px 28px -10px rgba(219,39,119,.7);animation-play-state:paused}
+        .group:hover .bzl-badge::after{opacity:1;animation:bzl-shine .7s ease}
+        @keyframes bzl-shine{from{left:-60%}to{left:120%}}
+        .group:hover .bzl-badge svg{transform:scale(1.16) rotate(-5deg)}
+        @media (prefers-reduced-motion:reduce){.bzl-pop,.bzl-badge{animation:none;opacity:1;transform:none}}
       `}</style>
 
       {/* ═════════════ HERO ═════════════ */}
@@ -327,17 +343,17 @@ export default function Landing() {
                   <p className="bzl-kicker shrink-0 text-[8px] md:text-[10px]" style={{ color: "var(--muted)" }}>All in one place</p>
                 </div>
                 <div className="grid grid-cols-4 gap-x-1 gap-y-2.5 md:gap-y-4">
-                  {HERO_FEATURES.map((f) => {
+                  {HERO_FEATURES.map((f, i) => {
                     const Icon = f.icon;
                     return (
-                      <div key={f.title} className="group flex flex-col items-center gap-1 text-center">
+                      <div key={f.title} className="group bzl-pop flex cursor-pointer flex-col items-center gap-1 text-center" style={{ animationDelay: `${1000 + i * 80}ms` }}>
                         <span
-                          className="grid h-10 w-10 place-items-center rounded-full ring-1 ring-white/80 shadow-[0_6px_14px_-7px_rgba(219,39,119,0.6)] transition group-hover:-translate-y-0.5 md:h-12 md:w-12"
-                          style={{ background: "radial-gradient(120% 120% at 30% 22%, #FFF2F8 0%, #FCD6E7 62%, #F7BEDA 100%)" }}
+                          className="bzl-badge grid h-10 w-10 place-items-center rounded-full ring-1 ring-white/80 shadow-[0_6px_14px_-7px_rgba(219,39,119,0.6)] md:h-12 md:w-12"
+                          style={{ background: "radial-gradient(120% 120% at 30% 22%, #FFF2F8 0%, #FBCFE4 58%, #F4AFD3 100%)", animationDelay: `${i * 0.35}s` }}
                         >
                           <Icon className="h-[17px] w-[17px] md:h-[22px] md:w-[22px]" strokeWidth={1.9} style={{ color: "var(--hot)" }} />
                         </span>
-                        <p className="text-[9px] font-extrabold leading-[1.1] md:text-[11.5px]" style={{ color: "var(--plum)" }}>{f.title}</p>
+                        <p className="text-[9px] font-extrabold leading-[1.1] transition-colors group-hover:text-hotpink md:text-[11.5px]" style={{ color: "var(--plum)" }}>{f.title}</p>
                       </div>
                     );
                   })}
