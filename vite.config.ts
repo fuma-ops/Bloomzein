@@ -3,8 +3,10 @@ import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import tsconfigPaths from "vite-tsconfig-paths"
 import { VitePWA } from "vite-plugin-pwa"
-import { writeFileSync } from "node:fs"
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
 import { blogPaths } from "./src/lib/blog"
+import { blogPages, blogIndexPage, type BlogPage } from "./src/lib/prerenderContent"
 
 // Regenerate public/sitemap.xml from the live content on every build so new
 // blog articles are always discoverable by Google without hand-editing.
@@ -33,11 +35,85 @@ function sitemapPlugin(): Plugin {
   return { name: "bloomzein-sitemap", buildStart() { build() } }
 }
 
+// Prerender the public blog into real HTML files at build time. The app is a
+// client-rendered SPA, so without this a crawler/social scraper fetching
+// /blog/<slug> gets an empty shell. We take the built dist/index.html as the
+// template, swap in each article's <title>/description/canonical/OpenGraph tags
+// and inject the article text into #root — so Google indexes the words and
+// social cards show the right title + image. React still boots and re-renders
+// #root for the live reader. On Vercel a real file at the path is served in
+// place of the SPA rewrite, so these win over the catch-all fallback.
+function prerenderBlogPlugin(): Plugin {
+  const SITE = "https://www.bloomzein.com"
+  const abs = (p: string) => (p.startsWith("http") ? p : SITE + p)
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+
+  const renderPage = (tpl: string, page: BlogPage, isArticle: boolean): string => {
+    const title = `${page.title} — Bloomzein`
+    const img = abs(page.imagePath)
+    const url = abs(page.urlPath)
+    let html = tpl
+    // <title>
+    html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(title)}</title>`)
+    // description
+    html = html.replace(/<meta name="description"[^>]*>/, `<meta name="description" content="${esc(page.description)}" />`)
+    // canonical
+    html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${esc(url)}" />`)
+    // Open Graph
+    html = html.replace(/<meta property="og:type"[^>]*>/, `<meta property="og:type" content="${isArticle ? "article" : "website"}" />`)
+    html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${esc(title)}" />`)
+    html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(page.description)}" />`)
+    html = html.replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${esc(url)}" />`)
+    html = html.replace(/<meta property="og:image"[^>]*>/, `<meta property="og:image" content="${esc(img)}" />`)
+    // Twitter
+    html = html.replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${esc(title)}" />`)
+    html = html.replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${esc(page.description)}" />`)
+    html = html.replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${esc(img)}" />`)
+    // Article JSON-LD (helps Google understand it as an article)
+    if (isArticle) {
+      const ld = {
+        "@context": "https://schema.org", "@type": "Article",
+        headline: page.title, description: page.description,
+        image: img, url, publisher: { "@type": "Organization", name: "Bloomzein" },
+        mainEntityOfPage: url,
+      }
+      html = html.replace(/<\/head>/, `  <script type="application/ld+json">${JSON.stringify(ld)}</script>\n  </head>`)
+    }
+    // Inject the static article content for crawlers (React replaces it on boot).
+    html = html.replace(/<div id="root">\s*<\/div>/, `<div id="root">${page.contentHtml}</div>`)
+    return html
+  }
+
+  return {
+    name: "bloomzein-prerender-blog",
+    apply: "build",
+    closeBundle() {
+      const dist = "dist"
+      let tpl: string
+      try { tpl = readFileSync(join(dist, "index.html"), "utf8") } catch { return }
+      const pages = [blogIndexPage(), ...blogPages()]
+      let n = 0
+      for (const page of pages) {
+        const isArticle = page.urlPath !== "/blog"
+        const outPath = join(dist, page.filePath)
+        try {
+          mkdirSync(dirname(outPath), { recursive: true })
+          writeFileSync(outPath, renderPage(tpl, page, isArticle))
+          n++
+        } catch { /* skip a bad page rather than fail the build */ }
+      }
+      // eslint-disable-next-line no-console
+      console.log(`[prerender] wrote ${n} blog HTML files`)
+    },
+  }
+}
+
 export default defineConfig({
   base: "/",
   publicDir: "public",
   plugins: [
     sitemapPlugin(),
+    prerenderBlogPlugin(),
     react(),
     tailwindcss(),
     tsconfigPaths(),
