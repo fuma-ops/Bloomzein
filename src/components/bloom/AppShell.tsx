@@ -5,6 +5,7 @@ import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { NotificationHost } from "./NotificationHost";
+import { TrialPreviewHost } from "./TrialPreviewHost";
 import { RibbonBackground } from "./RibbonBackground";
 import { seedDiscoverNotifications } from "@/lib/discoverNotifications";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
@@ -172,9 +173,9 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       {/* App-wide in-app notifications (toasts) */}
       <NotificationHost />
 
-      {/* The old 10-minute free preview is retired — Bloom+ is now required to
-          enter the app (hard paywall enforced in App.tsx), so nothing unlocks
-          the app for free before a subscription. */}
+      {/* New users get a 10-minute Bloom+ preview; when it ends the mandatory
+          subscribe wall (App.tsx) takes over — no free app access after that. */}
+      <TrialPreviewHost />
 
       {/* ── Phone + Tablet bottom nav — a premium centred floating frosted pill,
              5 primary tabs (Shop lives in the desktop sidebar) ────────────────── */}
