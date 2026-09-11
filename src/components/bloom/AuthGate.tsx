@@ -2,6 +2,8 @@ import { useEffect } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { AuthModal } from "./AuthModal"
 import { AppIcon } from "./AppIcon"
+import { openCheckout } from "@/lib/paddle"
+import { readPendingProfile, clearPendingProfile, readPendingTrial, clearPendingTrial } from "@/lib/pendingOnboarding"
 
 const Loader = () => (
   <div className="grid min-h-[60vh] place-items-center">
@@ -19,6 +21,26 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   // profile.setup_done) stays consistent for anyone who lands with it unset.
   useEffect(() => {
     if (user && profile && !profile.setup_done) updateProfile({ setup_done: true })
+  }, [user, profile, updateProfile])
+
+  // Value-first funnel handoff: a guest who completed onboarding before signing
+  // up has their profile answers stashed locally. The moment they have an
+  // account, apply them (name/age/weight) so their world is fully saved. The
+  // mandatory subscribe wall then takes them to Bloom+ before app access.
+  useEffect(() => {
+    if (!user || !profile) return
+    const pending = readPendingProfile()
+    if (pending) {
+      clearPendingProfile()
+      updateProfile(pending).catch(() => { /* offline — Today still works from local setup */ })
+    }
+    // A guest who tapped "Start 3-day free trial" before signing in: open the
+    // real Bloom+ checkout now that they have an account.
+    const trial = readPendingTrial()
+    if (trial) {
+      clearPendingTrial()
+      openCheckout(trial.billing, { userId: user.id, email: user.email }).catch(() => { /* she can retry from the wall */ })
+    }
   }, [user, profile, updateProfile])
 
   if (loading) return <Loader />

@@ -5,8 +5,8 @@ import { AppIcon } from "./AppIcon";
 import { BloomBackground } from "./BloomBackground";
 import { PaywallHost, PlusReturn } from "./premium/PremiumKit";
 import { NotificationHost } from "./NotificationHost";
-import { RibbonBackground } from "./RibbonBackground";
 import { TrialPreviewHost } from "./TrialPreviewHost";
+import { RibbonBackground } from "./RibbonBackground";
 import { seedDiscoverNotifications } from "@/lib/discoverNotifications";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
 import { PLAN_UPDATED, usePremium } from "@/lib/entitlements";
@@ -173,7 +173,8 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       {/* App-wide in-app notifications (toasts) */}
       <NotificationHost />
 
-      {/* New-user 10-minute Bloom+ preview → end-of-preview choice modal */}
+      {/* New users get a 10-minute Bloom+ preview; when it ends the mandatory
+          subscribe wall (App.tsx) takes over — no free app access after that. */}
       <TrialPreviewHost />
 
       {/* ── Phone + Tablet bottom nav — a premium centred floating frosted pill,

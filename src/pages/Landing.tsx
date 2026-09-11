@@ -10,6 +10,9 @@ import { trackEvent } from "@/lib/analytics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 const START = "/app/today";
+// "Start Blooming" opens the onboarding funnel — no account needed. Visitors
+// build their personalized plan first, then sign up + subscribe on the result.
+const BEGIN = "/onboarding";
 
 /* Brand glyphs lucide no longer ships. */
 function TikTokIcon({ className = "" }: { className?: string }) {
@@ -269,7 +272,7 @@ export default function Landing() {
             </nav>
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline-block">
-                <a href={START} onClick={() => trackEvent("get_started_click", { location: "header" })}
+                <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "header" })}
                   className="bzl-cta px-5 py-2.5 text-sm">
                   Start Blooming <ArrowRight className="h-3.5 w-3.5" />
                 </a>
@@ -289,7 +292,7 @@ export default function Landing() {
                 {n.label}
               </a>
             ))}
-            <a href={START} onClick={() => setMenuOpen(false)} className="bzl-cta mt-1 justify-center px-5 py-3 text-sm">
+            <a href={BEGIN} onClick={() => setMenuOpen(false)} className="bzl-cta mt-1 justify-center px-5 py-3 text-sm">
               Start Blooming — free <ArrowRight className="h-4 w-4" />
             </a>
           </div>
@@ -316,7 +319,7 @@ export default function Landing() {
               beautifully simple app.
             </p>
             <div className="bzl-fade mt-6 flex flex-wrap items-center gap-x-5 gap-y-4 md:mt-8 md:gap-x-6 max-sm:mt-4 max-sm:max-w-[66%]" style={{ animationDelay: "780ms" }}>
-              <a href={START} onClick={() => trackEvent("get_started_click", { location: "hero" })}
+              <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "hero" })}
                 className="bzl-cta whitespace-nowrap px-7 py-3.5 text-base md:px-8 md:py-4 md:text-lg max-sm:px-5 max-sm:text-[15px]">
                 Start Blooming — free <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
               </a>
@@ -470,7 +473,7 @@ export default function Landing() {
           <p className="mx-auto mt-4 max-w-md text-[15px] font-medium text-white/90">
             Join the women turning their rhythm into their superpower — one gentle, beautiful day at a time.
           </p>
-          <a href={START} onClick={() => trackEvent("get_started_click", { location: "footer_cta" })}
+          <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "footer_cta" })}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-9 py-4 text-base font-extrabold shadow-xl transition hover:scale-105 active:scale-95"
             style={{ color: "var(--hot)" }}>
             Start Blooming — free <ArrowRight className="h-4 w-4" />
@@ -521,7 +524,7 @@ export default function Landing() {
       {/* Floating mobile CTA — the primary action is always one tap away */}
       <div className={`fixed inset-x-0 bottom-0 z-40 p-3 sm:hidden transition-all duration-300 ${showBar ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"}`}
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
-        <a href={START} onClick={() => trackEvent("get_started_click", { location: "mobile_bar" })}
+        <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "mobile_bar" })}
           className="bzl-cta w-full justify-center px-6 py-3.5 text-base">
           Start Blooming — free <ArrowRight className="h-4 w-4" />
         </a>

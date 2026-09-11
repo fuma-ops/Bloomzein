@@ -26,6 +26,7 @@ import { todayISO } from "@/lib/localDate";
 import { openCheckout } from "@/lib/paddle";
 import { setOnboarded, endGuide } from "@/lib/guidedSetup";
 import { WELCOME_TOAST_KEY } from "../NotificationHost";
+import { PENDING_PROFILE_KEY, setPendingTrial } from "@/lib/pendingOnboarding";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bloomzein onboarding — the full "Let's make Bloomzein yours" post-signup flow.
@@ -385,17 +386,6 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   const [billing, setBilling] = useState<"monthly" | "annual">("annual");
   const [summary, setSummary] = useState<{ kcal: number; meals: number; sample: string[] }>({ kcal: 0, meals: 0, sample: [] });
   const [recipe, setRecipe] = useState<(typeof RECIPES)[number] | null>(null);
-  // Shows the cute flower "getting everything ready" screen while we finish up and
-  // move her into the app — so a tap on the final buttons gives instant feedback
-  // (no more "did it register?" while Today lazy-loads).
-  const [finishing, setFinishing] = useState(false);
-  // Safety net: if for any reason the soft hand-off doesn't drop us onto Today,
-  // hard-navigate so the flower loader can never become a dead end.
-  useEffect(() => {
-    if (!finishing || preview) return;
-    const t = window.setTimeout(() => { try { window.location.assign("/app/today"); } catch { /* ignore */ } }, 3500);
-    return () => window.clearTimeout(t);
-  }, [finishing, preview]);
   // One-shot "plan ready" celebration: fire the moment the Personalized Plan
   // reveal (stage "previews") first appears, then let it bow out on its own.
   const [celebrate, setCelebrate] = useState(false);
@@ -423,7 +413,14 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     }
     writeCycleSettings({ ...DEFAULT_CYCLE_SETTINGS, lastPeriodStart: a.lastPeriod, cycleLength: a.cycleLength, periodLength: a.periodLength, contraceptiveMethod: a.contraceptive, contraceptiveReminder: true, reminderHour: a.reminderTime, deviceNotifications: a.notifications, trackerMode: "protection" });
     const cleanName = a.name.trim();
-    try { await updateProfile({ setup_done: true, ...(cleanName ? { name: cleanName } : {}), age: a.age, weight: a.weight, weight_unit: "kg" }); } catch { /* offline ok */ }
+    const profilePatch = { setup_done: true, ...(cleanName ? { name: cleanName } : {}), age: a.age, weight: a.weight, weight_unit: "kg" as const };
+    if (user) {
+      try { await updateProfile(profilePatch); } catch { /* offline ok */ }
+    } else {
+      // Guest (no account yet): stash the profile so it's applied the moment
+      // they sign up on the plan-result CTA (picked up in AuthGate).
+      try { localStorage.setItem(PENDING_PROFILE_KEY, JSON.stringify(profilePatch)); } catch { /* ignore */ }
+    }
     const food = FOOD_MAP[a.foodStyle];
     updateDietProfile({ goal: a.goal, weight: a.weight, heightCm: a.height, age: a.age, targetWeight: a.goal === "maintain" ? a.weight : a.targetWeight, dietType: food.dietType, regime: food.regime });
     try { localStorage.setItem(DIET_SETUP_KEY, JSON.stringify(true)); } catch { /* ignore */ }
@@ -448,36 +445,20 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   }
 
   // ── WELCOME (custom hero) ──────────────────────────────────────────────────
-  // Getting-ready flower loader — shown the moment she taps a final CTA, so the
-  // tap clearly registers while we hand her over to the app.
-  if (finishing) {
-    return (
-      <div className="fixed inset-0 z-[110] grid place-items-center px-6 text-center"
-           style={{ background: "radial-gradient(120% 90% at 50% 0%, #FFF0F7 0%, #FFE0EF 42%, #FCC7E1 100%)" }}>
-        <div className="flex flex-col items-center">
-          <span className="relative grid h-20 w-20 place-items-center">
-            <span className="absolute inset-0 animate-ping rounded-full bg-hotpink/20" />
-            <span className="animate-spin" style={{ animationDuration: "2.4s" }}><BloomFlower size={56} petal="#EC4899" center="#FFFFFF" /></span>
-          </span>
-          <p className="mt-6 font-script text-[2rem] leading-none text-hotpink">Getting everything ready…</p>
-          <p className="mt-2 text-[14px] font-semibold text-rose/70">Blooming your personalized world 🌸</p>
-        </div>
-      </div>
-    );
-  }
 
   if (stage === "welcome") {
     const tools = [{ Icon: Moon, l: "Cycle" }, { Icon: Dumbbell, l: "Workout" }, { Icon: Salad, l: "Meals" }, { Icon: Heart, l: "Mind" }, { Icon: CalendarDays, l: "Life" }];
     const checks = ["Personalized to your cycle", "Practical and easy to follow", "Tailored to your goals", "Made for real life", "All in one place", "You can always adjust later"];
     return (
       <Frame>
-        <HeroPanel tagline="A life that feels like you" />
+        <HeroPanel tagline="A life that feels like you" image="/images/landing-hero-happier.webp" />
         <div className="relative flex flex-1 flex-col md:flex-none md:w-[26rem] lg:w-[38rem] xl:w-[42rem]">
-          {/* phone-only hero band — replaced by the left HeroPanel on tablet & laptop */}
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[52vh] min-h-[360px] overflow-hidden md:hidden">
-            <img src="/images/page-bg-today-morning.webp" alt="" className="absolute inset-0 h-full w-full object-cover object-[68%_20%]" />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(105deg, rgba(255,236,246,0.92) 0%, rgba(255,224,239,0.62) 38%, rgba(255,214,235,0.12) 62%, transparent 82%)" }} />
-            <div className="absolute inset-x-0 bottom-0 h-40" style={{ background: "linear-gradient(180deg, transparent, #FFE7F2 78%, #FFECF5 100%)" }} />
+          {/* phone-only hero backdrop — a tall, full-column image behind the copy
+              (single column on phone). Replaced by the left HeroPanel on tablet+. */}
+          <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden md:hidden">
+            <img src="/images/landing-hero-happier-portrait.webp" alt="" className="absolute inset-x-0 top-0 h-[78vh] min-h-[560px] w-full object-cover object-[58%_20%]" />
+            {/* legibility wash: soft over the top copy, opaque pink over the lower cards */}
+            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,240,247,0.62) 0%, rgba(255,236,246,0.30) 22%, rgba(255,224,239,0.10) 40%, rgba(255,231,242,0.72) 62%, #FFE7F2 74%, #FFECF5 100%)" }} />
           </div>
           <div className="relative px-5 pb-8 md:px-8 md:py-7 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
             <div className="inline-flex items-center gap-1.5 md:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
@@ -862,20 +843,22 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
         }));
       } catch { /* ignore */ }
     };
+    // "Continue free" — no purchase now. New users still get the 10-minute
+    // Bloom+ preview once they're in the app; after that the subscribe wall.
     const finish = () => {
       if (preview) { onDone(); return; }
+      setOnboarded();
       queueWelcome();
-      setFinishing(true);          // show the flower loader immediately (instant feedback)
-      // Release after a short beat: setOnboarded() flips the gate (it fires
-      // "bloom:guide-updated", which forces App to re-render even though the path
-      // is already /app/today), and onDone scrolls/settles Today.
-      window.setTimeout(() => { setOnboarded(); onDone(); }, 700);
+      onDone();
     };
     const startTrial = () => {
       if (preview) { onDone(); return; }
       setOnboarded();
       queueWelcome();
-      openCheckout(billing, { userId: user?.id, email: user?.email }).catch(() => { /* overlay failed — she stays, can Continue free */ });
+      // Guest: they need an account before checkout. Remember the plan, hand them
+      // to sign-in, and AuthGate opens the real trial checkout once they're in.
+      if (!user) { setPendingTrial(billing); onDone(); return; }
+      openCheckout(billing, { userId: user.id, email: user.email }).catch(() => { /* overlay failed — the subscribe wall will catch her */ });
     };
     const Plan = ({ id, name, price, per, badge }: { id: "monthly" | "annual"; name: string; price: string; per: string; badge?: string }) => (
       <button onClick={() => setBilling(id)} className={["relative rounded-[1.3rem] p-3 text-center transition active:scale-[0.98]", billing === id ? "bg-white ring-2 ring-hotpink shadow-[0_10px_28px_rgba(236,72,153,0.2)]" : "bg-white/75 ring-1 ring-hotpink/15"].join(" ")}>
@@ -903,7 +886,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           <div className="mt-3 rounded-[1.4rem] bg-white/70 p-3.5 ring-1 ring-white/70"><div className="space-y-2">{features.map((f) => (<div key={f.t} className="flex items-start gap-2.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-3 w-3 text-hotpink" strokeWidth={2.2} /></span><span className="text-[12.5px] font-semibold leading-snug text-rose/85">{f.t}</span></div>))}</div></div>
           <button onClick={startTrial} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2.5 py-3.5 text-[17px] font-bold text-white"><Sparkles className="h-5 w-5" /> Start 3-day free trial</button>
           <button onClick={finish} className="mt-2 w-full rounded-2xl border border-hotpink/30 bg-white/60 py-2.5 text-[14px] font-bold text-hotpink active:scale-[0.99] transition">Continue with the free version</button>
-          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 3-day free trial · cancel anytime · no hidden fees</p>
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 10-minute Bloom+ preview · cancel anytime · no hidden fees</p>
         </div>
       </Frame>
     );

@@ -85,7 +85,7 @@ function InlineCheckout({
 }
 
 /* ─────────────────────────── The paywall sheet ─────────────────────────── */
-export function PaywallSheet({ feature = "general", onClose }: { feature?: PaywallFeature; onClose: () => void }) {
+export function PaywallSheet({ feature = "general", onClose, mandatory = false }: { feature?: PaywallFeature; onClose: () => void; mandatory?: boolean }) {
   const [annual, setAnnual] = useState(true);
   const [done, setDone] = useState(false);
   const [checkout, setCheckout] = useState<"monthly" | "annual" | null>(null);
@@ -136,7 +136,7 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={mandatory ? undefined : onClose}>
       <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
       <div
         onClick={(e) => e.stopPropagation()}
@@ -144,9 +144,11 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
       >
         {/* soft premium header wash */}
         <div className="relative px-6 pt-6 pb-5 text-center" style={{ background: `linear-gradient(160deg, #FFF1F6, #FCE7F3)` }}>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
-            <X className="h-4 w-4" />
-          </button>
+          {!mandatory && (
+            <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
+              <X className="h-4 w-4" />
+            </button>
+          )}
           <span className="mx-auto mb-2 grid h-14 w-14 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
             <Crown className="h-7 w-7" strokeWidth={1.8} />
           </span>
@@ -189,7 +191,9 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
               <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
             </button>
             <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
-            <button onClick={onClose} className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/45 transition hover:text-hotpink">Maybe later</button>
+            {!mandatory && (
+              <button onClick={onClose} className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/45 transition hover:text-hotpink">Maybe later</button>
+            )}
           </div>
         )}
       </div>
@@ -230,6 +234,10 @@ export function PlusReturn() {
     // param) — GA4 records it and GTM can convert the Pinterest Tag on it.
     if (params.get("checkout") === "success") {
       trackEvent("purchase", { currency: "USD" });
+      // A real Paddle payment is the only thing that lands here, so unlock
+      // immediately — the buyer never gets stuck behind the paywall if the
+      // webhook is slow. refreshEntitlement below reconciles with the backend.
+      setPlan("plus");
     }
     // clean the URL so a refresh doesn't re-trigger it
     params.delete("welcome"); params.delete("checkout");

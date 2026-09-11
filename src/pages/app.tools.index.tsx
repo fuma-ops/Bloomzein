@@ -118,9 +118,7 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
       {...linkPropsFor(tool)}
       onClick={handleClick}
       style={{ animationDelay: `${index * 0.06}s, ${(index % 6) * 1.4}s` }}
-      className={`bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate ${
-        explored ? "" : "opacity-70"
-      }`}
+      className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate"
     >
       <div
         className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
@@ -129,9 +127,7 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
 
       <div className="flex items-start justify-between">
         <span
-          className={`animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0 clay-blob ${
-            explored ? "" : "grayscale opacity-60"
-          }`}
+          className="animate-icon-breathe grid h-12 w-12 sm:h-14 sm:w-14 place-items-center rounded-2xl text-white shrink-0 clay-blob"
         >
           <CuteToolIcon slug={tool.slug} className="h-7 w-7 sm:h-8 sm:w-8 drop-shadow-[0_2px_3px_oklch(0.4_0.22_350/0.3)]" />
         </span>
