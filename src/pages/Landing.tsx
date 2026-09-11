@@ -92,7 +92,6 @@ const HERO_FEATURES: { icon: LucideIcon; title: string }[] = [
   { icon: Heart, title: "Habits" },
   { icon: Droplet, title: "Water" },
   { icon: Wallet, title: "Budget" },
-  { icon: Sparkles, title: "And More" },
 ];
 const NAV: { label: string; href: string }[] = [
   { label: "Home", href: "#top" },
