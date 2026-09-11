@@ -231,10 +231,18 @@ function StageImage({ src }: { src: string }) {
 }
 
 /** Small round illustrative thumbnail (Today-setup images) for the plan sections. */
-function SetupThumb({ src, big = false }: { src: string; big?: boolean }) {
+/** A section's visual: a small topical photo with the section's ICON kept as a
+ *  little badge overlaid in the corner — so each plan section has both. */
+function SectionMedia({ img, Icon, big = false }: { img: string; Icon: typeof Heart; big?: boolean }) {
+  const s = big ? "h-12 w-12" : "h-10 w-10";
   return (
-    <span className={`${big ? "h-12 w-12" : "h-10 w-10"} shrink-0 overflow-hidden rounded-full ring-1 ring-white/70 shadow-[0_5px_12px_-5px_rgba(219,39,119,0.65)]`}>
-      <img src={src} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+    <span className={`relative ${s} shrink-0`}>
+      <span className="block h-full w-full overflow-hidden rounded-full ring-1 ring-white/70 shadow-[0_5px_12px_-5px_rgba(219,39,119,0.65)]">
+        <img src={img} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+      </span>
+      <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white ring-2 ring-white shadow">
+        <Icon className="h-3 w-3" strokeWidth={2.4} />
+      </span>
     </span>
   );
 }
@@ -701,7 +709,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           <div className="mt-5 grid gap-4 lg:grid-cols-[1.35fr_1fr]">
             <div className={CARD}>
               <div className="flex items-start gap-3">
-                <SetupThumb src="/images/setup-cycle.webp" big />
+                <SectionMedia img="/images/setup-cycle.webp" Icon={Sprout} big />
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold text-rose/70">You're in your</p>
                   <p className="font-script text-[1.9rem] leading-none text-hotpink">{info.title}</p>
@@ -713,7 +721,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
               <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>Learn more about this phase <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-cycle.webp" /><p className="text-[16px] font-extrabold text-hotpink">How you might feel</p></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-cycle.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">How you might feel</p></div>
               <div className="mt-3 grid grid-cols-4 gap-2">{info.feels.map((f) => (<div key={f.l} className="flex flex-col items-center gap-1.5 text-center"><span className="grid h-11 w-11 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><span className="text-[11.5px] font-bold leading-tight text-rose/80">{f.l}</span></div>))}</div>
               <div className="mt-3 rounded-2xl bg-hotpink/8 p-3"><p className="text-[12.5px] leading-snug text-rose/80"><span className="font-script text-xl text-hotpink">“</span>{info.quote}</p></div>
             </div>
@@ -722,7 +730,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           {/* goal · nutrition · today's focus */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className={CARD}>
-              <div className="flex items-center justify-between"><div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-goal.webp" /><div><p className="text-[12.5px] font-bold text-rose/60">Your goal</p><p className="text-[17px] font-extrabold text-hotpink leading-tight">{goalLabel}</p></div></div><button onClick={() => go("goal")} className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink/70 active:scale-95"><Pencil className="h-3.5 w-3.5" /> Edit</button></div>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-goal.webp" Icon={Scale} /><div><p className="text-[12.5px] font-bold text-rose/60">Your goal</p><p className="text-[17px] font-extrabold text-hotpink leading-tight">{goalLabel}</p></div></div><button onClick={() => go("goal")} className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink/70 active:scale-95"><Pencil className="h-3.5 w-3.5" /> Edit</button></div>
               {isMaintain ? (
                 <>
                   <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">You're maintaining a healthy balance — no restriction needed. We'll keep your nutrition and movement steady so you feel your best every day.</p>
@@ -738,7 +746,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
               )}
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-goal.webp" /><div><p className="text-[12.5px] font-bold text-rose/60">Your daily nutrition</p><p className="leading-none"><span className="text-[22px] font-extrabold text-hotpink">{kcal.toLocaleString()}</span> <span className="text-[13px] font-bold text-rose/70">kcal</span></p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/grid-diet.webp" Icon={Utensils} /><div><p className="text-[12.5px] font-bold text-rose/60">Your daily nutrition</p><p className="leading-none"><span className="text-[22px] font-extrabold text-hotpink">{kcal.toLocaleString()}</span> <span className="text-[13px] font-bold text-rose/70">kcal</span></p></div></div>
               <p className="mt-1 text-[12px] font-semibold text-rose/60">Your recommended intake today</p>
               <div className="mt-3 flex h-2.5 overflow-hidden rounded-full"><span className="bg-hotpink" style={{ width: "40%" }} /><span className="bg-pink-400" style={{ width: "30%" }} /><span className="bg-rose-300" style={{ width: "30%" }} /></div>
               <div className="mt-2.5 grid grid-cols-3 divide-x divide-hotpink/15 text-center">
@@ -747,7 +755,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
               <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>See why this is right for you <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-ai.webp" /><p className="text-[17px] font-extrabold text-hotpink">Today's focus</p></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Star} /><p className="text-[17px] font-extrabold text-hotpink">Today's focus</p></div>
               <div className="mt-3 space-y-2">{todaysFocus.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
             </div>
           </div>
@@ -755,7 +763,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           {/* meals */}
           <div className={`${CARD} mt-4`}>
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-meals.webp" /><div><p className="text-[17px] font-extrabold text-hotpink leading-tight">Your meals for today</p><p className="text-[12px] font-semibold text-rose/65">Delicious, balanced meals — <b className="text-hotpink">{kcal.toLocaleString()} kcal</b> total</p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-meals.webp" Icon={Salad} /><div><p className="text-[17px] font-extrabold text-hotpink leading-tight">Your meals for today</p><p className="text-[12px] font-semibold text-rose/65">Delicious, balanced meals — <b className="text-hotpink">{kcal.toLocaleString()} kcal</b> total</p></div></div>
               <button onClick={() => go("pricing")} className={`${LINK} hidden active:scale-95 sm:inline-flex`}>View full meal plan <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">{meals.map((m) => (
@@ -769,17 +777,17 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           {/* workouts · yoga · mind */}
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-movement.webp" /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your workouts</p><p className="text-[11.5px] font-semibold text-rose/65">3 sessions this week · 30–40 min</p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-workout.webp" Icon={Dumbbell} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your workouts</p><p className="text-[11.5px] font-semibold text-rose/65">3 sessions this week · 30–40 min</p></div></div>
               <div className="mt-3 grid grid-cols-3 gap-2">{workouts.map((w) => <VideoThumb key={w.name} {...w} />)}</div>
               <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>View your weekly plan <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-movement.webp" /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your yoga flow</p><p className="text-[11.5px] font-semibold text-rose/65">Recommended for your phase</p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-yoga.webp" Icon={Flower2} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your yoga flow</p><p className="text-[11.5px] font-semibold text-rose/65">Recommended for your phase</p></div></div>
               <div className="mt-3 grid grid-cols-3 gap-2">{yoga.map((y) => <VideoThumb key={y.name} {...y} />)}</div>
               <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>View all yoga flows <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SetupThumb src="/images/setup-ai.webp" /><p className="text-[16px] font-extrabold text-hotpink">Mind &amp; self-care</p></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">Mind &amp; self-care</p></div>
               <div className="mt-3 space-y-2">{selfCare.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
               <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>Add to my calendar <ArrowRight className="h-3.5 w-3.5" /></button>
             </div>
