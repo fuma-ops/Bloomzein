@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
   Search, Clock, ArrowRight, Flower2, Sparkles, Salad, CookingPot, Gem,
   PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star,
-  PiggyBank, Droplets } from "lucide-react";
+  PiggyBank, Droplets, Share2, Link2, Check, Facebook } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { supabase } from "@/lib/supabase";
 import { ARTICLES, FILTERS, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
@@ -875,6 +875,80 @@ function BlogArticleBody({ md }: { md: string }) {
   );
 }
 
+/* Brand glyphs lucide doesn't ship. */
+function PinterestGlyph({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M12 2C6.48 2 2 6.48 2 12c0 4.24 2.64 7.86 6.36 9.31-.09-.79-.17-2 .04-2.86.18-.78 1.17-4.97 1.17-4.97s-.3-.6-.3-1.48c0-1.39.81-2.43 1.81-2.43.85 0 1.27.64 1.27 1.41 0 .86-.55 2.14-.83 3.33-.24.99.5 1.8 1.48 1.8 1.77 0 3.13-1.87 3.13-4.57 0-2.39-1.72-4.06-4.17-4.06-2.84 0-4.51 2.13-4.51 4.33 0 .86.33 1.78.74 2.28.08.1.09.19.07.29-.08.32-.25 1-.28 1.14-.04.18-.15.22-.34.13-1.25-.58-2.03-2.4-2.03-3.87 0-3.15 2.29-6.04 6.6-6.04 3.46 0 6.15 2.47 6.15 5.77 0 3.44-2.17 6.21-5.18 6.21-1.01 0-1.97-.53-2.29-1.15l-.62 2.37c-.23.86-.83 1.94-1.24 2.6.94.29 1.92.44 2.95.44 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+    </svg>
+  );
+}
+function WhatsAppGlyph({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51-.17-.01-.37-.01-.57-.01-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.63.71.23 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.5h-.01a9.4 9.4 0 0 1-4.8-1.31l-.34-.2-3.57.94.95-3.48-.22-.36a9.38 9.38 0 0 1-1.44-5.01c0-5.19 4.23-9.42 9.43-9.42 2.52 0 4.88.98 6.66 2.76a9.35 9.35 0 0 1 2.76 6.67c0 5.19-4.23 9.42-9.42 9.42zM20.13 3.86A11.32 11.32 0 0 0 12.05 .5C5.8.5.72 5.58.72 11.83c0 2 .52 3.96 1.52 5.68L.5 23.5l6.13-1.61a11.3 11.3 0 0 0 5.42 1.38h.01c6.25 0 11.33-5.08 11.33-11.33 0-3.03-1.18-5.87-3.26-8.08z" />
+    </svg>
+  );
+}
+function XGlyph({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231zm-1.161 17.52h1.833L7.084 4.126H5.117l11.966 15.644z" />
+    </svg>
+  );
+}
+
+/** Easy social sharing for an article — native OS share sheet where available,
+ *  plus one-tap links to each platform. The URL carries the article's OpenGraph
+ *  tags (prerendered), so previews show the right title + image; Pinterest also
+ *  gets the image explicitly via its `media` param. */
+function ShareBar({ url, title, image }: { url: string; title: string; image: string }) {
+  const [copied, setCopied] = useState(false);
+  const canNativeShare = typeof navigator !== "undefined" && typeof (navigator as Navigator & { share?: unknown }).share === "function";
+  const text = `${title} — Bloomzein`;
+  const E = encodeURIComponent;
+
+  const links: { label: string; href: string; Icon: React.ComponentType<{ className?: string }>; bg: string }[] = [
+    { label: "Pinterest", href: `https://pinterest.com/pin/create/button/?url=${E(url)}&media=${E(image)}&description=${E(text)}`, Icon: PinterestGlyph, bg: "bg-[#E60023] text-white hover:brightness-110" },
+    { label: "Facebook", href: `https://www.facebook.com/sharer/sharer.php?u=${E(url)}`, Icon: (p) => <Facebook className={p.className} />, bg: "bg-[#1877F2] text-white hover:brightness-110" },
+    { label: "WhatsApp", href: `https://wa.me/?text=${E(text + " " + url)}`, Icon: WhatsAppGlyph, bg: "bg-[#25D366] text-white hover:brightness-110" },
+    { label: "X", href: `https://twitter.com/intent/tweet?text=${E(text)}&url=${E(url)}`, Icon: XGlyph, bg: "bg-black text-white hover:brightness-125" },
+  ];
+
+  const nativeShare = () => {
+    (navigator as Navigator & { share: (d: { title: string; text: string; url: string }) => Promise<void> })
+      .share({ title, text, url }).catch(() => { /* user cancelled */ });
+  };
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch { /* ignore */ }
+  };
+
+  return (
+    <div className="mt-8 rounded-[1.4rem] border border-petal/50 bg-blush/30 p-4 sm:p-5">
+      <p className="flex items-center gap-2 font-script text-[1.5rem] leading-none text-hotpink">
+        <Heart className="h-5 w-5 fill-hotpink text-hotpink" /> Loved this? Share it
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-2.5">
+        {canNativeShare && (
+          <button onClick={nativeShare} className="inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:brightness-110 active:scale-95">
+            <Share2 className="h-4 w-4" /> Share
+          </button>
+        )}
+        {links.map(({ label, href, Icon, bg }) => (
+          <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={`Share on ${label}`} title={`Share on ${label}`}
+            className={`grid h-10 w-10 place-items-center rounded-full shadow-sm transition active:scale-90 ${bg}`}>
+            <Icon className="h-[18px] w-[18px]" />
+          </a>
+        ))}
+        <button onClick={copy} aria-label="Copy link" title="Copy link"
+          className="inline-flex items-center gap-1.5 rounded-full border border-hotpink/30 bg-white/80 px-3.5 py-2 text-sm font-bold text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+          {copied ? <><Check className="h-4 w-4 text-emerald-500" strokeWidth={3} /> Copied</> : <><Link2 className="h-4 w-4" /> Copy link</>}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function BlogArticlePage({ slug }: { slug: string }) {
   const article = articleBySlug(slug);
   useSeo(
@@ -997,6 +1071,8 @@ export function BlogArticlePage({ slug }: { slug: string }) {
               <ArticleBody parsed={parseArticle(md)} readHref={blogReadHref} />
             )}
           </div>
+
+          <ShareBar url={`${SITE}/blog/${slug}`} title={article.title} image={SITE + article.image} />
 
           {related.length > 0 && (
             <section className="mt-10">
