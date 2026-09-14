@@ -43,6 +43,7 @@ const YogaPage = lazyRetry(() => import("./pages/app.tools.yoga"));
 const MealsPage = lazyRetry(() => import("./pages/app.tools.meals"));
 const DietPage = lazyRetry(() => import("./pages/app.tools.diet"));
 const WorkoutPage = lazyRetry(() => import("./pages/app.tools.workout"));
+const BreathworkPage = lazyRetry(() => import("./pages/app.tools.breathwork"));
 const IntroPreviewPage = lazyRetry(() => import("./pages/app.intro-preview"));
 const WelcomeScreen = lazyRetry(() => import("./pages/app.welcome-screen"));
 const BloomOnboarding = lazyRetry(() => import("./components/bloom/onboarding/BloomOnboarding"));
@@ -266,6 +267,8 @@ function AppContent() {
     content = <DietPage />;
   } else if (path === "/app/tools/workout") {
     content = <WorkoutPage />;
+  } else if (path === "/app/tools/breathwork") {
+    content = <BreathworkPage />;
   } else if (path === "/app/tools/intro") {
     content = <IntroPreviewPage />;
   } else if (path === "/app/tools/notes") {
