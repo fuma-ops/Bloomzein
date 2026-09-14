@@ -466,6 +466,37 @@ export function CuteToolIcon({ slug, className = "h-8 w-8" }: Props) {
         </svg>
       );
 
+    case "breathwork":
+      /* Glossy pink lotus — meditation & breathwork */
+      return (
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+          <defs>
+            <linearGradient id="lotusPetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.88 0.12 350)" />
+              <stop offset="100%" stopColor="oklch(0.62 0.26 350)" />
+            </linearGradient>
+            <linearGradient id="lotusMid" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="oklch(0.95 0.06 350)" />
+              <stop offset="100%" stopColor="oklch(0.74 0.22 350)" />
+            </linearGradient>
+          </defs>
+          {/* soft water shadow */}
+          <ellipse cx="50" cy="82" rx="30" ry="6" fill="oklch(0.55 0.2 350 / 0.18)" />
+          {/* outer side petals */}
+          <path d="M50 78 C 24 74 12 56 16 40 C 30 44 44 58 50 78 Z" fill="url(#lotusPetal)" stroke="#fff" strokeWidth="2" />
+          <path d="M50 78 C 76 74 88 56 84 40 C 70 44 56 58 50 78 Z" fill="url(#lotusPetal)" stroke="#fff" strokeWidth="2" />
+          {/* inner side petals */}
+          <path d="M50 80 C 33 74 26 54 34 36 C 44 44 50 60 50 80 Z" fill="url(#lotusMid)" stroke="#fff" strokeWidth="2" />
+          <path d="M50 80 C 67 74 74 54 66 36 C 56 44 50 60 50 80 Z" fill="url(#lotusMid)" stroke="#fff" strokeWidth="2" />
+          {/* center petal */}
+          <path d="M50 82 C 40 66 40 40 50 22 C 60 40 60 66 50 82 Z" fill="url(#lotusMid)" stroke="#fff" strokeWidth="2.5" />
+          {/* sheen + sparkle */}
+          <path d="M47 34 C 45 46 45 60 49 72" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity="0.6" />
+          <circle cx="72" cy="34" r="2" fill="#fff" opacity="0.9" />
+          <circle cx="26" cy="40" r="1.6" fill="#fff" opacity="0.8" />
+        </svg>
+      );
+
     default:
       return null;
   }
