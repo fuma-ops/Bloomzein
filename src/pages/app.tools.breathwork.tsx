@@ -344,7 +344,7 @@ function pick(active: boolean) {
 function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center sm:p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-[#7a1247]/40 backdrop-blur-sm animate-fade-in" />
+      <div className="absolute inset-0 bg-rose/25 backdrop-blur-[3px] animate-fade-in" />
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-t-[1.75rem] bg-white p-5 shadow-2xl animate-scale-in sm:rounded-[1.75rem]" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
         <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
         {children}
