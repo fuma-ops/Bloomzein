@@ -48,12 +48,23 @@ export function DeleteAccountInfoPage() {
           </section>
 
           <section>
+            <h2 className="flex items-center gap-1.5 text-[17px] font-extrabold text-hotpink"><Trash2 className="h-4 w-4" /> Delete only some of your data</h2>
+            <p className="mt-1.5 text-[14px] leading-relaxed text-rose/85">
+              You don't have to delete your whole account to remove data. Inside the app you can
+              delete individual items at any time — a journal entry, a logged meal, a water or
+              medication log, a saved favourite — and <b className="text-rose">Me → Start fresh</b> clears
+              all your tool data (cycle, meals, movement, mood, water, budget) while keeping your
+              account. You can also email us (below) to request deletion of specific data.
+            </p>
+          </section>
+
+          <section>
             <h2 className="flex items-center gap-1.5 text-[17px] font-extrabold text-hotpink"><Mail className="h-4 w-4" /> Prefer we do it for you?</h2>
             <p className="mt-1.5 text-[14px] leading-relaxed text-rose/85">
               If you can't access the app, email us from your account's email address and we'll
-              delete your account and data within 30 days:
+              delete your account or specific data within 30 days:
             </p>
-            <a href="mailto:hello@bloomzein.com?subject=Delete%20my%20account" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:brightness-110">
+            <a href="mailto:hello@bloomzein.com?subject=Delete%20my%20data" className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:brightness-110">
               <Mail className="h-4 w-4" /> hello@bloomzein.com
             </a>
           </section>
