@@ -1,29 +1,32 @@
 # Digital Asset Links (TWA ↔ domain verification)
 
-`assetlinks.json` proves that this website (bloomzein.com) and the Android app
-are the same owner, so the Play Store app (a Trusted Web Activity) runs
-full-screen **without the browser address bar**.
+`public/.well-known/assetlinks.json` proves bloomzein.com and the Android app
+are the same owner, so the Play Store app (Trusted Web Activity) runs
+full-screen without the browser address bar.
 
-## How to finish it (2 values to paste)
+Served at: https://www.bloomzein.com/.well-known/assetlinks.json
 
-When you package the PWA with **PWABuilder** (or Bubblewrap), it generates the
-exact `assetlinks.json` for you. Two values must match your final app:
+## Current state
+Filled from the PWABuilder package:
+- package_name: `com.bloomzein.twa`
+- sha256 (PWABuilder upload key): `13:D0:FA:05:...:6A:06`
 
-1. **`package_name`** — the Android application id you chose in PWABuilder
-   (e.g. `com.bloomzein.app`).
-2. **`sha256_cert_fingerprints`** — the SHA-256 of the key that **signs** the app.
-   Use the **App signing key** fingerprint from
-   **Play Console → your app → Setup → App integrity → App signing**
-   (not the upload key). PWABuilder also prints a fingerprint for its generated key.
+## IMPORTANT — after you upload the .aab to Play Console
+New apps use **Google Play App Signing**: Google re-signs the app with its OWN
+key, so the fingerprint that verifies in production is DIFFERENT from the
+PWABuilder one above.
 
-Replace the two `REPLACE_WITH_...` placeholders in `assetlinks.json` with those
-values (or just overwrite the whole file with the one PWABuilder gives you),
-then redeploy. It will be served at:
-
-    https://www.bloomzein.com/.well-known/assetlinks.json
+1. Upload the .aab, then go to:
+   Play Console → your app → **Setup → App integrity → App signing** →
+   copy the **SHA-256 certificate fingerprint** of the *App signing key*.
+2. Add it to the `sha256_cert_fingerprints` array in assetlinks.json (keep both
+   — upload key + app signing key — so it verifies before and after re-signing),
+   then redeploy.
 
 ## Verify
-
-Open that URL in a browser (must return raw JSON, HTTP 200), then check with
-Google's tester:
+Open the URL (must return JSON, HTTP 200) and test with:
 https://developers.google.com/digital-asset-links/tools/generator
+
+## Secrets (DO NOT COMMIT)
+The signing keystore + passwords from the PWABuilder zip (signing.keystore,
+signing-key-info.txt) must be kept private and are NOT stored in this repo.
