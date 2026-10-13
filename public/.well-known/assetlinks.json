@@ -5,7 +5,8 @@
       "namespace": "android_app",
       "package_name": "com.bloomzein.twa",
       "sha256_cert_fingerprints": [
-        "13:D0:FA:05:7F:80:34:4E:39:D3:75:2F:2B:F7:D9:BC:F4:29:10:24:C7:31:6D:D6:3A:F6:B3:40:F6:EF:6A:06"
+        "13:D0:FA:05:7F:80:34:4E:39:D3:75:2F:2B:F7:D9:BC:F4:29:10:24:C7:31:6D:D6:3A:F6:B3:40:F6:EF:6A:06",
+        "C5:B0:FE:72:4B:04:C4:7A:B2:63:9D:5A:C0:15:4C:B5:81:0D:4B:33:52:98:50:AF:16:CF:28:2C:7A:FA:16:04"
       ]
     }
   }
