@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bloomzein.twa",
+      "sha256_cert_fingerprints": [
+        "13:D0:FA:05:7F:80:34:4E:39:D3:75:2F:2B:F7:D9:BC:F4:29:10:24:C7:31:6D:D6:3A:F6:B3:40:F6:EF:6A:06"
+      ]
+    }
+  }
+]

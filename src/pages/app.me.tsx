@@ -4,7 +4,7 @@ import {
   Sparkles, Wallet,
   ChevronRight, Camera, Trash2,
   User, Crown, Bell, Shield, LifeBuoy, LogOut, RotateCcw,
-  Check, Inbox, Eye, Heart,
+  Check, Inbox, Eye, Heart, AlertTriangle, X, Loader2,
 } from "lucide-react";
 
 /** Only this account sees the private admin inbox link. */
@@ -119,7 +119,7 @@ function readFavorites(): { items: FavItem[]; isReal: boolean } {
   return { isReal: true, items: items.slice(0, 12) };
 }
 
-type SettingAction = "edit" | "logout" | "replay" | "reset" | "preview-first-time";
+type SettingAction = "edit" | "logout" | "replay" | "reset" | "preview-first-time" | "delete";
 type SettingItem = { Icon: typeof User; label: string; href?: string; action?: SettingAction; soon?: boolean };
 const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
@@ -136,6 +136,7 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
     items: [
       { Icon: RotateCcw, label: "Start fresh — reset my whole world", action: "reset" },
+      { Icon: Trash2, label: "Delete my account", action: "delete" },
       { Icon: LogOut, label: "Log out", action: "logout" },
     ],
     danger: true,
@@ -143,7 +144,7 @@ const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
 ];
 
 export default function MePage() {
-  const { profile, user, signOut, updateProfile } = useAuth();
+  const { profile, user, signOut, updateProfile, deleteAccount } = useAuth();
   const displayName = profile?.name || user?.email?.split("@")[0] || "Bloom girl";
 
   // Add the private "Messages" inbox link only for the admin account.
@@ -204,6 +205,8 @@ export default function MePage() {
     resetEverything();
     window.location.href = "/app/today";
   }
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Editing age/weight on the account MUST flow into the canonical Diet profile —
   // the ONE store the BMR, calorie targets and goal projection read — so the
@@ -461,6 +464,7 @@ export default function MePage() {
                   : item.action === "reset" ? () => resetWorld()
                   : item.action === "preview-first-time" ? () => previewFirstTime()
                   : item.action === "edit" ? () => setEditOpen(true)
+                  : item.action === "delete" ? () => setDeleteOpen(true)
                   : undefined;
                 return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{inner}</button>;
               })}
@@ -493,6 +497,19 @@ export default function MePage() {
         />
         );
       })()}
+
+      {deleteOpen && (
+        <DeleteAccountModal
+          email={user?.email ?? null}
+          onClose={() => setDeleteOpen(false)}
+          onConfirm={async () => {
+            const { error } = await deleteAccount();
+            if (error) return error;
+            window.location.href = "/";
+            return null;
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -604,6 +621,63 @@ function EditProfileModal({
           {saving ? "Saving…" : <><Check className="h-4 w-4" strokeWidth={3} /> Save changes</>}
         </button>
         <p className="mt-2 text-center text-[10px] text-rose/50">Syncs to your Diet plan & profile ✿</p>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+/** Serious, reversible-looking confirmation for permanent account deletion.
+ *  Requires typing DELETE, matching app-store "clear intent" expectations. */
+function DeleteAccountModal({ email, onClose, onConfirm }: {
+  email: string | null;
+  onClose: () => void;
+  onConfirm: () => Promise<string | null>;
+}) {
+  const [confirmText, setConfirmText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const ready = confirmText.trim().toUpperCase() === "DELETE";
+
+  const run = async () => {
+    if (!ready || busy) return;
+    setBusy(true); setErr(null);
+    const error = await onConfirm();
+    if (error) { setErr(error); setBusy(false); }
+    // on success the page redirects, so no need to reset state
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[160] flex items-end justify-center sm:items-center sm:p-4" onClick={busy ? undefined : onClose}>
+      <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
+      <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-t-[1.75rem] bg-white p-6 shadow-2xl animate-scale-in sm:rounded-[1.75rem]" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
+        {!busy && (
+          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-magenta active:scale-90"><X className="h-4 w-4" /></button>
+        )}
+        <span className="grid h-14 w-14 place-items-center rounded-2xl bg-magenta/10 text-magenta"><AlertTriangle className="h-7 w-7" strokeWidth={1.8} /></span>
+        <h2 className="mt-3 text-[1.5rem] font-extrabold leading-tight text-[#7a1247]">Delete your account?</h2>
+        <p className="mt-1.5 text-[13.5px] leading-snug text-rose/80">
+          This permanently deletes your Bloomzein account{email ? <> (<b className="text-rose">{email}</b>)</> : null} and <b className="text-rose">all your data</b> — cycle, meals, movement, mood, water, budget, reminders and profile. This <b>cannot be undone</b>.
+        </p>
+        <p className="mt-3 text-[12.5px] font-bold text-rose/70">Type <span className="font-extrabold text-magenta">DELETE</span> to confirm</p>
+        <input
+          value={confirmText}
+          onChange={(e) => setConfirmText(e.target.value)}
+          placeholder="DELETE"
+          autoCapitalize="characters"
+          className="mt-1.5 w-full rounded-2xl border border-magenta/30 bg-white px-4 py-2.5 text-sm font-bold tracking-widest text-magenta outline-none transition focus:border-magenta focus:ring-4 focus:ring-magenta/15"
+        />
+        {err && <p className="mt-2 text-[12.5px] font-semibold text-magenta">{err}</p>}
+        <button
+          onClick={run}
+          disabled={!ready || busy}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-magenta py-3 text-[15px] font-bold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-45"
+        >
+          {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : <><Trash2 className="h-4 w-4" /> Delete my account permanently</>}
+        </button>
+        {!busy && (
+          <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-petal/60 bg-white py-2.5 text-[14px] font-bold text-rose transition active:scale-[0.99]">Keep my account</button>
+        )}
       </div>
     </div>,
     document.body,

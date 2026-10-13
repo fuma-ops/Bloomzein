@@ -29,6 +29,7 @@ function lazyRetry<T extends ComponentType<any>>(factory: () => Promise<{ defaul
 const PrivacyPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.PrivacyPage })));
 const TermsPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
 const RefundPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.RefundPage })));
+const DeleteAccountInfoPage = lazyRetry(() => import("./pages/DeleteAccountInfo").then((m) => ({ default: m.DeleteAccountInfoPage })));
 const PricingPage = lazyRetry(() => import("./pages/Pricing").then((m) => ({ default: m.PricingPage })));
 const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
 const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
@@ -214,6 +215,9 @@ function AppContent() {
   }
   if (path === "/refund") {
     return <Suspense fallback={<PageLoader />}><RefundPage /></Suspense>;
+  }
+  if (path === "/delete-account") {
+    return <Suspense fallback={<PageLoader />}><DeleteAccountInfoPage /></Suspense>;
   }
   if (path === "/pricing") {
     return <Suspense fallback={<PageLoader />}><PricingPage /></Suspense>;
