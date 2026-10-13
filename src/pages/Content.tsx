@@ -321,7 +321,7 @@ const FAQS: { q: string; a: string }[] = [
   { q: "Does Bloomzein work offline?", a: "Yes. It's a Progressive Web App, so your data is cached on your device and the core experience works offline. Changes sync to the cloud the next time you're online and signed in." },
   { q: "Can I install it like an app?", a: "Yes. On your phone, open the site and choose “Add to Home Screen” (iPhone: the Share button; Android: the install prompt). It then opens full-screen like a native app." },
   { q: "Which devices are supported?", a: "Any modern browser on iOS, Android, or desktop. Sign in and your data follows you across all your devices." },
-  { q: "How do I delete my account or data?", a: "Email us and we'll remove your data from our systems. You can also clear your logs from within the app." },
+  { q: "How do I delete my account or data?", a: "Open the app, go to Me → Delete my account, and confirm — your account and all your data are erased immediately. You can also visit bloomzein.com/delete-account, or email us and we'll remove everything for you." },
   { q: "Is Bloomzein medical advice?", a: "No. It's a wellness and self-tracking tool for general information. Always consult a qualified healthcare professional for medical decisions." },
 ];
 

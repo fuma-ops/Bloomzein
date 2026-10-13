@@ -4,6 +4,7 @@ import { supabase, type Profile } from "@/lib/supabase"
 import { initCloudSync, startCloudSync, stopCloudSync } from "@/lib/cloudSync"
 import { trackEvent } from "@/lib/analytics"
 import { refreshEntitlement } from "@/lib/paddle"
+import { resetEverything } from "@/lib/crossToolData"
 
 type AuthContextValue = {
   user: User | null
@@ -17,6 +18,7 @@ type AuthContextValue = {
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
   updateProfile: (patch: Partial<Profile>) => Promise<{ error: string | null }>
+  deleteAccount: () => Promise<{ error: string | null }>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -113,6 +115,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  // Permanently delete the account + all server-side data (via the delete-account
+  // edge function), then wipe local data and sign out. Required by app stores.
+  const deleteAccount = async () => {
+    if (!user) return { error: "Not signed in" }
+    const { data, error } = await supabase.functions.invoke("delete-account", { method: "POST" })
+    if (error) return { error: error.message }
+    if (data && (data as { error?: string }).error) return { error: (data as { error?: string }).error ?? "Delete failed" }
+    try { resetEverything() } catch { /* ignore */ }
+    try { await supabase.auth.signOut() } catch { /* already gone */ }
+    return { error: null }
+  }
+
   const refreshProfile = async () => {
     if (user) await loadProfile(user.id)
   }
@@ -131,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, refreshProfile, updateProfile }}
+      value={{ user, session, profile, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, refreshProfile, updateProfile, deleteAccount }}
     >
       {children}
     </AuthContext.Provider>
