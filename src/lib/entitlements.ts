@@ -28,6 +28,30 @@ export function isOwnerEmail(email: string | null | undefined): boolean {
   return !!e && OWNER_EMAILS.some((o) => o.toLowerCase() === e);
 }
 
+/**
+ * Complimentary Bloom+ accounts — closed-test reviewers who get full premium
+ * for free, without owner powers. Granted by `refreshEntitlement` on sign-in,
+ * so it works on any device and even for a brand-new signup. Remove this list
+ * after the Play Store closed test.
+ */
+export const COMP_PREMIUM_EMAILS = [
+  "asmaaradouane912@gmail.com",
+  "bloomzeinapp@gmail.com",
+  "elhadraouimaroua04@gmail.com",
+  "hopen8401@gmail.com",
+  "issam.khalfaoui20@gmail.com",
+  "issamkhalfaoui18@gmail.com",
+  "radouaneaya83@gmail.com",
+  "sn2wzii@gmail.com",
+  "soufiane.elguetaibi@gmail.com",
+  "soumlia463@gmail.com",
+  "zanzaa2005@gmail.com",
+];
+export function isCompPremiumEmail(email: string | null | undefined): boolean {
+  const e = String(email ?? "").trim().toLowerCase();
+  return !!e && COMP_PREMIUM_EMAILS.some((o) => o.toLowerCase() === e);
+}
+
 export function readPlan(): Plan {
   try { return localStorage.getItem(KEY) === "plus" ? "plus" : "free"; } catch { return "free"; }
 }
