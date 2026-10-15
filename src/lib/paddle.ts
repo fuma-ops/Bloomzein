@@ -25,7 +25,7 @@
  * webhook's Supabase env.
  */
 import { supabase } from "./supabase";
-import { setPlan, isOwnerEmail } from "./entitlements";
+import { setPlan, isOwnerEmail, isCompPremiumEmail } from "./entitlements";
 
 /** "sandbox" while testing, "production" once your Paddle account is live. */
 export const PADDLE_ENV: "sandbox" | "production" =
@@ -231,6 +231,11 @@ export async function refreshEntitlement(userId: string, email?: string | null):
   // Owner/founder accounts always have Bloom+, independent of billing — grant it
   // up front so it holds on every device and even offline (before any lookup).
   if (isOwnerEmail(email)) {
+    setPlan("plus");
+    return;
+  }
+  // Complimentary premium for Play Store closed-test reviewers (no billing).
+  if (isCompPremiumEmail(email)) {
     setPlan("plus");
     return;
   }
