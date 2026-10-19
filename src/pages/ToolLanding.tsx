@@ -7,6 +7,7 @@ import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { AdSlot } from "@/components/bloom/AdSlot";
 import { AD_SLOTS } from "@/lib/ads";
 import { TOOL_PAGES, toolPageBySlug } from "@/lib/toolPages";
+import { ToolMagic } from "@/components/bloom/ToolMagic";
 
 const SITE = "https://www.bloomzein.com";
 
@@ -98,6 +99,11 @@ export function ToolLandingPage({ slug }: { slug: string }) {
             <img src={tool.image} alt={tool.h1} className="aspect-[4/3] w-full object-cover" width={1200} height={900} />
           </div>
         </section>
+
+        {/* the live, usable tool — magic first, before we ask for anything */}
+        <div className="mt-10">
+          <ToolMagic slug={tool.slug} />
+        </div>
 
         {/* sections */}
         <section className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

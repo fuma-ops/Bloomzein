@@ -106,7 +106,7 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
 
   const startTrial = () => {
     const plan = annual ? "annual" : "monthly";
-    trackEvent("begin_checkout", { plan, value: annual ? 59 : 9.99, currency: "USD" });
+    trackEvent("begin_checkout", { plan, value: annual ? 29 : 3, currency: "USD" });
 
     // Real billing: open the inline checkout inside our own Bloomzein-styled
     // modal (falls back to Paddle's overlay if the inline frame can't load).
@@ -176,19 +176,19 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setAnnual(false)} className={["rounded-2xl border p-2.5 text-center transition active:scale-95", !annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Monthly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">{prices.monthly ?? "$9.99"}<span className="text-[10px] font-bold text-rose/50">/mo</span></p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{prices.monthly ?? "$3"}<span className="text-[10px] font-bold text-rose/50">/mo</span></p>
               </button>
               <button onClick={() => setAnnual(true)} className={["relative rounded-2xl border p-2.5 text-center transition active:scale-95", annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
-                <span className="absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>Save 51%</span>
+                <span className="absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>Save 19%</span>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Yearly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">{prices.annual ?? "$59"}<span className="text-[10px] font-bold text-rose/50">/yr</span></p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{prices.annual ?? "$29"}<span className="text-[10px] font-bold text-rose/50">/yr</span></p>
               </button>
             </div>
 
             <button onClick={startTrial} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
               <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
             </button>
-            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$59"}/year` : `${prices.monthly ?? "$9.99"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
+            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$29"}/year` : `${prices.monthly ?? "$3"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
             <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-hotpink/25 bg-white/70 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-hotpink/5 active:scale-[0.99]">Continue with the free version</button>
           </div>
         )}
