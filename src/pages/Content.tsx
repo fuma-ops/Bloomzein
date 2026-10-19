@@ -4,6 +4,8 @@ import { ArrowLeft, ChevronRight, BookOpen, HelpCircle, LifeBuoy, Send, Heart,
   PersonStanding, Feather, Brain, Moon, Leaf, HeartHandshake, NotebookPen, Compass, Star,
   PiggyBank, Droplets, Share2, Link2, Check, Facebook } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
+import { AdSlot } from "@/components/bloom/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 import { supabase } from "@/lib/supabase";
 import { ARTICLES, FILTERS, articlesByCategory, articleById, type Filter, type Article } from "@/lib/readsData";
 import { articleSlug, articleBySlug } from "@/lib/blog";
@@ -1073,6 +1075,8 @@ export function BlogArticlePage({ slug }: { slug: string }) {
           </div>
 
           <ShareBar url={`${SITE}/blog/${slug}`} title={article.title} image={SITE + article.image} />
+
+          <AdSlot slot={AD_SLOTS.article} />
 
           {related.length > 0 && (
             <section className="mt-10">
