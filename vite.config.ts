@@ -6,7 +6,8 @@ import { VitePWA } from "vite-plugin-pwa"
 import { writeFileSync, mkdirSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { blogPaths } from "./src/lib/blog"
-import { blogPages, blogIndexPage, type BlogPage } from "./src/lib/prerenderContent"
+import { blogPages, blogIndexPage, toolPages, type BlogPage } from "./src/lib/prerenderContent"
+import { toolPagePaths } from "./src/lib/toolPages"
 
 // Regenerate public/sitemap.xml from the live content on every build so new
 // blog articles are always discoverable by Google without hand-editing.
@@ -26,7 +27,8 @@ function sitemapPlugin(): Plugin {
   ]
   const build = () => {
     const blog = blogPaths().map((loc) => ({ loc, changefreq: "monthly", priority: "0.6" }))
-    const rows = [...staticEntries, ...blog]
+    const tools = toolPagePaths().map((loc) => ({ loc, changefreq: "monthly", priority: "0.8" }))
+    const rows = [...staticEntries, ...tools, ...blog]
       .map((e) => `  <url><loc>${SITE}${e.loc}</loc><changefreq>${e.changefreq}</changefreq><priority>${e.priority}</priority></url>`)
       .join("\n")
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${rows}\n</urlset>\n`
@@ -49,9 +51,10 @@ function prerenderBlogPlugin(): Plugin {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
   const renderPage = (tpl: string, page: BlogPage, isArticle: boolean): string => {
-    const title = `${page.title} — Bloomzein`
+    const title = page.fullTitle ? page.title : `${page.title} — Bloomzein`
     const img = abs(page.imagePath)
     const url = abs(page.urlPath)
+    const ogType = page.ogType ?? (isArticle ? "article" : "website")
     let html = tpl
     // <title>
     html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(title)}</title>`)
@@ -60,7 +63,7 @@ function prerenderBlogPlugin(): Plugin {
     // canonical
     html = html.replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${esc(url)}" />`)
     // Open Graph
-    html = html.replace(/<meta property="og:type"[^>]*>/, `<meta property="og:type" content="${isArticle ? "article" : "website"}" />`)
+    html = html.replace(/<meta property="og:type"[^>]*>/, `<meta property="og:type" content="${esc(ogType)}" />`)
     html = html.replace(/<meta property="og:title"[^>]*>/, `<meta property="og:title" content="${esc(title)}" />`)
     html = html.replace(/<meta property="og:description"[^>]*>/, `<meta property="og:description" content="${esc(page.description)}" />`)
     html = html.replace(/<meta property="og:url"[^>]*>/, `<meta property="og:url" content="${esc(url)}" />`)
@@ -69,17 +72,18 @@ function prerenderBlogPlugin(): Plugin {
     html = html.replace(/<meta name="twitter:title"[^>]*>/, `<meta name="twitter:title" content="${esc(title)}" />`)
     html = html.replace(/<meta name="twitter:description"[^>]*>/, `<meta name="twitter:description" content="${esc(page.description)}" />`)
     html = html.replace(/<meta name="twitter:image"[^>]*>/, `<meta name="twitter:image" content="${esc(img)}" />`)
-    // Article JSON-LD (helps Google understand it as an article)
-    if (isArticle) {
-      const ld = {
-        "@context": "https://schema.org", "@type": "Article",
-        headline: page.title, description: page.description,
-        image: img, url, publisher: { "@type": "Organization", name: "Bloomzein" },
-        mainEntityOfPage: url,
-      }
-      html = html.replace(/<\/head>/, `  <script type="application/ld+json">${JSON.stringify(ld)}</script>\n  </head>`)
+    // Structured data: explicit jsonLd if provided, else the default Article schema.
+    const blocks: unknown[] = page.jsonLd ?? (isArticle ? [{
+      "@context": "https://schema.org", "@type": "Article",
+      headline: page.title, description: page.description,
+      image: img, url, publisher: { "@type": "Organization", name: "Bloomzein" },
+      mainEntityOfPage: url,
+    }] : [])
+    if (blocks.length) {
+      const scripts = blocks.map((b) => `  <script type="application/ld+json">${JSON.stringify(b)}</script>`).join("\n")
+      html = html.replace(/<\/head>/, `${scripts}\n  </head>`)
     }
-    // Inject the static article content for crawlers (React replaces it on boot).
+    // Inject the static content for crawlers (React replaces it on boot).
     html = html.replace(/<div id="root">\s*<\/div>/, `<div id="root">${page.contentHtml}</div>`)
     return html
   }
@@ -91,10 +95,10 @@ function prerenderBlogPlugin(): Plugin {
       const dist = "dist"
       let tpl: string
       try { tpl = readFileSync(join(dist, "index.html"), "utf8") } catch { return }
-      const pages = [blogIndexPage(), ...blogPages()]
+      const pages = [blogIndexPage(), ...blogPages(), ...toolPages()]
       let n = 0
       for (const page of pages) {
-        const isArticle = page.urlPath !== "/blog"
+        const isArticle = page.urlPath.startsWith("/blog/")
         const outPath = join(dist, page.filePath)
         try {
           mkdirSync(dirname(outPath), { recursive: true })
@@ -103,7 +107,7 @@ function prerenderBlogPlugin(): Plugin {
         } catch { /* skip a bad page rather than fail the build */ }
       }
       // eslint-disable-next-line no-console
-      console.log(`[prerender] wrote ${n} blog HTML files`)
+      console.log(`[prerender] wrote ${n} static HTML files (blog + tools)`)
     },
   }
 }

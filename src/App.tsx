@@ -30,6 +30,7 @@ const PrivacyPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ defau
 const TermsPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.TermsPage })));
 const RefundPage = lazyRetry(() => import("./pages/Legal").then((m) => ({ default: m.RefundPage })));
 const DeleteAccountInfoPage = lazyRetry(() => import("./pages/DeleteAccountInfo").then((m) => ({ default: m.DeleteAccountInfoPage })));
+const ToolLandingPage = lazyRetry(() => import("./pages/ToolLanding").then((m) => ({ default: m.ToolLandingPage })));
 const PricingPage = lazyRetry(() => import("./pages/Pricing").then((m) => ({ default: m.PricingPage })));
 const HelpPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.HelpPage })));
 const FaqPage = lazyRetry(() => import("./pages/Content").then((m) => ({ default: m.FaqPage })));
@@ -241,6 +242,11 @@ function AppContent() {
   }
   if (path.startsWith("/blog/")) {
     return <Suspense fallback={<PageLoader />}><BlogArticlePage slug={decodeURIComponent(path.split("/").pop() || "")} /></Suspense>;
+  }
+  // Public, SEO-first tool landing pages (crawlable) — distinct from the
+  // login-gated in-app /app/tools/<slug>.
+  if (path.startsWith("/tools/")) {
+    return <Suspense fallback={<PageLoader />}><ToolLandingPage slug={decodeURIComponent(path.split("/").pop() || "")} /></Suspense>;
   }
 
   // Private admin inbox — gated by email + Supabase RLS inside the page

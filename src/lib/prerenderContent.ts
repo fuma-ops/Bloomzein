@@ -15,6 +15,7 @@
  */
 import { ARTICLES, CAT_IMG, type Article, type Category } from "./readsData";
 import { articleSlug } from "./blog";
+import { TOOL_PAGES } from "./toolPages";
 
 import cycle from "../content/reads/cycle";
 import nutrition from "../content/reads/nutrition";
@@ -128,6 +129,12 @@ export type BlogPage = {
   category: string;
   /** Static article HTML injected into #root for crawlers. */
   contentHtml: string;
+  /** Use the title verbatim (don't append "— Bloomzein"). */
+  fullTitle?: boolean;
+  /** og:type override (default: article for blog, website otherwise). */
+  ogType?: string;
+  /** JSON-LD objects to inject (overrides the default Article schema). */
+  jsonLd?: unknown[];
 };
 
 /** Every article as a prerenderable page (used by vite.config's plugin). */
@@ -168,4 +175,75 @@ export function blogIndexPage(): BlogPage {
     category: "Read",
     contentHtml: `<main><h1>The Bloomzein Read</h1><ul>${links}</ul></main>`,
   };
+}
+
+const SITE = "https://www.bloomzein.com";
+
+/** Public SEO tool pages (/tools/<slug>) as prerenderable pages, each with
+ *  static content HTML + SoftwareApplication / FAQPage / BreadcrumbList JSON-LD. */
+export function toolPages(): BlogPage[] {
+  return TOOL_PAGES.map((t) => {
+    const url = `${SITE}/tools/${t.slug}`;
+    const img = SITE + t.image;
+    const content =
+      `<main>` +
+      `<nav class="breadcrumb"><a href="/">Home</a> › <a href="/#features">Tools</a> › <span>${escapeHtml(t.name)}</span></nav>` +
+      `<h1>${escapeHtml(t.h1)}</h1>` +
+      `<p>${escapeHtml(t.intro)}</p>` +
+      `<img src="${escapeAttr(t.image)}" alt="${escapeAttr(t.h1)}" width="1200" height="900" />` +
+      `<p><a href="/onboarding">Start Blooming — free</a></p>` +
+      t.sections.map((s) => `<section><h2>${escapeHtml(s.h)}</h2><p>${escapeHtml(s.p)}</p></section>`).join("") +
+      `<section><h2>Frequently asked questions</h2>` +
+      t.faqs.map((f) => `<div><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join("") +
+      `</section>` +
+      `<section><h2>Explore more tools</h2><ul>` +
+      t.related.map((r) => `<li><a href="/tools/${r}">${escapeHtml(r.replace(/-/g, " "))}</a></li>`).join("") +
+      `</ul></section>` +
+      `</main>`;
+
+    const jsonLd: unknown[] = [
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: `Bloomzein — ${t.name}`,
+        applicationCategory: "HealthApplication",
+        operatingSystem: "Android, Web",
+        description: t.metaDescription,
+        image: img,
+        url,
+        offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        publisher: { "@type": "Organization", name: "Bloomzein", url: SITE },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: t.faqs.map((f) => ({
+          "@type": "Question",
+          name: f.q,
+          acceptedAnswer: { "@type": "Answer", text: f.a },
+        })),
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+          { "@type": "ListItem", position: 2, name: t.name, item: url },
+        ],
+      },
+    ];
+
+    return {
+      urlPath: `/tools/${t.slug}`,
+      filePath: `tools/${t.slug}/index.html`,
+      title: t.metaTitle,
+      fullTitle: true,
+      ogType: "website",
+      description: t.metaDescription,
+      imagePath: t.image,
+      category: "Tool",
+      contentHtml: content,
+      jsonLd,
+    };
+  });
 }
