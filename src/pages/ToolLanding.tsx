@@ -4,6 +4,8 @@
 import { useEffect } from "react";
 import { ArrowRight, ArrowLeft, Sparkles, Check, ChevronRight } from "lucide-react";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
+import { AdSlot } from "@/components/bloom/AdSlot";
+import { AD_SLOTS } from "@/lib/ads";
 import { TOOL_PAGES, toolPageBySlug } from "@/lib/toolPages";
 
 const SITE = "https://www.bloomzein.com";
@@ -111,6 +113,7 @@ export function ToolLandingPage({ slug }: { slug: string }) {
         {/* FAQ */}
         <section className="mt-12">
           <h2 className="font-script text-3xl text-hotpink">Frequently asked questions</h2>
+          <AdSlot slot={AD_SLOTS.tool} />
           <div className="mt-4 space-y-3">
             {tool.faqs.map((f) => (
               <div key={f.q} className="rounded-[1.25rem] border border-petal/50 bg-white/75 p-4">
