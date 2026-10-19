@@ -67,10 +67,10 @@ function Reveal({ children, delay = 0, className = "" }: { children: ReactNode; 
 /* ───────── flagship features (big alternating rows) ───────── */
 type Feat = { icon: LucideIcon; kicker: string; title: string; body: string; img: string; href: string };
 const FLAGSHIP: Feat[] = [
-  { icon: HeartPulse, kicker: "Cycle sync", title: "Know your body like never before.", body: "Track your cycle once and watch every tool adapt to your phase — automatically. Your energy, cravings and mood, finally decoded.", img: "/images/flagship-cycle.webp", href: "/app/tools/cycle" },
-  { icon: Flower2, kicker: "Yoga studio", title: "Flows that meet you where you are.", body: "Cycle-aware yoga, guided and beautiful — from 5-minute resets to full classes that soften cramps or wake up your glow.", img: "/images/flagship-yoga.webp", href: "/app/tools/yoga" },
-  { icon: Dumbbell, kicker: "Workouts", title: "Move with your energy, not against it.", body: "Strength, HIIT and mobility that rise when you're powerful and rest when you're not — perfectly matched to your phase.", img: "/images/flagship-workout.webp", href: "/app/tools/workout" },
-  { icon: Utensils, kicker: "Meals & recipes", title: "Eat exactly what your body's asking for.", body: "Phase-smart recipes and a weekly meal plan that writes itself — nourishing, gorgeous, and effortless.", img: "/images/flagship-meals.webp", href: "/app/tools/meals" },
+  { icon: HeartPulse, kicker: "Cycle sync", title: "Know your body like never before.", body: "Track your cycle once and watch every tool adapt to your phase — automatically. Your energy, cravings and mood, finally decoded.", img: "/images/flagship-cycle.webp", href: "/tools/cycle-tracker" },
+  { icon: Flower2, kicker: "Yoga studio", title: "Flows that meet you where you are.", body: "Cycle-aware yoga, guided and beautiful — from 5-minute resets to full classes that soften cramps or wake up your glow.", img: "/images/flagship-yoga.webp", href: "/tools/yoga" },
+  { icon: Dumbbell, kicker: "Workouts", title: "Move with your energy, not against it.", body: "Strength, HIIT and mobility that rise when you're powerful and rest when you're not — perfectly matched to your phase.", img: "/images/flagship-workout.webp", href: "/tools/workout-programs" },
+  { icon: Utensils, kicker: "Meals & recipes", title: "Eat exactly what your body's asking for.", body: "Phase-smart recipes and a weekly meal plan that writes itself — nourishing, gorgeous, and effortless.", img: "/images/flagship-meals.webp", href: "/tools/meal-planner" },
 ];
 
 /* ───────── the rest (illustrated grid) ───────── */
