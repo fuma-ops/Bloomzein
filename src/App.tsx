@@ -315,8 +315,11 @@ function AppContent() {
   }
 
   if (content) {
-    // Today, Calendar, Tools and Me require an account — Shop and Read stay public for visibility/SEO
-    const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me" || path.startsWith("/app/tools") || path === "/budget";
+    // Only the PERSONAL dashboard requires an account — Today, Calendar and Me.
+    // The tools themselves (and Budget, Shop, Read) are fully public so anyone
+    // can actually USE them: this is what draws visitors in and converts. Their
+    // work saves to localStorage and syncs the moment they create an account.
+    const isProtected = path === "/app/today" || path === "/app/calendar" || path === "/app/me";
 
     // ── New-user ONBOARDING ──────────────────────────────────────────────────
     // The full "Let's make Bloomzein yours" flow. Runs for a signed-in user
