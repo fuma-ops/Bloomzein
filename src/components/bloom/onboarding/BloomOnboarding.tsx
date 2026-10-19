@@ -880,8 +880,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
             <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-snug text-rose/75">Everything you just set up — cycle, meals, movement, energy & more. Start with a <b className="text-hotpink">3-day free trial</b>, cancel anytime.</p>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2.5">
-            <Plan id="monthly" name="Monthly" price="$9.99" per="per month" />
-            <Plan id="annual" name="Yearly" price="$59" per="per year" badge="SAVE 51%" />
+            <Plan id="monthly" name="Monthly" price="$3" per="per month" />
+            <Plan id="annual" name="Yearly" price="$29" per="per year" badge="SAVE 19%" />
           </div>
           <div className="mt-3 rounded-[1.4rem] bg-white/70 p-3.5 ring-1 ring-white/70"><div className="space-y-2">{features.map((f) => (<div key={f.t} className="flex items-start gap-2.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-3 w-3 text-hotpink" strokeWidth={2.2} /></span><span className="text-[12.5px] font-semibold leading-snug text-rose/85">{f.t}</span></div>))}</div></div>
           <button onClick={startTrial} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2.5 py-3.5 text-[17px] font-bold text-white"><Sparkles className="h-5 w-5" /> Start 3-day free trial</button>

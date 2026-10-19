@@ -82,8 +82,8 @@ export function PricingPage() {
         </header>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-stretch">
-          <PlanCard name="Monthly" price="$9.99" period="month" note="Billed monthly · cancel anytime" />
-          <PlanCard name="Yearly" price="$59" period="year" note="Billed yearly · best value" highlight badge="Save 51%" />
+          <PlanCard name="Monthly" price="$3" period="month" note="Billed monthly · cancel anytime" />
+          <PlanCard name="Yearly" price="$29" period="year" note="Billed yearly · best value" highlight badge="Save 19%" />
         </div>
 
         <section className="mt-10">

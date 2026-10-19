@@ -99,6 +99,43 @@ const PROTEIN_PER_KG: Record<DietGoal, number> = {
  * The full daily target, personalised from her body, goal, planned training
  * load and cycle phase. `forToday` adds the eat-back from today's workouts.
  */
+/**
+ * Mifflin-St Jeor BMR, female equation: 10·kg + 6.25·cm − 5·age − 161.
+ * This is the SINGLE calorie formula for the whole app (see file header) —
+ * both computeTargets and the public calorie calculator go through it, so no
+ * second BMR engine can ever drift from it.
+ */
+export function bmrMifflin(weightKg: number, heightCm: number, age: number): number {
+  return Math.round(10 * weightKg + 6.25 * heightCm - 5 * age - 161);
+}
+
+export interface SimpleTargetInput {
+  weightKg: number;
+  heightCm: number;
+  age: number;
+  goal: DietGoal;
+  pace?: DietPace;
+  /** TDEE activity factor. Defaults to the app's daily-life factor. */
+  activity?: number;
+}
+
+/**
+ * Standalone target estimate from raw inputs — used by the PUBLIC diet
+ * calculator so a visitor with no saved profile gets the SAME maths (BMR,
+ * goal delta, protein, macro split) as the signed-in engine above.
+ */
+export function estimateTargets(i: SimpleTargetInput): MacroTargets & { bmr: number; tdee: number } {
+  const bmr = bmrMifflin(i.weightKg, i.heightCm, i.age);
+  const factor = i.activity && i.activity > 0 ? i.activity : LIFESTYLE_FACTOR;
+  const tdee = Math.round(bmr * factor);
+  const pace: DietPace = i.pace ?? "steady";
+  const calories = Math.max(MIN_CALORIES, Math.round((tdee * GOAL_DELTA_BY_PACE[pace][i.goal]) / 10) * 10);
+  const protein = Math.round(i.weightKg * PROTEIN_PER_KG[i.goal]);
+  const fat = Math.round((calories * 0.27) / 9);
+  const carbs = Math.max(0, Math.round((calories - protein * 4 - fat * 9) / 4));
+  return { calories, protein, carbs, fat, bmr, tdee };
+}
+
 export function computeTargets(forToday = false): TargetBreakdown {
   const p = readDietProfile();
   const weight = p.weight > 0 ? p.weight : 65;
@@ -106,8 +143,8 @@ export function computeTargets(forToday = false): TargetBreakdown {
   const age = p.age && p.age > 0 ? p.age : DEFAULT_AGE;
   const goal = p.goal;
 
-  // Mifflin-St Jeor (female): 10·kg + 6.25·cm − 5·age − 161
-  const bmr = Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+  // Mifflin-St Jeor (female) — the ONE BMR engine (see bmrMifflin below).
+  const bmr = bmrMifflin(weight, height, age);
 
   const workoutDays = readWorkoutPlanDays().length;
   const yogaDays = readYogaPlanDays().length;
