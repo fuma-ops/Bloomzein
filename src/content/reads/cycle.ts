@@ -1262,5 +1262,438 @@ Normal is a wide, kind range, and most of your worries live safely inside it.
 
 But you are always allowed to ask the question out loud — and to be taken seriously when you do.
 `,
+  "CY011": `# Why Am I So Bloated Before My Period?
+
+*Your jeans button fine one week and fight you the next. That pre-period puffiness isn't weight gain — it's a monthly tide your hormones pull in, and it goes out again.*
+
+You step on the scale, or pull on your favourite jeans, and something has changed.
+
+The waistband digs in. Your stomach feels tight, round, full of air. You haven't eaten differently — and yet your body feels like it belongs to someone a size up.
+
+Then your period arrives, and within a few days it all quietly melts away.
+
+If this happens on a loop, every single month, you are not imagining it and you have not gained weight overnight. You are watching one of the most common — and most misunderstood — signs of the luteal phase.
+
+## It Starts With Progesterone
+
+In the week or so before your period, progesterone becomes the dominant hormone. It does a lot of quiet, important work — and one of its side effects is slowing everything down.
+
+Progesterone relaxes smooth muscle. That includes the muscle lining your digestive tract. When digestion slows, food moves through you more lazily, which means more gas, more fullness, and often constipation that adds to the heavy feeling.
+
+So the bloat you feel isn't only water. A good part of it is a digestive system that has simply shifted into a slower gear for the week.
+
+@chart hormones
+
+## And Then Your Body Holds Water
+
+The second half of the story is fluid.
+
+The shifting balance of estrogen and progesterone changes how your body handles salt and water, nudging it to hold on to more than usual. That retained water shows up as puffiness — in your belly, but also sometimes your fingers, ankles and face.
+
+This is why the number on the scale can jump two or three pounds in the days before your period and vanish just as fast afterwards. It was never fat. It was water, arriving and leaving on a hormonal schedule.
+
+Knowing that one fact can quietly end years of monthly panic.
+
+## Why Tracking Changes Everything
+
+Here is what makes the bloat feel so much worse: surprise. When it arrives unannounced, it feels like something is wrong with you.
+
+When you can see it coming — when you know this is day 25, and this is simply what day 25 feels like — the whole experience softens. You stop reading it as a verdict on your body and start reading it as a date on a calendar.
+
+@tool cycle | Log your bloating beside your phase for a cycle or two and watch it line up with the days before your period — open your Cycle Tracker
+
+The pattern is almost always the same: puffiness builds across the luteal phase, peaks in the day or two before bleeding, and eases within the first few days of your period.
+
+## What Actually Helps
+
+You can't switch off the hormonal tide, but you can take the edge off how it feels.
+
+Drink more water, not less. It feels backwards, but when you are even slightly dehydrated your body clings harder to the fluid it has. Steady hydration tells it that it is safe to let go.
+
+Ease off the salt in the luteal week. Salt pulls water with it, so the saltier your meals, the more you hold. Lean on potassium-rich foods instead — bananas, leafy greens, sweet potato — which help flush excess sodium out.
+
+@tool diet | See which foods calm bloating in your luteal phase and which quietly make it worse
+
+Move gently. A walk, a stretch, an easy yoga flow all help your digestion and your circulation keep things moving instead of settling.
+
+And be kind to your gut: magnesium-rich foods, warmth, and going easy on fizzy drinks and heavy, hard-to-digest meals all help the slowed-down digestion of this week.
+
+@read CY008 | Feeling heavy and low alongside the bloat? There's a reason the whole week feels harder →
+
+## The Reframe That Sticks
+
+The bloat is not your body betraying you. It is your body doing exactly what the luteal phase asks of it — slowing down, holding on, preparing.
+
+It is temporary. It is predictable. And once you can see it coming, it loses almost all of its power to ruin your week.
+
+## Bloom Reflection
+
+For years you may have met pre-period bloating with dread, or worse, with blame — as if a tight waistband were proof you had done something wrong.
+
+You did nothing wrong. You are watching a tide, not a trend. It comes in, it goes out, and you are exactly where you are meant to be in your cycle.
+
+The month you stop weighing yourself against your luteal phase is the month your body stops feeling like the enemy.
+
+## Bloom Tips
+
+- Drink more water, not less — mild dehydration makes your body hold on to fluid harder.
+- Go easy on salt in the luteal week; lean on potassium-rich foods like banana, greens and sweet potato.
+- Keep digestion moving with gentle walks, stretching and fibre.
+- Don't weigh yourself the week before your period — the number is water, not fat.
+- Track your bloating against your phase so it stops arriving as a surprise.
+
+## Today's Bloom
+
+Fill your water bottle now, and check which day of your cycle you're on. If you're in the luteal week, let that be the whole explanation — nothing is wrong.
+
+## Bloom Reminder
+
+You are not bigger. You are not failing. You are simply a few days from your period — and this always passes.
+`,
+  "CY012": `# How to Get Rid of Period Cramps — Fast
+
+*When cramps hit, you want relief now — not next week. Here's what actually works fast, why it works, and the timing trick most women get wrong.*
+
+It starts as a dull ache low in your belly and builds into something that bends you over.
+
+You reach for a painkiller, a hot water bottle, the sofa — anything to make it stop. And while you wait for relief, you wonder, again, why your body does this to you every single month.
+
+Here is the good news: period cramps are very treatable once you understand what is causing them. Some of the most effective relief is free, fast, and probably already in your home — and one small change in *timing* can make your painkillers work far better.
+
+## What a Cramp Actually Is
+
+Your period cramp is a contraction.
+
+To shed its lining each month, your uterus squeezes — and it is driven to squeeze by chemicals called prostaglandins. The more prostaglandins your body makes, the harder and more painful those contractions are. Women with severe cramps tend to have higher prostaglandin levels. That is the whole mechanism in one sentence.
+
+This matters, because almost everything that relieves cramps fast works by either calming those contractions or blocking those prostaglandins.
+
+## The Timing Trick With Painkillers
+
+Here is the part most women never get told.
+
+Anti-inflammatory painkillers like ibuprofen don't just numb pain — they actually reduce how many prostaglandins your body produces. But they can only stop prostaglandins you haven't made yet.
+
+So if you wait until the pain is at a 9 and then take one, you are already behind. Taken *early* — at the very first ache, or even the day you expect your period if your cramps are reliable — they work dramatically better, because they cut the prostaglandins off at the source.
+
+@tool cycle | Know your period is coming before it arrives, so you can get ahead of the pain instead of chasing it — open your Cycle Tracker
+
+Take them with food, follow the dosing on the packet, and never exceed it. If anti-inflammatories don't suit you, this is a conversation worth having with a pharmacist or doctor.
+
+## Heat Really Is As Good As Medicine
+
+If you only do one thing, make it heat.
+
+A hot water bottle or heat patch on your lower belly isn't just comforting — studies have found that applying heat can relieve period pain about as effectively as common painkillers. Warmth relaxes the contracting muscle and improves blood flow to the area, which eases the cramp directly.
+
+This is the rare home remedy that genuinely rivals the pill bottle. Warm bath, heat patch under your clothes, hot water bottle in bed — all of it counts.
+
+## Movement Sounds Wrong, But Works
+
+When you are curled up in pain, exercise is the last thing you want. But gentle movement is one of the fastest natural relievers there is.
+
+Light activity releases endorphins — your body's own painkillers — and improves circulation to the uterus, which helps clear the pain-causing chemicals faster. You don't need a workout. A slow walk, a few minutes of stretching, or soft yoga poses that open the hips and lower back can take the edge off within minutes.
+
+@tool yoga | Try a few gentle poses made for period days — they ease cramping without draining you
+
+## What Helps Over the Month
+
+Fast relief handles today. A few steady habits make next month's cramps milder to begin with.
+
+Magnesium-rich foods — dark chocolate, nuts, seeds, leafy greens — help relax muscle and are linked to less cramping. Omega-3 fats, found in oily fish, can lower prostaglandin levels over time. Staying hydrated and easing up on salt, caffeine and heavily processed food in the days before your period all help too.
+
+@tool diet | See the anti-inflammatory foods that quietly make your cramps less fierce each cycle
+
+Think of it as two layers: calm the pain today, and lower the baseline for next month.
+
+@read CY006 | Cramps are one message — here's how to read the others your period sends →
+
+## When Cramps Aren't Just Cramps
+
+Normal cramps are uncomfortable but manageable, and they ease with the measures above. Pain that is different deserves attention.
+
+If your cramps are severe enough to regularly stop your life — keeping you home from work or school, unrelieved by painkillers, or getting worse over time — please see a doctor. Pain like that can be a sign of conditions such as endometriosis or fibroids, which are common, real, and too often dismissed. You are allowed to take your pain seriously.
+
+## Bloom Reflection
+
+You were never meant to just grit your teeth through this.
+
+Period pain is real, it has a cause, and it responds to the right care — the heat, the timing, the movement, the food. Understanding the *why* turns a monthly ordeal into something you can actually manage.
+
+And if your pain is bigger than the usual tools can hold, that is not weakness. That is information, and it is worth bringing to someone who can help.
+
+## Bloom Tips
+
+- Take anti-inflammatory painkillers early — at the first ache — so they can block prostaglandins before they build.
+- Use heat on your lower belly; it can relieve cramps about as well as medication.
+- Move gently — a walk or soft yoga releases natural painkillers and improves blood flow.
+- Build magnesium and omega-3 into the days before your period to lower next month's baseline.
+- See a doctor if cramps regularly stop your life or keep getting worse — that is not something to endure quietly.
+
+## Today's Bloom
+
+Fill a hot water bottle, rest it low on your belly, and let the warmth do its work for twenty minutes. Notice the muscle start to unclench.
+
+## Bloom Reminder
+
+Your pain is real, and it is manageable. You deserve relief — and the tools are closer than you think.
+`,
+  "CY013": `# Why Is My Period Late When I'm Not Pregnant?
+
+*The test says no — so where is it? A late period almost always has an explanation, and most of them are quieter and more fixable than you fear.*
+
+You have checked the calendar three times. You have taken the test — maybe two. Not pregnant.
+
+And still, your period hasn't come. The waiting turns into worrying, and the worrying makes you check even more.
+
+Take a breath. A late period is incredibly common, and the reasons behind it are usually far gentler than the ones your mind jumps to. To understand why it happens, you first need to know one thing almost nobody is taught about how a period is actually timed.
+
+## The Secret: A Late Period Is a Late Ovulation
+
+Here is the fact that reframes everything.
+
+Your cycle has two halves. The second half — from ovulation to your period — is remarkably fixed, usually around 12 to 14 days, every cycle. It rarely changes much.
+
+The *first* half — from the start of your period to ovulation — is the flexible one. If something delays your ovulation, your period is simply pushed back by the same amount. Ovulate four days late, and your period comes four days late.
+
+So a late period almost never means your period "forgot." It means that, this month, your body held off on ovulating. And once you know that, the real question becomes gentler: what asked your body to wait?
+
+@tool cycle | Track your cycles over a few months to learn what "normal" actually looks like for you — open your Cycle Tracker
+
+## Stress Is the Usual Suspect
+
+The most common answer is stress.
+
+When you are under real pressure — emotional, physical, or even just relentless busyness — your body raises cortisol. High cortisol can suppress the hormone signals that trigger ovulation. From your body's point of view, a stressful month is not a safe month to begin a pregnancy, so it quietly delays the whole process.
+
+This is why periods so often go missing during exam season, a breakup, a big move, or a stretch of poor sleep. It isn't a malfunction. It is your body being protective.
+
+@tool diary | Notice what this month actually asked of you — the stress you normalised may be the answer →
+
+## The Other Common Reasons
+
+Stress is the headline, but it has company. A late period can also follow:
+
+- **Big changes in weight or eating** — losing or gaining quickly, or undereating, can pause ovulation.
+- **Intense exercise** — heavy training loads, especially with low fuel, are a frequent cause.
+- **Travel and disrupted sleep** — jet lag and shift work confuse the body clock that helps time your cycle.
+- **Illness** — even a bad cold or infection can push ovulation back that month.
+- **Coming off hormonal birth control** — it can take a few cycles for your own rhythm to find its feet.
+
+Any one of these can nudge ovulation later, and your period follows obediently behind.
+
+## When It's Worth a Closer Look
+
+Sometimes a pattern of late or missing periods points to something that deserves care, and that is useful to know — not frightening.
+
+Conditions like PCOS (polycystic ovary syndrome) and thyroid imbalances are common and very manageable, and irregular periods are often the first clue. If you are in your 40s, cycles that start shifting can be an early sign of perimenopause.
+
+@read CY010 | Not sure what counts as a normal period in the first place? Start here →
+
+See a doctor if your periods are regularly irregular, if you go more than three months without one (and aren't pregnant), or if a reliably punctual cycle suddenly changes and stays changed. Tracking gives you the exact history to show them — which makes getting answers much faster.
+
+## In the Meantime
+
+If you have ruled out pregnancy and nothing feels alarming, the kindest thing you can do is lower the pressure — including the pressure of waiting.
+
+Sleep, food, rest, and a little less stress are not just vague wellness advice here. They are the exact inputs your ovulation responds to. Often, the period that was waiting on a stressful week arrives soon after the week eases.
+
+## Bloom Reflection
+
+A late period can feel like your body has gone silent on you. It hasn't. It is speaking — about stress, about change, about what this month has asked of you.
+
+Once you understand that a late period is usually a delayed ovulation, the fear loosens. You stop asking what is *wrong* with you and start asking what your body is *responding* to. That question almost always has a kind answer.
+
+## Bloom Tips
+
+- Remember: a late period is usually a late ovulation — your body delayed, it didn't fail.
+- Look first at stress, sleep, big weight or exercise changes, travel and recent illness.
+- Give your rhythm a few cycles to settle after stopping hormonal birth control.
+- Track your cycles so you know your own normal — and have a record to show a doctor.
+- See a doctor for periods that are often irregular, absent for 3+ months, or suddenly and persistently changed.
+
+## Today's Bloom
+
+Instead of checking the calendar again, do one genuinely restful thing today. Rest is not passive here — it is exactly what your cycle is waiting for.
+
+## Bloom Reminder
+
+Your body isn't broken. It's responding — and when the pressure lifts, your rhythm usually finds its way back.
+`,
+  "CY014": `# What Your Discharge Is Trying to Tell You
+
+*It changes all month long, and almost no one explains why. Your discharge is one of your body's clearest signals — once you can read it, you'll never un-know it.*
+
+Some days there is almost nothing. Other days it is creamy, or clear and stretchy, and you wonder, quietly, whether that is normal.
+
+No one really teaches this. So most women spend years half-worried about something that is, in fact, one of the most useful status updates their body sends.
+
+Your discharge — more precisely, your cervical mucus — is not random. It changes in a predictable rhythm across your cycle, and each stage is telling you something specific about where you are and what your hormones are doing. Learn to read it once, and you have a monthly map of your own fertility and health.
+
+## Why It Changes at All
+
+Your discharge changes because your hormones do.
+
+Across your cycle, rising and falling estrogen and progesterone change the fluid your cervix produces — its amount, its texture, its purpose. The whole point is fertility: your body is adjusting the environment to either welcome sperm or quietly close the door.
+
+So the shifts you notice aren't a glitch. They are a running commentary on your phase.
+
+@chart hormones
+
+## The Monthly Pattern, Decoded
+
+Here is the arc most cycles follow. Yours may vary a little — the point is to learn *your* version.
+
+**Just after your period:** often dry, with little discharge. Estrogen is low; not much is happening yet.
+
+**Building up:** as estrogen rises, you'll notice more — creamy, white or slightly cloudy, soft in texture.
+
+**Around ovulation:** the headline change. Discharge becomes clear, slippery and stretchy — a lot like raw egg white. This is your body at its most fertile. That stretchy mucus is literally designed to help sperm travel, which is why it shows up right as an egg is released.
+
+**After ovulation:** progesterone takes over and dries things up again — discharge becomes thicker, stickier, or scant through the luteal phase, until your next period begins.
+
+@tool cycle | Log your discharge beside your phase for one cycle and watch the pattern appear — it's one of the clearest signals you have →
+
+That egg-white day is the quiet star of the show: it is the closest thing your body has to announcing, out loud, "this is my fertile window."
+
+## Why This Is Genuinely Useful
+
+Reading your discharge isn't just interesting — it is practical.
+
+If you are trying to conceive, that stretchy, egg-white mucus marks your most fertile days better than almost any symptom. If you are avoiding pregnancy, knowing when that window opens matters just as much (though mucus alone is not a reliable contraceptive on its own). And either way, knowing your normal pattern means you'll notice fast when something is off.
+
+@read CY003 | See how each of these shifts maps onto the four phases of your cycle →
+
+## When It's Worth Checking In
+
+Healthy discharge is usually clear or white, and its main smell is mild or barely-there. Changes in colour, smell or texture are your body flagging that something may need care — and these are common and treatable, not shameful.
+
+Worth a conversation with a doctor or pharmacist:
+
+- **Thick, white and clumpy** like cottage cheese, usually with itching — often a yeast infection.
+- **Grey or white with a fishy smell** — can signal bacterial vaginosis.
+- **Green, yellow or frothy**, especially with discomfort — worth getting checked.
+- **Brown or bloody between periods** — usually harmless spotting, but worth mentioning if it's new or repeating.
+
+None of these mean you did anything wrong. They are simply your body asking for a little support.
+
+## The Shift in How You See It
+
+Discharge has been wrapped in so much quiet embarrassment that most women never learn what a gift it is. It is not something to be faintly ashamed of. It is a daily, honest signal — about your phase, your fertility, and your health.
+
+Once you can read it, you carry a kind of fluency in your own body that you'll have for life.
+
+## Bloom Reflection
+
+For years, your discharge may have been something you noticed and worried about in silence. Now it can be something you understand.
+
+It is your body, communicating clearly, every single day — telling you where you are in your cycle and whether all is well. Learning its language is one of the most quietly empowering things you can do.
+
+## Bloom Tips
+
+- Expect the arc: dry after your period, creamy as estrogen rises, clear and stretchy at ovulation, thicker in the luteal phase.
+- Treat egg-white, stretchy discharge as your fertile-window signal.
+- Learn your own normal — amount, texture, mild smell — so changes stand out.
+- Check in with a doctor for cottage-cheese texture, a fishy or strong smell, green or yellow discharge, or new spotting.
+- Log it alongside your cycle; it's one of the clearest phase markers you have.
+
+## Today's Bloom
+
+Next time you notice your discharge, pause instead of dismissing it. Ask which phase it points to — and let it tell you where you are.
+
+## Bloom Reminder
+
+Your body is always talking to you. This is one of the clearest things it says — and now you can understand it.
+`,
+  "CY015": `# Signs Your Hormones Are Out of Balance
+
+*Stubborn weight, wrecked sleep, moods you can't explain, skin that won't settle — when several line up, your hormones are often the thread tying them together.*
+
+You are tired in a way sleep doesn't fix. Your skin has turned on you. Your moods swing without a reason you can name, your periods have gone rogue, and the weight around your middle won't budge no matter what you do.
+
+Each symptom on its own feels like a separate problem. But when several of them show up together, there is often a single thread running underneath — your hormones.
+
+Hormones are your body's messengers, and when their signals get crossed, the effects ripple out everywhere: mood, skin, sleep, energy, weight, periods. Here is how to recognise the pattern, what commonly drives it, and when it's worth getting answers.
+
+## First, a Gentler Way to Think About It
+
+The phrase "hormonal imbalance" sounds like a scale tipped the wrong way. It is more accurate, and more useful, to picture a rhythm.
+
+Your hormones are meant to rise and fall in a particular dance across your cycle and your day. When that rhythm gets disrupted — by stress, by a condition, by a life stage — the symptoms follow. So the goal is never a single perfect "level." It is a rhythm that flows the way it is meant to.
+
+That reframe matters, because it means the fix is usually about supporting the rhythm, not chasing one magic number.
+
+@chart hormones
+
+## The Signs That Tend to Cluster
+
+No single symptom proves anything. It is the *cluster* that tells the story. See how many of these feel familiar:
+
+- **Irregular, missing, or newly heavy or painful periods** — often the clearest signal of all.
+- **Severe PMS or mood swings** that feel bigger than the situation.
+- **Adult acne, especially along the jaw and chin**, that behaves like teenage skin.
+- **Hair changes** — thinning on your head, or new growth where you don't want it.
+- **Stubborn weight**, particularly around the middle, that resists your usual efforts.
+- **Deep fatigue** that rest doesn't touch.
+- **Trouble sleeping**, or waking unrefreshed.
+- **Low libido** and a dimmer sense of drive.
+- **Feeling cold, sluggish, or foggy** much of the time.
+
+One or two of these are part of being human. Several at once, especially if they are new or worsening, are worth paying attention to.
+
+@tool cycle | Track your symptoms against your cycle for a month or two — the pattern you capture is exactly what a doctor needs to help you →
+
+## What's Usually Behind It
+
+When the rhythm is disrupted, a few common culprits are usually involved.
+
+**Chronic stress** is the big one. Sustained high cortisol interferes with the hormones that run your cycle, your sleep and your energy — which is why a relentless few months can scramble so many things at once.
+
+**PCOS and thyroid conditions** are extremely common, very treatable, and classic causes of exactly this cluster — irregular periods, weight and energy changes, skin and hair shifts.
+
+**Perimenopause**, the years leading up to menopause, brings its own natural hormonal turbulence, often starting earlier than women expect.
+
+And everyday inputs — sleep, food, movement, how much you are asking of yourself — shape the whole system more than most of us are ever told.
+
+@read CY002 | Want to understand what each hormone actually does first? Start here →
+
+## What You Can Do
+
+Some of the most powerful support is unglamorous and free. Your hormones respond, genuinely, to the basics.
+
+Protect your sleep — it is when much of your hormonal regulation happens. Eat enough, and enough protein and healthy fat, so your body has the raw materials to make hormones at all. Move in a way that doesn't punish you. And take stress seriously, not as a luxury, but as a direct input into the system that is struggling.
+
+@tool diet | Eat in a way that supports your hormones instead of fighting them — small shifts, real difference
+
+These won't fix a medical condition on their own, but they create the conditions in which your rhythm can recover — and they make everything else work better.
+
+## When to Get Real Answers
+
+You do not have to white-knuckle this or guess. If the cluster above sounds like your life — especially irregular periods alongside fatigue, mood, skin or weight changes — see a doctor and ask about hormone and thyroid testing.
+
+Bring your tracking. A few months of logged symptoms and cycles turns a vague "I just feel off" into a clear pattern a doctor can act on quickly. You deserve to be taken seriously, and good data helps you be heard.
+
+## Bloom Reflection
+
+When your body feels like it is misbehaving on every front at once, it is easy to believe something is simply wrong with you. Usually, something is out of rhythm — and rhythm can be supported.
+
+Reading the signs is not about fear. It is about finally connecting the dots you have been carrying as separate burdens, and realising they may share one cause — one that can be understood, and helped.
+
+## Bloom Tips
+
+- Look for the cluster, not the single symptom — several signs together are the real signal.
+- Treat irregular, missing, heavy or newly painful periods as a message worth heeding.
+- Support the basics: sleep, enough food and protein, gentle movement, and real stress care.
+- Track your symptoms and cycles so you can see the pattern — and show it to a doctor.
+- Ask about thyroid and hormone testing if the cluster fits; PCOS and thyroid issues are common and treatable.
+
+## Today's Bloom
+
+Pick the one symptom that's bothered you most and start logging it today, beside your cycle. One data point now is the start of a pattern that can finally be understood.
+
+## Bloom Reminder
+
+Your body isn't betraying you. It's asking for support — and the signals you're learning to read are the first step to feeling like yourself again.
+`,
 };
 export default bodies;
