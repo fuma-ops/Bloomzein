@@ -1695,5 +1695,371 @@ Pick the one symptom that's bothered you most and start logging it today, beside
 
 Your body isn't betraying you. It's asking for support — and the signals you're learning to read are the first step to feeling like yourself again.
 `,
+  "CY016": `# Is It PMS or PMDD? How to Tell the Difference
+
+*If the week before your period doesn't just feel rough but genuinely dark, there may be a name for it — and it isn't "being dramatic." Here's how to tell PMS from something more.*
+
+Everyone talks about PMS like it's a punchline. A bit moody, a bit weepy, craving chocolate.
+
+But for some women, the week before their period isn't a punchline at all. It's a cliff. The mood doesn't just dip — it crashes into hopelessness, rage, or an anxiety so heavy it swallows the week. Relationships strain. Work feels impossible. And then the period starts, and the fog lifts like it was never there.
+
+If that sounds more like your experience than "a bit moody," this matters: there is a real, recognised condition behind it, and it has a name. Understanding the difference between PMS and PMDD is the first step to getting the right help.
+
+## What PMS Actually Is
+
+PMS — premenstrual syndrome — is the familiar cluster of symptoms in the luteal phase, the week or so before your period.
+
+It's driven by the hormonal shifts of that phase, especially the fall in estrogen and the dip in serotonin that comes with it. It can bring bloating, sore breasts, cravings, irritability, tearfulness and low energy. It's common, it's real, and for most women it's uncomfortable but manageable — it doesn't derail their lives.
+
+@chart hormones
+
+## What PMDD Is — and Why It's Different
+
+PMDD — premenstrual dysphoric disorder — is PMS's far more serious relative. It affects an estimated 1 in 20 women, and it is a recognised medical condition, not a character flaw or an overreaction.
+
+The difference isn't the *type* of symptom so much as the *severity*. PMDD brings intense emotional symptoms that can genuinely upend your life:
+
+- Deep hopelessness, sadness, or a sense of dread
+- Severe anxiety or feeling on edge
+- Intense irritability or anger — sometimes rage that frightens you
+- Feeling overwhelmed or out of control
+- Difficulty functioning at work, or real strain on your relationships
+
+The feelings are bigger than the situation, and they can be scary precisely because they don't match the rest of your month.
+
+## The One Clue That Tells Them Apart
+
+Here is the detail that distinguishes PMDD from other mood conditions, and it's the most useful thing in this article: **timing.**
+
+PMDD is strictly cyclical. The symptoms appear in the luteal phase — the week or two before your period — and then lift within a few days of bleeding starting. There is a symptom-free stretch after your period. That on-off pattern, locked to your cycle, is exactly what separates it from depression or anxiety that runs all month.
+
+@tool diary | Log your mood every day for two cycles — the pattern of when it lifts is what a doctor needs to tell PMS from PMDD →
+
+This is why tracking is so powerful here. Two months of daily mood notes turn a vague "I feel awful sometimes" into a clear, dated pattern a doctor can act on — and it's often how PMDD is diagnosed in the first place.
+
+## It's Treatable — You Don't Have to White-Knuckle It
+
+If this is you, please hear this clearly: PMDD is manageable, and you are not meant to just endure it every month.
+
+There are real treatments — certain antidepressants (SSRIs), which can be taken continuously or only in the luteal phase, hormonal approaches, and lifestyle support around sleep, movement and stress. A doctor can help you find what fits. The basics — steady blood sugar, magnesium, protecting sleep, gentle movement — genuinely help too, but with PMDD they are a support, not a substitute for proper care.
+
+@read CY015 | Mood is one signal — here are the other signs your hormones may need support →
+
+**One important note:** if your premenstrual low ever brings thoughts of harming yourself, treat that as urgent and reach out for help straight away — a doctor, a crisis line, or someone you trust. That symptom is part of PMDD for some women, and it deserves immediate care, not silence.
+
+## The Reframe That Matters Most
+
+For years, women with PMDD are told they're "too sensitive" or "dramatic." They come to believe it. They white-knuckle through one brutal week a month and blame themselves for not coping better.
+
+You are coping with something real. The dread, the rage, the hopelessness that arrives on schedule and leaves on schedule — that's not weakness. It's a hormone-sensitive condition with a name and a treatment. Naming it is the moment it stops being your fault.
+
+## Bloom Reflection
+
+There's a particular loneliness in a suffering no one takes seriously — including, sometimes, you.
+
+If the week before your period has felt like a different, darker person takes over, you are not broken and you are not exaggerating. You may be describing PMDD. And the kindest, bravest thing you can do is write it down, see it clearly, and bring it to someone who can help.
+
+## Bloom Tips
+
+- PMS is manageable discomfort; PMDD is severe, life-disrupting mood symptoms in the luteal phase.
+- The key clue is timing: PMDD lifts within days of your period and leaves a symptom-free stretch.
+- Track your mood daily for two cycles — the dated pattern is how PMDD is identified.
+- See a doctor if premenstrual symptoms regularly disrupt your life; effective treatments exist.
+- If you ever have thoughts of harming yourself, seek help immediately — that is urgent, and support is available.
+
+## Today's Bloom
+
+Start a simple mood log today — one line, one number, every evening, beside your cycle day. You're building the exact picture that gets you answers.
+
+## Bloom Reminder
+
+What arrives on a schedule can be understood — and what can be understood can be helped. You deserve both.
+`,
+  "CY017": `# Why Do I Get a Headache Before My Period?
+
+*Like clockwork, a headache shows up a day or two before you bleed. It isn't random — it's one specific hormone leaving the room, and you can see it coming.*
+
+It arrives at almost the same point every month. A tightening behind your eyes, a throb at your temple, sometimes a full migraine that flattens a whole day.
+
+You take a painkiller, push through, and don't connect it to anything — until you notice it keeps landing in the same spot on the calendar: right before your period.
+
+That timing is the entire clue. Period-related headaches are one of the most predictable symptoms there is, because they're triggered by one specific, measurable event in your cycle. Once you know what it is, you can stop being ambushed and start getting ahead of it.
+
+## It's Estrogen, Leaving
+
+In the days before your period, estrogen drops sharply.
+
+For women prone to them, that sudden fall is a classic headache and migraine trigger. It's often called a "menstrual migraine," and it's specifically the *withdrawal* of estrogen — the steep drop, not the level itself — that sets it off. This is why the headache tends to cluster in the late luteal phase and the first day or two of bleeding, exactly when estrogen is at its lowest ebb.
+
+@chart hormones
+
+So this isn't a vague "hormones" hand-wave. It's a specific hormonal exit, on a schedule your body repeats every month.
+
+## Why Some Months Are Worse
+
+If the drop in estrogen is the trigger, everyday life is the amplifier.
+
+Dehydration, skipped meals, poor sleep, stress and too much caffeine all lower your threshold — so the same hormonal dip that gives you a mild ache in a well-rested week can become a pounding migraine in a chaotic one. That's actually good news: the trigger you can't control (the estrogen drop) rides on top of several you *can*.
+
+@tool cycle | Know the headache window is coming and protect your sleep, meals and water in advance — open your Cycle Tracker
+
+## How to Get Ahead of It
+
+Because this headache is predictable, prevention beats cure.
+
+**Magnesium** is the standout. There's real evidence that magnesium can help prevent menstrual migraines, and many women find that taking it consistently through the second half of the cycle softens the whole pattern. Magnesium-rich foods — leafy greens, nuts, seeds, dark chocolate — are an easy place to start.
+
+@tool diet | Build magnesium and steady, regular meals into your luteal week to lower the headache threshold
+
+**Keep your blood sugar steady.** Don't skip meals in the days before your period; a blood-sugar crash on top of the estrogen drop is a reliable headache recipe. **Hydrate properly**, protect your **sleep**, and ease off anything you know is a personal trigger.
+
+And when a headache does come, the timing rule from painkillers applies: taken early, at the first sign, anti-inflammatories tend to work far better than once the pain is fully established.
+
+@read CY011 | Headaches often travel with the bloating and heaviness of this week — here's that story →
+
+## When to See a Doctor
+
+Most menstrual headaches are predictable and manageable. Some deserve a professional eye.
+
+See a doctor if your headaches are severe, getting more frequent, come with visual disturbances or "aura," don't respond to the usual measures, or feel different from your normal pattern. Menstrual migraines are very treatable, and there are specific preventive options a doctor can offer — including ones timed to your cycle. You don't have to just lose a day a month.
+
+## Bloom Reflection
+
+A headache that lands on the same day every month can feel like a small monthly betrayal. It's actually a signal — clear, timed, and readable.
+
+Your body isn't malfunctioning. It's responding to estrogen stepping away, right on cue. And because it's on cue, you hold more power over it than it feels: the water, the meals, the magnesium, the sleep, all placed *before* the window, not scrambled for after.
+
+## Bloom Tips
+
+- Expect the headache window in the late luteal phase — it's triggered by the sharp drop in estrogen.
+- Lower the threshold with magnesium, steady meals, hydration and protected sleep in the days before.
+- Don't skip meals pre-period; a blood-sugar crash amplifies the hormonal trigger.
+- Take anti-inflammatories early, at the first sign, for best effect.
+- See a doctor for severe, worsening, or aura-accompanied headaches — menstrual migraine is treatable.
+
+## Today's Bloom
+
+Check your cycle day. If your headache window is close, fill your water bottle, plan a real lunch, and get to bed on time tonight — you're pre-empting, not reacting.
+
+## Bloom Reminder
+
+What you can predict, you can prepare for. This headache has a pattern — and a pattern is something you can outsmart.
+`,
+  "CY018": `# Why Do I Feel Sick Before My Period?
+
+*Queasy, off, vaguely unwell the week before you bleed? That wave of nausea has a cause — the very same chemical behind your cramps.*
+
+It's not quite being ill, but it's not feeling well either.
+
+A low queasiness. Food loses its appeal. Your stomach feels unsettled, maybe a little churny, and you move through the day slightly off — until your period comes and, within a day or two, it quietly passes.
+
+Feeling sick before your period is more common than most women realise, and it's rarely talked about. But like almost everything in your cycle, it has a clear cause. And reassuringly, it usually traces back to the same source as a symptom you already know well.
+
+## Blame the Same Chemical as Your Cramps
+
+Meet prostaglandins again.
+
+These are the chemicals your body makes to help your uterus contract and shed its lining. The trouble is they don't stay politely in the uterus. When prostaglandin levels rise around the start of your period, they can affect the nearby digestive tract too — triggering nausea, looser stools, and that generally unsettled stomach.
+
+So if you get strong cramps *and* feel sick, that's not a coincidence. They're two outputs of the same chemical, which is why they so often arrive together.
+
+## The Other Threads
+
+Prostaglandins are the main story, but a few other things add to it.
+
+The hormonal shifts of the luteal phase slow digestion (the same reason this week brings bloating), which can leave your stomach feeling heavy and off. Dips in blood sugar — easy to hit if nausea has put you off eating — make queasiness worse, creating a loop where not eating makes you feel sicker. And for some women, pre-period nausea travels alongside menstrual headaches or migraines, which bring their own queasiness.
+
+@tool cycle | Track nausea beside your phase and cramps — seeing it cluster before your period is reassuring in itself →
+
+## What Actually Helps
+
+The good news is that the gentle, practical fixes work well here.
+
+**Eat small and often.** An empty stomach amplifies nausea, so light, regular meals steady both your blood sugar and your stomach — even when appetite is low. Reach for plain, easy foods rather than anything heavy or greasy.
+
+**Ginger genuinely works.** It's one of the few remedies with real evidence behind it for nausea — as tea, in warm water, or however you like it.
+
+@tool diet | See the gentle, stomach-friendly foods that settle the luteal week instead of stirring it up
+
+**Stay hydrated**, sip slowly, and go easy on the usual stomach irritants — too much caffeine, alcohol, and very rich food. And because prostaglandins are the driver, the same anti-inflammatory measures that ease cramps can take the edge off the nausea too.
+
+@read CY011 | Nausea often comes bundled with bloating and heaviness — here's the full luteal-tummy picture →
+
+## When to Check In
+
+Pre-period nausea that's mild and lifts with your period is normal. A few situations are worth a second look.
+
+If the nausea is severe, comes with vomiting, or is intense enough to disrupt your life, see a doctor — it can sometimes point to conditions like endometriosis, and it's worth proper care. And one essential: if your period is *late* and you're feeling sick, take a pregnancy test before assuming it's premenstrual, since early pregnancy causes nausea too.
+
+## Bloom Reflection
+
+Feeling unwell without a clear reason is unsettling — it's easy to wonder if something is wrong with you.
+
+Usually, nothing is. That queasy, off feeling is your body responding to a rise in the very chemicals that run your period, plus a digestive system in its slower luteal gear. It's temporary, it's explainable, and it passes with your period — every time.
+
+## Bloom Tips
+
+- Pre-period nausea is usually driven by prostaglandins — the same chemicals behind your cramps.
+- Eat small, plain, regular meals; an empty stomach makes queasiness worse.
+- Try ginger — it's one of the few nausea remedies with real evidence behind it.
+- Stay hydrated and ease off caffeine, alcohol and heavy food in the luteal week.
+- See a doctor for severe nausea or vomiting — and test for pregnancy if your period is late.
+
+## Today's Bloom
+
+If you're feeling queasy, make a mug of ginger tea and eat something plain and small. Gentle and steady beats forcing it down or skipping food entirely.
+
+## Bloom Reminder
+
+That off, unwell feeling has a cause and an end date. It's your cycle passing through — not something being wrong with you.
+`,
+  "CY019": `# Why Do I Cry Before My Period?
+
+*An advert, a kind text, nothing at all — and suddenly you're in tears. The week before your period can crack you open, and there's real chemistry behind it.*
+
+You're fine. And then you're crying at a dog video.
+
+Or a slightly short reply from a friend lands like a rejection. Or you simply feel everything more — the sad things sadder, the overwhelming things impossible, the tears sitting right behind your eyes all day for no reason you can name.
+
+Then your period starts, and a few days later you feel like yourself again, a little bemused by the whole thing.
+
+This isn't you being "too emotional." The week before your period, your brain chemistry genuinely shifts — and tearfulness is one of the most common, most human results. Here's what's actually happening.
+
+## Serotonin Drops With Estrogen
+
+The main driver is a brain chemical called serotonin.
+
+Serotonin helps keep your mood steady and resilient. In the luteal phase, as estrogen falls, serotonin can fall with it. Lower serotonin means a thinner buffer between you and your feelings — so the same small thing that would roll off you mid-cycle can tip you straight into tears this week.
+
+Nothing is wrong with your reaction. The thing you're reacting *with* — your mood's shock absorber — is simply running low for a few days.
+
+@chart hormones
+
+## Your Calm Chemistry Is Fluctuating Too
+
+There's a second layer. Progesterone, which rises in the luteal phase, breaks down into a compound that acts on the same calming system in your brain as relaxation itself.
+
+As progesterone rises and then falls before your period, that soothing influence fluctuates — and for many women, those swings add a layer of sensitivity, restlessness or weepiness. So you've got less steadying serotonin *and* a wobble in your natural calm, at the same time. No wonder everything feels closer to the surface.
+
+## Why Everything Feels Bigger
+
+Put those together and you get the signature feeling of the premenstrual week: not just sad, but *porous*. Thin-skinned. Everything gets in.
+
+A film makes you sob. A worry you'd normally manage spirals. Affection feels overwhelming; criticism feels devastating. This is real neurochemistry, not a lack of composure — your emotional volume dial has been turned up by hormones, and it will be turned back down when your period comes.
+
+@tool diary | Let the feelings out on a page instead of holding them in — a few lines can lighten the whole evening →
+
+## How to Be Gentle With It
+
+You can't switch off the chemistry, but you can stop fighting it — and soften it.
+
+**Anticipate it.** When you can see on your tracker that you're in the tearful window, the tears stop feeling like a crisis and start feeling like weather. "Oh — it's this week." That reframe alone takes out half the distress.
+
+@tool cycle | Mark your sensitive days so when the tears come, you already know why — open your Cycle Tracker
+
+**Support your serotonin.** Gentle movement, daylight, and slow-releasing carbohydrates all nudge serotonin up naturally. **Protect your sleep**, since tiredness thins your resilience further. And **let yourself feel it** — a good cry is a release, not a failure. Schedule less, expect less of yourself, and treat this week as a time to be held rather than pushed.
+
+@read CY008 | If it's not just tears but a heavy, everything-is-harder feeling, here's why the whole week drags →
+
+## When It's More Than Tearful
+
+Tearfulness that lifts with your period is normal and human. But if your premenstrual mood tips into genuine hopelessness, dread, or rage — feelings big enough to disrupt your life — that can be a sign of PMDD, a more serious but very treatable condition.
+
+@read CY016 | If the week goes darker than weepy — hopeless, furious, out of control — read this →
+
+You don't have to tell the difference alone. Tracking your mood and talking to a doctor is exactly how you find out whether this is ordinary PMS or something that deserves more support.
+
+## Bloom Reflection
+
+For so long, crying before your period has probably come wrapped in a little embarrassment — a sense that you *should* be able to hold it together.
+
+But you're not failing to hold it together. You're moving through a few days of lower serotonin and shifting calm-chemistry, with your feelings turned up loud. That's not weakness. It's biology — and it deserves tenderness, not judgement.
+
+## Bloom Tips
+
+- Expect tearfulness in the luteal week — falling serotonin thins your emotional buffer.
+- Name it when it comes ("it's this week") to take the fear out of the feeling.
+- Support serotonin with daylight, gentle movement and slow-release carbs; protect your sleep.
+- Let yourself cry — it's a release — and ask less of yourself this week.
+- If the mood turns to hopelessness or rage, track it and talk to a doctor about PMDD.
+
+## Today's Bloom
+
+If you're in the tender window, cancel one non-essential thing today and do something soft instead. Lowering the demands is a kindness your chemistry will thank you for.
+
+## Bloom Reminder
+
+You're not too much. You're a few days from your period, feeling everything more — and that always softens again.
+`,
+  "CY020": `# Why Is My Period Blood Brown?
+
+*Brown instead of red — and a small flicker of worry. In almost every case it means one simple, harmless thing, and here's how to read every colour your period shows you.*
+
+You check, and it's brown. Not the red you expected — brown, or dark, almost rusty.
+
+And a small, quiet worry starts up. Is that okay? Is something wrong? It's the kind of question most women have but rarely ask out loud.
+
+Here's the reassuring headline: brown period blood is almost always completely normal. Once you understand the single reason behind it, you'll never be thrown by it again — and you'll be able to read the other colours your period shows you, too.
+
+## Brown Just Means Older
+
+The colour of blood comes down to one thing: how long it took to leave your body.
+
+Fresh blood is bright red. When blood takes a little longer to make its way out, it's exposed to oxygen for longer, and it darkens — to deep red, then brown. So brown blood isn't different blood or "bad" blood. It's simply *older* blood that left more slowly.
+
+That's the whole mechanism. And it instantly explains when you see it most.
+
+## Why It Shows Up at the Start and End
+
+Brown blood turns up most often at the very beginning and the very end of your period — and now you can see why.
+
+At the start, there's sometimes blood left from the tail of your last cycle, or the flow is just getting going slowly. At the end, the flow is winding down and the last of the lining leaves unhurriedly. Slower flow means more time, more oxygen, darker colour. Brown at the edges of your period is one of the most normal things your body does.
+
+@tool cycle | Log your flow and its colour across a cycle — you'll quickly learn your own normal pattern →
+
+You might also see brown spotting between periods around ovulation, or on hormonal birth control — often harmless, though worth knowing your own baseline.
+
+## The Full Colour Map
+
+Since you're here, let's decode the rest — so no shade ever worries you without reason:
+
+- **Bright red:** fresh, steady flow. Classic and normal, usually mid-period.
+- **Dark red to brown:** older, slower blood. Normal, especially at the start and end.
+- **Pink:** blood mixed with other fluid, often light days or spotting. Usually fine; if it's persistent and very light, it can sometimes reflect low estrogen.
+- **Orange or grey:** worth attention. Grey, or an off colour with an unusual smell, can signal an infection — check in with a doctor.
+- **Very heavy bright red with large clots:** some clotting is normal, but soaking through protection hourly, or clots bigger than a coin, is worth raising with a doctor.
+
+@read CY014 | Your discharge between periods has its own colour language — here's how to read it →
+
+## When to See a Doctor
+
+Brown blood itself is rarely the problem. The surrounding context is what matters.
+
+Check in with a doctor if you have brown or dark discharge with a foul smell, bleeding or brown spotting that keeps happening *between* your periods, any bleeding after menopause, or brown spotting when there's a chance you're pregnant. These aren't usually emergencies, but they're worth a professional eye — and tracking gives you the exact history to show them.
+
+@read CY010 | Wondering what a "normal" period even looks like overall? Here's the fuller answer →
+
+## Bloom Reflection
+
+So much period worry comes from simply never being told what's normal. A colour changes, and with no context, the mind fills the silence with fear.
+
+Brown blood is just older blood, moving slowly — a tiny, ordinary detail of a healthy cycle. Knowing that replaces a flicker of worry with a quiet, grounded understanding of your own body. That's what this is really about.
+
+## Bloom Tips
+
+- Brown blood is simply older blood that left slowly and oxidised — not "bad" blood.
+- It's most normal at the start and end of your period, when flow is slower.
+- Learn the colour map: bright red is fresh, dark/brown is older, pink is light, grey needs a check.
+- Track your flow and colour so you know your own normal and spot real changes fast.
+- See a doctor for foul-smelling brown discharge, bleeding between periods, bleeding after menopause, or spotting in possible pregnancy.
+
+## Today's Bloom
+
+Next time you notice the colour of your period, don't brush past it — read it. It's one more piece of your body's daily, honest report.
+
+## Bloom Reminder
+
+Most of what worries you about your period is simply something no one explained. Now this one's explained — and it's okay.
+`,
 };
 export default bodies;
