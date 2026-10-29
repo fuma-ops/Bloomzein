@@ -14,7 +14,9 @@
     "allow": [
       "mcp__Supabase__execute_sql",
       "Bash(node scripts/social/post.mjs publier:*)",
-      "Bash(node scripts/social/post.mjs apercu:*)"
+      "Bash(node scripts/social/post.mjs apercu:*)",
+      "Bash(node scripts/social/instagram.mjs publier:*)",
+      "Bash(node scripts/social/instagram.mjs apercu:*)"
     ]
   }
 }
