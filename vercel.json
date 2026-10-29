@@ -1,6 +1,7 @@
 {
   "git": {
     "deploymentEnabled": {
+      "claude/**": false,
       "claude/workout-player-animations-7j6l68": false
     }
   },
@@ -8,8 +9,14 @@
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" },
-        { "key": "Pragma", "value": "no-cache" }
+        {
+          "key": "Cache-Control",
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
       ]
     }
   ],
