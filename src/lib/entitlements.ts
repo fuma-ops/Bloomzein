@@ -117,7 +117,33 @@ export function usePremium(): boolean {
 }
 
 /** Which Bloom+ moment triggered the paywall — themes its headline. */
-export type PaywallFeature = "meals" | "diet" | "workout" | "yoga" | "coach" | "cycle" | "budget" | "me" | "general";
+export type PaywallFeature = "meals" | "diet" | "workout" | "yoga" | "journal" | "shopping" | "coach" | "cycle" | "budget" | "me" | "general";
+
+/**
+ * Freemium model (owner decision, 05/11/2026): every TOOL is free and
+ * ad-supported — meals (incl. the whole planned week & recipes), diet
+ * (calories, macros, energy), workouts & yoga (every level/program/length) and
+ * the journal. Bloom+ ($3/month or $29/year, 3-day free trial) is the deeper
+ * layer: the daily coach (Today / Calendar day plan), reports & long-term
+ * history/insights (Me, cycle insights, budget goals & reports), the shopping
+ * list & pantry, the living phase theme — and no ads.
+ *
+ * Every gate asks `hasAccess(feature)` / `useAccess(feature)` — never its own
+ * premium check — so moving a feature between free and Bloom+ is a one-line
+ * change here.
+ */
+const FREE_FEATURES = new Set<PaywallFeature>(["meals", "diet", "workout", "yoga", "journal"]);
+
+/** Can she use this feature right now? (always true for free features) */
+export function hasAccess(feature: PaywallFeature): boolean {
+  return FREE_FEATURES.has(feature) || isPremium();
+}
+
+/** Live `hasAccess` for components — re-renders when the plan flips. */
+export function useAccess(feature: PaywallFeature): boolean {
+  const premium = usePremium();
+  return FREE_FEATURES.has(feature) || premium;
+}
 
 /** Open the app-wide paywall, themed to the feature she reached for. */
 export function openPaywall(feature: PaywallFeature = "general"): void {
@@ -126,6 +152,6 @@ export function openPaywall(feature: PaywallFeature = "general"): void {
 
 /** Run a premium action, or open the paywall if she's on the free plan. */
 export function withPremium(feature: PaywallFeature, action: () => void): void {
-  if (isPremium()) action();
+  if (hasAccess(feature)) action();
   else openPaywall(feature);
 }

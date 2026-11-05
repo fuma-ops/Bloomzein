@@ -286,9 +286,9 @@ export function RefundPage() {
       </section>
 
       <section>
-        <H>7-day free trial</H>
+        <H>3-day free trial</H>
         <P>
-          Bloom+ starts with a <b>7-day free trial</b>. You won’t be charged during the trial. If you
+          Bloom+ starts with a <b>3-day free trial</b>. You won’t be charged during the trial. If you
           cancel before the trial ends, you pay nothing. If you don’t cancel, your chosen plan
           (monthly or yearly) begins automatically when the trial finishes, at the price shown at
           checkout.

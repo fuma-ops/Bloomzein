@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Cloud, Smile, Zap, Heart, Moon, Battery, type LucideIcon } from "lucide-react";
 import { readTodayMood } from "@/lib/crossToolData";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
-import { isPremium, openPaywall } from "@/lib/entitlements";
+import { openPaywall, hasAccess } from "@/lib/entitlements";
 
 /** Free plan keeps a generous 20 diary entries; the 21st opens Bloom+. */
 const FREE_DIARY_LIMIT = 20;
@@ -874,7 +874,7 @@ export default function DiaryPage() {
   const onSave = (photos: string[]) => {
     if (!draft.trim()) return;
     // Free plan is generous — 20 entries — then Bloom+ for unlimited history.
-    if (!isPremium() && entries.length >= FREE_DIARY_LIMIT) { openPaywall("general"); return; }
+    if (!hasAccess("journal") && entries.length >= FREE_DIARY_LIMIT) { openPaywall("general"); return; }
     const entry: DiaryEntry = {
       id: `diary-${Date.now()}`,
       date: todayISO(),

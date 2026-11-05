@@ -85,7 +85,7 @@ import { buildDayCoach } from "@/lib/todayCoach";
 import { readsForPhase } from "@/lib/readsData";
 import { TomorrowCard, PhaseReads } from "@/components/bloom/coach/CoachCards";
 import { CycleNutritionView } from "@/components/bloom/diet/CycleNutritionView";
-import { usePremium } from "@/lib/entitlements";
+import { useAccess } from "@/lib/entitlements";
 import { PlusLock } from "@/components/bloom/premium/PremiumKit";
 import {
   RECIPES,
@@ -2192,7 +2192,7 @@ function CycleNutritionTab({
   // One source of truth for the whole emotional-coach layer.
   const coach = useMemo(() => buildDayCoach(), []);
   const phaseReads = useMemo(() => readsForPhase(coach.phase), [coach.phase]);
-  const premium = usePremium();
+  const premium = useAccess("diet");
 
   // No cycle saved yet → the gentle setup nudge.
   if (!cycleReady) {

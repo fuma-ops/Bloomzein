@@ -50,7 +50,7 @@ function PlanCard({
         href="/app"
         className="bloom-luxury-btn mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
       >
-        <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
+        <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 3-day free trial
       </a>
     </div>
   );
@@ -76,8 +76,8 @@ export function PricingPage() {
           <h1 className="mt-1 font-script text-4xl sm:text-5xl text-[#831843] leading-none">Simple, honest pricing</h1>
           <p className="mx-auto mt-3 max-w-md text-[14px] text-rose/75 leading-relaxed">
             Bloomzein is your all-in-one wellness companion &amp; life organizer — cycle, meals,
-            movement, budget, calendar, notes and reminders in one place. <b>Bloom+</b> unlocks the
-            full experience. Start with a <b>7-day free trial</b>, cancel anytime.
+            movement, budget, calendar, notes and reminders in one place — <b>free</b>. <b>Bloom+</b> adds
+            your daily coach, reports &amp; insights, with no ads. Start with a <b>3-day free trial</b>, cancel anytime.
           </p>
         </header>
 
@@ -103,7 +103,7 @@ export function PricingPage() {
           processed by <b>Paddle</b>, our Merchant of Record.
         </p>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-[12px] text-rose/60">
-          <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 7-day free trial · cancel anytime · no hidden fees
+          <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 3-day free trial · cancel anytime · no hidden fees
         </p>
 
         <footer className="mt-12 border-t border-[#F4C6DD] pt-6 text-center text-xs text-[#9D5C7E]">

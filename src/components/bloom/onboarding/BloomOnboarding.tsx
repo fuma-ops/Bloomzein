@@ -824,12 +824,11 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   // ── PRICING (Bloom+) ───────────────────────────────────────────────────────
   if (stage === "pricing") {
     const features = [
-      { Icon: Flower2, t: "Cycle tracking that syncs every tool to your phase" },
-      { Icon: Utensils, t: "Your whole week of meals, auto-planned & shoppable" },
-      { Icon: Dumbbell, t: "Full workout & yoga programs matched to your cycle" },
-      { Icon: Flame, t: "Energy engine — daily target, macros & goal timeline" },
-      { Icon: CalendarDays, t: "A big calendar & life organizer for your month" },
-      { Icon: Sparkles, t: "Long-term mood, health & progress insights" },
+      { Icon: Sparkles, t: "Your daily coach — a full plan for every day, synced to your phase" },
+      { Icon: CalendarDays, t: "Your day plan in the calendar, every day of the month" },
+      { Icon: Flame, t: "Reports & long-term mood, health & progress insights" },
+      { Icon: Utensils, t: "Smart shopping list & pantry, written from your week" },
+      { Icon: Flower2, t: "Your living phase theme — and no ads" },
     ];
     // Queue the one-time welcome toast for the app shell to raise once it mounts
     // (firing it here would be lost — the NotificationHost isn't mounted yet).
@@ -877,7 +876,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Sparkles className="h-6 w-6" /></span>
             <p className="mt-2 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: "#B76E79" }}>Bloom+ Premium</p>
             <h1 className="mt-0.5 leading-[0.95]"><span className="block text-[1.9rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Your whole world,</span><span className="font-script text-[2.1rem] text-hotpink">unlocked ♡</span></h1>
-            <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-snug text-rose/75">Everything you just set up — cycle, meals, movement, energy & more. Start with a <b className="text-hotpink">3-day free trial</b>, cancel anytime.</p>
+            <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-snug text-rose/75">All your tools stay free. Bloom+ adds your daily coach, reports &amp; insights — ad-free. Start with a <b className="text-hotpink">3-day free trial</b>, cancel anytime.</p>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2.5">
             <Plan id="monthly" name="Monthly" price="$3" per="per month" />

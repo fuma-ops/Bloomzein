@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
-import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
+import { openPaywall, hasAccess, useAccess } from "@/lib/entitlements";
 import { LockChip, PlusLock } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
 import { NotifCard } from "@/components/bloom/NotifCard";
@@ -516,11 +516,12 @@ const MEALS_GUIDE_CONTENT: SparkleContent = {
 /* ---------- Page ---------- */
 
 /** Meals tabs reserved for Bloom+ (only "This Week" browsing is free). */
-const PREMIUM_MEALS_TABS = new Set<TabKey>(["pantry", "shop", "favs"]);
+// Shopping list & pantry stay Bloom+ (see entitlements.ts); the week, recipes and favourites are free.
+const PREMIUM_MEALS_TABS = new Set<TabKey>(["pantry", "shop"]);
 
 export default function MealsPage() {
   const [tab, setTab] = useState<TabKey>("week");
-  const premiumPlan = usePremium();
+  const shoppingUnlocked = useAccess("shopping");
   // Guided-setup focus mode: narrow hero + this week + one "Finish on Today" action.
   const guided = useGuided();
   const cyclePhaseNow = readCyclePhase();
@@ -530,7 +531,7 @@ export default function MealsPage() {
   useEffect(() => { if (guided && tab !== "week" && tab !== "pantry") setTab("week"); }, [guided, tab]);
   // Free users browse & plan This Week manually; the organiser tabs are Bloom+.
   const goToTab = (key: TabKey) => {
-    if (!premiumPlan && PREMIUM_MEALS_TABS.has(key)) { openPaywall("meals"); return; }
+    if (!shoppingUnlocked && PREMIUM_MEALS_TABS.has(key)) { openPaywall("shopping"); return; }
     setTab(key);
   };
   // Banner shown when the week was just set up from the Diet tool.
@@ -906,7 +907,7 @@ export default function MealsPage() {
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
                     {t.label}
-                    {!premiumPlan && PREMIUM_MEALS_TABS.has(t.key) && <LockChip />}
+                    {!shoppingUnlocked && PREMIUM_MEALS_TABS.has(t.key) && <LockChip />}
                   </button>
                 );
               })}
@@ -1340,7 +1341,7 @@ function WeekTab({
   };
   // Header ♻ — re-roll just the week she's viewing (keeps the rest of the month).
   const handleRegenWeek = () => {
-    if (!isPremium()) { openPaywall("meals"); return; }
+    if (!hasAccess("meals")) { openPaywall("meals"); return; }
     setGenerating(true);
     onRegenWeek();
     setTimeout(() => setGenerating(false), 400);

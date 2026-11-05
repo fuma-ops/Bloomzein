@@ -12,7 +12,7 @@ import { readLaunch, LAUNCH_WORKOUT_KEY } from "@/components/bloom/phasePlan";
 import { readFuelInPlan, writeFuelInPlan, readWorkoutStreak, readWorkoutSessionCount, resetToolState, readWorkoutPlanDays, readMovementLevel } from "@/lib/crossToolData";
 import { isGuided } from "@/lib/guidedSetup";
 import { useGuided, guidedNudge, GuidedFinishBar, GuidedFocusHero } from "@/components/bloom/GuidedFocus";
-import { isPremium, openPaywall, usePremium, isOwnerEmail } from "@/lib/entitlements";
+import { openPaywall, isOwnerEmail, hasAccess, useAccess } from "@/lib/entitlements";
 import { useAuth } from "@/contexts/AuthContext";
 import { PlusLock, LockChip } from "@/components/bloom/premium/PremiumKit";
 import { SpotlightCoach } from "@/components/bloom/SpotlightCoach";
@@ -470,7 +470,7 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
   try { const v = localStorage.getItem(PROGRAM_PHASE_KEY); programPhase = v ? JSON.parse(v) : null; } catch { programPhase = null; }
   const synced = known && !!program && programPhase === phase;
   const onSync = () => {
-    if (!isPremium()) { openPaywall("workout"); return; } // cycle-sync is Bloom+
+    if (!hasAccess("workout")) { openPaywall("workout"); return; } // cycle-sync is Bloom+
     if (!known) { window.location.href = "/app/calendar"; return; }
     let profile = DEFAULT_PROFILE;
     try { const v = localStorage.getItem(PROFILE_KEY); if (v) profile = JSON.parse(v); } catch { profile = DEFAULT_PROFILE; }
@@ -1069,7 +1069,7 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   const replacesExisting = (!!active && active.programId !== program.id) || hasFreestyle;
 
   const commitPlan = () => {
-    if (!isPremium()) { openPaywall("workout"); return; } // Bloom+ gate: enrolling a program is premium
+    if (!hasAccess("workout")) { openPaywall("workout"); return; } // Bloom+ gate: enrolling a program is premium
     // One plan at a time: enrolling a program clears any freestyle week.
     try { localStorage.removeItem(PROGRAM_KEY); localStorage.removeItem(PROGRAM_PHASE_KEY); } catch {}
     saveActiveProgram({ programId: program.id, week: 1, startedISO: todayISO() });
@@ -1257,7 +1257,7 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
   const meta = weekMeta(program, week);
 
   const startTimer = () => {
-    if (!isPremium()) { openPaywall("workout"); return; }
+    if (!hasAccess("workout")) { openPaywall("workout"); return; }
     onStartTimer(programToTimerSession(program, week, sessionIndex));
   };
 
@@ -1403,7 +1403,7 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
 // ===================== SETUP PROFILE =====================
 
 function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p: WorkoutProfile) => void }) {
-  const premium = usePremium();
+  const premium = useAccess("workout");
   // Free plan: Beginner · Nothing/Mat · 2–3 days. Start free users on safe values.
   const eqFree = (e: Equipment) => e === "none" || e === "mat";
   const [level, setLevel] = useState<Level>(!premium && initial.level !== "Beginner" ? "Beginner" : initial.level);
@@ -1551,7 +1551,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
   onBestShape: () => void;
   onGoToPlan: () => void;
 }) {
-  const premium = usePremium();
+  const premium = useAccess("workout");
   const [phase, setPhase] = useState<CyclePhase>("any");
   const [energy, setEnergy] = useLS<{ date: string; level: EnergyLevel | null }>(ENERGY_KEY, { date: "", level: null });
   const [streak] = useLS<{ count: number; lastISO: string | null }>(STREAK_KEY, { count: 0, lastISO: null });
@@ -1613,7 +1613,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
 
   const onPickSession = (session: WorkoutSession) => {
     // Free users can test only the 10-minute session; 20/30-min are Bloom+.
-    if (!isPremium() && session.durationMin > 10) { openPaywall("workout"); return; }
+    if (!hasAccess("workout") && session.durationMin > 10) { openPaywall("workout"); return; }
     setSelectedSessionId(session.id);
     setTimeout(() => onStartSession(session), 200);
   };
@@ -2075,7 +2075,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   const goal = readDietProfile().goal;
   // Shared preference: show recovery meals inside the plan, or keep it simple.
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { if (!isPremium()) { openPaywall("meals"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  const toggleFuel = () => { if (!hasAccess("workout")) { openPaywall("meals"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   // Build-your-own-week: hand-pick a zone/intensity/duration per day.
   const [editing, setEditing] = useState(false);
@@ -2110,7 +2110,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 
   // Start a blank custom week (leaves any active program) and open the editor.
   const buildMyOwn = () => {
-    if (!isPremium()) { openPaywall("workout"); return; } // build-my-own week is Bloom+
+    if (!hasAccess("workout")) { openPaywall("workout"); return; } // build-my-own week is Bloom+
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
     const empty: Record<string, DayPlan | null> = {};
     DAYS.forEach((d) => { empty[d] = null; });
@@ -2138,7 +2138,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   // The seed advances each time so "Regenerate" always yields a fresh, varied
   // — but still smart — week rather than the same deterministic plan.
   const generateFreestyle = () => {
-    if (!isPremium()) { openPaywall("workout"); return; } // Bloom+ gate
+    if (!hasAccess("workout")) { openPaywall("workout"); return; } // Bloom+ gate
     if (activeProgram) { saveActiveProgram(null); setActive(null); }
     const nextSeed = seed + 1;
     const wk = generateWeeklyPlan(profile, phase, nextSeed);
@@ -2179,7 +2179,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
   };
   // Editing a goal-tuned week makes it her own → warn it drops the auto-tuning.
   const onEditClick = () => {
-    if (!isPremium()) { openPaywall("workout"); return; } // editing the week is Bloom+
+    if (!hasAccess("workout")) { openPaywall("workout"); return; } // editing the week is Bloom+
     if (tunedGoal) {
       setConfirmChange({
         title: "Customise this week?",
@@ -2333,7 +2333,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           </div>
           {/* FREE Bloom plan — a gentle 2-day, 10-min week so free users can
               finish setup without hitting the wall. (Premium has the full set.) */}
-          {!isPremium() && (
+          {!hasAccess("workout") && (
             <button onClick={generateFreeWeek} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
@@ -2349,7 +2349,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Follow a flagship program {!isPremium() && <PlusTag />}</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Follow a flagship program {!hasAccess("workout") && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">A structured multi-week journey, spread smartly across your week.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2358,7 +2358,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Generate a freestyle week {!isPremium() && <PlusTag />}</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Generate a freestyle week {!hasAccess("workout") && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">One-tap auto plan from your level, goal, days/week and phase.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2366,7 +2366,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Dumbbell className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Build my own week {!isPremium() && <PlusTag />}</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Build my own week {!hasAccess("workout") && <PlusTag />}</p>
               <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.</p>
             </div>
             <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2559,7 +2559,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
 // ===================== LIBRARY =====================
 
 function Library() {
-  const premium = usePremium();
+  const premium = useAccess("workout");
   const [zone, setZone] = useState<Zone>("glutes");
   const exercises = ZONE_EXERCISES[zone];
   const zoneMeta = ZONES.find((z) => z.key === zone);

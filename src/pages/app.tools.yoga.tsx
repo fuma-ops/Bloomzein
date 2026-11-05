@@ -28,7 +28,7 @@ import { FuelCard, yogaIntensity, normalizePhase } from "@/components/bloom/trai
 import { PickerField } from "@/components/bloom/PickerField";
 import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
-import { isPremium, openPaywall, usePremium } from "@/lib/entitlements";
+import { openPaywall, hasAccess, useAccess } from "@/lib/entitlements";
 
 // ===================== DATA =====================
 
@@ -1535,7 +1535,7 @@ export default function YogaPage() {
           {/* Titled, ready-made flows (searchable) */}
           <FlowLibrary
             onStart={(f, record) => {
-              if (!isPremium() && f.level !== "Beginner") { openPaywall("yoga"); return; }
+              if (!hasAccess("yoga") && f.level !== "Beginner") { openPaywall("yoga"); return; }
               setView({ kind: "session", flow: buildNamedFlow(f.poses), lang: "en", mode: "visual",
                 intention: f.intention, hold: holdSecondsFor(f.durationMin, f.level), durationMin: f.durationMin,
                 sound: DEFAULT_SOUND, title: f.title, record,
@@ -1546,7 +1546,7 @@ export default function YogaPage() {
             }}
           />
           {/* Flow sessions — find your moment (quick presets → customize) */}
-          <FlowSessionsSection onStart={(intention, durationMin) => { if (!isPremium()) { openPaywall("yoga"); return; } setView({ kind: "setup", preset: { intention, durationMin } }); }} />
+          <FlowSessionsSection onStart={(intention, durationMin) => { if (!hasAccess("yoga")) { openPaywall("yoga"); return; } setView({ kind: "setup", preset: { intention, durationMin } }); }} />
           {/* Curated plans — a week, set for you */}
           <CuratedPlans onApply={(p) => {
             try { localStorage.setItem(SCHEDULE_KEY, JSON.stringify({ ...p.focus })); window.dispatchEvent(new Event("bloom:yoga-updated")); } catch {}
@@ -1588,7 +1588,7 @@ export default function YogaPage() {
           onStart={(cfg) => {
             // Free plan can build & do only Beginner flows (the free "build my own
             // week" path); every other level is Bloom+.
-            if (!isPremium() && cfg.level !== "Beginner") { openPaywall("yoga"); return; }
+            if (!hasAccess("yoga") && cfg.level !== "Beginner") { openPaywall("yoga"); return; }
             const flow = buildFlow(cfg);
             setView({ kind: "session", flow, lang: cfg.lang, mode: cfg.mode, intention: cfg.intention, hold: holdSecondsFor(cfg.durationMin, cfg.level), durationMin: cfg.durationMin, sound: cfg.sound });
           }}
@@ -1673,7 +1673,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
   try { schedule = JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "{}"); } catch { schedule = {}; }
   const synced = known && WEEK.every((d, i) => (schedule[d] ?? null) === rec[i]);
   const onSync = () => {
-    if (!isPremium()) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
+    if (!hasAccess("yoga")) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
     if (!known) { window.location.href = "/app/calendar"; return; }
     const next: Record<string, string | null> = {};
     WEEK.forEach((d, i) => { next[d] = rec[i]; });
@@ -1717,7 +1717,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
 function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number; onStart: (f: NamedFlow, record?: boolean) => void; isOwner?: boolean }) {
   const [open, setOpen] = useState(false);
   const thumb = POSE_BY_SLUG[f.thumb ?? f.poses[Math.floor(f.poses.length / 2)]]?.image;
-  const plusLocked = f.level !== "Beginner" && !isPremium();
+  const plusLocked = f.level !== "Beginner" && !hasAccess("yoga");
   return (
     <div
       style={{ animationDelay: `${index * 40}ms` }}
@@ -1883,7 +1883,7 @@ function YogaHero({
             <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
             <button data-tour="yg-tab-flows" onClick={onFlows} className={tabClass(active === "flows")}>Flows</button>
             <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button data-tour="yg-tab-library" onClick={() => { if (!isPremium()) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>Library{!isPremium() && <Lock className="inline h-3 w-3 ml-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
+            <button data-tour="yg-tab-library" onClick={() => { if (!hasAccess("yoga")) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>Library{!hasAccess("yoga") && <Lock className="inline h-3 w-3 ml-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
           </div>
         </div>
       </div>
@@ -1976,7 +1976,7 @@ function PlanPage({ onSetup, onQuickStart }: {
   const { streak, phaseSuggestion } = useYogaPhaseAndStreak();
   // Free users go straight to the player from a plan flow; premium keeps the setup.
   const startFlow = (intention: Intention, durationMin: number) =>
-    isPremium() ? onSetup({ intention, durationMin }) : onQuickStart(intention, durationMin);
+    hasAccess("yoga") ? onSetup({ intention, durationMin }) : onQuickStart(intention, durationMin);
 
   return (
     <div className="space-y-4 yoga-fade">
@@ -2127,7 +2127,7 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
           return (
             <button
               key={p.id}
-              onClick={() => { if (guided) return guidedNudge(); if (!isPremium()) { openPaywall("yoga"); return; } setConfirm(p); }}
+              onClick={() => { if (guided) return guidedNudge(); if (!hasAccess("yoga")) { openPaywall("yoga"); return; } setConfirm(p); }}
               className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
               style={{ animationDelay: `${i * 70}ms` }}
             >
@@ -2245,7 +2245,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
   );
   // Shared preference: show recovery meals inside the plan, or keep it simple.
   const [fuelInPlan, setFuelInPlan] = useState(() => readFuelInPlan());
-  const toggleFuel = () => { if (!isPremium()) { openPaywall("yoga"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
+  const toggleFuel = () => { if (!hasAccess("yoga")) { openPaywall("yoga"); return; } const v = !fuelInPlan; setFuelInPlan(v); writeFuelInPlan(v); };
 
   useEffect(() => {
     try {
@@ -2268,7 +2268,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
 
   // Fill the week with flows matched to the current cycle phase (opt-in).
   const syncToCycle = () => {
-    if (!isPremium()) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
+    if (!hasAccess("yoga")) { openPaywall("yoga"); return; } // cycle-sync is Bloom+
     const dayList = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
     const plan = PHASE_DEFAULT_PLAN[phase];
     const next: Record<string, string | null> = {};
@@ -2389,7 +2389,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               options={REMINDER_TIME_OPTIONS}
               onChange={updateReminder}
             />
-            <button onClick={() => { if (!editing && !isPremium()) { openPaywall("yoga"); return; } setEditing((v) => !v); }} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
+            <button onClick={() => { if (!editing && !hasAccess("yoga")) { openPaywall("yoga"); return; } setEditing((v) => !v); }} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
               {editing ? "Done" : "Edit"}
             </button>
             <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -2459,7 +2459,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             </div>
             {/* FREE Bloom plan — a gentle 2-day Calm & Restore week so free users
                 can finish setup without hitting the wall. */}
-            {!isPremium() && (
+            {!hasAccess("yoga") && (
               <button onClick={() => createOwnWeek("Beginner", "calm", 2)} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
                 <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
                 <div className="flex-1 min-w-0">
@@ -2472,7 +2472,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
             <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Sync to my cycle {!isPremium() && <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2 w-2" strokeWidth={3} /> Bloom+</span>}</p>
+                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Sync to my cycle {!hasAccess("yoga") && <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2 w-2" strokeWidth={3} /> Bloom+</span>}</p>
                 <p className="text-[11px] text-rose/70 leading-snug">Auto-fill the week with flows matched to your {phase} phase.</p>
               </div>
               <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
@@ -2676,7 +2676,7 @@ function YogaPlanSetup({ onBack, onCreate }: {
   onBack: () => void;
   onCreate: (level: Level, goal: YogaGoal, days: number) => void;
 }) {
-  const premium = usePremium();
+  const premium = useAccess("yoga");
   // Free plan can build ONLY: Beginner · Calm & restore · 2 days.
   const [level, setLevel] = useState<Level>(() => (premium ? readYogaProfileLevel() : "Beginner"));
   const [goal, setGoal] = useState<YogaGoal>("calm");
@@ -2729,7 +2729,7 @@ function Setup({
   onStart: (cfg: { durationMin: number; intention: Intention; level: Level; lang: Lang; sound: typeof SOUNDS[number]; mode: Mode; phase: Phase }) => void;
   preset?: { intention: Intention; durationMin: number };
 }) {
-  const premium = usePremium();
+  const premium = useAccess("yoga");
   // Free plan can build only: 10 min · Morning energy · Beginner.
   const [durationMin, setDuration] = useState(preset?.durationMin ?? (premium ? 20 : 10));
   const [intention, setIntention] = useState<Intention>(preset?.intention ?? "morning");

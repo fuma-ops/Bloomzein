@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles, X, Check, Lock, Crown, ChevronRight, Utensils, Flame, Dumbbell, Flower2, CreditCard, Loader2 } from "lucide-react";
-import { isPremium, setPlan, usePremium, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
+import { isPremium, setPlan, usePremium, useAccess, openPaywall, OPEN_PAYWALL, type PaywallFeature } from "@/lib/entitlements";
 import { trackEvent } from "@/lib/analytics";
 import { PADDLE_CONFIGURED, PADDLE_ENV, openCheckout, openInlineCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, INLINE_FRAME_CLASS, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,14 +19,17 @@ const HEADLINES: Record<PaywallFeature, string> = {
   cycle:   "Your long-term trends & insights, read from your whole history.",
   budget:  "Goals, insights and your whole money picture.",
   me:      "Your full glow dashboard — consistency, mood & progress over time.",
+  journal: "Your whole journal history, beautifully kept.",
+  shopping: "Your shopping list & pantry — written for you from your week.",
   general: "Bloom your whole week ✿",
 };
 
+// Bloom+ = the deeper layer on top of the free tools (see entitlements.ts).
 const BENEFITS = [
-  { Icon: Utensils, text: "Your whole week of meals, auto-planned & shoppable" },
-  { Icon: Flame,    text: "Real energy engine — target, macros, eat-back & goal timeline" },
-  { Icon: Dumbbell, text: "Full workout & yoga programs, matched to your phase" },
-  { Icon: Sparkles, text: "Everything synced to your cycle & goal — one living plan" },
+  { Icon: Sparkles, text: "Your daily coach — a full plan for every day, synced to your phase" },
+  { Icon: Flame,    text: "Reports & long-term insights from everything you log" },
+  { Icon: Utensils, text: "Smart shopping list & pantry, written from your week" },
+  { Icon: Dumbbell, text: "No ads — plus budget goals & your living phase theme" },
 ];
 
 /* ─── Inline checkout — Paddle's payment form inside a Bloomzein-styled modal.
@@ -69,7 +72,7 @@ function InlineCheckout({
             <Crown className="h-6 w-6" strokeWidth={1.8} />
           </span>
           <h2 className="font-script text-2xl text-hotpink leading-none">Complete your Bloom+</h2>
-          <p className="mt-1 text-[12px] text-rose/70">{plan === "annual" ? "Yearly plan" : "Monthly plan"} · 7-day free trial</p>
+          <p className="mt-1 text-[12px] text-rose/70">{plan === "annual" ? "Yearly plan" : "Monthly plan"} · 3-day free trial</p>
         </div>
         <div className="px-4 pb-4 pt-3">
           {/* Paddle injects the payment form into this container. */}
@@ -186,7 +189,7 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
             </div>
 
             <button onClick={startTrial} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
-              <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 7-day free trial
+              <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 3-day free trial
             </button>
             <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$29"}/year` : `${prices.monthly ?? "$3"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
             <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-hotpink/25 bg-white/70 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-hotpink/5 active:scale-[0.99]">Continue with the free version</button>
@@ -321,7 +324,7 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}><Crown className="h-5 w-5" strokeWidth={1.8} /></span>
         <div className="min-w-0">
           <p className="text-sm font-bold text-hotpink">You're Bloom+ ✿</p>
-          <p className="text-[11.5px] text-rose/70 leading-snug">Every tool is fully unlocked — bloom on.</p>
+          <p className="text-[11.5px] text-rose/70 leading-snug">Your coach, reports &amp; insights are unlocked — ad-free.</p>
         </div>
       </div>
     );
@@ -337,7 +340,7 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
       </span>
       <div className="min-w-0 flex-1">
         <p className="flex items-center gap-1.5 text-sm font-bold text-hotpink">Discover Bloom+ <PremiumBadge /></p>
-        <p className="text-[11.5px] text-rose/75 leading-snug">Let me plan your whole week — meals, movement &amp; energy, all synced to your cycle.</p>
+        <p className="text-[11.5px] text-rose/75 leading-snug">Your daily coach, reports &amp; insights — ad-free, from $3/month.</p>
       </div>
       <ChevronRight className="h-5 w-5 shrink-0 text-hotpink" />
     </button>
@@ -422,8 +425,8 @@ export function PlusLock({
   /** Min height when there are no children to give the lock room (e.g. "min-h-[168px]"). */
   minH?: string;
 }) {
-  const premium = usePremium();
-  if (premium) return <>{children}</>;
+  const unlocked = useAccess(feature);
+  if (unlocked) return <>{children}</>;
   return (
     <div className={["relative overflow-hidden rounded-[1.5rem]", minH, className].join(" ")}>
       {/* Cap the blurred teaser so a tall locked section (e.g. the health history)
