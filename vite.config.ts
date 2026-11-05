@@ -83,6 +83,13 @@ function prerenderBlogPlugin(): Plugin {
       const scripts = blocks.map((b) => `  <script type="application/ld+json">${JSON.stringify(b)}</script>`).join("\n")
       html = html.replace(/<\/head>/, `${scripts}\n  </head>`)
     }
+    // Translated pages: <html lang/dir>, og:locale and hreflang alternates.
+    if (page.htmlLang) html = html.replace(/<html lang="[^"]*"/, `<html lang="${esc(page.htmlLang)}"${page.dir === "rtl" ? ' dir="rtl"' : ""}`)
+    if (page.ogLocale) html = html.replace(/<\/head>/, `  <meta property="og:locale" content="${esc(page.ogLocale)}" />\n  </head>`)
+    if (page.alternates?.length) {
+      const links = page.alternates.map(([l, u]) => `  <link rel="alternate" hreflang="${esc(l)}" href="${esc(u)}" />`).join("\n")
+      html = html.replace(/<\/head>/, `${links}\n  </head>`)
+    }
     // Inject the static content for crawlers (React replaces it on boot).
     html = html.replace(/<div id="root">\s*<\/div>/, `<div id="root">${page.contentHtml}</div>`)
     return html

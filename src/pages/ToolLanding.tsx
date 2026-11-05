@@ -6,7 +6,8 @@ import { ArrowRight, ArrowLeft, Sparkles, Check, ChevronRight } from "lucide-rea
 import { BloomFlower } from "@/components/bloom/BloomFlower";
 import { AdSlot } from "@/components/bloom/AdSlot";
 import { AD_SLOTS } from "@/lib/ads";
-import { TOOL_PAGES, toolPageBySlug } from "@/lib/toolPages";
+import { TOOL_PAGES, localizedToolPage, toolPageUrl, type ToolLang } from "@/lib/toolPages";
+import { TOOL_UI, TOOL_LANGS } from "@/lib/toolPagesI18n";
 import { ToolMagic } from "@/components/bloom/ToolMagic";
 
 const SITE = "https://www.bloomzein.com";
@@ -18,13 +19,18 @@ function setMeta(name: string, content: string, prop = false) {
   el.setAttribute("content", content);
 }
 
-export function ToolLandingPage({ slug }: { slug: string }) {
-  const tool = toolPageBySlug(slug);
+const LANG_LABEL: Record<ToolLang, string> = { en: "EN", fr: "FR", ar: "عربي" };
+const HREFLANG: Record<ToolLang, string> = { en: "en", fr: "fr", ar: "ar" };
+
+export function ToolLandingPage({ slug, lang = "en" }: { slug: string; lang?: ToolLang }) {
+  const tool = localizedToolPage(slug, lang);
+  const ui = TOOL_UI[lang];
+  const rtl = lang === "ar";
 
   useEffect(() => {
     if (!tool) return;
     const title = tool.metaTitle;
-    const url = `${SITE}/tools/${tool.slug}`;
+    const url = SITE + toolPageUrl(tool.slug, lang);
     const img = SITE + tool.image;
     const prevTitle = document.title;
     document.title = title;
@@ -42,24 +48,41 @@ export function ToolLandingPage({ slug }: { slug: string }) {
     const prevCanonical = canonical?.getAttribute("href") ?? null;
     if (!canonical) { canonical = document.createElement("link"); canonical.setAttribute("rel", "canonical"); document.head.appendChild(canonical); }
     canonical.setAttribute("href", url);
-    return () => { document.title = prevTitle; if (prevCanonical) canonical?.setAttribute("href", prevCanonical); };
-  }, [tool]);
+    // Language alternates (hreflang) + the document language/direction.
+    const alts = TOOL_LANGS.map((l) => {
+      const a = document.createElement("link");
+      a.setAttribute("rel", "alternate"); a.setAttribute("hreflang", HREFLANG[l]); a.setAttribute("href", SITE + toolPageUrl(tool.slug, l));
+      document.head.appendChild(a); return a;
+    });
+    const xd = document.createElement("link");
+    xd.setAttribute("rel", "alternate"); xd.setAttribute("hreflang", "x-default"); xd.setAttribute("href", SITE + toolPageUrl(tool.slug, "en"));
+    document.head.appendChild(xd); alts.push(xd);
+    const html = document.documentElement;
+    const prevLang = html.getAttribute("lang"), prevDir = html.getAttribute("dir");
+    html.setAttribute("lang", HREFLANG[lang]); html.setAttribute("dir", rtl ? "rtl" : "ltr");
+    return () => {
+      document.title = prevTitle; if (prevCanonical) canonical?.setAttribute("href", prevCanonical);
+      alts.forEach((a) => a.remove());
+      if (prevLang) html.setAttribute("lang", prevLang); if (prevDir) html.setAttribute("dir", prevDir); else html.removeAttribute("dir");
+    };
+  }, [tool, lang, rtl]);
 
   if (!tool) {
     return (
       <div className="min-h-screen bg-[#FFF0F6] text-rose">
         <div className="mx-auto max-w-2xl px-5 py-20 text-center">
-          <h1 className="font-script text-4xl text-hotpink">Tool not found</h1>
-          <a href="/" className="bloom-luxury-btn mt-5 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"><ArrowLeft className="h-4 w-4" /> Back to Bloomzein</a>
+          <h1 className="font-script text-4xl text-hotpink">{ui.notFound}</h1>
+          <a href="/" className="bloom-luxury-btn mt-5 inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-bold text-white"><ArrowLeft className="h-4 w-4" /> {ui.back}</a>
         </div>
       </div>
     );
   }
 
-  const related = tool.related.map(toolPageBySlug).filter(Boolean) as typeof TOOL_PAGES;
+  const related = tool.related.map((r) => localizedToolPage(r, lang)).filter(Boolean) as typeof TOOL_PAGES;
+  const Arrow = rtl ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="min-h-screen bg-[#FFF0F6] text-rose">
+    <div className="min-h-screen bg-[#FFF0F6] text-rose" dir={rtl ? "rtl" : "ltr"} lang={HREFLANG[lang]}>
       {/* top bar */}
       <header className="sticky top-0 z-20 border-b border-white/60 bg-[#FFF0F6]/85 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
@@ -67,17 +90,26 @@ export function ToolLandingPage({ slug }: { slug: string }) {
             <BloomFlower size={24} petal="#EC4899" center="#FFFFFF" />
             <span className="font-script text-2xl text-hotpink">Bloomzein</span>
           </a>
-          <a href="/onboarding" className="bloom-luxury-btn inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white">
-            Start Blooming <ArrowRight className="h-4 w-4" />
-          </a>
+          <div className="flex items-center gap-2">
+            {/* language switcher */}
+            <nav aria-label="Language" className="flex items-center rounded-full border border-hotpink/20 bg-white/70 p-0.5 text-[12px] font-bold">
+              {TOOL_LANGS.map((l) => (
+                <a key={l} href={toolPageUrl(tool.slug, l)} hrefLang={HREFLANG[l]} aria-current={l === lang ? "page" : undefined}
+                  className={["rounded-full px-2.5 py-1 transition", l === lang ? "bg-hotpink text-white" : "text-hotpink hover:bg-hotpink/10"].join(" ")}>{LANG_LABEL[l]}</a>
+              ))}
+            </nav>
+            <a href="/onboarding" className="bloom-luxury-btn hidden sm:inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white">
+              {ui.start} <Arrow className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pb-16 sm:px-6">
         {/* breadcrumb */}
         <nav className="flex items-center gap-1.5 pt-5 text-xs font-semibold text-rose/60">
-          <a href="/" className="hover:text-hotpink">Home</a> <ChevronRight className="h-3 w-3" />
-          <a href="/#features" className="hover:text-hotpink">Tools</a> <ChevronRight className="h-3 w-3" />
+          <a href="/" className="hover:text-hotpink">{ui.home}</a> <ChevronRight className={["h-3 w-3", rtl ? "rotate-180" : ""].join(" ")} />
+          <a href="/#features" className="hover:text-hotpink">{ui.tools}</a> <ChevronRight className={["h-3 w-3", rtl ? "rotate-180" : ""].join(" ")} />
           <span className="text-rose/80">{tool.name}</span>
         </nav>
 
@@ -88,12 +120,13 @@ export function ToolLandingPage({ slug }: { slug: string }) {
             <p className="mt-3 text-[15px] leading-relaxed text-rose/85 sm:text-[16px]">{tool.intro}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a href="/onboarding" className="bloom-luxury-btn inline-flex items-center gap-2 rounded-full px-6 py-3 text-[15px] font-bold text-white">
-                <Sparkles className="h-4 w-4" /> Start Blooming — free
+                <Sparkles className="h-4 w-4" /> {ui.startFree}
               </a>
               <a href={tool.appHref} className="inline-flex items-center gap-1.5 rounded-full border border-hotpink/30 bg-white/70 px-5 py-3 text-[15px] font-bold text-hotpink transition hover:bg-white">
-                Open {tool.name} <ArrowRight className="h-4 w-4" />
+                {ui.open(tool.name)} <Arrow className="h-4 w-4" />
               </a>
             </div>
+            {ui.appNote && <p className="mt-3 text-[12.5px] font-semibold text-rose/60">{ui.appNote}</p>}
           </div>
           <div className="overflow-hidden rounded-[1.75rem] border border-white/70 shadow-[0_24px_60px_-28px_rgba(236,72,153,0.5)]">
             <img src={tool.image} alt={tool.h1} className="aspect-[4/3] w-full object-cover" width={1200} height={900} />
@@ -102,7 +135,7 @@ export function ToolLandingPage({ slug }: { slug: string }) {
 
         {/* the live, usable tool — magic first, before we ask for anything */}
         <div className="mt-10">
-          <ToolMagic slug={tool.slug} />
+          <ToolMagic slug={tool.slug} lang={lang} />
         </div>
 
         {/* sections */}
@@ -118,7 +151,7 @@ export function ToolLandingPage({ slug }: { slug: string }) {
 
         {/* FAQ */}
         <section className="mt-12">
-          <h2 className="font-script text-3xl text-hotpink">Frequently asked questions</h2>
+          <h2 className={rtl ? "text-2xl font-extrabold text-hotpink" : "font-script text-3xl text-hotpink"}>{ui.faq}</h2>
           <AdSlot slot={AD_SLOTS.tool} />
           <div className="mt-4 space-y-3">
             {tool.faqs.map((f) => (
@@ -133,12 +166,12 @@ export function ToolLandingPage({ slug }: { slug: string }) {
         {/* related */}
         {related.length > 0 && (
           <section className="mt-12">
-            <h2 className="font-script text-3xl text-hotpink">Explore more tools</h2>
+            <h2 className={rtl ? "text-2xl font-extrabold text-hotpink" : "font-script text-3xl text-hotpink"}>{ui.more}</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {related.map((r) => (
-                <a key={r.slug} href={`/tools/${r.slug}`} className="group flex items-center justify-between rounded-2xl border border-petal/50 bg-white/75 px-4 py-3 transition hover:bg-white">
+                <a key={r.slug} href={toolPageUrl(r.slug, lang)} className="group flex items-center justify-between rounded-2xl border border-petal/50 bg-white/75 px-4 py-3 transition hover:bg-white">
                   <span className="text-[14px] font-bold text-hotpink">{r.name}</span>
-                  <ArrowRight className="h-4 w-4 text-hotpink transition group-hover:translate-x-0.5" />
+                  <Arrow className="h-4 w-4 text-hotpink transition group-hover:translate-x-0.5" />
                 </a>
               ))}
             </div>
@@ -147,15 +180,15 @@ export function ToolLandingPage({ slug }: { slug: string }) {
 
         {/* footer CTA */}
         <section className="mt-14 rounded-[1.75rem] bg-gradient-to-br from-hotpink to-[#db2777] p-8 text-center text-white shadow-lg">
-          <h2 className="font-script text-3xl">Your softest era starts here ✿</h2>
-          <p className="mx-auto mt-2 max-w-md text-[14px] text-white/90">Cycle, meals, movement, mind and life — one beautiful app, synced to your body.</p>
+          <h2 className={rtl ? "text-2xl font-extrabold" : "font-script text-3xl"}>{ui.footerTitle}</h2>
+          <p className="mx-auto mt-2 max-w-md text-[14px] text-white/90">{ui.footerText}</p>
           <a href="/onboarding" className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[15px] font-bold text-hotpink transition hover:bg-white/90">
-            <Sparkles className="h-4 w-4" /> Start Blooming — free
+            <Sparkles className="h-4 w-4" /> {ui.startFree}
           </a>
         </section>
 
         <p className="mt-8 text-center text-xs text-rose/50">
-          <a href="/" className="font-semibold hover:text-hotpink">Home</a> · <a href="/blog" className="font-semibold hover:text-hotpink">Read</a> · <a href="/privacy" className="font-semibold hover:text-hotpink">Privacy</a>
+          <a href="/" className="font-semibold hover:text-hotpink">{ui.home}</a> · <a href="/blog" className="font-semibold hover:text-hotpink">{ui.read}</a> · <a href="/privacy" className="font-semibold hover:text-hotpink">{ui.privacy}</a>
         </p>
       </main>
     </div>

@@ -248,6 +248,11 @@ function AppContent() {
   if (path.startsWith("/tools/")) {
     return <Suspense fallback={<PageLoader />}><ToolLandingPage slug={decodeURIComponent(path.split("/").pop() || "")} /></Suspense>;
   }
+  // French / Arabic versions of the public tool pages.
+  if (path.startsWith("/fr/tools/") || path.startsWith("/ar/tools/")) {
+    const lang = path.startsWith("/fr/") ? "fr" : "ar";
+    return <Suspense fallback={<PageLoader />}><ToolLandingPage slug={decodeURIComponent(path.split("/").pop() || "")} lang={lang} /></Suspense>;
+  }
 
   // Private admin inbox — gated by email + Supabase RLS inside the page
   if (path === "/admin") {

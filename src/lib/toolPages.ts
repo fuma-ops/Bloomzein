@@ -10,6 +10,9 @@
 // build time (like the blog/sitemap generators).
 // =============================================================================
 
+import { TOOL_COPY, TOOL_LANGS, type ToolLang } from "./toolPagesI18n";
+export type { ToolLang } from "./toolPagesI18n";
+
 export type ToolFaq = { q: string; a: string };
 export type ToolSection = { h: string; p: string };
 export type ToolPage = {
@@ -216,6 +219,19 @@ export const TOOL_PAGES: ToolPage[] = [
 export function toolPageBySlug(slug: string): ToolPage | undefined {
   return TOOL_PAGES.find((t) => t.slug === slug);
 }
+/** URL of a tool page in a language: /tools/<slug>, /fr/tools/<slug>, /ar/tools/<slug>. */
+export function toolPageUrl(slug: string, lang: ToolLang = "en"): string {
+  return lang === "en" ? `/tools/${slug}` : `/${lang}/tools/${slug}`;
+}
+
+/** The page in the requested language (English source + translated copy). */
+export function localizedToolPage(slug: string, lang: ToolLang = "en"): ToolPage | undefined {
+  const base = toolPageBySlug(slug);
+  if (!base || lang === "en") return base;
+  const copy = TOOL_COPY[lang]?.[slug];
+  return copy ? { ...base, ...copy } : base;
+}
+
 export function toolPagePaths(): string[] {
-  return TOOL_PAGES.map((t) => `/tools/${t.slug}`);
+  return TOOL_LANGS.flatMap((lang) => TOOL_PAGES.map((t) => toolPageUrl(t.slug, lang)));
 }

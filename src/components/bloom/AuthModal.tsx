@@ -3,9 +3,15 @@ import { X, Mail } from "lucide-react"
 import { AppIcon } from "./AppIcon"
 import { useAuth } from "@/contexts/AuthContext"
 
-export function AuthModal({ onClose }: { onClose?: () => void }) {
+/**
+ * `initialMode` — open straight on sign-up for a brand-new guest (e.g. right
+ * after onboarding), so she isn't greeted with "Welcome back" + a sign-in form.
+ * `savePlan` — she has just built her plan as a guest: frame the sign-up as
+ * saving it, and make clear the account is free.
+ */
+export function AuthModal({ onClose, initialMode = "signin", savePlan = false }: { onClose?: () => void; initialMode?: "signin" | "signup"; savePlan?: boolean }) {
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword } = useAuth()
-  const [mode, setMode] = useState<"signin" | "signup">("signin")
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -77,12 +83,14 @@ export function AuthModal({ onClose }: { onClose?: () => void }) {
         <div className="flex flex-col items-center text-center">
           <AppIcon size={56} />
           <h2 className="mt-3 font-script text-3xl text-[#831843]">
-            {mode === "signin" ? "Welcome back ✿" : "Join Bloomzein ✿"}
+            {mode === "signin" ? "Welcome back ✿" : savePlan ? "Save your plan ✿" : "Join Bloomzein ✿"}
           </h2>
           <p className="mt-1 text-sm text-[#9D5C7E] leading-snug">
             {mode === "signin"
               ? "Sign in to pick up right where you left off."
-              : "Create your free account to unlock every feature."}
+              : savePlan
+                ? "Your personalized plan is ready. Create your free account to keep it — it takes 10 seconds."
+                : "Create your free account to unlock every feature."}
           </p>
         </div>
 

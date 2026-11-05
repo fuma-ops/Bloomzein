@@ -6,13 +6,15 @@
 // get the full SEO copy prerendered on the page.
 import { useState } from "react";
 import { Sparkles, Droplet, Sprout, Star, Moon } from "lucide-react";
+import type { ToolLang } from "@/lib/toolPagesI18n";
+import { PT, REVEAL_I18N } from "./publicToolI18n";
 
 type PhaseKey = "period" | "follicular" | "ovulation" | "luteal";
-const PHASES: { key: PhaseKey; label: string; Icon: typeof Droplet }[] = [
-  { key: "period", label: "Period", Icon: Droplet },
-  { key: "follicular", label: "Follicular", Icon: Sprout },
-  { key: "ovulation", label: "Ovulation", Icon: Star },
-  { key: "luteal", label: "Luteal", Icon: Moon },
+const PHASES: { key: PhaseKey; Icon: typeof Droplet }[] = [
+  { key: "period", Icon: Droplet },
+  { key: "follicular", Icon: Sprout },
+  { key: "ovulation", Icon: Star },
+  { key: "luteal", Icon: Moon },
 ];
 
 type Sample = { headline: string; items: string[] };
@@ -60,22 +62,23 @@ const SAMPLES: Record<string, { title: string; cta: string; byPhase: Record<Phas
   },
 };
 
-export function PublicMagicReveal({ slug }: { slug: string }) {
-  const data = SAMPLES[slug];
+export function PublicMagicReveal({ slug, lang = "en" }: { slug: string; lang?: ToolLang }) {
+  const T = PT[lang];
+  const data = lang === "en" ? SAMPLES[slug] : (REVEAL_I18N[lang][slug] ?? SAMPLES[slug]);
   const [phase, setPhase] = useState<PhaseKey>("follicular");
   if (!data) return null;
   const sample = data.byPhase[phase];
 
   return (
     <section className="rounded-[1.75rem] border border-petal/60 bg-white/80 p-5 shadow-[0_18px_50px_-30px_rgba(236,72,153,0.5)] sm:p-7">
-      <h2 className="font-script text-2xl text-hotpink sm:text-3xl">{data.title}</h2>
-      <p className="mt-1 text-[13px] text-rose/70">Tap your current phase — Bloomzein tailors everything to where you are.</p>
+      <h2 className={lang === "ar" ? "text-xl font-extrabold text-hotpink sm:text-2xl" : "font-script text-2xl text-hotpink sm:text-3xl"}>{data.title}</h2>
+      <p className="mt-1 text-[13px] text-rose/70">{T.reveal.lead}</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
         {PHASES.map((p) => (
           <button key={p.key} onClick={() => setPhase(p.key)}
             className={["inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-bold transition active:scale-95", phase === p.key ? "bg-hotpink text-white" : "border border-petal/60 bg-white text-rose/70 hover:border-hotpink/40"].join(" ")}>
-            <p.Icon className="h-3.5 w-3.5" strokeWidth={2.2} /> {p.label}
+            <p.Icon className="h-3.5 w-3.5" strokeWidth={2.2} /> {T.phaseName[p.key]}
           </button>
         ))}
       </div>
@@ -92,10 +95,10 @@ export function PublicMagicReveal({ slug }: { slug: string }) {
       </div>
 
       <div className="mt-4 rounded-2xl bg-gradient-to-br from-hotpink to-[#db2777] p-5 text-center text-white">
-        <p className="font-script text-2xl">This is just a taste ✿</p>
+        <p className={lang === "ar" ? "text-xl font-extrabold" : "font-script text-2xl"}>{T.reveal.taste}</p>
         <p className="mx-auto mt-1 max-w-md text-[13px] text-white/90">{data.cta}</p>
         <a href="/onboarding" className="mt-3 inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-[15px] font-bold text-hotpink transition hover:bg-white/90">
-          <Sparkles className="h-4 w-4" /> Create my free account
+          <Sparkles className="h-4 w-4" /> {T.createFree}
         </a>
       </div>
     </section>

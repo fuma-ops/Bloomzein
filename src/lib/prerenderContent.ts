@@ -15,7 +15,8 @@
  */
 import { ARTICLES, CAT_IMG, type Article, type Category } from "./readsData";
 import { articleSlug } from "./blog";
-import { TOOL_PAGES } from "./toolPages";
+import { TOOL_PAGES, localizedToolPage, toolPageUrl } from "./toolPages";
+import { TOOL_LANGS, TOOL_UI } from "./toolPagesI18n";
 
 import cycle from "../content/reads/cycle";
 import nutrition from "../content/reads/nutrition";
@@ -135,6 +136,13 @@ export type BlogPage = {
   ogType?: string;
   /** JSON-LD objects to inject (overrides the default Article schema). */
   jsonLd?: unknown[];
+  /** <html lang> / dir for translated pages (default: the template's "en"). */
+  htmlLang?: string;
+  dir?: "ltr" | "rtl";
+  /** hreflang alternates: [hreflang, absolute url]. */
+  alternates?: [string, string][];
+  /** og:locale, e.g. fr_FR. */
+  ogLocale?: string;
 };
 
 /** Every article as a prerenderable page (used by vite.config's plugin). */
@@ -182,23 +190,26 @@ const SITE = "https://www.bloomzein.com";
 /** Public SEO tool pages (/tools/<slug>) as prerenderable pages, each with
  *  static content HTML + SoftwareApplication / FAQPage / BreadcrumbList JSON-LD. */
 export function toolPages(): BlogPage[] {
-  return TOOL_PAGES.map((t) => {
-    const url = `${SITE}/tools/${t.slug}`;
+  return TOOL_LANGS.flatMap((lang) => TOOL_PAGES.map((base) => {
+    const t = localizedToolPage(base.slug, lang) ?? base;
+    const ui = TOOL_UI[lang];
+    const url = SITE + toolPageUrl(t.slug, lang);
     const img = SITE + t.image;
     const content =
       `<main>` +
-      `<nav class="breadcrumb"><a href="/">Home</a> › <a href="/#features">Tools</a> › <span>${escapeHtml(t.name)}</span></nav>` +
+      `<nav class="breadcrumb"><a href="/">${escapeHtml(ui.home)}</a> › <a href="/#features">${escapeHtml(ui.tools)}</a> › <span>${escapeHtml(t.name)}</span></nav>` +
       `<h1>${escapeHtml(t.h1)}</h1>` +
       `<p>${escapeHtml(t.intro)}</p>` +
       `<img src="${escapeAttr(t.image)}" alt="${escapeAttr(t.h1)}" width="1200" height="900" />` +
-      `<p><a href="/onboarding">Start Blooming — free</a></p>` +
+      `<p><a href="/onboarding">${escapeHtml(ui.startFree)}</a></p>` +
       t.sections.map((s) => `<section><h2>${escapeHtml(s.h)}</h2><p>${escapeHtml(s.p)}</p></section>`).join("") +
-      `<section><h2>Frequently asked questions</h2>` +
+      `<section><h2>${escapeHtml(ui.faq)}</h2>` +
       t.faqs.map((f) => `<div><h3>${escapeHtml(f.q)}</h3><p>${escapeHtml(f.a)}</p></div>`).join("") +
       `</section>` +
-      `<section><h2>Explore more tools</h2><ul>` +
-      t.related.map((r) => `<li><a href="/tools/${r}">${escapeHtml(r.replace(/-/g, " "))}</a></li>`).join("") +
+      `<section><h2>${escapeHtml(ui.more)}</h2><ul>` +
+      t.related.map((r) => `<li><a href="${toolPageUrl(r, lang)}">${escapeHtml(localizedToolPage(r, lang)?.name ?? r.replace(/-/g, " "))}</a></li>`).join("") +
       `</ul></section>` +
+      `<p>${TOOL_LANGS.map((l) => `<a href="${toolPageUrl(t.slug, l)}" hreflang="${l}">${l === "en" ? "English" : l === "fr" ? "Français" : "العربية"}</a>`).join(" · ")}</p>` +
       `</main>`;
 
     const jsonLd: unknown[] = [
@@ -209,6 +220,7 @@ export function toolPages(): BlogPage[] {
         applicationCategory: "HealthApplication",
         operatingSystem: "Android, Web",
         description: t.metaDescription,
+        inLanguage: lang,
         image: img,
         url,
         offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -227,15 +239,16 @@ export function toolPages(): BlogPage[] {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         itemListElement: [
-          { "@type": "ListItem", position: 1, name: "Home", item: SITE },
+          { "@type": "ListItem", position: 1, name: ui.home, item: SITE },
           { "@type": "ListItem", position: 2, name: t.name, item: url },
         ],
       },
     ];
 
+    const path = toolPageUrl(t.slug, lang);
     return {
-      urlPath: `/tools/${t.slug}`,
-      filePath: `tools/${t.slug}/index.html`,
+      urlPath: path,
+      filePath: `${path.slice(1)}/index.html`,
       title: t.metaTitle,
       fullTitle: true,
       ogType: "website",
@@ -244,6 +257,13 @@ export function toolPages(): BlogPage[] {
       category: "Tool",
       contentHtml: content,
       jsonLd,
+      htmlLang: lang,
+      dir: lang === "ar" ? "rtl" : "ltr",
+      ogLocale: lang === "fr" ? "fr_FR" : lang === "ar" ? "ar_MA" : "en_US",
+      alternates: [
+        ...TOOL_LANGS.map((l) => [l, SITE + toolPageUrl(t.slug, l)] as [string, string]),
+        ["x-default", SITE + toolPageUrl(t.slug, "en")],
+      ],
     };
-  });
+  }));
 }

@@ -46,10 +46,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   if (loading) return <Loader />
 
   if (!user) {
+    // A guest who just finished onboarding has her answers stashed locally:
+    // she's NEW, so open on sign-up ("Save your plan"), not "Welcome back".
+    const isNewGuest = readPendingProfile() !== null
     return (
       <>
         <div className="pointer-events-none select-none blur-sm">{children}</div>
-        <AuthModal />
+        <AuthModal initialMode={isNewGuest ? "signup" : "signin"} savePlan={isNewGuest} />
       </>
     )
   }
