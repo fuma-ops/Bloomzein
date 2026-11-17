@@ -607,7 +607,7 @@ export function CycleNutritionView({
               <img
                 src={content.heroImage}
                 alt=""
-                className="h-full w-full object-cover object-[75%_28%]"
+                className="bz-flip-rtl h-full w-full object-cover object-[75%_28%]"
                 loading="lazy"
                 onError={(e) => {
                   const el = e.currentTarget as HTMLImageElement;

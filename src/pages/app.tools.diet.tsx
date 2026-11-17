@@ -1131,10 +1131,10 @@ function SetupScreen({
         <img
           src="/images/meals-hero-new.webp"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-center"
+          className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center"
           referrerPolicy="no-referrer"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-hotpink/75 via-hotpink/25 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent" />
         <div className="relative flex flex-col justify-center min-h-[140px] sm:min-h-[210px] lg:min-h-[250px] p-4 sm:p-6">
           <div className="max-w-[70%] sm:max-w-[60%]">
@@ -3342,10 +3342,10 @@ export default function DietPage() {
           <img
             src="/images/meal-oats.webp"
             alt=""
-            className="animate-hero-breathe h-full w-full object-cover object-[72%_42%]"
+            className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[72%_42%]"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+          <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         </div>
 
         {/* content */}

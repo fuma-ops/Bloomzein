@@ -86,8 +86,8 @@ export function GuidedFocusHero({
 }: { label: string; phaseLabel?: string; image?: string; className?: string }) {
   return (
     <div className={`relative w-full min-h-[92px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-lg shadow-pink-200/30 mb-3 animate-card-pop-in ${className}`}>
-      {image && <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />}
-      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/85 via-hotpink/45 to-hotpink/10" />
+      {image && <img src={image} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />}
+      <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-hotpink/85 via-hotpink/45 to-hotpink/10" />
       <div className="relative flex items-center min-h-[92px] px-4 py-3">
         <div>
           <p className="font-script text-2xl sm:text-3xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{trx(label)}</p>

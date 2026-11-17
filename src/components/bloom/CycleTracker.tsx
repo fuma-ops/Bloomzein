@@ -832,7 +832,7 @@ export function CycleTracker() {
             <img
               src="/images/cycle-insight-hero.webp"
               alt="" aria-hidden loading="eager" decoding="async"
-              className="absolute inset-0 h-full w-full object-cover object-top pointer-events-none"
+              className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-top pointer-events-none"
               style={{
                 opacity: 0.45,
                 maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.05) 28%, rgba(0,0,0,0.55) 52%, black 72%)',

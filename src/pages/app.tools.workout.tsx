@@ -421,9 +421,9 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
           <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
         </div>
       ) : (
-        <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
+        <img src={src} alt={title} className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
+      <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
       <div className="absolute top-0 start-0 p-3 sm:p-5">
         <h2 className="font-script text-xl sm:text-3xl lg:text-4xl text-white leading-tight drop-shadow-md">{trx(title)}</h2>
         {subtitle && <p className="mt-1 text-[10px] sm:text-xs italic leading-snug text-white/90 max-w-[7rem] sm:max-w-[9rem] drop-shadow">{trx(subtitle)}</p>}
@@ -545,9 +545,9 @@ function HeroHeader({
             <Sparkles className="h-10 w-10 text-hotpink/40" strokeWidth={1.5} />
           </div>
         ) : (
-          <img src={src} alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_18%]" onError={() => setBroken(true)} />
+          <img src={src} alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[70%_18%]" onError={() => setBroken(true)} />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
       </div>
 
       <div className="absolute top-1 end-0 z-[2] flex items-center gap-1.5">
@@ -993,8 +993,8 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
             >
               {/* Photo — left */}
               <div className="relative w-28 sm:w-40 shrink-0 overflow-hidden">
-                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
+                <img src={p.image} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
                 <span className="absolute top-2 start-2 inline-flex items-center gap-1 rounded-full bg-hotpink/90 text-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm">
                   <Sparkles className="h-2.5 w-2.5" />{" "}{tr("Premium")}</span>
                 {pct > 0 && (
@@ -1411,8 +1411,8 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
       {/* Compact hero — same photo banner every workout tab uses, so setup feels
           like part of the tool, not a bare form. */}
       <div className="relative w-full overflow-hidden rounded-3xl border border-petal/60 shadow-md shadow-rose/10 mb-3 animate-card-pop-in">
-        <img src={HERO_IMAGES.program} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/80 via-hotpink/30 to-transparent" />
+        <img src={HERO_IMAGES.program} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }} />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-hotpink/80 via-hotpink/30 to-transparent" />
         <div className="relative z-10 px-4 py-4 sm:px-5 sm:py-5 max-w-[72%] min-h-[92px] sm:min-h-[110px] flex flex-col justify-center">
           <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
             <Dumbbell className="h-2.5 w-2.5" strokeWidth={2.5} />{" "}{tr("Workout")}</p>
@@ -1898,8 +1898,8 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
     <div className="space-y-3">
       {/* Hero — same aspect as workout, title inside */}
       <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-card-pop-in">
-        <img src={HERO_IMAGES.bestShape} alt={tr("Best Shape Calculator")} className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
+        <img src={HERO_IMAGES.bestShape} alt={tr("Best Shape Calculator")} className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div className="animate-scale-in">

@@ -1392,8 +1392,8 @@ export function BudgetPlanner() {
               {/* This scene (piggy bank + blossoms + money) sits centre-right, so
                   keep a taller band and centre on it — a wide short crop would slice
                   the piggy out and lose the whole visual. */}
-              <img src="/images/budget-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[66%_46%]" referrerPolicy="no-referrer" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+              <img src="/images/budget-hero.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[66%_46%]" referrerPolicy="no-referrer" />
+              <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
             </div>
 
             <div className="relative z-[1] pt-0.5 pb-1">

@@ -1725,8 +1725,8 @@ function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number;
       <div className="flex items-stretch">
         {/* Tall image strip (left) — whole pose fits; cover crops the sides. */}
         <button onClick={() => onStart(f)} aria-label={tr("Start {0}", { 0: f.title })} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
-          {thumb && <img src={thumb} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />}
-          <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+          {thumb && <img src={thumb} alt="" loading="lazy" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />}
+          <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
           {plusLocked && <span className="absolute start-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink shadow-sm"><Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Plus")}</span>}
         </button>
         {/* Content (right). */}
@@ -1841,8 +1841,8 @@ function YogaHero({
         className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[320px] overflow-hidden"
         style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 30%, transparent 84%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 30%, transparent 84%)" }}
       >
-        <img src="/images/yoga-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[70%_24%]" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        <img src="/images/yoga-hero.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[70%_24%]" referrerPolicy="no-referrer" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
       </div>
 
       <div className="absolute top-1 end-0 z-[2] flex items-center gap-1.5">
@@ -2051,8 +2051,8 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
       className="group flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm text-start transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
     >
       <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
-        <img src={preset.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
+        <img src={preset.image} alt="" loading="lazy" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
       </div>
       <div className="flex-1 min-w-0 p-3 flex flex-col">
         <p className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-rose/55"><Clock className="h-3 w-3" />{trx(preset.duration)}{" "}{tr("min")}</p>
@@ -2123,8 +2123,8 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
-                <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
+                <img src={p.image} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
                 <span className="absolute top-2 start-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Bloom+")}</span>
               </div>
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
@@ -2547,8 +2547,8 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                 ) : (
                   // Meals on → one big photo behind the whole day: visible left, veiled content right
                   <div className="relative">
-                    <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent from-[26%] via-white/45 to-white/70" />
+                    <img src={meta.image} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover object-center" />
+                    <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-transparent from-[26%] via-white/45 to-white/70" />
                     <div className="relative z-10 flex items-stretch">
                       <button onClick={() => startFocus(focus, d)} aria-label={tr("Start {0}", { 0: focus })}
                         className="relative w-[30%] sm:w-[25%] shrink-0 flex flex-col justify-between p-2.5 text-start active:scale-[0.98] transition">

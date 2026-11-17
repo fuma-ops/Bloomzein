@@ -2567,3 +2567,8 @@ html[lang="ar"] body { font-family: "Tajawal", var(--font-sans); }
 html[lang="ar"] .font-script { font-family: "Aref Ruqaa", "Amiri", serif; }
 html[lang="ar"] .tracking-wide, html[lang="ar"] .tracking-wider, html[lang="ar"] .tracking-widest { letter-spacing: 0; }
 html[lang="ar"] .uppercase { text-transform: none; }
+
+/* Arabic (RTL): mirror hero photos and their readability scrims so the text,
+   which now sits on the right, never covers the model's face. Uses the
+   independent `scale` property so it composes with breathe/ken-burns transforms. */
+html[dir="rtl"] .bz-flip-rtl { scale: -1 1; }

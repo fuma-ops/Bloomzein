@@ -268,12 +268,12 @@ export default function Landing() {
         <picture>
           <source media="(min-width:1024px)" srcSet="/images/landing-hero-happier.webp" />
           <img src="/images/landing-hero-happier-portrait.webp" alt={T.heroAlt}
-            className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[52%_38%] lg:object-[64%_center]" />
+            className="bz-flip-rtl bzl-kenburns absolute inset-0 h-full w-full object-cover object-[52%_38%] lg:object-[64%_center]" />
         </picture>
         {/* overlay — DESKTOP: a light-but-not-washed area on the left for the copy;
             fades off quickly so the photo keeps its colour (copy stays legible via the
             .bzl-halo glow) */}
-        <div className="absolute inset-0 hidden lg:block" aria-hidden style={{ background:
+        <div className="bz-flip-rtl absolute inset-0 hidden lg:block" aria-hidden style={{ background:
           "linear-gradient(96deg,rgba(255,246,251,.86) 0%,rgba(255,246,251,.66) 32%,rgba(255,246,251,.34) 48%,rgba(255,246,251,.1) 62%,rgba(255,246,251,0) 80%),linear-gradient(180deg,rgba(255,246,251,.28) 0%,rgba(255,246,251,0) 24%,rgba(255,246,251,0) 66%,rgba(251,211,230,.58) 100%)" }} />
         {/* PHONE/TABLET: NO paling veil — keep the photo at full colour. The copy stays
             legible via its glow halo (.bzl-halo). Only a soft bottom fade blends the

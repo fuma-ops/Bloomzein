@@ -1614,8 +1614,8 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
         className="group relative block w-full overflow-hidden rounded-3xl text-start animate-card-pop-in hover-scale active:scale-[0.99] transition"
         style={{ animationDelay: "90ms" }}
       >
-        <img src={plan.yoga.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent" />
+        <img src={plan.yoga.image} alt="" className="bz-flip-rtl absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-black/60 via-black/25 to-transparent" />
         <div className="relative z-[1] flex items-center gap-3 p-4 sm:p-5 min-h-[132px]">
           <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/90 text-hotpink shadow-lg animate-icon-breathe">
             <Play className="h-5 w-5 fill-hotpink" />

@@ -13,7 +13,7 @@ import {
   type DayCoach, type FeelGood, type CoachTreat,
 } from "@/lib/todayCoach";
 import type { Article } from "@/lib/readsData";
-import { tr, trx } from "@/i18n";
+import { tr, trx, RTL } from "@/i18n";
 
 /* ---------- energy meter (the cute daily read) ---------- */
 
@@ -217,12 +217,12 @@ export function CoachTodayCompact({ coach }: { coach: DayCoach }) {
              perfectly legible while the photo shows through on the right. ── */}
       <div className="relative m-3 sm:m-4 overflow-hidden rounded-[1.4rem] border border-petal/50 shadow-sm">
         <img
-          src="/images/coach-bloom-hero.webp" alt="" loading="lazy"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover object-top"
+          src={RTL ? "/images/today-hero.webp" : "/images/coach-bloom-hero.webp"} alt="" loading="lazy"
+          className="bz-flip-rtl pointer-events-none absolute inset-0 h-full w-full object-cover object-top"
           onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/hero-girl.webp")) el.src = "/images/hero-girl.webp"; }}
         />
         {/* readability scrim — strong on the left (text), clearing on the right (photo) */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-white/95 via-white/88 sm:via-white/78 to-white/30 sm:to-transparent" />
+        <div className="bz-flip-rtl pointer-events-none absolute inset-0 bg-gradient-to-r from-white/95 via-white/88 sm:via-white/78 to-white/30 sm:to-transparent" />
 
         <div className="relative p-4 sm:p-5 max-w-full sm:max-w-[64%]">
           <div className="flex items-center gap-2.5">

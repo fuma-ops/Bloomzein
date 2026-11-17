@@ -968,9 +968,9 @@ export default function DiaryPage() {
           maskImage: "linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%)",
         }}
       >
-        <img src="/images/diary-hero.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[62%_38%]" referrerPolicy="no-referrer" />
+        <img src="/images/diary-hero.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[62%_38%]" referrerPolicy="no-referrer" />
         {/* left fade → readable pink behind the title */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
       </div>
 
       {/* Calendar date picker — root level */}

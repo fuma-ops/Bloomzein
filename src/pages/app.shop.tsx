@@ -133,10 +133,10 @@ export default function ShopPage() {
       >
         {/* object-[50%_82%]: anchor near the bottom so the products (bottles right,
             candle + mask left) are what we actually see rather than the empty centre. */}
-        <img src="/images/shop-hero-bg.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[50%_82%]" referrerPolicy="no-referrer" />
+        <img src="/images/shop-hero-bg.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[50%_82%]" referrerPolicy="no-referrer" />
         {/* left fade → gentle, only far-left, so the title stays readable but the
             products on the right read clearly (no heavy wash over them) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/85 via-[#FFE4F1]/12 to-transparent" />
+        <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1]/85 via-[#FFE4F1]/12 to-transparent" />
       </div>
 
       <BloomBubbles count={10} />

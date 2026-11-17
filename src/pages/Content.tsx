@@ -691,9 +691,9 @@ export function BlogIndexPage() {
             maskImage: "linear-gradient(to bottom, #000 0%, #000 46%, transparent 100%)",
           }}
         >
-          <img src="/images/page-bg-today-ribbon.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[60%_20%]" referrerPolicy="no-referrer" />
+          <img src="/images/page-bg-today-ribbon.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[60%_20%]" referrerPolicy="no-referrer" />
           {/* soft left wash behind the title (same as RibbonBackground) */}
-          <div className="absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_38%,rgba(255,232,244,0.9)_0%,rgba(255,232,244,0.42)_27%,transparent_52%)]" />
+          <div className="bz-flip-rtl absolute inset-0 bg-[radial-gradient(120%_115%_at_0%_38%,rgba(255,232,244,0.9)_0%,rgba(255,232,244,0.42)_27%,transparent_52%)]" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#FFF0F6]" />
         </div>
 

@@ -851,8 +851,8 @@ export default function MealsPage() {
           className="pointer-events-none absolute left-1/2 -translate-x-1/2 w-screen -top-8 -z-10 h-[300px] overflow-hidden"
           style={{ WebkitMaskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 82%)", maskImage: "linear-gradient(to bottom, #000 0%, #000 28%, transparent 82%)" }}
         >
-          <img src="/images/meals-hero-new.webp" alt="" className="animate-hero-breathe h-full w-full object-cover object-[60%_28%]" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
+          <img src="/images/meals-hero-new.webp" alt="" className="bz-flip-rtl animate-hero-breathe h-full w-full object-cover object-[60%_28%]" referrerPolicy="no-referrer" />
+          <div className="bz-flip-rtl absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
         </div>
 
         {/* content */}
