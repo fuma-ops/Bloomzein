@@ -306,11 +306,11 @@ const JOURNAL_PROMPTS = [
 
 // Phase-aware prompts — the diary, like every tool, reflects the user's cycle.
 const PHASE_PROMPTS: Record<Exclude<CyclePhase, "any">, string[]> = {
-  period:     ["What is my body asking me for today?", "How can I be gentler with myself right now?", "What would rest look like today?"],
-  follicular: ["What new thing do I want to begin this cycle?", "What's sparking my curiosity lately?", "Where do I feel fresh energy rising?"],
-  fertile:    ["Where do I feel most magnetic and alive right now?", "What am I drawing toward me?", "How do I want to show up today?"],
-  ovulation:  ["What am I genuinely proud of about myself today?", "Where is my confidence shining?", "What do I want to say yes to?"],
-  luteal:     ["What boundary do I need to honour today?", "What's quietly asking for my attention?", "What can I let go of this evening?"],
+  period:     [tr("What is my body asking me for today?"), tr("How can I be gentler with myself right now?"), tr("What would rest look like today?")],
+  follicular: [tr("What new thing do I want to begin this cycle?"), tr("What's sparking my curiosity lately?"), tr("Where do I feel fresh energy rising?")],
+  fertile:    [tr("Where do I feel most magnetic and alive right now?"), tr("What am I drawing toward me?"), tr("How do I want to show up today?")],
+  ovulation:  [tr("What am I genuinely proud of about myself today?"), tr("Where is my confidence shining?"), tr("What do I want to say yes to?")],
+  luteal:     [tr("What boundary do I need to honour today?"), tr("What's quietly asking for my attention?"), tr("What can I let go of this evening?")],
 };
 
 function pickPhasePrompt(): string {

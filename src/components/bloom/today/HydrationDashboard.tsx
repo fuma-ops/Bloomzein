@@ -101,11 +101,10 @@ export function HydrationDashboard({
 
   // Motivational headline scales with progress.
   const motivTitle =
-    reached      ? "Goal reached — beautiful! 🎉" :
-    pct >= 75    ? "Almost there! 🌟" :
-    pct >= 45    ? "You're halfway there! 💖" :
-    pct > 0      ? "Lovely start! 🌸" :
-                   "Let's begin — one sip at a time 💧";
+    reached      ? tr("Goal reached — beautiful! 🎉") :
+    pct >= 75    ? tr("Almost there! 🌟") :
+    pct >= 45    ? tr("You're halfway there! 💖") :
+    pct > 0      ? tr("Lovely start! 🌸") : tr("Let's begin — one sip at a time 💧");
   const motivBody = reached
     ? "You've hit your water goal today. Your body — and your glow — thank you."
     : tr("Your body still needs about {0}L today. Keep going, you're doing amazing!", { 0: remainingL });

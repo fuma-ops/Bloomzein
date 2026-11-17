@@ -74,61 +74,61 @@ export const PHASE_META: Record<Exclude<Phase, null>, { label: string; color: st
 };
 
 const PHASE_INSIGHT: Record<Exclude<Phase, null>, string> = {
-  period:     "Your body is resting and renewing. Be extra gentle with yourself — cosy comfort and light movement help today.",
-  follicular: "Your energy is naturally rising. A great day to focus on growth and new opportunities.",
-  fertile:    "You're glowing with energy — a lovely day for connection, creativity and confidence.",
-  ovulation:  "You're at your peak. Channel this radiant energy into your boldest ideas today.",
-  luteal:     "Energy is winding down. Prioritise rest, warm food and gentle self-care.",
+  period: tr("Your body is resting and renewing. Be extra gentle with yourself — cosy comfort and light movement help today."),
+  follicular: tr("Your energy is naturally rising. A great day to focus on growth and new opportunities."),
+  fertile: tr("You're glowing with energy — a lovely day for connection, creativity and confidence."),
+  ovulation: tr("You're at your peak. Channel this radiant energy into your boldest ideas today."),
+  luteal: tr("Energy is winding down. Prioritise rest, warm food and gentle self-care."),
 };
 
 const PHASE_SUBTITLE: Record<Exclude<Phase, null>, string> = {
-  period:     "Take it easy, your body is doing amazing things.",
-  follicular: "Energy rising — bloom into your day with intention.",
-  fertile:    "You're glowing! Embrace your magnetic energy today.",
-  ovulation:  "Your peak day — own it with confidence and joy.",
-  luteal:     "Wind down gently — rest is your superpower right now.",
+  period: tr("Take it easy, your body is doing amazing things."),
+  follicular: tr("Energy rising — bloom into your day with intention."),
+  fertile: tr("You're glowing! Embrace your magnetic energy today."),
+  ovulation: tr("Your peak day — own it with confidence and joy."),
+  luteal: tr("Wind down gently — rest is your superpower right now."),
 };
 
 // Why each suggestion matters for the phase she's in — so the card teaches,
 // not just shows a generic photo.
 const PHASE_WHY: Record<Exclude<Phase, null>, { yoga: string; workout: string; meal: string; journal: string }> = {
-  period:     { yoga: "Gentle, restorative poses ease cramps and calm your nervous system.", workout: "Keep it light — soft mobility boosts circulation without draining low energy.", meal: "Iron-rich, warming food replaces what your period loses and steadies your energy.", journal: "Rest and reflect — noticing how you feel helps you honour a slower week." },
-  follicular: { yoga: "Flowing, energizing movement matches your naturally rising energy.", workout: "Your body recovers fast now — a perfect time to build strength and try more.", meal: "Fresh, light, protein-rich food fuels growth and your climbing energy.", journal: "Capture new ideas — this is your most creative, motivated phase." },
-  fertile:    { yoga: "Open, heart-lifting flows ride your bright, magnetic energy.", workout: "You're strong and coordinated — great for a fun, challenging session.", meal: "Colourful, antioxidant-rich food supports you as your energy climbs.", journal: "Dream big — your confidence and clarity are high right now." },
-  ovulation:  { yoga: "Dynamic flows channel your peak energy and confidence.", workout: "You're at your strongest — go for your boldest, highest-intensity workout.", meal: "Antioxidant-rich, hydrating food supports your body at its peak.", journal: "Set bold intentions — your focus and drive are highest today." },
-  luteal:     { yoga: "Slow, grounding stretches soothe PMS and a busier mind.", workout: "Steady, moderate movement lifts your mood without over-taxing your body.", meal: "Magnesium & complex carbs ease cravings and keep your mood balanced.", journal: "Slow down and unload — writing calms the pre-period emotional wave." },
+  period:     { yoga: tr("Gentle, restorative poses ease cramps and calm your nervous system."), workout: tr("Keep it light — soft mobility boosts circulation without draining low energy."), meal: tr("Iron-rich, warming food replaces what your period loses and steadies your energy."), journal: tr("Rest and reflect — noticing how you feel helps you honour a slower week.") },
+  follicular: { yoga: tr("Flowing, energizing movement matches your naturally rising energy."), workout: tr("Your body recovers fast now — a perfect time to build strength and try more."), meal: tr("Fresh, light, protein-rich food fuels growth and your climbing energy."), journal: tr("Capture new ideas — this is your most creative, motivated phase.") },
+  fertile:    { yoga: tr("Open, heart-lifting flows ride your bright, magnetic energy."), workout: tr("You're strong and coordinated — great for a fun, challenging session."), meal: tr("Colourful, antioxidant-rich food supports you as your energy climbs."), journal: tr("Dream big — your confidence and clarity are high right now.") },
+  ovulation:  { yoga: tr("Dynamic flows channel your peak energy and confidence."), workout: tr("You're at your strongest — go for your boldest, highest-intensity workout."), meal: tr("Antioxidant-rich, hydrating food supports your body at its peak."), journal: tr("Set bold intentions — your focus and drive are highest today.") },
+  luteal:     { yoga: tr("Slow, grounding stretches soothe PMS and a busier mind."), workout: tr("Steady, moderate movement lifts your mood without over-taxing your body."), meal: tr("Magnesium & complex carbs ease cravings and keep your mood balanced."), journal: tr("Slow down and unload — writing calms the pre-period emotional wave.") },
 };
 
 const PHASE_TODAY_INSIGHTS: Record<Exclude<Phase, null>, { label: string; value: string; Icon: LucideIcon; color: string; bg: string }[]> = {
   period: [
-    { label: tr("Energy"),    value: "Low",            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
-    { label: tr("Hydration"), value: "Stay Focused",   Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: tr("Movement"),  value: "Gentle Yoga",    Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
-    { label: tr("Nutrition"), value: "Iron-rich foods",Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: tr("Low"),            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
+    { label: tr("Hydration"), value: tr("Stay Focused"),   Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: tr("Gentle Yoga"),    Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Nutrition"), value: tr("Iron-rich foods"),Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
   follicular: [
-    { label: tr("Energy"),    value: "Rising",         Icon: Zap,      color: "text-magenta",   bg: "bg-pink-50"   },
-    { label: tr("Hydration"), value: "Stay Active",    Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: tr("Movement"),  value: "Strength",       Icon: Dumbbell, color: "text-magenta",  bg: "bg-pink-50"  },
-    { label: tr("Nutrition"), value: "Protein-rich",   Icon: Sprout,   color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: tr("Rising"),         Icon: Zap,      color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Hydration"), value: tr("Stay Active"),    Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: tr("Strength"),       Icon: Dumbbell, color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: tr("Nutrition"), value: tr("Protein-rich"),   Icon: Sprout,   color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   fertile: [
-    { label: tr("Energy"),    value: "High",           Icon: Zap,      color: "text-pink-500",    bg: "bg-pink-50"    },
-    { label: tr("Hydration"), value: "Active day",     Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: tr("Movement"),  value: "Power Flow",     Icon: Flame,    color: "text-rose-500",    bg: "bg-rose-50"    },
-    { label: tr("Nutrition"), value: "Fresh & Light",  Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: tr("High"),           Icon: Zap,      color: "text-pink-500",    bg: "bg-pink-50"    },
+    { label: tr("Hydration"), value: tr("Active day"),     Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: tr("Power Flow"),     Icon: Flame,    color: "text-rose-500",    bg: "bg-rose-50"    },
+    { label: tr("Nutrition"), value: tr("Fresh & Light"),  Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   ovulation: [
-    { label: tr("Energy"),    value: "Peak",           Icon: Zap,      color: "text-rose-500",  bg: "bg-rose-50"  },
-    { label: tr("Hydration"), value: "Intense",        Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: tr("Movement"),  value: "HIIT",           Icon: Flame,    color: "text-rose-500",     bg: "bg-rose-50"     },
-    { label: tr("Nutrition"), value: "Energizing",     Icon: Sprout,   color: "text-hotpink", bg: "bg-pink-50" },
+    { label: tr("Energy"),    value: tr("Peak"),           Icon: Zap,      color: "text-rose-500",  bg: "bg-rose-50"  },
+    { label: tr("Hydration"), value: tr("Intense"),        Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: tr("HIIT"),           Icon: Flame,    color: "text-rose-500",     bg: "bg-rose-50"     },
+    { label: tr("Nutrition"), value: tr("Energizing"),     Icon: Sprout,   color: "text-hotpink", bg: "bg-pink-50" },
   ],
   luteal: [
-    { label: tr("Energy"),    value: "Winding",        Icon: Zap,      color: "text-rose-400",  bg: "bg-rose-50"  },
-    { label: tr("Hydration"), value: "Wind Down",      Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: tr("Movement"),  value: "Gentle Tone",    Icon: Leaf,     color: "text-magenta",  bg: "bg-pink-50"  },
-    { label: tr("Nutrition"), value: "Comforting",     Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: tr("Winding"),        Icon: Zap,      color: "text-rose-400",  bg: "bg-rose-50"  },
+    { label: tr("Hydration"), value: tr("Wind Down"),      Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: tr("Gentle Tone"),    Icon: Leaf,     color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: tr("Nutrition"), value: tr("Comforting"),     Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
 };
 

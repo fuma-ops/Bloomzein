@@ -1822,8 +1822,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 actual={weightActual}
                 predicted={weightPred ?? []}
                 unit="kg"
-                actualLabel="Weighed in"
-                predictedLabel="On-plan path"
+                actualLabel={tr("Weighed in")}
+                predictedLabel={tr("On-plan path")}
                 predictedColor={PRED_C}
                 tapHint="Tap a point to see that day's weight. Dashed = your on-plan path."
                 ghostShape={[0.82, 0.76, 0.72, 0.64, 0.6, 0.52, 0.45]}

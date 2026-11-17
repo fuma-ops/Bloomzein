@@ -20,19 +20,19 @@ import { toContentPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { tr, trx } from "@/i18n";
 
 const PHASE_TIP: Record<string, string> = {
-  period: "Rest deeply — your body is working hard. Warmth and an early night help.",
-  follicular: "Good sleep now turns your rising energy into real momentum.",
-  ovulation: "You may feel wired at your peak — wind down early to protect your glow.",
-  luteal: "Sleep often dips before your period — magnesium and a calm routine help.",
-  any: "A steady sleep rhythm keeps your hormones and mood balanced.",
+  period: tr("Rest deeply — your body is working hard. Warmth and an early night help."),
+  follicular: tr("Good sleep now turns your rising energy into real momentum."),
+  ovulation: tr("You may feel wired at your peak — wind down early to protect your glow."),
+  luteal: tr("Sleep often dips before your period — magnesium and a calm routine help."),
+  any: tr("A steady sleep rhythm keeps your hormones and mood balanced."),
 };
 
 const INSIGHT: Record<number, string> = {
-  1: "A rough night — be extra gentle with yourself today. 🤍",
-  2: "Not your best sleep — a slower morning will help.",
-  3: "An okay night — a calm evening tonight can lift it.",
-  4: "Good rest — your body and mood will thank you.",
-  5: "Wonderful sleep — you recover and glow on nights like this. ✨",
+  1: tr("A rough night — be extra gentle with yourself today. 🤍"),
+  2: tr("Not your best sleep — a slower morning will help."),
+  3: tr("An okay night — a calm evening tonight can lift it."),
+  4: tr("Good rest — your body and mood will thank you."),
+  5: tr("Wonderful sleep — you recover and glow on nights like this. ✨"),
 };
 
 // Quality shown as ONE pink glyph (never a multi-colour emoji) so every sleep

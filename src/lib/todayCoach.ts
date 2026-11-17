@@ -16,24 +16,25 @@ import {
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
 import { PHASE_INFO, RECIPES, recipeImageSrc, type DietPhase } from "@/components/bloom/recipes/data";
 import { todayISO, localDateISO } from "@/lib/localDate";
+import { tr } from "@/i18n";
 
 /* ---------- phase energy read (drives the cute meter) ---------- */
 
 export type EnergyRead = "low" | "rising" | "peak" | "winding";
 
 const ENERGY_BY_PHASE: Record<DietPhase, { read: EnergyRead; level: number; label: string }> = {
-  menstrual:  { read: "low",     level: 28, label: "gentle & low" },
-  follicular: { read: "rising",  level: 66, label: "rising ✦" },
-  ovulatory:  { read: "peak",    level: 96, label: "at its peak ☀️" },
-  luteal:     { read: "winding", level: 48, label: "winding down" },
+  menstrual:  { read: "low",     level: 28, label: tr("gentle & low") },
+  follicular: { read: "rising",  level: 66, label: tr("rising ✦") },
+  ovulatory:  { read: "peak",    level: 96, label: tr("at its peak ☀️") },
+  luteal:     { read: "winding", level: 48, label: tr("winding down") },
 };
 
 /** One warm coach sentence — "what you need today", never guilt-based. */
 const NEED_LINE: Record<DietPhase, string> = {
-  menstrual:  "Rest is productive too. Keep warm, move slowly, and be tender with yourself today. 🤍",
-  follicular: "Your energy is climbing — say yes to something new and fuel the momentum. 🌱",
-  ovulatory:  "You're at your brightest. Shine, connect, and enjoy how good you feel. ☀️",
-  luteal:     "Cravings and big feelings are normal now. Comfort yourself — kindly. 🍫",
+  menstrual: tr("Rest is productive too. Keep warm, move slowly, and be tender with yourself today. 🤍"),
+  follicular: tr("Your energy is climbing — say yes to something new and fuel the momentum. 🌱"),
+  ovulatory: tr("You're at your brightest. Shine, connect, and enjoy how good you feel. ☀️"),
+  luteal: tr("Cravings and big feelings are normal now. Comfort yourself — kindly. 🍫"),
 };
 
 /* ---------- the feel-good bank (her "chihaja fun") ----------

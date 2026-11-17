@@ -400,10 +400,10 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
     { key: "meals",    Icon: Leaf,     label: tr("Planned meals"),    sub: tr("Calories in your meal plan"), value: e.eaten,  tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
   ];
   // A gentle verdict for the tip.
-  const tip = eatenPct >= 95 ? "Nice! You're almost perfectly on track today."
-    : eatenPct >= 70 ? "Lovely balance — a light snack still fits beautifully."
-    : remaining > 0 ? "Plenty of room left — fuel up with something nourishing."
-    : "You're right on target — beautifully done today.";
+  const tip = eatenPct >= 95 ? tr("Nice! You're almost perfectly on track today.")
+    : eatenPct >= 70 ? tr("Lovely balance — a light snack still fits beautifully.")
+    : remaining > 0 ? tr("Plenty of room left — fuel up with something nourishing.")
+    : tr("You're right on target — beautifully done today.");
   const snacks = remaining > 0 ? snackIdeasFor(remaining, 4) : [];
   // Budget nearly spent (a few kcal left, nothing sensible fits): don't push
   // over-budget snacks — gently tell her she's on track.

@@ -1043,7 +1043,7 @@ function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey
 
 /** Premium daily nutrition target — the number that makes the app feel real. */
 function DailyTargetCard({ t }: { t: TargetBreakdown }) {
-  const goalLabel = t.goal === "lose" ? "Lean" : t.goal === "gain" ? "Build" : "Maintain";
+  const goalLabel = t.goal === "lose" ? tr("Lean") : t.goal === "gain" ? tr("Build") : tr("Maintain");
   const macros = [
     { k: "Protein", v: t.protein, cls: "text-amber-600", bg: "bg-amber-50", br: "border-amber-200/70" },
     { k: "Carbs", v: t.carbs, cls: "text-rose-500", bg: "bg-rose-50", br: "border-rose-200/70" },

@@ -37,10 +37,10 @@ const DUR_KEY = "bloom:breathwork-minutes";
 const SOUND_KEY = "bloom:breathwork-sound";
 
 const QUOTES = [
-  "Breathe. Be here. You are enough.",
-  "Inhale calm, exhale everything you can't control.",
-  "Your softest reset is just one breath away.",
-  "Slow breath, soft heart, clear mind.",
+  tr("Breathe. Be here. You are enough."),
+  tr("Inhale calm, exhale everything you can't control."),
+  tr("Your softest reset is just one breath away."),
+  tr("Slow breath, soft heart, clear mind."),
 ];
 
 /** Soft cue tone via WebAudio — no audio assets needed. */

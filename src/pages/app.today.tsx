@@ -850,9 +850,8 @@ export default function TodayPage() {
   const bloomPercent  = Math.round((bloomUnits.filter(Boolean).length / bloomUnits.length) * 100);
   const bloomFull     = bloomPercent === 100;
   const bloomMessage  =
-    bloomPercent === 0  ? "Your day awaits — start with one small bloom ✿" :
-    bloomPercent < 50   ? "A lovely start — keep blooming, beautiful" :
-                          "More than halfway — you're glowing today ✿";
+    bloomPercent === 0  ? tr("Your day awaits — start with one small bloom ✿") :
+    bloomPercent < 50   ? tr("A lovely start — keep blooming, beautiful") : tr("More than halfway — you're glowing today ✿");
 
   // Day fully bloomed → one joyful Barbie-pink confetti burst, once per day (so a
   // reload after completing doesn't replay it; unticking + re-ticking won't spam).

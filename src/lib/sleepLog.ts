@@ -9,6 +9,7 @@
  * is the clinically useful extra shown in readouts and the doctor report.
  */
 import { todayISO } from "@/lib/localDate";
+import { tr } from "@/i18n";
 
 export const SLEEP_LOG_KEY = "bloom:sleep-log-v2";
 export const SLEEP_EVENT = "bloom:sleep-updated";
@@ -20,11 +21,11 @@ export interface SleepEntry {
 
 /** The five quick quality taps (1..5), from roughest to best. */
 export const SLEEP_OPTIONS: { q: number; label: string; emoji: string }[] = [
-  { q: 1, label: "Rough", emoji: "😴" },
-  { q: 2, label: "Poor", emoji: "🥱" },
-  { q: 3, label: "OK", emoji: "😐" },
-  { q: 4, label: "Good", emoji: "🙂" },
-  { q: 5, label: "Great", emoji: "✨" },
+  { q: 1, label: tr("Rough"), emoji: "😴" },
+  { q: 2, label: tr("Poor"), emoji: "🥱" },
+  { q: 3, label: tr("OK"), emoji: "😐" },
+  { q: 4, label: tr("Good"), emoji: "🙂" },
+  { q: 5, label: tr("Great"), emoji: "✨" },
 ];
 
 export const sleepQualityLabel = (q: number): string =>

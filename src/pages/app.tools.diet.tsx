@@ -1354,15 +1354,15 @@ function weightFeedback(
 
   const wantDown = goal === "lose";
   const reached = wantDown ? latest <= target + 0.05 : latest >= target - 0.05;
-  if (reached) return { tone: "excellent", msg: "You've reached your goal weight — incredible work! 🌸" };
-  if (prev == null) return { tone: "ontrack", msg: "Baseline saved — log daily and watch your trend move toward your goal ✿" };
+  if (reached) return { tone: "excellent", msg: tr("You've reached your goal weight — incredible work! 🌸") };
+  if (prev == null) return { tone: "ontrack", msg: tr("Baseline saved — log daily and watch your trend move toward your goal ✿") };
 
   const movingRight = wantDown ? d < 0 : d > 0;
   if (movingRight && Math.abs(d) >= 0.1)
-    return { tone: "excellent", msg: `Excellent — ${Math.abs(d)} kg ${wantDown ? "down" : "up"} since your last log, right toward your goal ✿` };
+    return { tone: "excellent", msg: tr(wantDown ? "Excellent — {0} kg down since your last log, right toward your goal ✿" : "Excellent — {0} kg up since your last log, right toward your goal ✿", { 0: Math.abs(d) }) };
   if (flat)
-    return { tone: "effort", msg: "Holding steady — a little more effort this week and the trend will start to move 💪" };
-  return { tone: "effort", msg: `${wantDown ? "Up" : "Down"} ${Math.abs(d)} kg since last time — stay with your plan, tomorrow is a fresh start 💪` };
+    return { tone: "effort", msg: tr("Holding steady — a little more effort this week and the trend will start to move 💪") };
+  return { tone: "effort", msg: tr(wantDown ? "Up {0} kg since last time — stay with your plan, tomorrow is a fresh start 💪" : "Down {0} kg since last time — stay with your plan, tomorrow is a fresh start 💪", { 0: Math.abs(d) }) };
 }
 
 /** Weight over time: real logged points + a dashed projection that follows the
@@ -1601,7 +1601,7 @@ function WeightChart({
         )}
         {target != null && (
           <span className="inline-flex items-center gap-1">{tr("🎯 Goal ·")}{" "}{trx(target)}{tr("kg")}{" "}
-            {target < lastReal.kg ? "(below)" : target > lastReal.kg ? "(above)" : ""}
+            {target < lastReal.kg ? tr("(below)") : target > lastReal.kg ? tr("(above)") : ""}
           </span>
         )}
       </div>

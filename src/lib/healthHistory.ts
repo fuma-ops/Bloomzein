@@ -552,22 +552,22 @@ function buildPatterns(h: {
     weight =
       dir === "steady"
         ? tr("Holding steady around {0} kg across {1} weigh-ins.", { 0: h.weight.currentKg, 1: h.weight.series.length })
-        : tr("{0} {1} kg since your first weigh-in — a {2} trend over {3} readings.", { 0: dir === "down" ? "Down" : "Up", 1: Math.abs(h.weight.changeKg), 2: dir === "down" ? "gentle downward" : "rising", 3: h.weight.series.length });
+        : tr(dir === "down" ? "Down {0} kg since your first weigh-in — a gentle downward trend over {1} readings." : "Up {0} kg since your first weigh-in — a rising trend over {1} readings.", { 0: Math.abs(h.weight.changeKg), 1: h.weight.series.length });
   }
 
-  const burnLine = (days: DayBurn[], kind: string) => {
+  const burnLine = (days: DayBurn[], kind: "workouts" | "yoga flows") => {
     if (!days.length) return tr("No {0} logged yet — finish a session and it charts here.", { 0: kind });
     const total = days.reduce((s, d) => s + d.kcal, 0);
     const sessions = days.reduce((s, d) => s + d.sessions, 0);
     const avg = Math.round(total / Math.max(1, sessions));
     const best = [...days].sort((a, b) => b.kcal - a.kcal)[0];
-    return tr("{0} {1} on {2} day{3} · {4} kcal total · ~{5} kcal each. Biggest burn: {6} ({7} kcal).", { 0: sessions, 1: kind, 2: days.length, 3: days.length === 1 ? "" : "s", 4: total.toLocaleString(), 5: avg, 6: dayLabel(best.date), 7: best.kcal });
+    return tr("{0} {1} on {2} days · {3} kcal total · ~{4} kcal each. Biggest burn: {5} ({6} kcal).", { 0: sessions, 1: kind, 2: days.length, 3: total.toLocaleString(), 4: avg, 5: dayLabel(best.date), 6: best.kcal });
   };
   const workout = burnLine(h.workoutDaily, "workouts");
   const yoga = burnLine(h.yogaDaily, "yoga flows");
 
   // Mood
-  let mood = "Log your mood and its ups and downs will show here.";
+  let mood = tr("Log your mood and its ups and downs will show here.");
   if (h.moodSeries.length) {
     let trend = "";
     if (h.moodSeries.length >= 4) {
@@ -576,21 +576,23 @@ function buildPatterns(h: {
       const second = h.moodSeries.slice(mid);
       const avg = (arr: MoodPoint[]) => arr.reduce((s, p) => s + p.score, 0) / arr.length;
       const change = pctChange(avg(first), avg(second));
-      if (change >= 8) trend = " — trending brighter lately";
-      else if (change <= -8) trend = " — dipping a little lately";
-      else trend = " — fairly steady";
+      if (change >= 8) trend = tr(" — trending brighter lately");
+      else if (change <= -8) trend = tr(" — dipping a little lately");
+      else trend = tr(" — fairly steady");
+      trend = trend.startsWith(" ") ? trend : " " + trend;
     }
-    mood = `Mostly ${h.moodTop ?? "mixed"} across ${h.moodSeries.length} logged days · average positivity ${h.moodAvg}/5${trend}.`;
+    mood = tr("Mostly {0} across {1} logged days · average positivity {2}/5", { 0: (h.moodTop ?? "mixed").toLowerCase(), 1: h.moodSeries.length, 2: h.moodAvg ?? 0 }) + trend + ".";
   }
 
   // Symptoms
-  let symptoms = "Tag how you feel and your symptom pattern builds here.";
+  let symptoms = tr("Tag how you feel and your symptom pattern builds here.");
   if (h.symptomsDaily.length) {
-    symptoms = `Logged on ${h.symptomsDaily.length} day${h.symptomsDaily.length === 1 ? "" : "s"}${h.symptomsTop ? tr(" · most common: {0} ({1}×)", { 0: h.symptomsTop.label, 1: h.symptomsTop.count }) : ""}.`;
+    const n = h.symptomsDaily.length;
+    symptoms = (n === 1 ? tr("Logged on 1 day") : tr("Logged on {0} days", { 0: n })) + (h.symptomsTop ? tr(" · most common: {0} ({1}×)", { 0: h.symptomsTop.label, 1: h.symptomsTop.count }) : "") + ".";
   }
 
   // Sleep
-  let sleep = "Log how you sleep each night and your rest pattern shows here.";
+  let sleep = tr("Log how you sleep each night and your rest pattern shows here.");
   if (h.sleep.days) {
     const worst = [...h.byPhase]
       .filter((p) => p.sleepAvg != null)
@@ -603,49 +605,47 @@ function buildPatterns(h: {
   }
 
   // Nutrition (planned vs logged)
-  let nutrition = "Plan your meals and tick what you eat — your plan-vs-plate shows here.";
+  let nutrition = tr("Plan your meals and tick what you eat — your plan-vs-plate shows here.");
   if (h.nutrition.series.length && h.nutrition.adherencePct != null) {
     const pct = h.nutrition.adherencePct;
     const feel =
       pct >= 95 && pct <= 108
-        ? "right on plan"
+        ? tr("right on plan")
         : pct < 95
-          ? "a little under your plan"
-          : "a touch over your plan";
-    nutrition = `Across ${h.nutrition.series.length} logged day${h.nutrition.series.length === 1 ? "" : "s"} you ate ~${h.nutrition.avgLogged} kcal against a planned ~${h.nutrition.avgPlanned} kcal — ${feel} (${pct}%).`;
+          ? tr("a little under your plan")
+          : tr("a touch over your plan");
+    nutrition = tr("Across {0} logged days you ate ~{1} kcal against a planned ~{2} kcal — {3} ({4}%).", { 0: h.nutrition.series.length, 1: h.nutrition.avgLogged, 2: h.nutrition.avgPlanned, 3: feel, 4: pct });
   }
 
   // Cycle
-  let cycle = "Confirm two period starts and your cycle lengths will chart here.";
+  let cycle = tr("Confirm two period starts and your cycle lengths will chart here.");
   const done = h.cycles.filter((c) => !c.ongoing);
   if (done.length >= 1) {
     const reg =
       h.regularity === "regular"
-        ? "a regular rhythm (varies ≤ 3 days)"
+        ? tr("a regular rhythm (varies ≤ 3 days)")
         : h.regularity === "irregular"
-          ? "an irregular rhythm (varies > 3 days)"
-          : "still settling";
-    cycle = `${done.length} completed cycle${done.length === 1 ? "" : "s"}${h.avgCycle ? tr(" · average {0} days", { 0: h.avgCycle }) : ""} · ${reg}.`;
+          ? tr("an irregular rhythm (varies > 3 days)")
+          : tr("still settling");
+    cycle = (done.length === 1 ? tr("1 completed cycle") : tr("{0} completed cycles", { 0: done.length })) + (h.avgCycle ? tr(" · average {0} days", { 0: h.avgCycle }) : "") + ` · ${reg}.`;
   }
 
   // Combined (by phase × time) — name the phase where mood is brightest and where
   // she moves most, so the overlay chart reads as a takeaway, not just lines.
-  let combined =
-    "As you log across a full cycle, this shows how your body moves through each phase.";
+  let combined = tr("As you log across a full cycle, this shows how your body moves through each phase.");
   const moodRanked = h.byPhase
     .filter((p) => p.moodAvg != null)
     .sort((a, b) => (b.moodAvg ?? 0) - (a.moodAvg ?? 0));
   const burnRanked = h.byPhase
     .filter((p) => p.burnKcal > 0)
     .sort((a, b) => b.burnKcal - a.burnKcal);
-  if (moodRanked.length || burnRanked.length) {
-    const bits: string[] = [];
-    if (moodRanked.length)
-      bits.push(`your mood is brightest in your ${moodRanked[0].label.toLowerCase()} phase`);
-    if (burnRanked.length)
-      bits.push(`you move most in your ${burnRanked[0].label.toLowerCase()} phase`);
-    combined = `Across your cycle, ${bits.join(" and ")} — the coloured bands show each phase over time.`;
-  }
+  const ph = (l: string) => l.toLowerCase();
+  if (moodRanked.length && burnRanked.length)
+    combined = tr("Across your cycle, your mood is brightest in your {0} phase and you move most in your {1} phase — the coloured bands show each phase over time.", { 0: ph(moodRanked[0].label), 1: ph(burnRanked[0].label) });
+  else if (moodRanked.length)
+    combined = tr("Across your cycle, your mood is brightest in your {0} phase — the coloured bands show each phase over time.", { 0: ph(moodRanked[0].label) });
+  else if (burnRanked.length)
+    combined = tr("Across your cycle, you move most in your {0} phase — the coloured bands show each phase over time.", { 0: ph(burnRanked[0].label) });
 
   return { weight, workout, yoga, mood, symptoms, sleep, nutrition, cycle, combined };
 }

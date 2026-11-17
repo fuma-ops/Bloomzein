@@ -33,8 +33,8 @@ function relDay(daysAway: number, late: boolean): string {
   return tr("in {0} days", { 0: daysAway });
 }
 const PHASE_NOTE: Record<Exclude<CyclePhase, "any">, string> = {
-  period: "resting & renewing", follicular: "energy rising ✦", fertile: "glowing & magnetic",
-  ovulation: "peak energy ✦", luteal: "winding down",
+  period: tr("resting & renewing"), follicular: tr("energy rising ✦"), fertile: tr("glowing & magnetic"),
+  ovulation: tr("peak energy ✦"), luteal: tr("winding down"),
 };
 
 function Why({ children }: { children: ReactNode }) {

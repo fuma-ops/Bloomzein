@@ -2275,15 +2275,15 @@ function DashboardTab(props: {
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
     if (totalIncome > 0 && effectiveSpend > totalIncome)
-      r.push({ icon: "♥", main: "Over income this month", sub: tr("Committed {0} vs {1} income — review your plan ✿", { 0: fmt(effectiveSpend, currency), 1: fmt(totalIncome, currency) }) });
+      r.push({ icon: "♥", main: tr("Over income this month"), sub: tr("Committed {0} vs {1} income — review your plan ✿", { 0: fmt(effectiveSpend, currency), 1: fmt(totalIncome, currency) }) });
     else if (extraLogged > 0)
-      r.push({ icon: "✿", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? tr("{0} still available", { 0: fmt(effectiveSave, currency) }) : "Budget is tight — take a soft pause ✿" });
+      r.push({ icon: "✿", main: tr("+{0} in extra spends", { 0: fmt(extraLogged, currency) }), sub: effectiveSave > 0 ? tr("{0} still available", { 0: fmt(effectiveSave, currency) }) : tr("Budget is tight — take a soft pause ✿") });
     else if (plannedTotal > 0)
-      r.push({ icon: "✿", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? tr("{0} available after plan", { 0: fmt(effectiveSave, currency) }) : "Income fully allocated" });
+      r.push({ icon: "✿", main: tr("{0} committed", { 0: fmt(plannedTotal, currency) }), sub: effectiveSave > 0 ? tr("{0} available after plan", { 0: fmt(effectiveSave, currency) }) : tr("Income fully allocated") });
     if (goals.length > 0)
-      r.push({ icon: "✦", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: tr("You are amazing!") });
+      r.push({ icon: "✦", main: goals.length > 1 ? tr("{0} savings goals in progress", { 0: goals.length }) : tr("1 savings goal in progress"), sub: tr("You are amazing!") });
     if (r.length === 0)
-      r.push({ icon: "✿", main: "Start tracking to see your story", sub: tr("bloom here ✿") });
+      r.push({ icon: "✿", main: tr("Start tracking to see your story"), sub: tr("bloom here ✿") });
     return r.slice(0, 3);
   }, [effectiveSpend, extraLogged, effectiveSave, plannedTotal, goals, totalIncome, currency]);
 
