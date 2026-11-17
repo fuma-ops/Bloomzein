@@ -16,9 +16,9 @@
       "Bash(node scripts/social/post.mjs publier:*)",
       "Bash(node scripts/social/post.mjs apercu:*)",
       "Bash(node scripts/social/instagram.mjs publier:*)",
-      "Bash(node scripts/social/instagram.mjs apercu:*)"
+      "Bash(node scripts/social/instagram.mjs apercu:*)",
+      "Bash(node scripts/social/page-week.mjs planifier:*)",
+      "Bash(node scripts/social/page-week.mjs instagram:*)"
     ]
   }
 }
-"Bash(node scripts/social/page-week.mjs planifier:*)",
-"Bash(node scripts/social/page-week.mjs instagram:*)"
