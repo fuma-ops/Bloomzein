@@ -71,19 +71,19 @@ function findings() {
   });
   if (bestMood) {
     const bm: { ph: string; mood: string; n: number } = bestMood;
-    out.push({ Icon: Brain, text: <>{tr("In your")}{" "}<b style={{ color: "#BE185D" }}>{trx(PHASE_LABEL[bm.ph])}</b>{" "}{tr("phase you most often feel")}{" "}<b style={{ color: "#BE185D" }}>{cap(bm.mood)}</b>.</> });
+    out.push({ Icon: Brain, text: <>{tr("In your {0} phase you most often feel {1}.", { 0: PHASE_LABEL[bm.ph].toLowerCase(), 1: cap(bm.mood) })}</> });
   }
 
   const tough = Object.entries(symByPhase).sort((a, b) => b[1] - a[1])[0];
   if (tough && tough[1] >= 2) {
     const top = Object.entries(symName[tough[0]] || {}).sort((a, b) => b[1] - a[1])[0];
-    out.push({ Icon: HeartPulse, text: <>{tr("Your toughest phase is")}{" "}<b style={{ color: "#BE185D" }}>{trx(PHASE_LABEL[tough[0]])}</b>{top ? <>{" "}{tr("— most often")}{" "}<b style={{ color: "#BE185D" }}>{cap(top[0])}</b></> : null}.</> });
+    out.push({ Icon: HeartPulse, text: <>{top ? tr("Your toughest phase is {0} — most often {1}.", { 0: PHASE_LABEL[tough[0]].toLowerCase(), 1: cap(top[0]) }) : tr("Your toughest phase is {0}.", { 0: PHASE_LABEL[tough[0]].toLowerCase() })}</> });
   }
 
   const lens = recentCycleLengths(4);
   const reg = cycleRegularity();
   if (lens.length >= 2) {
-    out.push({ Icon: TrendingUp, text: <>{tr("Your recent cycles:")}{" "}<b style={{ color: "#BE185D" }}>{lens.join(" · ")}d</b> — {reg === "regular" ? tr("regular ✓") : tr("a little irregular")}.</> });
+    out.push({ Icon: TrendingUp, text: <>{tr("Your recent cycles:")}{" "}<b style={{ color: "#BE185D" }}>{tr("{0} days", { 0: lens.join(" · ") })}</b> — {reg === "regular" ? tr("regular ✓") : tr("a little irregular")}.</> });
   }
 
   return { out, startsN: readPeriodStarts().length };
