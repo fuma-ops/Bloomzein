@@ -180,7 +180,7 @@ function AppContent() {
   }, [path]);
 
   // Landing page remains standalone (no AppShell layout)
-  if (path === "/" || path === "/index.html") {
+  if (path === "/" || path === "/index.html" || path === "/fr" || path === "/ar" || path === "/fr/" || path === "/ar/") {
     return <Landing />;
   }
 

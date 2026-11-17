@@ -11,6 +11,7 @@ import { ARTICLES, FILTERS, articlesByCategory, articleById, type Filter, type A
 import { articleSlug, articleBySlug } from "@/lib/blog";
 import { loadArticleBody } from "@/content/reads/registry";
 import { ArticleBody, parseArticle } from "@/components/bloom/read/ArticleBody";
+import { LanguageButton } from "@/components/bloom/LanguageButton";
 
 /** @read cross-links on the public blog resolve to /blog/<slug> (crawlable),
  *  not the in-app reader. */
@@ -96,13 +97,16 @@ function ContentShell({ eyebrow, title, subtitle, children }: {
   return (
     <div className="min-h-screen bg-[#FFF5F9] text-[#4a2338]">
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-        <a
-          href="/"
-          onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
-        </a>
+        <div className="flex items-center justify-between gap-3">
+          <a
+            href="/"
+            onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
+          </a>
+          <LanguageButton />
+        </div>
         <header className="mt-6 flex items-center gap-3">
           <AppIcon size={44} />
           <div>
@@ -566,9 +570,12 @@ function BlogTopBar() {
           <AppIcon size={30} />
           <span className="font-script text-xl text-hotpink">Bloomzein</span>
         </a>
+        <div className="flex items-center gap-2">
+          <LanguageButton />
         <a href="/app/today" className="bloom-luxury-btn hover-scale inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-white">
-          Start Blooming <ArrowRight className="h-3.5 w-3.5" />
-        </a>
+            Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+          </a>
+        </div>
       </div>
     </div>
   );

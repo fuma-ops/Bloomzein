@@ -2,14 +2,18 @@
 // "provide a URL where users can request account & data deletion" requirement.
 // Reachable without signing in.
 import { Trash2, ShieldCheck, Mail, ArrowLeft } from "lucide-react";
+import { LanguageButton } from "@/components/bloom/LanguageButton";
 
 export function DeleteAccountInfoPage() {
   return (
     <div className="min-h-screen bg-[#FFF0F6] text-rose">
       <div className="mx-auto max-w-2xl px-5 py-10 sm:py-14">
-        <a href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-hotpink transition hover:opacity-80">
-          <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
-        </a>
+        <div className="flex items-center justify-between gap-3">
+          <a href="/" className="inline-flex items-center gap-1.5 text-sm font-semibold text-hotpink transition hover:opacity-80">
+            <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
+          </a>
+          <LanguageButton />
+        </div>
 
         <div className="mt-6 flex items-center gap-3">
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-magenta/10 text-magenta"><Trash2 className="h-7 w-7" strokeWidth={1.7} /></span>

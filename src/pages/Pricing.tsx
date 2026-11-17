@@ -1,5 +1,6 @@
 import { ArrowLeft, Check, Crown, Sparkles, Utensils, Flame, Dumbbell, Flower2, CalendarDays, Wallet, NotebookPen, Bell } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
+import { LanguageButton } from "@/components/bloom/LanguageButton";
 
 /* ------------------------------------------------------------------ *
  * Public pricing page — the single place where Bloom+ plans and prices
@@ -60,13 +61,16 @@ export function PricingPage() {
   return (
     <div className="min-h-screen bg-[#FFF5F9] text-[#4a2338]">
       <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-        <a
-          href="/"
-          onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
-        </a>
+        <div className="flex items-center justify-between gap-3">
+          <a
+            href="/"
+            onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
+          </a>
+          <LanguageButton />
+        </div>
 
         <header className="mt-6 text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>

@@ -9,6 +9,7 @@ import { AD_SLOTS } from "@/lib/ads";
 import { TOOL_PAGES, localizedToolPage, toolPageUrl, type ToolLang } from "@/lib/toolPages";
 import { TOOL_UI, TOOL_LANGS } from "@/lib/toolPagesI18n";
 import { ToolMagic } from "@/components/bloom/ToolMagic";
+import { LanguageButton } from "@/components/bloom/LanguageButton";
 
 const SITE = "https://www.bloomzein.com";
 
@@ -91,13 +92,7 @@ export function ToolLandingPage({ slug, lang = "en" }: { slug: string; lang?: To
             <span className="font-script text-2xl text-hotpink">Bloomzein</span>
           </a>
           <div className="flex items-center gap-2">
-            {/* language switcher */}
-            <nav aria-label="Language" className="flex items-center rounded-full border border-hotpink/20 bg-white/70 p-0.5 text-[12px] font-bold">
-              {TOOL_LANGS.map((l) => (
-                <a key={l} href={toolPageUrl(tool.slug, l)} hrefLang={HREFLANG[l]} aria-current={l === lang ? "page" : undefined}
-                  className={["rounded-full px-2.5 py-1 transition", l === lang ? "bg-hotpink text-white" : "text-hotpink hover:bg-hotpink/10"].join(" ")}>{LANG_LABEL[l]}</a>
-              ))}
-            </nav>
+            <LanguageButton current={lang} />
             <a href="/onboarding" className="bloom-luxury-btn hidden sm:inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-white">
               {ui.start} <Arrow className="h-4 w-4" />
             </a>

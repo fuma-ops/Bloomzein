@@ -8,6 +8,9 @@ import { BloomLogo } from "@/components/bloom/BloomLogo";
 import { triggerPWAInstall, waitForPWAPrompt, isIOS } from "@/lib/pwa";
 import { trackEvent } from "@/lib/analytics";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { LanguageButton } from "@/components/bloom/LanguageButton";
+import { getSiteLang, localizedPath, type SiteLang } from "@/lib/siteLang";
+import { LANDING_COPY } from "./landingI18n";
 
 const START = "/app/today";
 // "Start Blooming" opens the onboarding funnel — no account needed. Visitors
@@ -145,6 +148,23 @@ function Petals() {
 }
 
 export default function Landing() {
+  const lang: SiteLang = getSiteLang();
+  const T = LANDING_COPY[lang];
+  const rtl = lang === "ar";
+  const flagship = FLAGSHIP.map((f, i) => ({ ...f, ...T.flagship[i], href: localizedPath(f.href, lang) || f.href }));
+  const grid = GRID.map((f, i) => ({ ...f, ...T.grid[i] }));
+  const nav = NAV.map((n, i) => ({ ...n, label: T.nav[i] }));
+  // Arabic: document direction + Arabic fonts (Tajawal text, Amiri titles, Aref Ruqaa script).
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = rtl ? "rtl" : "ltr";
+    if (rtl && !document.getElementById("bz-ar-fonts")) {
+      const l = document.createElement("link");
+      l.id = "bz-ar-fonts"; l.rel = "stylesheet";
+      l.href = "https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Aref+Ruqaa:wght@700&family=Tajawal:wght@500;700;800&display=swap";
+      document.head.appendChild(l);
+    }
+  }, [lang, rtl]);
   const [installing, setInstalling] = useState(false);
   const [iosHint, setIosHint] = useState(false);
   const [showBar, setShowBar] = useState(false);
@@ -174,7 +194,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="bzl">
+    <div className={`bzl${rtl ? " bzl-ar" : ""}`} dir={rtl ? "rtl" : "ltr"} lang={lang}>
       <style>{`
         .bzl{
           --hot:#E6007E; --pink:#EC4899; --deep:#DB2777; --plum:#6B1238;
@@ -186,6 +206,8 @@ export default function Landing() {
           background:radial-gradient(120% 60% at 50% 0%,#FFFDFC 0%,#FFF1F7 40%,#FDE7F2 72%,#FBD3E6 100%);
           min-height:100vh; overflow-x:hidden;
         }
+        .bzl-ar{--serif:"Amiri",serif;--script:"Aref Ruqaa","Amiri",serif;--sans:"Tajawal",system-ui,sans-serif}
+        .bzl-ar .bzl-kicker{letter-spacing:0}
         .bzl-serif{font-family:var(--serif);font-weight:700;color:var(--plum)}
         .bzl-script{font-family:var(--script);font-weight:700;color:var(--hot);line-height:.96}
         .bzl-kicker{font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--hot)}
@@ -245,7 +267,7 @@ export default function Landing() {
         {/* full-bleed background photo — portrait crop on phone/tablet, landscape on desktop */}
         <picture>
           <source media="(min-width:1024px)" srcSet="/images/landing-hero-happier.webp" />
-          <img src="/images/landing-hero-happier-portrait.webp" alt="A woman practising cycle-synced yoga at home"
+          <img src="/images/landing-hero-happier-portrait.webp" alt={T.heroAlt}
             className="bzl-kenburns absolute inset-0 h-full w-full object-cover object-[52%_38%] lg:object-[64%_center]" />
         </picture>
         {/* overlay — DESKTOP: a light-but-not-washed area on the left for the copy;
@@ -265,17 +287,18 @@ export default function Landing() {
           <header className="relative mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
             <BloomLogo />
             <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-7 lg:flex">
-              {NAV.map((n) => (
+              {nav.map((n) => (
                 <a key={n.label} href={n.href} className="text-sm font-bold transition hover:text-hotpink" style={{ color: "var(--ink)" }}>
                   {n.label}
                 </a>
               ))}
             </nav>
             <div className="flex items-center gap-2">
+              <LanguageButton current={lang} />
               <span className="hidden sm:inline-block">
                 <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "header" })}
                   className="bzl-cta px-5 py-2.5 text-sm">
-                  Start Blooming <ArrowRight className="h-3.5 w-3.5" />
+                  {T.ctaShort} <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
                 </a>
               </span>
               <button onClick={() => setMenuOpen((v) => !v)} aria-label="Menu" aria-expanded={menuOpen}
@@ -287,14 +310,14 @@ export default function Landing() {
         </div>
         {menuOpen && (
           <div className="relative z-30 mx-4 mt-1 flex flex-col gap-1 rounded-2xl border border-white bg-white/95 p-3 shadow-xl backdrop-blur lg:hidden">
-            {NAV.map((n) => (
+            {nav.map((n) => (
               <a key={n.label} href={n.href} onClick={() => setMenuOpen(false)}
                 className="rounded-xl px-3 py-2 text-sm font-bold transition hover:bg-blush" style={{ color: "var(--ink)" }}>
                 {n.label}
               </a>
             ))}
             <a href={BEGIN} onClick={() => setMenuOpen(false)} className="bzl-cta mt-1 justify-center px-5 py-3 text-sm">
-              Start Blooming — free <ArrowRight className="h-4 w-4" />
+              {T.cta} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </a>
           </div>
         )}
@@ -303,34 +326,33 @@ export default function Landing() {
         <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 items-center px-6 py-8 sm:px-8 sm:py-10 md:items-start md:py-7 max-sm:items-start max-sm:py-4">
           <div className="w-full max-w-xl lg:max-w-2xl">
             <p className="bzl-kicker bzl-halo mb-3 text-[11px] sm:text-xs md:mb-4 md:text-[13px] bzl-fade" style={{ animationDelay: "150ms" }}>
-              Your cycle-synced companion 🌸
+              {T.kicker}
             </p>
             <h1 className="m-0 flex flex-col">
-              <Words text="A happier," className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" stagger={70} />
+              <Words key={lang} text={T.h1[0]} className="bzl-serif bzl-halo text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" stagger={70} />
               <span className="bzl-serif bzl-grad bzl-fade pb-[0.14em] text-[2.5rem] leading-[1.03] sm:text-5xl md:text-[3.5rem] lg:text-6xl" style={{ animationDelay: "300ms" }}>
-                healthier you
+                {T.h1[1]}
               </span>
               <span className="bzl-fade mt-1 flex items-center gap-2 whitespace-nowrap md:mt-2" style={{ animationDelay: "480ms" }}>
-                <span className="bzl-sheen bzl-script bzl-halo text-[2.2rem] sm:text-4xl md:text-[3rem] lg:text-5xl">in every phase</span>
+                <span className="bzl-sheen bzl-script bzl-halo text-[2.2rem] sm:text-4xl md:text-[3rem] lg:text-5xl">{T.h1[2]}</span>
                 <Heart className="h-6 w-6 shrink-0 fill-current sm:h-7 sm:w-7 md:h-9 md:w-9 lg:h-8 lg:w-8" style={{ color: "var(--hot)" }} />
               </span>
             </h1>
             <p className="bzl-fade bzl-halo mt-4 max-w-md text-[15px] font-semibold leading-relaxed sm:text-lg md:mt-6 md:max-w-lg md:text-xl max-sm:mt-3 max-sm:max-w-[80%]" style={{ color: "var(--ink)", animationDelay: "640ms" }}>
-              Workouts, yoga, meal plans, cycle tracking, journaling and more — all in one
-              beautifully simple app.
+              {T.sub}
             </p>
             <div className="bzl-fade mt-6 flex flex-wrap items-center gap-x-5 gap-y-4 md:mt-8 md:gap-x-6 max-sm:mt-4 max-sm:max-w-[66%]" style={{ animationDelay: "780ms" }}>
               <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "hero" })}
                 className="bzl-cta whitespace-nowrap px-7 py-3.5 text-base md:px-8 md:py-4 md:text-lg max-sm:px-5 max-sm:text-[15px]">
-                Start Blooming — free <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
+                {T.cta} <ArrowRight className="h-4 w-4 md:h-5 md:w-5 rtl:rotate-180" />
               </a>
               <button onClick={handleDownload} disabled={installing}
-                className="group inline-flex items-center gap-3 disabled:opacity-70" aria-label="Download the app">
+                className="group inline-flex items-center gap-3 disabled:opacity-70" aria-label={T.download}>
                 <span className="grid h-12 w-12 place-items-center rounded-full border-2 bg-white/70 backdrop-blur transition group-hover:scale-105 group-active:scale-95 md:h-14 md:w-14" style={{ borderColor: "var(--petal)" }}>
                   <Download className="h-5 w-5 md:h-6 md:w-6" style={{ color: "var(--hot)" }} />
                 </span>
                 <span className="text-sm font-extrabold md:text-base" style={{ color: "var(--hot)" }}>
-                  {installing ? "Preparing…" : "Download App"}
+                  {installing ? T.preparing : T.download}
                 </span>
               </button>
             </div>
@@ -342,12 +364,12 @@ export default function Landing() {
               <div className="rounded-[1.5rem] border border-white/60 bg-gradient-to-br from-white/55 via-white/40 to-white/30 p-2.5 shadow-[0_24px_60px_-22px_rgba(219,39,119,0.5)] ring-1 ring-white/40 backdrop-blur-2xl md:rounded-[1.75rem] md:p-5">
                 <div className="mb-2 flex items-baseline justify-between gap-2 md:mb-4">
                   <p className="bzl-script leading-none text-[1.2rem] md:text-[1.75rem]" style={{ color: "var(--hot)" }}>
-                    Everything you need <Heart className="inline h-3.5 w-3.5 fill-current md:h-5 md:w-5" />
+                    {T.everything} <Heart className="inline h-3.5 w-3.5 fill-current md:h-5 md:w-5" />
                   </p>
-                  <p className="bzl-kicker shrink-0 text-[8px] md:text-[10px]" style={{ color: "var(--muted)" }}>All in one place</p>
+                  <p className="bzl-kicker shrink-0 text-[8px] md:text-[10px]" style={{ color: "var(--muted)" }}>{T.allInOne}</p>
                 </div>
                 <div className="grid grid-cols-4 gap-x-1 gap-y-2.5 md:gap-y-4">
-                  {HERO_FEATURES.map((f, i) => {
+                  {HERO_FEATURES.map((f0, i) => { const f = { ...f0, title: T.features[i] };
                     const Icon = f.icon;
                     return (
                       <div key={f.title} className="group bzl-pop flex cursor-pointer flex-col items-center gap-1 text-center" style={{ animationDelay: `${1000 + i * 80}ms` }}>
@@ -368,11 +390,11 @@ export default function Landing() {
             {/* script sign-off */}
             <div className="bzl-fade mt-7 flex items-center gap-4 md:mt-10 md:gap-6 max-sm:mt-5" style={{ animationDelay: "1050ms" }}>
               <p className="bzl-script bzl-halo text-3xl leading-[0.95] sm:text-4xl md:text-[2.7rem]" style={{ color: "var(--hot)" }}>
-                Small steps<br />Big results <Heart className="inline h-5 w-5 fill-current md:h-6 md:w-6" />
+                {T.signoff[0]}<br />{T.signoff[1]} <Heart className="inline h-5 w-5 fill-current md:h-6 md:w-6" />
               </p>
               <span className="h-11 w-px shrink-0 md:h-14" style={{ background: "var(--petal)" }} />
               <p className="bzl-halo text-[13px] font-semibold leading-snug md:text-[15px]" style={{ color: "var(--ink)" }}>
-                More energy. A calmer mind.<br />A stronger, happier you.
+                {T.signoffRight[0]}<br />{T.signoffRight[1]}
               </p>
             </div>
           </div>
@@ -390,18 +412,17 @@ export default function Landing() {
       {/* ═════════════ INTRO LINE ═════════════ */}
       <section className="relative mx-auto max-w-3xl px-6 py-16 text-center sm:py-24">
         <Reveal>
-          <p className="bzl-kicker mb-3 text-xs">Everything, connected</p>
-          <h2 className="bzl-script text-4xl sm:text-6xl">Ten tools. One you.</h2>
+          <p className="bzl-kicker mb-3 text-xs">{T.introKicker}</p>
+          <h2 className="bzl-script text-4xl sm:text-6xl">{T.introTitle}</h2>
           <p className="mx-auto mt-4 max-w-xl text-[15px] font-semibold sm:text-lg" style={{ color: "var(--ink)" }}>
-            No more juggling six apps that don't talk to each other. Bloomzein reads your
-            cycle once and quietly tunes <em>everything</em> — so your whole day just fits.
+            {T.introBody[0]} <em>{T.introBody[1]}</em> {T.introBody[2]}
           </p>
         </Reveal>
       </section>
 
       {/* ═════════════ FLAGSHIP ROWS ═════════════ */}
       <section id="features" className="mx-auto max-w-6xl space-y-16 px-6 pb-8 sm:space-y-24 sm:px-8 scroll-mt-20">
-        {FLAGSHIP.map((f, i) => {
+        {flagship.map((f, i) => {
           const Icon = f.icon;
           const flip = i % 2 === 1;
           return (
@@ -421,7 +442,7 @@ export default function Landing() {
                 <p className="mt-3 max-w-md text-[15px] font-medium leading-relaxed sm:text-base" style={{ color: "var(--ink)" }}>{f.body}</p>
                 <a href={f.href} onClick={() => trackEvent("feature_click", { feature: f.kicker })}
                   className="mt-5 inline-flex items-center gap-2 text-sm font-bold transition hover:gap-3" style={{ color: "var(--hot)" }}>
-                  Explore <ArrowRight className="h-4 w-4" />
+                  {T.explore} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                 </a>
               </div>
             </Reveal>
@@ -433,11 +454,11 @@ export default function Landing() {
       {/* ═════════════ GRID — the rest ═════════════ */}
       <section id="how" className="relative mt-16 px-6 py-16 sm:px-8 sm:py-24 scroll-mt-20" style={{ background: "linear-gradient(180deg,transparent,#FDE7F2 22%,#FBD3E6 100%)" }}>
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="bzl-kicker mb-3 text-xs">And so much more</p>
-          <h2 className="bzl-script text-4xl sm:text-6xl">Your whole life, in bloom.</h2>
+          <p className="bzl-kicker mb-3 text-xs">{T.moreKicker}</p>
+          <h2 className="bzl-script text-4xl sm:text-6xl">{T.moreTitle}</h2>
         </Reveal>
         <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-          {GRID.map((f, i) => {
+          {grid.map((f, i) => {
             const Icon = f.icon;
             return (
               <Reveal key={f.kicker} delay={(i % 4) * 80}>
@@ -470,16 +491,16 @@ export default function Landing() {
           <div className="mb-4 flex items-center justify-center gap-1 text-white">
             {Array.from({ length: 5 }).map((_, i) => <Sparkles key={i} className="h-4 w-4 fill-white" />)}
           </div>
-          <h2 className="bzl-script text-4xl text-white sm:text-6xl" style={{ color: "#fff" }}>Bloom with your cycle, not against it.</h2>
+          <h2 className="bzl-script text-4xl text-white sm:text-6xl" style={{ color: "#fff" }}>{T.ctaTitle}</h2>
           <p className="mx-auto mt-4 max-w-md text-[15px] font-medium text-white/90">
-            Join the women turning their rhythm into their superpower — one gentle, beautiful day at a time.
+            {T.ctaBody}
           </p>
           <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "footer_cta" })}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-9 py-4 text-base font-extrabold shadow-xl transition hover:scale-105 active:scale-95"
             style={{ color: "var(--hot)" }}>
-            Start Blooming — free <ArrowRight className="h-4 w-4" />
+            {T.cta} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
           </a>
-          <p className="mt-4 text-xs font-semibold text-white/80">No credit card · Cancel anytime 🌸</p>
+          <p className="mt-4 text-xs font-semibold text-white/80">{T.noCard}</p>
         </Reveal>
       </section>
 
@@ -488,7 +509,7 @@ export default function Landing() {
         <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 text-center">
           <BloomLogo />
           <p className="max-w-sm text-sm font-medium leading-relaxed" style={{ color: "var(--muted)" }}>
-            Cycle tracking, nutrition, fitness &amp; self-care — designed for your body, mind &amp; life.
+            {T.footerTag}
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             {[
@@ -512,13 +533,13 @@ export default function Landing() {
               { label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" },
               { label: "Refunds", href: "/refund" },
               { label: "Help", href: "/help" }, { label: "FAQ", href: "/faq" },
-            ].map(({ label, href }) => (
+            ].map(({ href }, i) => ({ href, label: T.footer[i] })).map(({ label, href }) => (
               <a key={label} href={href} className="transition hover:text-hotpink">{label}</a>
             ))}
           </nav>
           <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--muted)" }}>
             <span>© {new Date().getFullYear()} Bloomzein.</span>
-            <span className="flex items-center gap-1">Made with love <Heart className="h-3 w-3 fill-hotpink text-hotpink" /></span>
+            <span className="flex items-center gap-1">{T.madeWith} <Heart className="h-3 w-3 fill-hotpink text-hotpink" /></span>
           </div>
         </div>
       </footer>
@@ -528,7 +549,7 @@ export default function Landing() {
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         <a href={BEGIN} onClick={() => trackEvent("get_started_click", { location: "mobile_bar" })}
           className="bzl-cta w-full justify-center px-6 py-3.5 text-base">
-          Start Blooming — free <ArrowRight className="h-4 w-4" />
+          {T.cta} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
         </a>
       </div>
 
@@ -537,7 +558,7 @@ export default function Landing() {
           <div className="flex items-center gap-3 rounded-2xl px-4 py-3 shadow-xl" style={{ background: "var(--plum)" }}>
             <Download className="h-4 w-4 shrink-0 text-white" />
             <p className="text-xs font-semibold leading-snug text-white">
-              Sur iPhone : <span className="font-normal">Partager</span> → <span className="font-normal">Sur l'écran d'accueil</span>
+              {T.ios[0]} <span className="font-normal">{T.ios[1]}</span> {rtl ? "←" : "→"} <span className="font-normal">{T.ios[2]}</span>
             </p>
             <button onClick={() => setIosHint(false)} className="ml-auto shrink-0 text-white/70 hover:text-white" aria-label="Dismiss"><X className="h-4 w-4" /></button>
           </div>

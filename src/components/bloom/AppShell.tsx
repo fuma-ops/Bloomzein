@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { LanguageButton } from "./LanguageButton";
+import { getSiteLang, type SiteLang } from "@/lib/siteLang";
 import { Flower2, CalendarDays, LayoutGrid, BookOpen, ShoppingBag, User, Sparkles, type LucideIcon } from "lucide-react";
 import { BloomLogo } from "./BloomLogo";
 import { AppIcon } from "./AppIcon";
@@ -33,6 +35,18 @@ const NAV_GROUPS: NavItem[][] = [
   [{ to: "/app/me", label: "Me", icon: User, plus: true }],
 ];
 const NAV = NAV_GROUPS.flat();
+// Navigation labels in the chosen site language (the screens themselves are still
+// being translated — see the note shown under the top bar).
+const NAV_LABEL: Record<SiteLang, Record<string, string>> = {
+  en: {},
+  fr: { "/app/today": "Aujourd'hui", "/app/calendar": "Calendrier", "/app/tools": "Outils", "/app/read": "À lire", "/app/shop": "Boutique", "/app/me": "Moi" },
+  ar: { "/app/today": "اليوم", "/app/calendar": "التقويم", "/app/tools": "الأدوات", "/app/read": "اقرئي", "/app/shop": "المتجر", "/app/me": "حسابي" },
+};
+const LANG_NOTE: Record<SiteLang, string> = {
+  en: "",
+  fr: "La traduction de l'application est en cours : certains écrans sont encore en anglais.",
+  ar: "ترجمة التطبيق جارية: بعض الشاشات ما زالت بالإنجليزية.",
+};
 // Mobile bottom bar stays uncrowded: 5 primary tabs (Shop lives in the sidebar).
 const MOBILE_NAV = NAV.filter((n) => n.to !== "/app/shop");
 
@@ -63,6 +77,9 @@ function TileBadges({ item, free }: { item: NavItem; free: boolean }) {
 export function AppShell({ children, currentPath }: { children: React.ReactNode; currentPath: string }) {
   const isActive = (to: string) => currentPath === to || currentPath.startsWith(to + "/");
   const free = !usePremium();
+  const lang = getSiteLang();
+  const label = (item: NavItem) => NAV_LABEL[lang][item.to] || item.label;
+  const [noteHidden, setNoteHidden] = useState(() => { try { return localStorage.getItem("bloom:lang-note") === lang; } catch { return false; } });
 
   // Seed the one-time "discover your tools" notifications for a new (onboarded) user.
   useEffect(() => { seedDiscoverNotifications(); }, []);
@@ -114,7 +131,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
                     <a
                       key={item.to}
                       href={item.to}
-                      aria-label={item.label}
+                      aria-label={label(item)}
                       aria-current={active ? "page" : undefined}
                       style={{ animationDelay: `${delay}ms` }}
                       className={`group animate-fade-in relative flex items-center gap-3 rounded-[1.35rem] px-2 py-1.5 transition-all duration-200 hover:scale-[1.02] active:scale-[0.97] ${
@@ -131,13 +148,13 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
 
                       {/* lg: inline label */}
                       <span className={`hidden lg:inline text-[15px] transition-colors ${active ? "font-bold text-hotpink" : "font-semibold text-[#831843]"}`}>
-                        {item.label}
+                        {label(item)}
                       </span>
                       {item.soon && <span className="hidden lg:inline rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">soon</span>}
 
                       {/* md (icon-only rail): floating tooltip on hover */}
                       <span className="lg:hidden pointer-events-none absolute left-full ml-3 z-30 whitespace-nowrap rounded-xl bg-[#831843] px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100">
-                        {item.label}{item.soon ? " · soon" : ""}
+                        {label(item)}{item.soon ? " · soon" : ""}
                       </span>
                     </a>
                   );
@@ -146,7 +163,10 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
             ))}
           </nav>
         </div>
-        <p className="hidden px-2 font-script text-sm text-[#831843] lg:block">stay soft, bloom on ✿</p>
+        <div className="hidden items-center justify-between gap-2 px-2 lg:flex">
+          <p className="font-script text-sm text-[#831843]">stay soft, bloom on ✿</p>
+          <LanguageButton current={lang} className="[&_ul]:bottom-full [&_ul]:mb-2 [&_ul]:mt-0" />
+        </div>
       </aside>
 
       {/* ── Phone + Tablet Top App Bar (below lg) ────────────────────────────── */}
@@ -154,7 +174,10 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
         <div className="scale-90 origin-left">
           <BloomLogo />
         </div>
-        <p className="font-script text-sm text-[#831843]">stay soft, bloom on ✿</p>
+        <div className="flex items-center gap-2">
+          <p className="hidden font-script text-sm text-[#831843] sm:block">stay soft, bloom on ✿</p>
+          <LanguageButton current={lang} />
+        </div>
       </header>
 
       {/* ── Main container ───────────────────────────────────────────────────── */}
@@ -162,6 +185,13 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
         {/* Soft ribbon-bow hero band behind every page (scrolls like Today's hero) */}
         <RibbonBackground />
         <div className="relative z-[1] mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-w-0">
+          {lang !== "en" && !noteHidden && (
+            <div dir={lang === "ar" ? "rtl" : "ltr"} className="mb-3 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/75 px-4 py-2.5 text-[13px] font-semibold text-[#831843] shadow-sm backdrop-blur animate-fade-in">
+              <span className="flex-1">{LANG_NOTE[lang]}</span>
+              <button type="button" onClick={() => { setNoteHidden(true); try { localStorage.setItem("bloom:lang-note", lang); } catch { /* ignore */ } }}
+                className="shrink-0 rounded-full px-2 py-0.5 text-hotpink transition hover:bg-hotpink/10 active:scale-95" aria-label="OK">OK</button>
+            </div>
+          )}
           {children}
         </div>
       </main>
@@ -187,7 +217,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
             <a
               key={item.to}
               href={item.to}
-              aria-label={item.label}
+              aria-label={label(item)}
               aria-current={active ? "page" : undefined}
               style={{ animationDelay: `${i * 45}ms` }}
               className="group animate-fade-in relative flex flex-1 flex-col items-center gap-1 py-1 transition active:scale-90"
@@ -201,7 +231,7 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
                 <TileBadges item={item} free={free} />
               </span>
               <span className={`text-[10px] leading-none transition-colors ${active ? "font-bold text-hotpink" : "font-semibold text-[#831843]/75"}`}>
-                {item.label}
+                {label(item)}
               </span>
             </a>
           );
