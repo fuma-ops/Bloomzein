@@ -2561,3 +2561,9 @@
     transition-delay: 0.46s;
   }
 }
+
+/* Arabic (html[lang=ar], set by src/i18n): Arabic fonts, script titles in Aref Ruqaa. */
+html[lang="ar"] body { font-family: "Tajawal", var(--font-sans); }
+html[lang="ar"] .font-script { font-family: "Aref Ruqaa", "Amiri", serif; }
+html[lang="ar"] .tracking-wide, html[lang="ar"] .tracking-wider, html[lang="ar"] .tracking-widest { letter-spacing: 0; }
+html[lang="ar"] .uppercase { text-transform: none; }

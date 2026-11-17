@@ -1,3 +1,4 @@
+import { tr, trx } from "@/i18n";
 import { Check, RefreshCw, Flower2 } from "lucide-react";
 
 /* A soft hero pill that always names the user's cycle phase (the app's core
@@ -20,30 +21,25 @@ export function PhaseSyncPill({
   if (!known) {
     return (
       <button onClick={onSync} className={`${base} bg-white/25 border border-white/50 text-white hover:bg-white/35 animate-selected-glow`}>
-        <Flower2 className="h-3.5 w-3.5" strokeWidth={2} /> Set your cycle
-      </button>
+        <Flower2 className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Set your cycle")}</button>
     );
   }
 
   if (synced) {
     return (
       <span className={`${base} bg-white/30 border border-white/60 text-white`}>
-        <span className="text-sm leading-none">{emoji}</span>
-        {label} phase
-        <span className="ml-0.5 inline-flex items-center gap-0.5 rounded-full bg-white/85 text-hotpink px-1.5 py-[1px] text-[9px] uppercase tracking-wide">
-          <Check className="h-2.5 w-2.5" strokeWidth={3} /> in sync
-        </span>
+        <span className="text-sm leading-none">{trx(emoji)}</span>
+        {tr("{0} phase", { 0: label })}<span className="ms-0.5 inline-flex items-center gap-0.5 rounded-full bg-white/85 text-hotpink px-1.5 py-[1px] text-[9px] uppercase tracking-wide">
+          <Check className="h-2.5 w-2.5" strokeWidth={3} />{" "}{tr("in sync")}</span>
       </span>
     );
   }
 
   return (
     <button onClick={onSync} className={`${base} bg-white/25 border border-white/50 text-white hover:bg-white/35 animate-selected-glow`}>
-      <span className="text-sm leading-none">{emoji}</span>
-      {label} phase
-      <span className="ml-0.5 inline-flex items-center gap-1 rounded-full bg-white/85 text-hotpink px-1.5 py-[1px] text-[9px] uppercase tracking-wide">
-        <RefreshCw className="h-2.5 w-2.5" strokeWidth={2.5} /> tap to sync
-      </span>
+      <span className="text-sm leading-none">{trx(emoji)}</span>
+      {tr("{0} phase", { 0: label })}<span className="ms-0.5 inline-flex items-center gap-1 rounded-full bg-white/85 text-hotpink px-1.5 py-[1px] text-[9px] uppercase tracking-wide">
+        <RefreshCw className="h-2.5 w-2.5" strokeWidth={2.5} />{" "}{tr("tap to sync")}</span>
     </button>
   );
 }

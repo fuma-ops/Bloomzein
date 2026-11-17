@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { CuteToolIcon } from "./CuteToolIcon";
+import { tr, trx } from "@/i18n";
 
 interface NodeDef {
   slug: string;
@@ -11,17 +12,17 @@ interface NodeDef {
 // Wide, horizontal layout — two rows of tools framing the Bloom Calendar in the middle,
 // so the diagram reads left-to-right instead of stretching the page tall.
 const TOOL_NODES: NodeDef[] = [
-  { slug: "diary", label: "Dreamy Diary", x: 8, y: 9 },
-  { slug: "cycle", label: "Cycle Tracker", x: 31, y: 9 },
-  { slug: "meals", label: "Meal Planner", x: 69, y: 9 },
-  { slug: "workout", label: "Workout", x: 92, y: 9 },
-  { slug: "budget", label: "Budget Planner", x: 8, y: 41 },
-  { slug: "diet", label: "Diet Tool", x: 31, y: 41 },
-  { slug: "notes", label: "Reminders", x: 69, y: 41 },
-  { slug: "yoga", label: "Yoga Flows", x: 92, y: 41 },
+  { slug: "diary", label: tr("Dreamy Diary"), x: 8, y: 9 },
+  { slug: "cycle", label: tr("Cycle Tracker"), x: 31, y: 9 },
+  { slug: "meals", label: tr("Meal Planner"), x: 69, y: 9 },
+  { slug: "workout", label: tr("Workout"), x: 92, y: 9 },
+  { slug: "budget", label: tr("Budget Planner"), x: 8, y: 41 },
+  { slug: "diet", label: tr("Diet Tool"), x: 31, y: 41 },
+  { slug: "notes", label: tr("Reminders"), x: 69, y: 41 },
+  { slug: "yoga", label: tr("Yoga Flows"), x: 92, y: 41 },
 ];
 
-const CENTER: NodeDef = { slug: "calendar", label: "Bloom Calendar", x: 50, y: 25 };
+const CENTER: NodeDef = { slug: "calendar", label: tr("Bloom Calendar"), x: 50, y: 25 };
 
 const NODE_MAP: Record<string, NodeDef> = { [CENTER.slug]: CENTER };
 for (const n of TOOL_NODES) NODE_MAP[n.slug] = n;
@@ -271,7 +272,7 @@ export function ConnectionsDiagram() {
             </span>
           </span>
           <span className="whitespace-nowrap rounded-full border border-petal/60 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-hotpink shadow sm:px-3 sm:py-1 sm:text-sm">
-            {CENTER.label}
+            {trx(CENTER.label)}
           </span>
         </div>
 
@@ -315,7 +316,7 @@ export function ConnectionsDiagram() {
                 active === n.slug ? "bg-hotpink text-white" : "bg-white/85 text-rose",
               ].join(" ")}
             >
-              {n.label}
+              {trx(n.label)}
             </span>
           </button>
         ))}
@@ -325,7 +326,7 @@ export function ConnectionsDiagram() {
       <div className="mt-3 flex min-h-[3.25rem] items-center justify-center px-2 sm:mt-4 sm:min-h-[3.5rem]">
         {activePhrase && (
           <div className="w-full max-w-md rounded-2xl border border-petal/60 bg-white/95 px-3 py-2 text-center text-xs font-semibold leading-snug text-[#831843] shadow-xl shadow-hotpink/30 backdrop-blur animate-fade-in sm:text-[13px]">
-            {activePhrase}
+            {trx(activePhrase)}
           </div>
         )}
       </div>

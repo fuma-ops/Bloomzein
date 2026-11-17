@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================
    HydrationNudge — a soft, dismissible "drink water" banner.
@@ -74,7 +75,7 @@ export function HydrationNudge({
 
   return (
     <div
-      className={`relative mb-3 flex items-center gap-3 rounded-3xl border px-4 py-3 pr-2 animate-fade-in select-none touch-pan-y ${className}`}
+      className={`relative mb-3 flex items-center gap-3 rounded-3xl border px-4 py-3 pe-2 animate-fade-in select-none touch-pan-y ${className}`}
       style={{
         transform: `translateX(${dx}px)`,
         opacity,
@@ -90,19 +91,17 @@ export function HydrationNudge({
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-bold text-hotpink leading-tight">{title}</p>
-        <p className="text-[11px] text-rose/70 leading-snug">{body}</p>
+        <p className="text-xs font-bold text-hotpink leading-tight">{trx(title)}</p>
+        <p className="text-[11px] text-rose/70 leading-snug">{trx(body)}</p>
       </div>
       <a
         href="/app/today#hydration"
         onClick={(e) => e.stopPropagation()}
         className="shrink-0 text-[10px] font-bold text-hotpink underline underline-offset-2"
-      >
-        Log it
-      </a>
+      >{tr("Log it")}</a>
       <button
         type="button"
-        aria-label="Dismiss"
+        aria-label={tr("Dismiss")}
         onClick={(e) => { e.stopPropagation(); dismiss(1); }}
         onPointerDown={(e) => e.stopPropagation()}
         className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-rose/50 transition hover:bg-white/60 hover:text-hotpink active:scale-90"

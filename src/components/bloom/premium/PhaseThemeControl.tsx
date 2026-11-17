@@ -2,6 +2,7 @@ import { Palette, Lock, Sparkles } from "lucide-react";
 import { usePremium, openPaywall } from "@/lib/entitlements";
 import { usePhaseThemeOn, setPhaseThemeOn } from "@/lib/phaseTheme";
 import { PremiumBadge } from "./PremiumKit";
+import { tr } from "@/i18n";
 
 const GOLD = "#B76E79";
 
@@ -17,14 +18,14 @@ export function PhaseThemeControl() {
         <Palette className="h-5 w-5" strokeWidth={1.9} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-bold text-hotpink">Living phase theme <PremiumBadge /></p>
-        <p className="text-[11.5px] text-rose/75 leading-snug">Your whole app gently blooms with your cycle phase.</p>
+        <p className="flex items-center gap-1.5 text-sm font-bold text-hotpink">{tr("Living phase theme")}{" "}<PremiumBadge /></p>
+        <p className="text-[11.5px] text-rose/75 leading-snug">{tr("Your whole app gently blooms with your cycle phase.")}</p>
       </div>
 
       {premium ? (
         <button
           onClick={() => setPhaseThemeOn(!on)}
-          aria-label="Toggle phase theme"
+          aria-label={tr("Toggle phase theme")}
           className={["relative h-6 w-11 shrink-0 rounded-full transition-colors", on ? "bg-hotpink" : "bg-rose/25"].join(" ")}
         >
           <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: on ? "1.375rem" : "0.125rem" }} />
@@ -35,8 +36,7 @@ export function PhaseThemeControl() {
           className="shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold text-white shadow active:scale-95"
           style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}
         >
-          <Lock className="h-3 w-3" strokeWidth={2.4} /> Unlock
-        </button>
+          <Lock className="h-3 w-3" strokeWidth={2.4} />{" "}{tr("Unlock")}</button>
       )}
     </div>
   );

@@ -19,6 +19,7 @@ import {
   doseConfirmToken,
   type ScheduledNotificationInput,
 } from "@/lib/push";
+import { tr, trx, DATE_LOCALE } from "@/i18n";
 
 /* ============================================================
    TYPES & CONSTANTS
@@ -54,12 +55,12 @@ export interface Reminder {
 }
 
 const NOTE_COLORS = [
-  { key: "sakura",   label: "Sakura Blush",   bg: "bg-[#FFF0F6]",   border: "border-[#FBCFE8]", text: "text-[#831843]", body: "text-[#9D5C7E]/80", accent: "#EC4899", dark: false, bloom: "🌸" },
-  { key: "lavender", label: "Lavender Glow",  bg: "bg-[#F3E8FF]",   border: "border-[#D8B4FE]", text: "text-[#5B21B6]", body: "text-[#7C3AED]/70", accent: "#8B5CF6", dark: false, bloom: "💜" },
-  { key: "mint",     label: "Mint Whisper",   bg: "bg-[#ECFDF5]",   border: "border-[#A7F3D0]", text: "text-[#065F46]", body: "text-[#065F46]/70", accent: "#10B981", dark: false, bloom: "🍃" },
-  { key: "lemon",    label: "Lemon Custard",  bg: "bg-[#FEFCE8]",   border: "border-[#FDE047]", text: "text-[#854D0E]", body: "text-[#854D0E]/70", accent: "#EAB308", dark: false, bloom: "✨" },
-  { key: "peach",    label: "Peach Cream",    bg: "bg-[#FFF5F5]",   border: "border-[#FECACA]", text: "text-[#9C4221]", body: "text-[#9C4221]/70", accent: "#F97316", dark: false, bloom: "🌺" },
-  { key: "midnight", label: "Midnight Bloom", bg: "bg-gradient-to-br from-[#9D174D] to-[#6D28D9]", border: "border-[#BE185D]", text: "text-white", body: "text-white/75", accent: "#EC4899", dark: true, bloom: "🌙" },
+  { key: "sakura",   label: tr("Sakura Blush"),   bg: "bg-[#FFF0F6]",   border: "border-[#FBCFE8]", text: "text-[#831843]", body: "text-[#9D5C7E]/80", accent: "#EC4899", dark: false, bloom: "🌸" },
+  { key: "lavender", label: tr("Lavender Glow"),  bg: "bg-[#F3E8FF]",   border: "border-[#D8B4FE]", text: "text-[#5B21B6]", body: "text-[#7C3AED]/70", accent: "#8B5CF6", dark: false, bloom: "💜" },
+  { key: "mint",     label: tr("Mint Whisper"),   bg: "bg-[#ECFDF5]",   border: "border-[#A7F3D0]", text: "text-[#065F46]", body: "text-[#065F46]/70", accent: "#10B981", dark: false, bloom: "🍃" },
+  { key: "lemon",    label: tr("Lemon Custard"),  bg: "bg-[#FEFCE8]",   border: "border-[#FDE047]", text: "text-[#854D0E]", body: "text-[#854D0E]/70", accent: "#EAB308", dark: false, bloom: "✨" },
+  { key: "peach",    label: tr("Peach Cream"),    bg: "bg-[#FFF5F5]",   border: "border-[#FECACA]", text: "text-[#9C4221]", body: "text-[#9C4221]/70", accent: "#F97316", dark: false, bloom: "🌺" },
+  { key: "midnight", label: tr("Midnight Bloom"), bg: "bg-gradient-to-br from-[#9D174D] to-[#6D28D9]", border: "border-[#BE185D]", text: "text-white", body: "text-white/75", accent: "#EC4899", dark: true, bloom: "🌙" },
 ];
 
 const TAG_EMOJI: Record<string, string> = {
@@ -73,31 +74,31 @@ const TAG_EMOJI: Record<string, string> = {
 const NOTE_TAGS = ["Self-care", "Ideas", "To-do", "Love", "Other"];
 
 const MOOD_OPTIONS = [
-  { emoji: "😊", label: "Happy",     color: "sakura"   },
-  { emoji: "😌", label: "Calm",      color: "lavender" },
-  { emoji: "💪", label: "Energized", color: "mint"     },
-  { emoji: "😔", label: "Low",       color: "peach"    },
-  { emoji: "😤", label: "Stressed",  color: "peach"    },
-  { emoji: "💕", label: "Loved",     color: "sakura"   },
-  { emoji: "🌟", label: "Grateful",  color: "lemon"    },
-  { emoji: "😴", label: "Tired",     color: "midnight" },
+  { emoji: "😊", label: tr("Happy"),     color: "sakura"   },
+  { emoji: "😌", label: tr("Calm"),      color: "lavender" },
+  { emoji: "💪", label: tr("Energized"), color: "mint"     },
+  { emoji: "😔", label: tr("Low"),       color: "peach"    },
+  { emoji: "😤", label: tr("Stressed"),  color: "peach"    },
+  { emoji: "💕", label: tr("Loved"),     color: "sakura"   },
+  { emoji: "🌟", label: tr("Grateful"),  color: "lemon"    },
+  { emoji: "😴", label: tr("Tired"),     color: "midnight" },
 ];
 
 const QUICK_SUGGESTIONS: { Icon: LucideIcon; label: string; kind: ReminderKind; title: string; times?: string[] }[] = [
-  { Icon: Pill,      label: "Daily Vitamins",  kind: "medication", title: "Daily Vitamins",   times: ["09:00"] },
-  { Icon: Cake,      label: "Mom's Birthday",  kind: "birthday",   title: "Mom's Birthday" },
-  { Icon: Droplets,  label: "Drink Water",     kind: "medication", title: "Drink Water",      times: ["08:00", "12:00", "18:00"] },
-  { Icon: Dumbbell,  label: "Morning Workout", kind: "medication", title: "Morning Workout",  times: ["07:00"] },
-  { Icon: Pill,      label: "Evening Meds",    kind: "medication", title: "Evening Meds",     times: ["21:00"] },
-  { Icon: Moon,      label: "Bedtime Routine", kind: "medication", title: "Bedtime Routine",  times: ["22:00"] },
+  { Icon: Pill,      label: tr("Daily Vitamins"),  kind: "medication", title: tr("Daily Vitamins"),   times: ["09:00"] },
+  { Icon: Cake,      label: tr("Mom's Birthday"),  kind: "birthday",   title: tr("Mom's Birthday") },
+  { Icon: Droplets,  label: tr("Drink Water"),     kind: "medication", title: tr("Drink Water"),      times: ["08:00", "12:00", "18:00"] },
+  { Icon: Dumbbell,  label: tr("Morning Workout"), kind: "medication", title: tr("Morning Workout"),  times: ["07:00"] },
+  { Icon: Pill,      label: tr("Evening Meds"),    kind: "medication", title: tr("Evening Meds"),     times: ["21:00"] },
+  { Icon: Moon,      label: tr("Bedtime Routine"), kind: "medication", title: tr("Bedtime Routine"),  times: ["22:00"] },
 ];
 
 const EXAMPLE_NOTES: Omit<Note, "id" | "createdAt">[] = [
-  { title: "Morning Self-care ✿", text: "• Face wash & moisturize\n• 10 min meditation\n• Drink lemon water\n• Gratitude journal 🌸", color: "sakura",   tag: "Self-care", pinned: true },
-  { title: "App Ideas 💡",        text: "• Mood tracker with music\n• Daily affirmation widget\n• Bloom journal premium\n• Sleep quality tracker", color: "lavender", tag: "Ideas",     pinned: false },
-  { title: "This Week ✅",        text: "[ ] Book dentist appointment\n[ ] Call mom on Sunday\n[x] Start new journal\n[ ] Buy face masks",      color: "mint",    tag: "To-do",    pinned: false },
-  { title: "Love Notes 💕",       text: "I am worthy of love and kindness.\nI choose joy every single day.\nI am becoming the best version of me.\n💕 You are enough.", color: "sakura", tag: "Love", pinned: false },
-  { title: "Midnight Dreams 🌙",  text: "One day I'll travel to Japan in spring, walk under cherry blossoms, write in a little cafe by the river...", color: "midnight", tag: "Other", pinned: false },
+  { title: tr("Morning Self-care ✿"), text: tr("• Face wash & moisturize\n• 10 min meditation\n• Drink lemon water\n• Gratitude journal 🌸"), color: "sakura",   tag: "Self-care", pinned: true },
+  { title: tr("App Ideas 💡"),        text: tr("• Mood tracker with music\n• Daily affirmation widget\n• Bloom journal premium\n• Sleep quality tracker"), color: "lavender", tag: "Ideas",     pinned: false },
+  { title: tr("This Week ✅"),        text: tr("[ ] Book dentist appointment\n[ ] Call mom on Sunday\n[x] Start new journal\n[ ] Buy face masks"),      color: "mint",    tag: "To-do",    pinned: false },
+  { title: tr("Love Notes 💕"),       text: tr("I am worthy of love and kindness.\nI choose joy every single day.\nI am becoming the best version of me.\n💕 You are enough."), color: "sakura", tag: "Love", pinned: false },
+  { title: tr("Midnight Dreams 🌙"),  text: tr("One day I'll travel to Japan in spring, walk under cherry blossoms, write in a little cafe by the river..."), color: "midnight", tag: "Other", pinned: false },
 ];
 
 function parseTodoItems(text: string): { checked: boolean; label: string; lineIndex: number }[] {
@@ -130,28 +131,28 @@ function fromTodoText(stored: string): string {
 }
 
 const KIND_OPTIONS: { key: ReminderKind; label: string; emoji: string; Icon: LucideIcon; hint: string }[] = [
-  { key: "medication", label: "Habit", emoji: "🌿", Icon: Repeat, hint: "Habits, routines, meds & vitamins" },
-  { key: "event", label: "Appointment & events", emoji: "📅", Icon: CalendarClock, hint: "Meetings, doctor visits, vacations…" },
-  { key: "birthday", label: "Birthday", emoji: "🎂", Icon: Cake, hint: "Repeats every year, forever ✿" },
+  { key: "medication", label: tr("Habit"), emoji: "🌿", Icon: Repeat, hint: tr("Habits, routines, meds & vitamins") },
+  { key: "event", label: tr("Appointment & events"), emoji: "📅", Icon: CalendarClock, hint: tr("Meetings, doctor visits, vacations…") },
+  { key: "birthday", label: tr("Birthday"), emoji: "🎂", Icon: Cake, hint: tr("Repeats every year, forever ✿") },
 ];
 
 const EVENT_CATEGORIES = [
-  { key: "appointment", label: "Appointment", Icon: Stethoscope, color: "text-sky-600 bg-sky-50" },
-  { key: "meeting", label: "Meeting", Icon: Briefcase, color: "text-indigo-600 bg-indigo-50" },
-  { key: "vacation", label: "Vacation", Icon: Plane, color: "text-amber-600 bg-amber-50" },
-  { key: "social", label: "Social", Icon: Users, color: "text-purple-600 bg-purple-50" },
-  { key: "chore", label: "Chore", Icon: Sparkle, color: "text-amber-600 bg-amber-50" },
-  { key: "other", label: "Other", Icon: Heart, color: "text-rose-600 bg-rose-50" },
+  { key: "appointment", label: tr("Appointment"), Icon: Stethoscope, color: "text-sky-600 bg-sky-50" },
+  { key: "meeting", label: tr("Meeting"), Icon: Briefcase, color: "text-indigo-600 bg-indigo-50" },
+  { key: "vacation", label: tr("Vacation"), Icon: Plane, color: "text-amber-600 bg-amber-50" },
+  { key: "social", label: tr("Social"), Icon: Users, color: "text-purple-600 bg-purple-50" },
+  { key: "chore", label: tr("Chore"), Icon: Sparkle, color: "text-amber-600 bg-amber-50" },
+  { key: "other", label: tr("Other"), Icon: Heart, color: "text-rose-600 bg-rose-50" },
 ];
 
 const WEEKDAYS = [
-  { key: 0, short: "S", label: "Sunday" },
-  { key: 1, short: "M", label: "Monday" },
-  { key: 2, short: "T", label: "Tuesday" },
-  { key: 3, short: "W", label: "Wednesday" },
-  { key: 4, short: "T", label: "Thursday" },
-  { key: 5, short: "F", label: "Friday" },
-  { key: 6, short: "S", label: "Saturday" },
+  { key: 0, short: "S", label: tr("Sunday") },
+  { key: 1, short: "M", label: tr("Monday") },
+  { key: 2, short: "T", label: tr("Tuesday") },
+  { key: 3, short: "W", label: tr("Wednesday") },
+  { key: 4, short: "T", label: tr("Thursday") },
+  { key: 5, short: "F", label: tr("Friday") },
+  { key: 6, short: "S", label: tr("Saturday") },
 ];
 
 /** Medication nudges repeat like an alarm — every N minutes — until marked "Taken". */
@@ -160,11 +161,11 @@ const MED_ALARM_INTERVAL_MIN = 15;
 const MED_ALARM_FOLLOWUPS = 3;
 
 const LEAD_OPTIONS = [
-  { value: 0, label: "On the day" },
-  { value: 1, label: "1 day before" },
-  { value: 2, label: "2 days before" },
-  { value: 3, label: "3 days before" },
-  { value: 7, label: "1 week before" },
+  { value: 0, label: tr("On the day") },
+  { value: 1, label: tr("1 day before") },
+  { value: 2, label: tr("2 days before") },
+  { value: 3, label: tr("3 days before") },
+  { value: 7, label: tr("1 week before") },
 ];
 
 /* ---- date helpers (local, no timezone surprises) ---- */
@@ -195,12 +196,12 @@ function startOfDay(d: Date) {
 function prettyDate(s?: string) {
   const d = parseLocalDate(s);
   if (!d) return "";
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  return d.toLocaleDateString(DATE_LOCALE, { weekday: "short", day: "numeric", month: "short" });
 }
 function prettyMonthDay(s?: string) {
   const d = parseLocalDate(s);
   if (!d) return "";
-  return d.toLocaleDateString(undefined, { day: "numeric", month: "long" });
+  return d.toLocaleDateString(DATE_LOCALE, { day: "numeric", month: "long" });
 }
 
 /** Soonest relevant calendar date (today or future) — drives sorting & notification badges. */
@@ -265,8 +266,8 @@ function upcomingFires(rem: Reminder, from: Date, userId: string | null): FireIt
           if (fireAt < from) continue;
           const body =
             n === 0
-              ? `Time for ${rem.title} · ${slot} 🌿`
-              : `Still waiting — ${rem.title} (${slot}) 🌿`;
+              ? tr("Time for {0} · {1} 🌿", { 0: rem.title, 1: slot })
+              : tr("Still waiting — {0} ({1}) 🌿", { 0: rem.title, 1: slot });
           out.push({ dedupeKey: `${doseKey}|${n}`, fireAt, body, data });
         }
       }
@@ -281,7 +282,7 @@ function upcomingFires(rem: Reminder, from: Date, userId: string | null): FireIt
   const [hh, mm] = time.split(":").map((n) => parseInt(n, 10));
   const occStr = fmtLocalDate(occurrence);
   const dueAt = new Date(occurrence.getFullYear(), occurrence.getMonth(), occurrence.getDate(), hh || 0, mm || 0);
-  const label = rem.kind === "birthday" ? `${rem.title}'s birthday is today 🎂` : `${rem.title} is today`;
+  const label = rem.kind === "birthday" ? tr("{0}'s birthday is today 🎂", { 0: rem.title }) : tr("{0} is today", { 0: rem.title });
   if (dueAt >= from) out.push({ dedupeKey: `due:${occStr}`, fireAt: dueAt, body: `${label} 💕` });
 
   if (rem.leadDays > 0) {
@@ -291,7 +292,7 @@ function upcomingFires(rem: Reminder, from: Date, userId: string | null): FireIt
       out.push({
         dedupeKey: `lead:${fmtLocalDate(lead)}`,
         fireAt: leadAt,
-        body: `${rem.title} is coming up in ${rem.leadDays} day${rem.leadDays > 1 ? "s" : ""} 💕`,
+        body: tr("{0} is coming up in {1} day{2} 💕", { 0: rem.title, 1: rem.leadDays, 2: rem.leadDays > 1 ? "s" : "" }),
       });
     }
   }
@@ -309,15 +310,15 @@ function turningAge(rem: Reminder): number | null {
 }
 
 function reminderVisual(rem: Reminder): { Icon: LucideIcon; color: string; label: string } {
-  if (rem.kind === "medication") return { Icon: Repeat, color: "text-emerald-600 bg-emerald-50", label: "Habit" };
-  if (rem.kind === "birthday") return { Icon: Cake, color: "text-pink-600 bg-pink-50", label: "Birthday" };
+  if (rem.kind === "medication") return { Icon: Repeat, color: "text-emerald-600 bg-emerald-50", label: tr("Habit") };
+  if (rem.kind === "birthday") return { Icon: Cake, color: "text-pink-600 bg-pink-50", label: tr("Birthday") };
   const cat = EVENT_CATEGORIES.find((c) => c.key === rem.category);
-  return cat ? { Icon: cat.Icon, color: cat.color, label: cat.label } : { Icon: Heart, color: "text-hotpink bg-blush", label: "Event" };
+  return cat ? { Icon: cat.Icon, color: cat.color, label: cat.label } : { Icon: Heart, color: "text-hotpink bg-blush", label: tr("Event") };
 }
 
 function weekdaysLabel(days: number[]) {
   if (days.length === 0) return "Every day";
-  if (days.length === 1) return `Every ${WEEKDAYS[days[0]].label}`;
+  if (days.length === 1) return tr("Every {0}", { 0: WEEKDAYS[days[0]].label });
   return days.map((d) => WEEKDAYS[d].label.slice(0, 3)).join(", ");
 }
 
@@ -512,7 +513,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteNote = (id: string) => {
-    if (confirm("Are you sure you want to delete this note?")) {
+    if (confirm(tr("Are you sure you want to delete this note?"))) {
       setNotes((prev) => prev.filter((n) => n.id !== id));
       if (editingNoteId === id) {
         setEditingNoteId(null);
@@ -646,7 +647,7 @@ export default function NotesPage() {
   };
 
   const handleDeleteReminder = (id: string) => {
-    if (confirm("Delete this reminder?")) {
+    if (confirm(tr("Delete this reminder?"))) {
       setReminders((prev) => prev.filter((r) => r.id !== id));
       if (editingReminderId === id) {
         setEditingReminderId(null);
@@ -753,7 +754,7 @@ export default function NotesPage() {
           let label = "";
           if (occStr === todayString && currentTime >= dueTime) {
             matchKey = `due:${occStr}`;
-            label = rem.kind === "birthday" ? `${rem.title}'s birthday is today` : `${rem.title} is today`;
+            label = rem.kind === "birthday" ? tr("{0}'s birthday is today", { 0: rem.title }) : tr("{0} is today", { 0: rem.title });
           } else if (leadStr === todayString) {
             matchKey = `lead:${leadStr}`;
             label = `${rem.title} is coming up in ${rem.leadDays} day${rem.leadDays > 1 ? "s" : ""}`;
@@ -782,7 +783,7 @@ export default function NotesPage() {
         upcomingFires(rem, new Date(), userId).map((fire) => ({
           dedupeKey: `${rem.id}:${fire.dedupeKey}`,
           fireAt: fire.fireAt.toISOString(),
-          title: "Bloomzein Nudge ✿",
+          title: tr("Bloomzein Nudge ✿"),
           body: fire.body,
           data: fire.data ?? { url: "/app/tools/notes", reminderId: rem.id },
         }))
@@ -874,16 +875,16 @@ export default function NotesPage() {
 
       {/* IN-APP ALERT */}
       {activeAlert && (
-        <div className="fixed inset-x-4 top-16 z-50 md:left-auto md:right-4 md:w-96 rounded-3xl bg-white border border-pink-200 p-5 shadow-2xl animate-bloom-bounce">
+        <div className="fixed inset-x-4 top-16 z-50 md:start-auto md:end-4 md:w-96 rounded-3xl bg-white border border-pink-200 p-5 shadow-2xl animate-bloom-bounce">
           <div className="flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-hotpink/10 text-hotpink animate-pulse">
               <BellRing className="h-5 w-5" />
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Gentle Bloom Nudge</p>
-              <h4 className="font-semibold text-rose text-sm truncate">{activeAlert.title}</h4>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{tr("Gentle Bloom Nudge")}</p>
+              <h4 className="font-semibold text-rose text-sm truncate">{trx(activeAlert.title)}</h4>
               <p className="text-xs text-rose/70 mt-0.5">
-                {activeAlert.kind === "medication" ? "Like an alarm — it'll keep nudging you until you mark it done 🌿" : "It's time to bloom! 💕"}
+                {activeAlert.kind === "medication" ? tr("Like an alarm — it'll keep nudging you until you mark it done 🌿") : tr("It's time to bloom! 💕")}
               </p>
               <div className="flex gap-2 mt-4">
                 {activeAlert.kind === "medication" ? (
@@ -894,14 +895,11 @@ export default function NotesPage() {
                         setActiveAlert(null);
                       }}
                       className="bloom-luxury-btn px-3 py-1.5 text-xs font-bold text-white flex-1"
-                    >
-                      Done ✓
-                    </button>
+                    >{tr("Done ✓")}</button>
                     <button
                       onClick={() => setActiveAlert(null)}
                       className="px-3 py-1.5 bg-blush text-hotpink text-xs font-bold rounded-full hover:bg-petal transition"
-                    >
-                      Snooze {MED_ALARM_INTERVAL_MIN}m
+                    >{tr("Snooze")}{" "}{trx(MED_ALARM_INTERVAL_MIN)}m
                     </button>
                   </>
                 ) : (
@@ -909,15 +907,11 @@ export default function NotesPage() {
                     <button
                       onClick={() => { handleToggleReminderDone(activeAlert.id); setActiveAlert(null); }}
                       className="bloom-luxury-btn px-3 py-1.5 text-xs font-bold text-white flex-1"
-                    >
-                      Mark done ✿
-                    </button>
+                    >{tr("Mark done ✿")}</button>
                     <button
                       onClick={() => setActiveAlert(null)}
                       className="px-3 py-1.5 bg-blush text-hotpink text-xs font-bold rounded-full hover:bg-petal transition"
-                    >
-                      Dismiss
-                    </button>
+                    >{tr("Dismiss")}</button>
                   </>
                 )}
               </div>
@@ -946,8 +940,8 @@ export default function NotesPage() {
         {/* content */}
         <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
           <div className="animate-scale-in">
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Notes &amp; Reminders</h1>
-            <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 max-w-[12rem] sm:max-w-sm leading-tight">Scribble thoughts, let dreams nudge ✿</p>
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{tr("Notes & Reminders")}</h1>
+            <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 max-w-[12rem] sm:max-w-sm leading-tight">{tr("Scribble thoughts, let dreams nudge ✿")}</p>
             <CyclePhasePill className="mt-1.5" />
           </div>
           {/* Tab toggle — light glass over the soft hero */}
@@ -957,14 +951,12 @@ export default function NotesPage() {
                 onClick={() => setTab("notes")}
                 className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "notes" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink"].join(" ")}
               >
-                <NotebookPen className="h-3.5 w-3.5" strokeWidth={2} /> Notes
-              </button>
+                <NotebookPen className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Notes")}</button>
               <button
                 onClick={() => setTab("reminders")}
                 className={["inline-flex items-center gap-1.5 rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition", tab === "reminders" ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink"].join(" ")}
               >
-                <Bell className="h-3.5 w-3.5" strokeWidth={2} /> Reminders
-              </button>
+                <Bell className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Reminders")}</button>
             </div>
           </div>
         </div>
@@ -979,13 +971,13 @@ export default function NotesPage() {
           {/* SEARCH + ACTION BUTTON */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose/40 pointer-events-none" />
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-rose/40 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={tab === "notes" ? "Search notes..." : "Search reminders..."}
-                className="w-full bg-white/90 border border-pink-200 rounded-full pl-9 pr-4 py-2 text-xs text-[#831843] placeholder:text-[#9D5C7E]/40 outline-none focus:ring-2 focus:ring-hotpink/20 transition"
+                placeholder={tab === "notes" ? tr("Search notes...") : tr("Search reminders...")}
+                className="w-full bg-white/90 border border-pink-200 rounded-full ps-9 pe-4 py-2 text-xs text-[#831843] placeholder:text-[#9D5C7E]/40 outline-none focus:ring-2 focus:ring-hotpink/20 transition"
               />
             </div>
             {tab === "notes" ? (
@@ -1000,20 +992,16 @@ export default function NotesPage() {
                 }}
                 className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
               >
-                <Plus className="h-3.5 w-3.5" /> Add Note
-              </button>
+                <Plus className="h-3.5 w-3.5" />{" "}{tr("Add Note")}</button>
             ) : (
               <button
                 onClick={() => { resetReminderForm(); setShowReminderForm((v) => !v); }}
                 className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white"
-              >
-                New Reminder
-              </button>
+              >{tr("New Reminder")}</button>
             )}
             {justSaved && (
               <span className="shrink-0 flex items-center gap-1 bg-white/95 px-2.5 py-1.5 rounded-full text-xs font-bold text-hotpink border border-pink-200 animate-scale-in">
-                <Sparkles className="h-3 w-3 text-hotpink animate-spin" /> Saved!
-              </span>
+                <Sparkles className="h-3 w-3 text-hotpink animate-spin" />{" "}{tr("Saved!")}</span>
             )}
           </div>
 
@@ -1024,18 +1012,12 @@ export default function NotesPage() {
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white text-[#EC4899] shadow-sm">
                   <Bell className="h-4 w-4" />
                 </span>
-                <div className="flex-1 text-left">
-                  <h4 className="text-xs font-bold text-[#831843]">Enable lovely desktop notification nudges? 💕</h4>
-                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                    Allow Bloomzein to send gentle reminders while the tab is open.
-                  </p>
+                <div className="flex-1 text-start">
+                  <h4 className="text-xs font-bold text-[#831843]">{tr("Enable lovely desktop notification nudges? 💕")}</h4>
+                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">{tr("Allow Bloomzein to send gentle reminders while the tab is open.")}</p>
                   <div className="mt-3 flex gap-2">
-                    <button onClick={handleRequestNotifPermission} className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white">
-                      Enable Nudges ✿
-                    </button>
-                    <button onClick={handleDismissNotifPrompt} className="px-3 py-1.5 bg-white/75 text-rose text-[10px] font-bold rounded-full hover:bg-white transition">
-                      Later
-                    </button>
+                    <button onClick={handleRequestNotifPermission} className="bloom-luxury-btn px-3 py-1.5 text-[10px] font-bold text-white">{tr("Enable Nudges ✿")}</button>
+                    <button onClick={handleDismissNotifPrompt} className="px-3 py-1.5 bg-white/75 text-rose text-[10px] font-bold rounded-full hover:bg-white transition">{tr("Later")}</button>
                   </div>
                 </div>
                 <button onClick={handleDismissNotifPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
@@ -1052,11 +1034,9 @@ export default function NotesPage() {
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#FFF0F6] text-[#EC4899] border border-pink-200">
                   <Smartphone className="h-4 w-4" />
                 </span>
-                <div className="flex-1 text-left">
-                  <h4 className="text-xs font-bold text-[#831843]">Remind you on your lockscreen?</h4>
-                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">
-                    Add Bloomzein to your phone's home screen as an app to receive self-care nudges even when closed.
-                  </p>
+                <div className="flex-1 text-start">
+                  <h4 className="text-xs font-bold text-[#831843]">{tr("Remind you on your lockscreen?")}</h4>
+                  <p className="text-[11px] text-[#9D5C7E] mt-0.5 leading-snug">{tr("Add Bloomzein to your phone's home screen as an app to receive self-care nudges even when closed.")}</p>
                 </div>
                 <button onClick={handleDismissPwaPrompt} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
                   <X className="h-3.5 w-3.5" />
@@ -1073,14 +1053,9 @@ export default function NotesPage() {
                   <Heart className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-script text-2xl text-[#EC4899]">Welcome back, beautiful!</h3>
-                  <p className="mt-1.5 text-xs sm:text-sm text-[#831843] leading-relaxed">
-                    Welcome to your little corner of peace. Here you can write down sweet thoughts, dump feelings,
-                    or set gorgeous nudges. Pinned notes float to the top so you can easily view your vision.
-                  </p>
-                  <button onClick={handleStartHere} className="bloom-luxury-btn mt-4 px-4 py-1.5 text-xs font-bold text-white">
-                    Start Here ✿
-                  </button>
+                  <h3 className="font-script text-2xl text-[#EC4899]">{tr("Welcome back, beautiful!")}</h3>
+                  <p className="mt-1.5 text-xs sm:text-sm text-[#831843] leading-relaxed">{tr("Welcome to your little corner of peace. Here you can write down sweet thoughts, dump feelings, or set gorgeous nudges. Pinned notes float to the top so you can easily view your vision.")}</p>
+                  <button onClick={handleStartHere} className="bloom-luxury-btn mt-4 px-4 py-1.5 text-xs font-bold text-white">{tr("Start Here ✿")}</button>
                 </div>
                 <button onClick={handleStartHere} className="text-[#9D5C7E]/40 hover:text-[#9D5C7E] transition self-start p-1">
                   <X className="h-4 w-4" />
@@ -1103,13 +1078,12 @@ export default function NotesPage() {
                       : "bg-white text-rose/70 border-pink-200 hover:bg-blush",
                   ].join(" ")}
                 >
-                  {t}
+                  {trx(t)}
                   {t !== "All" && <ChevronDown className="h-2.5 w-2.5 opacity-60" />}
                 </button>
               ))}
-              <button className="ml-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold border border-pink-200 bg-white text-rose/70 hover:bg-blush transition whitespace-nowrap">
-                <Tag className="h-3 w-3" /> Filter
-              </button>
+              <button className="ms-auto inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-bold border border-pink-200 bg-white text-rose/70 hover:bg-blush transition whitespace-nowrap">
+                <Tag className="h-3 w-3" />{" "}{tr("Filter")}</button>
             </div>
           )}
 
@@ -1121,7 +1095,7 @@ export default function NotesPage() {
             >
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-script text-2xl text-hotpink">
-                  {editingNoteId ? "Edit sticky note ✿" : "Create beautiful note ✿"}
+                  {editingNoteId ? tr("Edit sticky note ✿") : tr("Create beautiful note ✿")}
                 </h3>
                 <button type="button" onClick={() => setShowNoteForm(false)} className="p-1 text-rose/50 hover:text-rose transition">
                   <X className="h-4 w-4" />
@@ -1129,18 +1103,18 @@ export default function NotesPage() {
               </div>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Title</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Title")}</label>
                   <input
                     type="text"
                     required
                     value={noteTitle}
                     onChange={(e) => setNoteTitle(e.target.value)}
-                    placeholder="Title of note..."
+                    placeholder={tr("Title of note...")}
                     className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] placeholder:text-[#9D5C7E]/40 border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Your thoughts</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Your thoughts")}</label>
                   <textarea
                     required
                     rows={3}
@@ -1148,19 +1122,19 @@ export default function NotesPage() {
                     onChange={(e) => setNoteText(e.target.value)}
                     placeholder={
                       noteTag === "To-do"
-                        ? "Do something nice\nTake a walk\nCall mom\nBuy face masks"
+                        ? tr("Do something nice\nTake a walk\nCall mom\nBuy face masks")
                         : noteTag === "Ideas"
-                        ? "💡 What if we built...\n✦ A new approach to...\n✦ Brainstorm freely..."
+                        ? tr("💡 What if we built...\n✦ A new approach to...\n✦ Brainstorm freely...")
                         : noteTag === "Love"
-                        ? "I am worthy of love...\nI choose joy today...\n💕 You are enough."
-                        : "Scribble down your self-care routine, ideas, dreams..."
+                        ? tr("I am worthy of love...\nI choose joy today...\n💕 You are enough.")
+                        : tr("Scribble down your self-care routine, ideas, dreams...")
                     }
                     className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] placeholder:text-[#9D5C7E]/40 border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Category Tag</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Category Tag")}</label>
                     <div className="flex flex-wrap gap-1.5">
                       {NOTE_TAGS.map((t) => (
                         <button
@@ -1172,13 +1146,13 @@ export default function NotesPage() {
                               ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
                               : "bg-white text-rose border-pink-200 hover:bg-blush/50"].join(" ")}
                         >
-                          {t}
+                          {trx(t)}
                         </button>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Paper shade</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Paper shade")}</label>
                     <div className="flex gap-1.5 py-1 flex-wrap">
                       {NOTE_COLORS.map((c) => (
                         <button
@@ -1195,12 +1169,8 @@ export default function NotesPage() {
                   </div>
                 </div>
                 <div className="flex justify-end gap-2 pt-3">
-                  <button type="button" onClick={() => setShowNoteForm(false)} className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition">
-                    Cancel
-                  </button>
-                  <button type="submit" className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white">
-                    Save note ✿
-                  </button>
+                  <button type="button" onClick={() => setShowNoteForm(false)} className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition">{tr("Cancel")}</button>
+                  <button type="submit" className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white">{tr("Save note ✿")}</button>
                 </div>
               </div>
             </form>
@@ -1214,7 +1184,7 @@ export default function NotesPage() {
             >
               <div className="flex justify-between items-center">
                 <h3 className="font-script text-2xl text-hotpink">
-                  {editingReminderId ? "Edit gorgeous Reminder ✿" : "Set a smart nudge ✿"}
+                  {editingReminderId ? tr("Edit gorgeous Reminder ✿") : tr("Set a smart nudge ✿")}
                 </h3>
                 <button type="button" onClick={() => setShowReminderForm(false)} className="p-1 text-rose/50 hover:text-rose transition">
                   <X className="h-4 w-4" />
@@ -1222,21 +1192,21 @@ export default function NotesPage() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">What kind of reminder? ✿</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">{tr("What kind of reminder? ✿")}</label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     {KIND_OPTIONS.map((k) => (
                       <button
                         key={k.key}
                         type="button"
                         onClick={() => setRemKind(k.key)}
-                        className={["flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-left transition", remKind === k.key ? "border-hotpink bg-hotpink/10 shadow-sm" : "border-pink-200 bg-white hover:bg-blush"].join(" ")}
+                        className={["flex items-center gap-2 rounded-2xl border px-3 py-2.5 text-start transition", remKind === k.key ? "border-hotpink bg-hotpink/10 shadow-sm" : "border-pink-200 bg-white hover:bg-blush"].join(" ")}
                       >
                         <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-xl", remKind === k.key ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
                           <k.Icon className="h-4 w-4" strokeWidth={1.8} />
                         </span>
                         <span className="min-w-0">
-                          <span className="block text-xs font-bold text-rose">{k.label}</span>
-                          <span className="block text-[10px] text-rose/50 truncate">{k.hint}</span>
+                          <span className="block text-xs font-bold text-rose">{trx(k.label)}</span>
+                          <span className="block text-[10px] text-rose/50 truncate">{trx(k.hint)}</span>
                         </span>
                       </button>
                     ))}
@@ -1245,7 +1215,7 @@ export default function NotesPage() {
 
                 <div>
                   <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">
-                    {remKind === "medication" ? "Habit name" : remKind === "birthday" ? "Whose birthday?" : "Title"}
+                    {remKind === "medication" ? tr("Habit name") : remKind === "birthday" ? tr("Whose birthday?") : tr("Title")}
                   </label>
                   <input
                     type="text"
@@ -1254,10 +1224,10 @@ export default function NotesPage() {
                     onChange={(e) => setRemTitle(e.target.value)}
                     placeholder={
                       remKind === "medication"
-                        ? "e.g. Morning workout, Vitamin D, Drink water..."
+                        ? tr("e.g. Morning workout, Vitamin D, Drink water...")
                         : remKind === "birthday"
-                          ? "e.g. Mom's birthday, Lina's birthday..."
-                          : "e.g. Dentist appointment, Team meeting..."
+                          ? tr("e.g. Mom's birthday, Lina's birthday...")
+                          : tr("e.g. Dentist appointment, Team meeting...")
                     }
                     className="w-full rounded-xl bg-white px-3 py-2 text-sm text-[#831843] placeholder:text-[#9D5C7E]/40 border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20"
                   />
@@ -1266,7 +1236,7 @@ export default function NotesPage() {
                 {remKind === "medication" && (
                   <>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">Time(s) of day ✿</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">{tr("Time(s) of day ✿")}</label>
                       <div className="flex flex-wrap items-center gap-2">
                         {remTimes.map((t, i) => (
                           <div key={i} className="flex items-center gap-1">
@@ -1279,15 +1249,14 @@ export default function NotesPage() {
                           </div>
                         ))}
                         <button type="button" onClick={() => setRemTimes((prev) => [...prev, "09:00"])} className="inline-flex items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-[11px] font-bold text-hotpink hover:bg-petal transition">
-                          <Plus className="h-3 w-3" /> Add another time
-                        </button>
+                          <Plus className="h-3 w-3" />{" "}{tr("Add another time")}</button>
                       </div>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">How often? ✿</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1.5">{tr("How often? ✿")}</label>
                       <div className="inline-flex rounded-full bg-white p-1 border border-pink-200/70">
-                        <button type="button" onClick={() => setRemEveryDay(true)} className={["rounded-full px-4 py-1.5 text-xs font-bold transition", remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}>Every day</button>
-                        <button type="button" onClick={() => setRemEveryDay(false)} className={["rounded-full px-4 py-1.5 text-xs font-bold transition", !remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}>Choose days</button>
+                        <button type="button" onClick={() => setRemEveryDay(true)} className={["rounded-full px-4 py-1.5 text-xs font-bold transition", remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}>{tr("Every day")}</button>
+                        <button type="button" onClick={() => setRemEveryDay(false)} className={["rounded-full px-4 py-1.5 text-xs font-bold transition", !remEveryDay ? "bg-hotpink text-white shadow-sm" : "text-rose/70 hover:bg-blush"].join(" ")}>{tr("Choose days")}</button>
                       </div>
                       {!remEveryDay && (
                         <div className="mt-2.5 flex flex-wrap gap-1.5">
@@ -1295,7 +1264,7 @@ export default function NotesPage() {
                             const active = remWeekdays.includes(wd.key);
                             return (
                               <button key={wd.key} type="button" title={wd.label} onClick={() => setRemWeekdays((prev) => (active ? prev.filter((d) => d !== wd.key) : [...prev, wd.key].sort()))} className={["grid h-8 w-8 place-items-center rounded-full text-xs font-bold border transition", active ? "bg-hotpink text-white border-hotpink shadow-sm" : "bg-white text-rose/60 border-pink-200 hover:bg-blush"].join(" ")}>
-                                {wd.short}
+                                {trx(wd.short)}
                               </button>
                             );
                           })}
@@ -1308,14 +1277,14 @@ export default function NotesPage() {
                 {remKind === "birthday" && (
                   <>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Birthday date ✿</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Birthday date ✿")}</label>
                       <CuteDatePicker value={remDate} onChange={(v) => setRemDate(v || todayStr())} />
-                      <p className="mt-1.5 text-[10px] text-rose/50 leading-snug">🎂 We'll remind you every year on this day, forever.</p>
+                      <p className="mt-1.5 text-[10px] text-rose/50 leading-snug">{tr("🎂 We'll remind you every year on this day, forever.")}</p>
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Anticipation ✿</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Anticipation ✿")}</label>
                       <select value={remLeadDays} onChange={(e) => setRemLeadDays(parseInt(e.target.value, 10))} className="w-full sm:w-auto rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20">
-                        {LEAD_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        {LEAD_OPTIONS.map((o) => <option key={o.value} value={o.value}>{trx(o.label)}</option>)}
                       </select>
                     </div>
                   </>
@@ -1324,7 +1293,7 @@ export default function NotesPage() {
                 {remKind === "event" && (
                   <>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Category</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Category")}</label>
                       <div className="flex flex-wrap gap-1.5">
                         {EVENT_CATEGORIES.map((c) => (
                           <button
@@ -1336,46 +1305,42 @@ export default function NotesPage() {
                                 ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
                                 : "bg-white text-rose border-pink-200 hover:bg-blush/50"].join(" ")}
                           >
-                            <c.Icon className="h-3 w-3" strokeWidth={2} /> {c.label}
+                            <c.Icon className="h-3 w-3" strokeWidth={2} /> {trx(c.label)}
                           </button>
                         ))}
                       </div>
                     </div>
                     <label className="flex items-center gap-2 text-xs font-semibold text-rose/70">
-                      <input type="checkbox" checked={remIsRange} onChange={(e) => setRemIsRange(e.target.checked)} className="h-4 w-4 rounded accent-hotpink" />
-                      This spans multiple days (like a vacation)
-                    </label>
+                      <input type="checkbox" checked={remIsRange} onChange={(e) => setRemIsRange(e.target.checked)} className="h-4 w-4 rounded accent-hotpink" />{tr("This spans multiple days (like a vacation)")}</label>
                     <div className={["grid gap-3", remIsRange ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"].join(" ")}>
                       <div>
-                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{remIsRange ? "Starts ✿" : "Date ✿"}</label>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{remIsRange ? tr("Starts ✿") : tr("Date ✿")}</label>
                         <CuteDatePicker value={remDate} onChange={(v) => setRemDate(v || todayStr())} />
                       </div>
                       {remIsRange && (
                         <div>
-                          <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Ends ✿</label>
-                          <CuteDatePicker value={remEndDate} onChange={setRemEndDate} placeholder="Pick the end date" />
+                          <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Ends ✿")}</label>
+                          <CuteDatePicker value={remEndDate} onChange={setRemEndDate} placeholder={tr("Pick the end date")} />
                         </div>
                       )}
                     </div>
                     <div>
                       <label className="flex items-center gap-2 text-xs font-semibold text-rose/70 mb-1.5">
-                        <input type="checkbox" checked={remHasTime} onChange={(e) => setRemHasTime(e.target.checked)} className="h-4 w-4 rounded accent-hotpink" />
-                        Add a specific time
-                      </label>
+                        <input type="checkbox" checked={remHasTime} onChange={(e) => setRemHasTime(e.target.checked)} className="h-4 w-4 rounded accent-hotpink" />{tr("Add a specific time")}</label>
                       {remHasTime && <CuteTimePicker value={remTime} onChange={setRemTime} />}
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">Anticipation ✿</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-1">{tr("Anticipation ✿")}</label>
                       <select value={remLeadDays} onChange={(e) => setRemLeadDays(parseInt(e.target.value, 10))} className="w-full sm:w-auto rounded-xl bg-white px-3 py-2 text-sm text-[#831843] border border-pink-200 outline-none transition focus:ring-2 focus:ring-hotpink/20">
-                        {LEAD_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        {LEAD_OPTIONS.map((o) => <option key={o.value} value={o.value}>{trx(o.label)}</option>)}
                       </select>
                     </div>
                   </>
                 )}
 
                 <div className="flex justify-end gap-2 pt-3">
-                  <button type="button" onClick={() => setShowReminderForm(false)} className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition">Cancel</button>
-                  <button type="submit" className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white">Save Reminder ✿</button>
+                  <button type="button" onClick={() => setShowReminderForm(false)} className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition">{tr("Cancel")}</button>
+                  <button type="submit" className="bloom-luxury-btn px-5 py-2 text-xs font-bold text-white">{tr("Save Reminder ✿")}</button>
                 </div>
               </div>
             </form>
@@ -1385,12 +1350,12 @@ export default function NotesPage() {
           {tab === "notes" && showMoodPicker && (
             <div className="rounded-3xl border border-pink-200/50 bg-white/95 p-5 shadow-xl shadow-rose/10 animate-bloom-bounce">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-script text-2xl text-hotpink">How are you feeling? 💕</h3>
+                <h3 className="font-script text-2xl text-hotpink">{tr("How are you feeling? 💕")}</h3>
                 <button type="button" onClick={() => setShowMoodPicker(false)} className="p-1 text-rose/50 hover:text-rose transition">
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <p className="text-[11px] text-rose/60 mb-3">Tap a mood — we'll save it as a quick note so you can track how you feel ✿</p>
+              <p className="text-[11px] text-rose/60 mb-3">{tr("Tap a mood — we'll save it as a quick note so you can track how you feel ✿")}</p>
               <div className="grid grid-cols-4 gap-2">
                 {MOOD_OPTIONS.map((m) => (
                   <button
@@ -1412,8 +1377,8 @@ export default function NotesPage() {
                     }}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 hover:border-pink-200 transition active:scale-95"
                   >
-                    <span className="text-2xl leading-none">{m.emoji}</span>
-                    <span className="text-[9px] font-bold text-rose/70">{m.label}</span>
+                    <span className="text-2xl leading-none">{trx(m.emoji)}</span>
+                    <span className="text-[9px] font-bold text-rose/70">{trx(m.label)}</span>
                   </button>
                 ))}
               </div>
@@ -1428,35 +1393,28 @@ export default function NotesPage() {
                   <span className="text-4xl mb-2">{selectedTag !== "All" ? (TAG_EMOJI[selectedTag] || "🌸") : "🌸"}</span>
                   <p className="text-sm text-rose font-medium">
                     {notes.length === 0
-                      ? "Your canvas is empty — start writing ✿"
+                      ? tr("Your canvas is empty — start writing ✿")
                       : selectedTag !== "All"
-                      ? `No ${selectedTag} notes yet`
-                      : "No notes match your filters!"}
+                      ? tr("No {0} notes yet", { 0: selectedTag })
+                      : tr("No notes match your filters!")}
                   </p>
                   {selectedTag === "Love" && (
-                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">
-                      Love notes are your affirmations — little reminders that you are enough 💕
-                    </p>
+                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">{tr("Love notes are your affirmations — little reminders that you are enough 💕")}</p>
                   )}
                   {selectedTag === "Ideas" && (
-                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">
-                      Dump your wildest ideas here — big dreams, random sparks, anything 💡
-                    </p>
+                    <p className="text-xs text-rose/60 mt-1 max-w-[220px] leading-relaxed">{tr("Dump your wildest ideas here — big dreams, random sparks, anything 💡")}</p>
                   )}
                   <div className="flex gap-2 mt-4 flex-wrap justify-center">
                     <button
                       onClick={() => { setNoteTag(selectedTag !== "All" ? selectedTag : "Self-care"); setShowNoteForm(true); }}
                       className="bloom-luxury-btn px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
                     >
-                      <Plus className="h-3.5 w-3.5" /> New note
-                    </button>
+                      <Plus className="h-3.5 w-3.5" />{" "}{tr("New note")}</button>
                     {notes.length === 0 ? (
                       <button
                         onClick={handleSeedExamples}
                         className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition"
-                      >
-                        Try all examples ✿
-                      </button>
+                      >{tr("Try all examples ✿")}</button>
                     ) : selectedTag !== "All" && EXAMPLE_NOTES.find((n) => n.tag === selectedTag) && (
                       <button
                         onClick={() => {
@@ -1464,9 +1422,7 @@ export default function NotesPage() {
                           if (ex) setNotes((prev) => [{ ...ex, id: Math.random().toString(36).slice(2, 10), createdAt: new Date().toISOString() }, ...prev]);
                         }}
                         className="px-4 py-2 rounded-full border border-pink-200 text-xs font-bold text-rose/70 hover:bg-blush transition"
-                      >
-                        Add {selectedTag} example ✿
-                      </button>
+                      >{tr("Add")}{" "}{trx(selectedTag)}{" "}{tr("example ✿")}</button>
                     )}
                   </div>
                 </div>
@@ -1493,7 +1449,7 @@ export default function NotesPage() {
                             ].join(" ")}
                           >
                             {/* Cherry blossom corner decorator */}
-                            <span className="absolute -top-2 -right-2 text-6xl pointer-events-none select-none rotate-12 leading-none"
+                            <span className="absolute -top-2 -end-2 text-6xl pointer-events-none select-none rotate-12 leading-none"
                               style={{ opacity: shade.dark ? 0.18 : 0.13 }}>
                               🌸
                             </span>
@@ -1501,17 +1457,17 @@ export default function NotesPage() {
                             {/* Top row: emoji + date + pin */}
                             <div className="flex items-start justify-between relative z-10 shrink-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-sm leading-none">{tagEmoji}</span>
+                                <span className="text-sm leading-none">{trx(tagEmoji)}</span>
                                 <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", shade.dark ? "text-white/50" : "text-rose/50"].join(" ")}>
-                                  {new Date(note.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                                  {new Date(note.createdAt).toLocaleDateString(DATE_LOCALE, { month: "short", day: "numeric" })}
                                   {" · "}
-                                  {new Date(note.createdAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                                  {new Date(note.createdAt).toLocaleTimeString(DATE_LOCALE, { hour: "2-digit", minute: "2-digit" })}
                                 </span>
                               </div>
                               <button
                                 onClick={(e) => { e.stopPropagation(); handleTogglePin(note.id); }}
                                 className={["p-1 rounded-full transition shrink-0", shade.dark ? "text-white/30 hover:text-white" : "text-rose/30 hover:text-hotpink hover:bg-white/60"].join(" ")}
-                                title={note.pinned ? "Unpin" : "Pin"}
+                                title={note.pinned ? tr("Unpin") : tr("Pin")}
                               >
                                 {note.pinned ? (
                                   <Pin className={["h-3 w-3", shade.dark ? "text-white" : "text-hotpink"].join(" ")} fill="currentColor" />
@@ -1523,7 +1479,7 @@ export default function NotesPage() {
 
                             {/* Title */}
                             <h4 className={["font-script text-xl leading-tight relative z-10 shrink-0", expanded ? "" : "line-clamp-1", shade.text].join(" ")}>
-                              {note.title}
+                              {trx(note.title)}
                             </h4>
 
                             {/* Body */}
@@ -1533,13 +1489,13 @@ export default function NotesPage() {
                                   <button
                                     key={item.lineIndex}
                                     onClick={(e) => { e.stopPropagation(); handleToggleTodoItem(note.id, item.lineIndex); }}
-                                    className="flex items-start gap-2 w-full text-left"
+                                    className="flex items-start gap-2 w-full text-start"
                                   >
                                     <span className={["mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-2 flex items-center justify-center transition", item.checked ? "bg-current border-current" : "border-current/40"].join(" ")} style={{ color: shade.accent ?? "#EC4899" }}>
                                       {item.checked && <Check className="h-2 w-2 text-white" strokeWidth={3} />}
                                     </span>
                                     <span className={["text-xs leading-relaxed transition", shade.body, item.checked ? "line-through opacity-40" : ""].join(" ")}>
-                                      {item.label}
+                                      {trx(item.label)}
                                     </span>
                                   </button>
                                 ))}
@@ -1548,27 +1504,27 @@ export default function NotesPage() {
                               <p className={["text-xs font-medium whitespace-pre-wrap leading-relaxed relative z-10 flex-1 min-h-0", expanded ? "" : "overflow-hidden [mask-image:linear-gradient(to_bottom,#000_60%,transparent)]", shade.body].join(" ")}>
                                 {note.tag === "Ideas" && "💡 "}
                                 {note.tag === "Love" && "💕 "}
-                                {note.text}
+                                {trx(note.text)}
                               </p>
                             )}
 
                             {/* Footer */}
                             <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 shrink-0", shade.dark ? "border-white/10" : "border-pink-200/25"].join(" ")}>
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border", shade.dark ? "text-white/60 bg-white/10 border-white/10" : "text-rose/50 bg-white/70 border-pink-100"].join(" ")}>
-                                {tagEmoji} {note.tag}
+                                {trx(tagEmoji)} {trx(note.tag)}
                               </span>
                               <div className="flex gap-1">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleEditNote(note); }}
                                   className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-white/25" : "bg-white/60 text-rose hover:text-hotpink hover:bg-white"].join(" ")}
-                                  title="Edit"
+                                  title={tr("Edit")}
                                 >
                                   <Edit3 className="h-3 w-3" />
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleDeleteNote(note.id); }}
                                   className={["p-1 rounded-full transition", shade.dark ? "bg-white/10 text-white hover:bg-red-400/30" : "bg-white/60 text-rose hover:text-[#F87171] hover:bg-white"].join(" ")}
-                                  title="Delete"
+                                  title={tr("Delete")}
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </button>
@@ -1583,9 +1539,7 @@ export default function NotesPage() {
                     <button
                       onClick={() => setSelectedTag("All")}
                       className="text-xs text-hotpink font-bold hover:underline transition"
-                    >
-                      View all notes →
-                    </button>
+                    >{tr("View all notes →")}</button>
                   </div>
                 </>
               )}
@@ -1598,13 +1552,11 @@ export default function NotesPage() {
               {sortedReminders.length === 0 ? (
                 <div className="rounded-[2rem] bg-white/70 border border-petal/40 p-8 text-center flex flex-col items-center justify-center">
                   <Flower2 className="h-10 w-10 mb-2 text-[#EC4899]" strokeWidth={1.5} />
-                  <p className="text-sm text-rose italic">All clear! No upcoming nudges.</p>
+                  <p className="text-sm text-rose italic">{tr("All clear! No upcoming nudges.")}</p>
                   <button
                     onClick={() => setShowReminderForm(true)}
                     className="bloom-luxury-btn mt-4 px-4 py-2 text-xs font-bold text-white inline-flex items-center gap-1"
-                  >
-                    New reminder
-                  </button>
+                  >{tr("New reminder")}</button>
                 </div>
               ) : (
                 <>
@@ -1625,14 +1577,14 @@ export default function NotesPage() {
                         <div key={rem.id} className="group" style={{ animationDelay: `${idx * 60}ms` }}>
                           <div onClick={() => toggleCard(rem.id)} className={["relative rounded-3xl border p-4 flex flex-col gap-2 shadow-sm transition hover:shadow-lg duration-200 animate-scale-in overflow-hidden cursor-pointer", expanded ? "" : "h-44", style.bg, style.border].join(" ")}>
                             {/* Cherry blossom decorator */}
-                            <span className="absolute -top-2 -right-2 text-6xl opacity-10 pointer-events-none select-none rotate-12 leading-none">🌸</span>
+                            <span className="absolute -top-2 -end-2 text-6xl opacity-10 pointer-events-none select-none rotate-12 leading-none">🌸</span>
 
                             {/* Top: kind emoji + date */}
                             <div className="flex items-start justify-between relative z-10 shrink-0">
                               <div className="flex items-center gap-1.5">
-                                <span className="text-sm leading-none">{style.bloom}</span>
+                                <span className="text-sm leading-none">{trx(style.bloom)}</span>
                                 <span className={["text-[9px] font-bold tracking-tight leading-none mt-0.5", style.body].join(" ")}>
-                                  {dateLabel}
+                                  {trx(dateLabel)}
                                 </span>
                               </div>
                               {rem.kind === "event" && (
@@ -1640,40 +1592,40 @@ export default function NotesPage() {
                                   onClick={(e) => { e.stopPropagation(); handleToggleReminderDone(rem.id); }}
                                   className="h-5 w-5 shrink-0 rounded-full border-2 border-current opacity-40 hover:opacity-100 transition flex items-center justify-center"
                                   style={{ color: "currentColor" }}
-                                  title="Mark done"
+                                  title={tr("Mark done")}
                                 />
                               )}
                             </div>
 
                             {/* Title */}
                             <h4 className={["font-script text-xl leading-tight relative z-10 shrink-0", expanded ? "" : "line-clamp-1", style.text].join(" ")}>
-                              {rem.title}
-                              {age !== null && <span className="font-normal text-sm ml-1">· turning {age} ✿</span>}
+                              {trx(rem.title)}
+                              {age !== null && <span className="font-normal text-sm ms-1">{tr("· turning")}{" "}{trx(age)} ✿</span>}
                             </h4>
 
                             {/* Detail line */}
                             <p className={["text-xs font-medium leading-relaxed relative z-10 flex-1 min-h-0", expanded ? "" : "overflow-hidden", style.body].join(" ")}>
                               {rem.kind === "medication"
-                                ? `${weekdaysLabel(rem.weekdays)} · ${rem.times.length} dose${rem.times.length > 1 ? "s" : ""}/day`
+                                ? tr("{0} · {1} dose{2}/day", { 0: weekdaysLabel(rem.weekdays), 1: rem.times.length, 2: rem.times.length > 1 ? "s" : "" })
                                 : rem.kind === "birthday"
-                                  ? "Repeats every year 🎂"
+                                  ? tr("Repeats every year 🎂")
                                   : rem.time
                                     ? `${rem.time}${rem.leadDays > 0 ? ` · ${rem.leadDays}d heads-up` : ""}`
                                     : rem.leadDays > 0
-                                      ? `${rem.leadDays}d heads-up`
+                                      ? tr("{0}d heads-up", { 0: rem.leadDays })
                                       : visual.label}
                             </p>
 
                             {/* Footer */}
                             <div className={["flex items-center justify-between mt-1 pt-2 border-t relative z-10 border-current/10 shrink-0"].join(" ")}>
                               <span className={["inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full", visual.color].join(" ")}>
-                                <visual.Icon className="h-2.5 w-2.5" /> {visual.label}
+                                <visual.Icon className="h-2.5 w-2.5" /> {trx(visual.label)}
                               </span>
                               <div className="flex gap-1">
-                                <button onClick={(e) => { e.stopPropagation(); handleEditReminder(rem); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition" title="Edit">
+                                <button onClick={(e) => { e.stopPropagation(); handleEditReminder(rem); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-hotpink hover:bg-white transition" title={tr("Edit")}>
                                   <Edit3 className="h-3 w-3" />
                                 </button>
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteReminder(rem.id); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition" title="Delete">
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteReminder(rem.id); }} className="p-1 rounded-full bg-white/60 text-rose hover:text-[#F87171] hover:bg-white transition" title={tr("Delete")}>
                                   <Trash2 className="h-3 w-3" />
                                 </button>
                               </div>
@@ -1690,12 +1642,11 @@ export default function NotesPage() {
                   <button
                     type="button"
                     onClick={() => setDoneCollapsed(!doneCollapsed)}
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/40 transition text-left"
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/40 transition text-start"
                   >
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-5 w-5 text-hotpink" />
-                      <span className="font-script text-xl sm:text-2xl text-hotpink">
-                        Completed reminders ({completedReminders.length})
+                      <span className="font-script text-xl sm:text-2xl text-hotpink">{tr("Completed reminders (")}{trx(completedReminders.length)})
                       </span>
                     </div>
                     {doneCollapsed ? <ChevronDown className="h-4 w-4 text-hotpink" /> : <ChevronUp className="h-4 w-4 text-hotpink" />}
@@ -1705,15 +1656,15 @@ export default function NotesPage() {
                       {completedReminders.map((rem) => (
                         <div key={rem.id} className="flex items-center justify-between rounded-xl bg-white/60 p-2.5 px-3 border border-pink-200/20 shadow-sm transition animate-scale-in">
                           <div className="flex items-center gap-3.5 min-w-0 opacity-60">
-                            <button type="button" onClick={() => handleToggleReminderDone(rem.id)} className="p-1 h-5 w-5 shrink-0 rounded-full bg-hotpink text-white flex items-center justify-center transition" title="Undo completion">
+                            <button type="button" onClick={() => handleToggleReminderDone(rem.id)} className="p-1 h-5 w-5 shrink-0 rounded-full bg-hotpink text-white flex items-center justify-center transition" title={tr("Undo completion")}>
                               <Check className="h-3 w-3 text-white" strokeWidth={3} />
                             </button>
                             <div className="min-w-0">
-                              <h4 className="font-semibold text-rose text-xs line-through truncate leading-normal">{rem.title}</h4>
-                              <p className="text-[9px] text-rose/50 mt-0.5 font-semibold">completed ✿ {prettyDate(rem.date)}{rem.time ? ` @ ${rem.time}` : ""}</p>
+                              <h4 className="font-semibold text-rose text-xs line-through truncate leading-normal">{trx(rem.title)}</h4>
+                              <p className="text-[9px] text-rose/50 mt-0.5 font-semibold">{tr("completed ✿")}{" "}{prettyDate(rem.date)}{rem.time ? ` @ ${rem.time}` : ""}</p>
                             </div>
                           </div>
-                          <button onClick={() => handleDeleteReminder(rem.id)} className="p-1 text-rose/50 hover:text-[#F87171] transition" title="Delete">
+                          <button onClick={() => handleDeleteReminder(rem.id)} className="p-1 text-rose/50 hover:text-[#F87171] transition" title={tr("Delete")}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
@@ -1732,23 +1683,19 @@ export default function NotesPage() {
           {/* PINNED REMINDERS */}
           <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-bold text-[#831843]">Pinned Reminders</h3>
+              <h3 className="text-sm font-bold text-[#831843]">{tr("Pinned Reminders")}</h3>
               <button
                 onClick={() => setTab("reminders")}
                 className="text-[10px] text-hotpink font-bold hover:underline transition"
-              >
-                View All
-              </button>
+              >{tr("View All")}</button>
             </div>
             {sortedReminders.length === 0 ? (
               <div className="py-4 text-center">
-                <p className="text-[11px] text-rose/50">No upcoming reminders</p>
+                <p className="text-[11px] text-rose/50">{tr("No upcoming reminders")}</p>
                 <button
                   onClick={() => { setTab("reminders"); resetReminderForm(); setShowReminderForm(true); }}
                   className="mt-2 text-[10px] text-hotpink font-bold hover:underline"
-                >
-                  + Add reminder
-                </button>
+                >{tr("+ Add reminder")}</button>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2">
@@ -1766,14 +1713,14 @@ export default function NotesPage() {
                       key={rem.id}
                       className={["rounded-2xl bg-gradient-to-br p-3 border border-pink-100/80 flex flex-col gap-1.5 relative overflow-hidden transition hover:-translate-y-0.5 hover:shadow-sm", gradients[gi]].join(" ")}
                     >
-                      <span className="absolute top-1 right-1 text-2xl opacity-15 pointer-events-none select-none">🌸</span>
+                      <span className="absolute top-1 end-1 text-2xl opacity-15 pointer-events-none select-none">🌸</span>
                       <span className={["grid h-7 w-7 place-items-center rounded-xl text-xs shrink-0", visual.color].join(" ")}>
                         <visual.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
                       </span>
-                      <p className="text-[10px] font-bold text-[#831843] leading-tight line-clamp-2 pr-2">{rem.title}</p>
+                      <p className="text-[10px] font-bold text-[#831843] leading-tight line-clamp-2 pe-2">{trx(rem.title)}</p>
                       <p className="text-[9px] text-rose/60 font-semibold truncate">
                         {rem.kind === "medication"
-                          ? [...rem.times].sort()[0]
+                          ? trx([...rem.times].sort()[0])
                           : rem.kind === "birthday"
                             ? prettyMonthDay(rem.date)
                             : prettyDate(rem.date)}
@@ -1788,10 +1735,10 @@ export default function NotesPage() {
           {/* QUICK SUGGESTIONS */}
           <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold text-[#831843]">Quick Reminder Ideas ✿</h3>
+              <h3 className="text-sm font-bold text-[#831843]">{tr("Quick Reminder Ideas ✿")}</h3>
               <Bell className="h-4 w-4 text-rose/30" />
             </div>
-            <p className="text-[10px] text-rose/50 mb-3">Tap to instantly pre-fill a reminder</p>
+            <p className="text-[10px] text-rose/50 mb-3">{tr("Tap to instantly pre-fill a reminder")}</p>
             <div className="overflow-hidden">
               <div className="flex gap-2 animate-marquee-scroll hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
                 {[...QUICK_SUGGESTIONS, ...QUICK_SUGGESTIONS].map((s, idx) => (
@@ -1803,7 +1750,7 @@ export default function NotesPage() {
                     <span className="grid h-7 w-7 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
                       <s.Icon className="h-3.5 w-3.5" />
                     </span>
-                    <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
+                    <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{trx(s.label)}</span>
                   </button>
                 ))}
               </div>
@@ -1812,17 +1759,15 @@ export default function NotesPage() {
 
           {/* YOUR THOUGHTS — strong pink so the white copy reads clearly */}
           <div className="rounded-3xl bg-gradient-to-br from-[#F472B6] via-[#EC4899] to-[#C2186E] border border-hotpink/40 p-5 shadow-md shadow-hotpink/20 relative overflow-hidden">
-            <div className="absolute -bottom-3 -right-3 text-8xl opacity-20 pointer-events-none select-none rotate-[-20deg] leading-none">🌸</div>
-            <div className="absolute top-2 right-2 text-3xl opacity-25 pointer-events-none select-none">🌷</div>
-            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1 relative z-10">Your Thoughts</p>
-            <p className="text-sm font-bold text-white leading-snug relative z-10">
-              Your thoughts shape the world you live in.
-            </p>
-            <p className="text-[11px] text-white/80 mt-1 leading-relaxed relative z-10">Choose the beautiful life ✨</p>
+            <div className="absolute -bottom-3 -end-3 text-8xl opacity-20 pointer-events-none select-none rotate-[-20deg] leading-none">🌸</div>
+            <div className="absolute top-2 end-2 text-3xl opacity-25 pointer-events-none select-none">🌷</div>
+            <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1 relative z-10">{tr("Your Thoughts")}</p>
+            <p className="text-sm font-bold text-white leading-snug relative z-10">{tr("Your thoughts shape the world you live in.")}</p>
+            <p className="text-[11px] text-white/80 mt-1 leading-relaxed relative z-10">{tr("Choose the beautiful life ✨")}</p>
             {notes.length > 0 && (
               <div className="mt-3 p-2.5 rounded-2xl bg-white/25 border border-white/30 relative z-10">
-                <p className="text-[10px] text-white/80 line-clamp-2 italic">"{notes[0].text}"</p>
-                <p className="text-[9px] text-white font-bold mt-1 opacity-90">{notes[0].title}</p>
+                <p className="text-[10px] text-white/80 line-clamp-2 italic">"{trx(notes[0].text)}"</p>
+                <p className="text-[9px] text-white font-bold mt-1 opacity-90">{trx(notes[0].title)}</p>
               </div>
             )}
             <button
@@ -1836,9 +1781,7 @@ export default function NotesPage() {
                 setTab("notes");
               }}
               className="mt-3 bg-white/30 hover:bg-white/50 transition border border-white/40 text-white px-3 py-1.5 text-[10px] font-bold rounded-full relative z-10"
-            >
-              + Add thought
-            </button>
+            >{tr("+ Add thought")}</button>
           </div>
         </aside>
       </div>
@@ -1849,7 +1792,7 @@ export default function NotesPage() {
         {showMoodPicker && (
           <div className="rounded-3xl border border-pink-200/50 bg-white/95 p-4 shadow-xl animate-bloom-bounce">
             <div className="flex justify-between items-center mb-3">
-              <h3 className="font-script text-xl text-hotpink">How are you feeling? 💕</h3>
+              <h3 className="font-script text-xl text-hotpink">{tr("How are you feeling? 💕")}</h3>
               <button type="button" onClick={() => setShowMoodPicker(false)} className="p-1 text-rose/50 hover:text-rose transition"><X className="h-4 w-4" /></button>
             </div>
             <div className="grid grid-cols-4 gap-2">
@@ -1873,8 +1816,8 @@ export default function NotesPage() {
                   }}
                   className="flex flex-col items-center gap-1 p-2.5 rounded-2xl bg-[#FFF0F6]/50 hover:bg-[#FFF0F6] border border-pink-100 transition active:scale-95"
                 >
-                  <span className="text-xl leading-none">{m.emoji}</span>
-                  <span className="text-[9px] font-bold text-rose/70">{m.label}</span>
+                  <span className="text-xl leading-none">{trx(m.emoji)}</span>
+                  <span className="text-[9px] font-bold text-rose/70">{trx(m.label)}</span>
                 </button>
               ))}
             </div>
@@ -1883,7 +1826,7 @@ export default function NotesPage() {
 
         {/* Quick Reminder Ideas strip — infinite marquee, pauses on hover */}
         <div className="rounded-3xl bg-white/95 border border-pink-200/60 p-4 shadow-sm overflow-hidden">
-          <h3 className="text-xs font-bold text-[#831843] mb-3">Quick Reminder Ideas ✿</h3>
+          <h3 className="text-xs font-bold text-[#831843] mb-3">{tr("Quick Reminder Ideas ✿")}</h3>
           <div className="overflow-hidden">
             <div className="flex gap-2 animate-marquee-scroll hover:[animation-play-state:paused]" style={{ width: 'max-content' }}>
               {[...QUICK_SUGGESTIONS, ...QUICK_SUGGESTIONS].map((s, idx) => (
@@ -1895,7 +1838,7 @@ export default function NotesPage() {
                   <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[#FCE7F3] to-[#FBCFE8] text-hotpink border border-pink-200/50">
                     <s.Icon className="h-4 w-4" />
                   </span>
-                  <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{s.label}</span>
+                  <span className="text-[9px] font-bold text-rose/70 whitespace-nowrap">{trx(s.label)}</span>
                 </button>
               ))}
             </div>

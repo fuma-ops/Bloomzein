@@ -66,6 +66,7 @@ import {
   type Recipe,
 } from "@/components/bloom/recipes/data";
 import { AnimatedWords } from "@/components/bloom/AnimatedWords";
+import { tr, trx } from "@/i18n";
 
 /* ---------- icon resolvers ---------- */
 
@@ -103,10 +104,10 @@ const PLATE_SEGMENTS: {
   label: string;
   color: string;
 }[] = [
-  { key: "carbs", label: "Optimal Carbohydrates", color: "oklch(0.7 0.19 350)" },
-  { key: "protein", label: "Protein Sources", color: "oklch(0.62 0.24 0)" },
-  { key: "complexCarbs", label: "Complex Carbohydrates", color: "oklch(0.55 0.26 0)" },
-  { key: "fats", label: "Healthy Fats", color: "oklch(0.82 0.12 340)" },
+  { key: "carbs", label: tr("Optimal Carbohydrates"), color: "oklch(0.7 0.19 350)" },
+  { key: "protein", label: tr("Protein Sources"), color: "oklch(0.62 0.24 0)" },
+  { key: "complexCarbs", label: tr("Complex Carbohydrates"), color: "oklch(0.55 0.26 0)" },
+  { key: "fats", label: tr("Healthy Fats"), color: "oklch(0.82 0.12 340)" },
 ];
 
 function BloomPlate({
@@ -155,9 +156,9 @@ function BloomPlate({
               className="grid h-6 w-9 shrink-0 place-items-center rounded-full text-[11px] font-black text-white"
               style={{ background: seg.color }}
             >
-              {plate[seg.key]}%
+              {trx(plate[seg.key])}%
             </span>
-            <span className="font-semibold text-rose/80 leading-tight">{seg.label}</span>
+            <span className="font-semibold text-rose/80 leading-tight">{trx(seg.label)}</span>
           </li>
         ))}
       </ul>
@@ -182,10 +183,10 @@ function Meter({
     <div className="min-w-0">
       <div className="flex items-center justify-between gap-1">
         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-rose/60">
-          <Icon className="h-3 w-3" strokeWidth={2} style={{ color: accent }} /> {label}
+          <Icon className="h-3 w-3" strokeWidth={2} style={{ color: accent }} /> {trx(label)}
         </span>
         <span className="text-[11px] font-black" style={{ color: accent }}>
-          {value}%
+          {trx(value)}%
         </span>
       </div>
       <div className="mt-1 h-1.5 w-full rounded-full bg-blush/70 overflow-hidden">
@@ -217,7 +218,7 @@ function SectionTitle({
         <Icon className="h-5 w-5 text-hotpink" strokeWidth={1.8} />
         <AnimatedWords text={title} stagger={90} initialDelay={delay} />
       </h3>
-      {sub && <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">{sub}</p>}
+      {sub && <p className="mt-1 text-[12.5px] text-rose/70 leading-snug">{trx(sub)}</p>}
     </div>
   );
 }
@@ -316,9 +317,9 @@ function CycleRhythmChart({
   const guideX = xForDay(band.midDay);
 
   const gridLines = [
-    { v: 100, label: "Peak" },
-    { v: 50, label: "Mid" },
-    { v: 0, label: "Low" },
+    { v: 100, label: tr("Peak") },
+    { v: 50, label: tr("Mid") },
+    { v: 0, label: tr("Low") },
   ];
   const dayTicks = [1, 7, 14, 21, 28];
 
@@ -332,7 +333,7 @@ function CycleRhythmChart({
             className="inline-flex items-center gap-1.5 text-[11.5px] font-bold text-rose/75"
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: c.color }} />
-            {c.label}
+            {trx(c.label)}
           </span>
         ))}
       </div>
@@ -342,7 +343,7 @@ function CycleRhythmChart({
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Line chart of estrogen, progesterone, energy and mood across a 28-day cycle"
+        aria-label={tr("Line chart of estrogen, progesterone, energy and mood across a 28-day cycle")}
       >
         <defs>
           <linearGradient id="bz-plot-bg" x1="0" y1="0" x2="0" y2="1">
@@ -388,7 +389,7 @@ function CycleRhythmChart({
                   fill: active ? "oklch(0.5 0.26 0)" : "oklch(0.5 0.18 0 / 0.55)",
                 }}
               >
-                {CYCLE_NUTRITION[b.phase].label}
+                {trx(CYCLE_NUTRITION[b.phase].label)}
               </text>
               <text
                 x={bx + bw / 2}
@@ -420,7 +421,7 @@ function CycleRhythmChart({
               textAnchor="end"
               style={{ fontSize: 9.5, fontWeight: 700, fill: "oklch(0.5 0.18 0 / 0.5)" }}
             >
-              {g.label}
+              {trx(g.label)}
             </text>
           </g>
         ))}
@@ -480,7 +481,7 @@ function CycleRhythmChart({
             textAnchor="middle"
             style={{ fontSize: 9.5, fontWeight: 600, fill: "oklch(0.5 0.18 0 / 0.5)" }}
           >
-            {d === 1 ? "Day 1" : d}
+            {d === 1 ? tr("Day 1") : trx(d)}
           </text>
         ))}
       </svg>
@@ -497,10 +498,10 @@ function CycleRhythmChart({
             >
               <p className="inline-flex items-center gap-1.5 text-[10.5px] font-bold text-rose/70">
                 <span className="h-2 w-2 rounded-full" style={{ background: c.color }} />
-                {c.label}
+                {trx(c.label)}
               </p>
               <p className="mt-0.5 flex items-baseline gap-1">
-                <span className="text-[16px] font-black text-magenta">{v}</span>
+                <span className="text-[16px] font-black text-magenta">{trx(v)}</span>
                 <span className="text-[10px] font-bold" style={{ color: c.color }}>
                   {READOUT_TAG(v)}
                 </span>
@@ -511,8 +512,8 @@ function CycleRhythmChart({
       </div>
 
       <p className="mt-3 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-2.5 text-[12.5px] leading-snug text-[#831843]">
-        <b className="text-hotpink">{CYCLE_NUTRITION[selected].label} ·</b>{" "}
-        {CYCLE_NUTRITION[selected].chartNote}
+        <b className="text-hotpink">{trx(CYCLE_NUTRITION[selected].label)} ·</b>{" "}
+        {trx(CYCLE_NUTRITION[selected].chartNote)}
       </p>
     </Card>
   );
@@ -537,10 +538,10 @@ export function CycleNutritionView({
   const hero = useMemo(() => heroRecipeFor(selected), [selected]);
 
   const meters: { Icon: typeof Zap; label: string; key: keyof typeof content.meters }[] = [
-    { Icon: Zap, label: "Energy", key: "energy" },
-    { Icon: Smile, label: "Mood", key: "mood" },
-    { Icon: Target, label: "Focus", key: "focus" },
-    { Icon: Heart, label: "Recovery", key: "recovery" },
+    { Icon: Zap, label: tr("Energy"), key: "energy" },
+    { Icon: Smile, label: tr("Mood"), key: "mood" },
+    { Icon: Target, label: tr("Focus"), key: "focus" },
+    { Icon: Heart, label: tr("Recovery"), key: "recovery" },
   ];
 
   return (
@@ -552,14 +553,13 @@ export function CycleNutritionView({
         {/* elegant segmented phase bar (part of the hero section) */}
         <div className="rounded-[1.5rem] border border-petal/50 bg-white/65 backdrop-blur p-1.5">
           <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
-            <p className="font-script text-2xl text-hotpink leading-none">Your Cycle</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{tr("Your Cycle")}</p>
             {!isToday && (
               <button
                 onClick={() => setSelected(todayPhase)}
                 className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[10.5px] font-bold text-hotpink transition hover:bg-hotpink/20 active:scale-95 animate-selected-glow"
               >
-                <CalendarHeart className="h-3 w-3" strokeWidth={2.2} /> Back to today
-              </button>
+                <CalendarHeart className="h-3 w-3" strokeWidth={2.2} />{" "}{tr("Back to today")}</button>
             )}
           </div>
           <div className="grid grid-cols-4 gap-1 sm:gap-1.5">
@@ -578,7 +578,7 @@ export function CycleNutritionView({
                   ].join(" ")}
                 >
                   <span className="flex items-center justify-center gap-1 text-[11.5px] font-black leading-none sm:text-[13px]">
-                    {CYCLE_NUTRITION[p].label}
+                    {trx(CYCLE_NUTRITION[p].label)}
                     {isNow && (
                       <span
                         className={`inline-block h-1.5 w-1.5 rounded-full ${active ? "bg-white" : "bg-hotpink"} animate-pulse`}
@@ -588,7 +588,7 @@ export function CycleNutritionView({
                   <span
                     className={`mt-0.5 block text-[9px] font-semibold sm:text-[10px] ${active ? "text-white/85" : "text-rose/55"}`}
                   >
-                    {PHASE_DAY_RANGE[p]}
+                    {trx(PHASE_DAY_RANGE[p])}
                   </span>
                 </button>
               );
@@ -618,20 +618,19 @@ export function CycleNutritionView({
                   title stays legible; a thin bottom fade blends into the card */}
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/60 via-white/10 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white/85 to-transparent" />
-              <div className="absolute top-3 left-4 right-4">
+              <div className="absolute top-3 start-4 end-4">
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-hotpink shadow-sm">
-                  <Sparkles className="h-3 w-3" strokeWidth={2} /> Your Body Today
-                </span>
+                  <Sparkles className="h-3 w-3" strokeWidth={2} />{" "}{tr("Your Body Today")}</span>
                 <h2 className="mt-1.5 font-script text-3xl sm:text-4xl text-hotpink leading-none drop-shadow-[0_1px_5px_rgba(255,255,255,0.95)]">
-                  <AnimatedWords text={`${content.label} Phase`} stagger={110} />
+                  <AnimatedWords text={tr("{0} Phase", { 0: content.label })} stagger={110} />
                 </h2>
                 <p className="text-[12px] font-bold text-rose/80 drop-shadow-[0_1px_3px_rgba(255,255,255,0.95)]">
-                  {cycleDay ? `Day ${cycleDay} of your cycle` : content.dayRange}
+                  {cycleDay ? tr("Day {0} of your cycle", { 0: cycleDay }) : trx(content.dayRange)}
                 </p>
               </div>
             </div>
             <div className="p-4 sm:p-5">
-              <p className="text-[13.5px] leading-relaxed text-[#831843]">{content.bodyToday}</p>
+              <p className="text-[13.5px] leading-relaxed text-[#831843]">{trx(content.bodyToday)}</p>
               {/* vital meters — two-up on mobile for density */}
               <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3">
                 {meters.map((m) => (
@@ -650,11 +649,8 @@ export function CycleNutritionView({
           {/* Right panel — At a Glance (sticky on desktop, reacts to phase) */}
           <Card className="lg:col-span-2 lg:sticky lg:top-4 p-4 sm:p-5 self-start" delay={80}>
             <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
-              <Flower2 className="h-4 w-4" strokeWidth={2} /> At a Glance
-            </p>
-            <p className="mt-0.5 text-[11px] font-semibold text-rose/55">
-              what your {content.label.toLowerCase()} phase gives you
-            </p>
+              <Flower2 className="h-4 w-4" strokeWidth={2} />{" "}{tr("At a Glance")}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-rose/55">{tr("what your")}{" "}{content.label.toLowerCase()}{" "}{tr("phase gives you")}</p>
             <ul className="mt-3 space-y-2">
               {content.glance.map((g, i) => (
                 <li
@@ -668,12 +664,12 @@ export function CycleNutritionView({
                   >
                     <Sparkles className="h-3.5 w-3.5" strokeWidth={2} style={{ color: accent }} />
                   </span>
-                  <span className="text-[13px] font-semibold text-[#831843]">{g}</span>
+                  <span className="text-[13px] font-semibold text-[#831843]">{trx(g)}</span>
                 </li>
               ))}
             </ul>
             <p className="mt-4 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-2.5 text-[12.5px] leading-snug text-[#831843]">
-              {content.tagline}
+              {trx(content.tagline)}
             </p>
           </Card>
         </div>
@@ -686,7 +682,7 @@ export function CycleNutritionView({
         <section>
           <SectionTitle
             Icon={LineChart}
-            title="Hormones × Energy × Mood"
+            title={tr("Hormones × Energy × Mood")}
             sub="how they rise and fall together across your whole cycle · tap a phase band to explore"
           />
           <CycleRhythmChart selected={selected} onSelect={setSelected} />
@@ -696,7 +692,7 @@ export function CycleNutritionView({
         <section key={`n-${selected}`}>
           <SectionTitle
             Icon={Salad}
-            title="What Your Body Needs Today"
+            title={tr("What Your Body Needs Today")}
             sub="the nutrients that work with your hormones right now"
           />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -710,8 +706,8 @@ export function CycleNutritionView({
                   >
                     <Icon className="h-5 w-5" strokeWidth={1.9} style={{ color: accent }} />
                   </span>
-                  <p className="mt-2 text-[15px] font-black text-magenta leading-tight">{n.name}</p>
-                  <p className="mt-1 text-[11.5px] leading-snug text-rose/70">{n.why}</p>
+                  <p className="mt-2 text-[15px] font-black text-magenta leading-tight">{trx(n.name)}</p>
+                  <p className="mt-1 text-[11.5px] leading-snug text-rose/70">{trx(n.why)}</p>
                 </Card>
               );
             })}
@@ -721,7 +717,7 @@ export function CycleNutritionView({
         {/* ── Where to Find These Nutrients + Hormones × Nutrition ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <section>
-            <SectionTitle Icon={Utensils} title="Where to Find These Nutrients" />
+            <SectionTitle Icon={Utensils} title={tr("Where to Find These Nutrients")} />
             <Card className="divide-y divide-petal/50 overflow-hidden">
               {content.nutrients.map((n, i) => {
                 const Icon = NUTRIENT_ICON[n.icon];
@@ -738,14 +734,14 @@ export function CycleNutritionView({
                       <Icon className="h-4.5 w-4.5" strokeWidth={1.9} style={{ color: accent }} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-black text-magenta leading-none">{n.name}</p>
+                      <p className="text-[13px] font-black text-magenta leading-none">{trx(n.name)}</p>
                       <div className="mt-1.5 flex flex-wrap gap-1">
                         {n.sources.map((f) => (
                           <span
                             key={f}
                             className="rounded-full bg-blush/70 border border-petal/50 px-2 py-0.5 text-[10.5px] font-semibold text-magenta"
                           >
-                            {f}
+                            {trx(f)}
                           </span>
                         ))}
                       </div>
@@ -757,23 +753,21 @@ export function CycleNutritionView({
           </section>
 
           <section>
-            <SectionTitle Icon={HeartPulse} title="Hormones × Nutrition = Benefits" />
+            <SectionTitle Icon={HeartPulse} title={tr("Hormones × Nutrition = Benefits")} />
             <div className="space-y-3">
               <Card className="p-4">
                 <p
                   className="inline-flex items-center gap-1.5 text-[12px] font-black uppercase tracking-wide"
                   style={{ color: accent }}
                 >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> {content.hormoneTitle}
+                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> {trx(content.hormoneTitle)}
                 </p>
                 <p className="mt-1.5 text-[12.5px] leading-snug text-[#831843]">
-                  {content.hormoneNote}
+                  {trx(content.hormoneNote)}
                 </p>
               </Card>
               <Card className="p-4" delay={70}>
-                <p className="text-[12px] font-black uppercase tracking-wide text-hotpink">
-                  Nutrition Focus
-                </p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-hotpink">{tr("Nutrition Focus")}</p>
                 <ul className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {content.nutritionFocus.map((f) => (
                     <li
@@ -781,22 +775,20 @@ export function CycleNutritionView({
                       className="flex items-center gap-1.5 text-[12px] font-semibold text-rose/80"
                     >
                       <span className="h-1.5 w-1.5 rounded-full" style={{ background: accent }} />{" "}
-                      {f}
+                      {trx(f)}
                     </li>
                   ))}
                 </ul>
               </Card>
               <Card className="p-4" delay={140}>
-                <p className="text-[12px] font-black uppercase tracking-wide text-hotpink">
-                  Expected Benefits
-                </p>
+                <p className="text-[12px] font-black uppercase tracking-wide text-hotpink">{tr("Expected Benefits")}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {content.benefits.map((b) => (
                     <span
                       key={b}
                       className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/50 px-2.5 py-1 text-[11.5px] font-bold text-magenta"
                     >
-                      <Check className="h-3 w-3" strokeWidth={3} style={{ color: accent }} /> {b}
+                      <Check className="h-3 w-3" strokeWidth={3} style={{ color: accent }} /> {trx(b)}
                     </span>
                   ))}
                 </div>
@@ -808,7 +800,7 @@ export function CycleNutritionView({
         {/* ── Today's Bloom Plate + Bloom Coach Suggests ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <section>
-            <SectionTitle Icon={Salad} title="Today's Bloom Plate" sub={content.plate.note} />
+            <SectionTitle Icon={Salad} title={tr("Today's Bloom Plate")} sub={content.plate.note} />
             <Card className="p-4 sm:p-5">
               <BloomPlate plate={content.plate} />
             </Card>
@@ -817,7 +809,7 @@ export function CycleNutritionView({
           <section>
             <SectionTitle
               Icon={Sparkles}
-              title="Bloom Coach Suggests"
+              title={tr("Bloom Coach Suggests")}
               sub="a phase-perfect meal to nourish you"
             />
             {hero ? (
@@ -835,29 +827,22 @@ export function CycleNutritionView({
                     }}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-hotpink/70">
-                      Nourish to flourish
-                    </p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-hotpink/70">{tr("Nourish to flourish")}</p>
                     <p className="mt-0.5 text-[15px] font-black text-magenta leading-tight line-clamp-2">
-                      {hero.name}
+                      {trx(hero.name)}
                     </p>
                     <p className="mt-1 text-[11.5px] leading-snug text-rose/70">
-                      {hero.macros.calories} kcal · {hero.macros.protein}g protein — built to fuel
-                      your {content.label.toLowerCase()} phase.
-                    </p>
+                      {trx(hero.macros.calories)}{" "}{tr("kcal ·")}{" "}{trx(hero.macros.protein)}{tr("g protein — built to fuel your")}{" "}{content.label.toLowerCase()}{" "}{tr("phase.")}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => onOpenRecipe(hero.id)}
                   className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-4 py-2.5 text-[13px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
-                >
-                  View Full Recipe <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                >{tr("View Full Recipe")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
                 </button>
               </Card>
             ) : (
-              <Card className="p-5 text-center text-[13px] text-rose/60">
-                A phase-perfect meal is on its way ✿
-              </Card>
+              <Card className="p-5 text-center text-[13px] text-rose/60">{tr("A phase-perfect meal is on its way ✿")}</Card>
             )}
           </section>
         </div>
@@ -866,7 +851,7 @@ export function CycleNutritionView({
         <section key={`l-${selected}`}>
           <SectionTitle
             Icon={Flame}
-            title="Foods to Limit Today"
+            title={tr("Foods to Limit Today")}
             sub="ease up on these to feel your best this phase"
           />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -878,9 +863,9 @@ export function CycleNutritionView({
                     <Icon className="h-4.5 w-4.5 text-rose/70" strokeWidth={1.9} />
                   </span>
                   <p className="mt-2 text-[13.5px] font-black text-magenta leading-tight">
-                    {t.title}
+                    {trx(t.title)}
                   </p>
-                  <p className="mt-1 text-[11px] leading-snug text-rose/60">{t.note}</p>
+                  <p className="mt-1 text-[11px] leading-snug text-rose/60">{trx(t.note)}</p>
                 </Card>
               );
             })}
@@ -892,21 +877,17 @@ export function CycleNutritionView({
           {/* Did you know */}
           <Card className="relative overflow-hidden p-4 sm:p-5 bg-gradient-to-br from-blush/70 via-white to-petal/30">
             <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
-              <Sparkles className="h-4 w-4" strokeWidth={2} /> Did You Know?
-            </p>
+              <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Did You Know?")}</p>
             <p className="mt-2.5 text-[13px] leading-relaxed text-[#831843]">
-              {content.didYouKnow}
+              {trx(content.didYouKnow)}
             </p>
           </Card>
 
           {/* Pair with movement */}
           <Card className="p-4 sm:p-5" delay={70}>
             <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
-              <Activity className="h-4 w-4" strokeWidth={2} /> Pair With Movement
-            </p>
-            <p className="mt-0.5 text-[11px] font-semibold text-rose/55">
-              move in a way that matches your energy
-            </p>
+              <Activity className="h-4 w-4" strokeWidth={2} />{" "}{tr("Pair With Movement")}</p>
+            <p className="mt-0.5 text-[11px] font-semibold text-rose/55">{tr("move in a way that matches your energy")}</p>
             <ul className="mt-3 space-y-2.5">
               {content.movement.map((m) => {
                 const Icon = TIP_ICON[m.icon] ?? Flower2;
@@ -919,8 +900,8 @@ export function CycleNutritionView({
                       <Icon className="h-4 w-4" strokeWidth={1.9} style={{ color: accent }} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-black text-magenta leading-none">{m.title}</p>
-                      <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{m.note}</p>
+                      <p className="text-[13px] font-black text-magenta leading-none">{trx(m.title)}</p>
+                      <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{trx(m.note)}</p>
                     </div>
                   </li>
                 );
@@ -931,8 +912,7 @@ export function CycleNutritionView({
           {/* Lifestyle tips */}
           <Card className="p-4 sm:p-5" delay={140}>
             <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
-              <Flower2 className="h-4 w-4" strokeWidth={2} /> Bloom Lifestyle Tips
-            </p>
+              <Flower2 className="h-4 w-4" strokeWidth={2} />{" "}{tr("Bloom Lifestyle Tips")}</p>
             <ul className="mt-3 space-y-2.5">
               {content.lifestyle.map((t) => {
                 const Icon = TIP_ICON[t.icon] ?? Sun;
@@ -945,8 +925,8 @@ export function CycleNutritionView({
                       <Icon className="h-4 w-4" strokeWidth={1.9} style={{ color: accent }} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[13px] font-black text-magenta leading-tight">{t.title}</p>
-                      <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{t.note}</p>
+                      <p className="text-[13px] font-black text-magenta leading-tight">{trx(t.title)}</p>
+                      <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{trx(t.note)}</p>
                     </div>
                   </li>
                 );
@@ -957,10 +937,7 @@ export function CycleNutritionView({
 
         {/* ── Closing quote ── */}
         <div className="relative overflow-hidden rounded-[1.5rem] border border-hotpink/25 bg-gradient-to-br from-blush/70 via-white to-petal/40 p-6 text-center animate-card-breathe">
-          <p className="font-script text-xl sm:text-2xl text-hotpink leading-snug">
-            “When you nourish your body according to your cycle, you don't just feel better — you
-            bloom effortlessly.”
-          </p>
+          <p className="font-script text-xl sm:text-2xl text-hotpink leading-snug">{tr("“When you nourish your body according to your cycle, you don't just feel better — you bloom effortlessly.”")}</p>
         </div>
       </div>
     </div>

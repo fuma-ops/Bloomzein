@@ -15,6 +15,7 @@ import {
   previewStarted, previewEndsAt, startTrialPreview,
   PLAN_UPDATED,
 } from "@/lib/entitlements";
+import { tr } from "@/i18n";
 
 export function TrialPreviewHost() {
   const { user } = useAuth();
@@ -27,8 +28,8 @@ export function TrialPreviewHost() {
     if (!previewStarted()) {
       if (startTrialPreview(10)) {
         notify({
-          title: "Bloom+ unlocked for 10 minutes ✨",
-          body: "Explore everything — every tool, no limits. Enjoy 🌸",
+          title: tr("Bloom+ unlocked for 10 minutes ✨"),
+          body: tr("Explore everything — every tool, no limits. Enjoy 🌸"),
           tone: "bloom", duration: 6500,
         });
       }

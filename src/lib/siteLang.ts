@@ -1,7 +1,6 @@
 // Site language (EN / FR / AR) — one source of truth for the language button.
 // Priority: URL prefix (/fr, /ar, /fr/tools/…, /ar/tools/…) → saved choice
 // (localStorage "bloom:lang") → English. Arabic pages are RTL.
-import { toolPageUrl } from "@/lib/toolPages";
 
 export type SiteLang = "en" | "fr" | "ar";
 export const SITE_LANGS: SiteLang[] = ["en", "fr", "ar"];
@@ -27,7 +26,7 @@ export function getSiteLang(path: string = typeof window !== "undefined" ? windo
 /** Where the current page lives in another language (null = no translated version). */
 export function localizedPath(path: string, lang: SiteLang): string | null {
   const tool = path.match(/^\/(?:(?:fr|ar)\/)?tools\/([^/]+)\/?$/);
-  if (tool) return toolPageUrl(decodeURIComponent(tool[1]), lang);
+  if (tool) { const slug = decodeURIComponent(tool[1]); return lang === "en" ? `/tools/${slug}` : `/${lang}/tools/${slug}`; }
   if (path === "/" || path === "/fr" || path === "/ar" || path === "/fr/" || path === "/ar/") return lang === "en" ? "/" : `/${lang}`;
   return null;
 }

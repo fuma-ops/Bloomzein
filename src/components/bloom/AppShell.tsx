@@ -12,6 +12,7 @@ import { RibbonBackground } from "./RibbonBackground";
 import { seedDiscoverNotifications } from "@/lib/discoverNotifications";
 import { applyPhaseTheme, PHASE_THEME_UPDATED } from "@/lib/phaseTheme";
 import { PLAN_UPDATED, usePremium } from "@/lib/entitlements";
+import { tr, trx } from "@/i18n";
 
 interface NavItem {
   to: string;
@@ -26,13 +27,13 @@ interface NavItem {
 // Grouped so the sidebar shows clean dividers: primary tools · shop · account.
 const NAV_GROUPS: NavItem[][] = [
   [
-    { to: "/app/today", label: "Today", icon: Flower2 },
-    { to: "/app/calendar", label: "Calendar", icon: CalendarDays },
-    { to: "/app/tools", label: "Tools", icon: LayoutGrid },
-    { to: "/app/read", label: "Read", icon: BookOpen },
+    { to: "/app/today", label: tr("Today"), icon: Flower2 },
+    { to: "/app/calendar", label: tr("Calendar"), icon: CalendarDays },
+    { to: "/app/tools", label: tr("Tools"), icon: LayoutGrid },
+    { to: "/app/read", label: tr("Read"), icon: BookOpen },
   ],
-  [{ to: "/app/shop", label: "Shop", icon: ShoppingBag, soon: true }],
-  [{ to: "/app/me", label: "Me", icon: User, plus: true }],
+  [{ to: "/app/shop", label: tr("Shop"), icon: ShoppingBag, soon: true }],
+  [{ to: "/app/me", label: tr("Me"), icon: User, plus: true }],
 ];
 const NAV = NAV_GROUPS.flat();
 // Navigation labels in the chosen site language (the screens themselves are still
@@ -58,13 +59,11 @@ function TileBadges({ item, free }: { item: NavItem; free: boolean }) {
   return (
     <>
       {item.soon && (
-        <span className="absolute -top-1.5 -right-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-400 px-1 text-[7px] font-bold uppercase leading-none text-white shadow ring-2 ring-white">
-          soon
-        </span>
+        <span className="absolute -top-1.5 -end-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-amber-400 px-1 text-[7px] font-bold uppercase leading-none text-white shadow ring-2 ring-white">{tr("soon")}</span>
       )}
       {item.plus && free && (
         <span
-          className="absolute -top-1.5 -right-1.5 grid h-4 w-4 place-items-center rounded-full text-white shadow ring-2 ring-white animate-icon-breathe"
+          className="absolute -top-1.5 -end-1.5 grid h-4 w-4 place-items-center rounded-full text-white shadow ring-2 ring-white animate-icon-breathe"
           style={{ background: "linear-gradient(135deg,#F6D68B,#B76E79)" }}
         >
           <Sparkles className="h-2.5 w-2.5" strokeWidth={2.4} />
@@ -109,12 +108,12 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
       <BloomBackground />
 
       {/* ── Desktop sidebar (lg+ only) — tablets & phones use the bottom nav ──── */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col justify-between border-r border-[#EC4899]/12 bg-white/55 p-4 backdrop-blur-xl lg:flex lg:w-60 shadow-[8px_0_40px_-24px_oklch(0.6_0.2_350/0.5)]">
+      <aside className="fixed inset-y-0 start-0 z-20 hidden w-60 flex-col justify-between border-e border-[#EC4899]/12 bg-white/55 p-4 backdrop-blur-xl lg:flex lg:w-60 shadow-[8px_0_40px_-24px_oklch(0.6_0.2_350/0.5)]">
         <div>
           <div className="mb-6 px-1">
             <div className="lg:block hidden"><BloomLogo /></div>
             <div className="lg:hidden flex justify-center">
-              <a href="/" aria-label="Bloomzein home" className="transition hover:scale-105 active:scale-95">
+              <a href="/" aria-label={tr("Bloomzein home")} className="transition hover:scale-105 active:scale-95">
                 <AppIcon size={38} />
               </a>
             </div>
@@ -150,11 +149,11 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
                       <span className={`hidden lg:inline text-[15px] transition-colors ${active ? "font-bold text-hotpink" : "font-semibold text-[#831843]"}`}>
                         {label(item)}
                       </span>
-                      {item.soon && <span className="hidden lg:inline rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">soon</span>}
+                      {item.soon && <span className="hidden lg:inline rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-600">{tr("soon")}</span>}
 
                       {/* md (icon-only rail): floating tooltip on hover */}
-                      <span className="lg:hidden pointer-events-none absolute left-full ml-3 z-30 whitespace-nowrap rounded-xl bg-[#831843] px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100">
-                        {label(item)}{item.soon ? " · soon" : ""}
+                      <span className="lg:hidden pointer-events-none absolute start-full ms-3 z-30 whitespace-nowrap rounded-xl bg-[#831843] px-2.5 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-all duration-150 -translate-x-1 group-hover:translate-x-0 group-hover:opacity-100">
+                        {label(item)}{item.soon ? tr(" · soon") : ""}
                       </span>
                     </a>
                   );
@@ -164,32 +163,32 @@ export function AppShell({ children, currentPath }: { children: React.ReactNode;
           </nav>
         </div>
         <div className="hidden items-center justify-between gap-2 px-2 lg:flex">
-          <p className="font-script text-sm text-[#831843]">stay soft, bloom on ✿</p>
+          <p className="font-script text-sm text-[#831843]">{tr("stay soft, bloom on ✿")}</p>
           <LanguageButton current={lang} className="[&_ul]:bottom-full [&_ul]:mb-2 [&_ul]:mt-0" />
         </div>
       </aside>
 
       {/* ── Phone + Tablet Top App Bar (below lg) ────────────────────────────── */}
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-[#EC4899]/10 bg-white/85 px-4 py-2 backdrop-blur-xl lg:hidden">
+      <header className="fixed top-0 start-0 end-0 z-40 flex h-14 items-center justify-between border-b border-[#EC4899]/10 bg-white/85 px-4 py-2 backdrop-blur-xl lg:hidden">
         <div className="scale-90 origin-left">
           <BloomLogo />
         </div>
         <div className="flex items-center gap-2">
-          <p className="hidden font-script text-sm text-[#831843] sm:block">stay soft, bloom on ✿</p>
+          <p className="hidden font-script text-sm text-[#831843] sm:block">{tr("stay soft, bloom on ✿")}</p>
           <LanguageButton current={lang} />
         </div>
       </header>
 
       {/* ── Main container ───────────────────────────────────────────────────── */}
-      <main className="min-h-screen pt-14 pb-28 lg:pt-0 lg:ml-60 lg:pb-10 overflow-x-hidden relative">
+      <main className="min-h-screen pt-14 pb-28 lg:pt-0 lg:ms-60 lg:pb-10 overflow-x-hidden relative">
         {/* Soft ribbon-bow hero band behind every page (scrolls like Today's hero) */}
         <RibbonBackground />
         <div className="relative z-[1] mx-auto max-w-6xl px-3 py-3 sm:px-6 sm:py-5 lg:px-8 lg:py-6 min-w-0">
           {lang !== "en" && !noteHidden && (
             <div dir={lang === "ar" ? "rtl" : "ltr"} className="mb-3 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/75 px-4 py-2.5 text-[13px] font-semibold text-[#831843] shadow-sm backdrop-blur animate-fade-in">
-              <span className="flex-1">{LANG_NOTE[lang]}</span>
+              <span className="flex-1">{trx(LANG_NOTE[lang])}</span>
               <button type="button" onClick={() => { setNoteHidden(true); try { localStorage.setItem("bloom:lang-note", lang); } catch { /* ignore */ } }}
-                className="shrink-0 rounded-full px-2 py-0.5 text-hotpink transition hover:bg-hotpink/10 active:scale-95" aria-label="OK">OK</button>
+                className="shrink-0 rounded-full px-2 py-0.5 text-hotpink transition hover:bg-hotpink/10 active:scale-95" aria-label="OK">{tr("OK")}</button>
             </div>
           )}
           {children}

@@ -1,6 +1,7 @@
 import { ArrowLeft, Check, Crown, Sparkles, Utensils, Flame, Dumbbell, Flower2, CalendarDays, Wallet, NotebookPen, Bell } from "lucide-react";
 import { AppIcon } from "@/components/bloom/AppIcon";
 import { LanguageButton } from "@/components/bloom/LanguageButton";
+import { tr, trx } from "@/i18n";
 
 /* ------------------------------------------------------------------ *
  * Public pricing page — the single place where Bloom+ plans and prices
@@ -12,15 +13,15 @@ import { LanguageButton } from "@/components/bloom/LanguageButton";
 const GOLD = "#B76E79";
 
 const FEATURES = [
-  { Icon: Flower2, text: "Cycle tracking that syncs every tool to your current phase" },
-  { Icon: Utensils, text: "Your whole week of meals, auto-planned & shoppable" },
-  { Icon: Dumbbell, text: "Full workout & yoga programs, matched to your cycle phase" },
-  { Icon: Flame, text: "Energy engine — daily target, macros, eat-back & goal timeline" },
-  { Icon: CalendarDays, text: "A big calendar & life organizer for your whole month" },
-  { Icon: Wallet, text: "Budget planner to keep your money picture in one place" },
-  { Icon: NotebookPen, text: "Notes & a daily diary for reflections and tracking" },
-  { Icon: Bell, text: "Smart reminders for your cycle, meds, water & habits" },
-  { Icon: Sparkles, text: "Long-term mood, health & progress insights from day one" },
+  { Icon: Flower2, text: tr("Cycle tracking that syncs every tool to your current phase") },
+  { Icon: Utensils, text: tr("Your whole week of meals, auto-planned & shoppable") },
+  { Icon: Dumbbell, text: tr("Full workout & yoga programs, matched to your cycle phase") },
+  { Icon: Flame, text: tr("Energy engine — daily target, macros, eat-back & goal timeline") },
+  { Icon: CalendarDays, text: tr("A big calendar & life organizer for your whole month") },
+  { Icon: Wallet, text: tr("Budget planner to keep your money picture in one place") },
+  { Icon: NotebookPen, text: tr("Notes & a daily diary for reflections and tracking") },
+  { Icon: Bell, text: tr("Smart reminders for your cycle, meds, water & habits") },
+  { Icon: Sparkles, text: tr("Long-term mood, health & progress insights from day one") },
 ];
 
 function PlanCard({
@@ -38,21 +39,20 @@ function PlanCard({
     >
       {badge && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>
-          {badge}
+          {trx(badge)}
         </span>
       )}
-      <p className="text-[11px] font-bold uppercase tracking-widest text-rose/50">{name}</p>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-rose/50">{trx(name)}</p>
       <p className="mt-2 font-black text-4xl text-hotpink leading-none">
-        {price}
-        <span className="text-sm font-bold text-rose/50">/{period}</span>
+        {trx(price)}
+        <span className="text-sm font-bold text-rose/50">/{trx(period)}</span>
       </p>
-      <p className="mt-1.5 text-[12px] text-rose/70">{note}</p>
+      <p className="mt-1.5 text-[12px] text-rose/70">{trx(note)}</p>
       <a
         href="/app"
         className="bloom-luxury-btn mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
       >
-        <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 3-day free trial
-      </a>
+        <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Start 3-day free trial")}</a>
     </div>
   );
 }
@@ -67,8 +67,7 @@ export function PricingPage() {
             onClick={(e) => { if (typeof window !== "undefined" && window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
             className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#9D5C7E] hover:text-[#EC4899] transition"
           >
-            <ArrowLeft className="h-4 w-4" /> Back to Bloomzein
-          </a>
+            <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("Back to Bloomzein")}</a>
           <LanguageButton />
         </div>
 
@@ -76,13 +75,9 @@ export function PricingPage() {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
             <Crown className="h-7 w-7" strokeWidth={1.8} />
           </span>
-          <p className="mt-3 text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: GOLD }}>Bloom+ Premium</p>
-          <h1 className="mt-1 font-script text-4xl sm:text-5xl text-[#831843] leading-none">Simple, honest pricing</h1>
-          <p className="mx-auto mt-3 max-w-md text-[14px] text-rose/75 leading-relaxed">
-            Bloomzein is your all-in-one wellness companion &amp; life organizer — cycle, meals,
-            movement, budget, calendar, notes and reminders in one place — <b>free</b>. <b>Bloom+</b> adds
-            your daily coach, reports &amp; insights, with no ads. Start with a <b>3-day free trial</b>, cancel anytime.
-          </p>
+          <p className="mt-3 text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: GOLD }}>{tr("Bloom+ Premium")}</p>
+          <h1 className="mt-1 font-script text-4xl sm:text-5xl text-[#831843] leading-none">{tr("Simple, honest pricing")}</h1>
+          <p className="mx-auto mt-3 max-w-md text-[14px] text-rose/75 leading-relaxed">{tr("Bloomzein is your all-in-one wellness companion & life organizer — cycle, meals, movement, budget, calendar, notes and reminders in one place —")}{" "}<b>{tr("free")}</b>. <b>{tr("Bloom+")}</b>{" "}{tr("adds your daily coach, reports & insights, with no ads. Start with a")}{" "}<b>{tr("3-day free trial")}</b>{tr(", cancel anytime.")}</p>
         </header>
 
         <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-stretch">
@@ -91,33 +86,29 @@ export function PricingPage() {
         </div>
 
         <section className="mt-10">
-          <h2 className="text-center font-script text-2xl text-[#EC4899]">Everything Bloomzein brings together</h2>
+          <h2 className="text-center font-script text-2xl text-[#EC4899]">{tr("Everything Bloomzein brings together")}</h2>
           <ul className="mx-auto mt-4 max-w-md space-y-2.5">
             {FEATURES.map(({ Icon, text }) => (
               <li key={text} className="flex items-start gap-3 text-[14px] leading-snug text-[#5b3247]">
                 <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Icon className="h-3.5 w-3.5" strokeWidth={2.2} /></span>
-                {text}
+                {trx(text)}
               </li>
             ))}
           </ul>
         </section>
 
-        <p className="mt-10 text-center text-[12px] text-rose/60">
-          Prices in USD; your local currency and taxes are shown at checkout. Payments are securely
-          processed by <b>Paddle</b>, our Merchant of Record.
-        </p>
+        <p className="mt-10 text-center text-[12px] text-rose/60">{tr("Prices in USD; your local currency and taxes are shown at checkout. Payments are securely processed by")}{" "}<b>{tr("Paddle")}</b>{tr(", our Merchant of Record.")}</p>
         <p className="mt-2 flex items-center justify-center gap-1.5 text-[12px] text-rose/60">
-          <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 3-day free trial · cancel anytime · no hidden fees
-        </p>
+          <Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} />{" "}{tr("3-day free trial · cancel anytime · no hidden fees")}</p>
 
         <footer className="mt-12 border-t border-[#F4C6DD] pt-6 text-center text-xs text-[#9D5C7E]">
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <a href="/privacy" className="font-semibold hover:text-[#EC4899]">Privacy Policy</a>
-            <a href="/terms" className="font-semibold hover:text-[#EC4899]">Terms of Service</a>
-            <a href="/refund" className="font-semibold hover:text-[#EC4899]">Refund &amp; Cancellation</a>
-            <a href="/help" className="hover:text-[#EC4899]">Contact</a>
+            <a href="/privacy" className="font-semibold hover:text-[#EC4899]">{tr("Privacy Policy")}</a>
+            <a href="/terms" className="font-semibold hover:text-[#EC4899]">{tr("Terms of Service")}</a>
+            <a href="/refund" className="font-semibold hover:text-[#EC4899]">{tr("Refund & Cancellation")}</a>
+            <a href="/help" className="hover:text-[#EC4899]">{tr("Contact")}</a>
           </div>
-          <p className="mt-3">© {new Date().getFullYear()} Bloomzein. Made with care for your softest era. ✿</p>
+          <p className="mt-3">© {new Date().getFullYear()}{" "}{tr("Bloomzein. Made with care for your softest era. ✿")}</p>
         </footer>
       </div>
     </div>

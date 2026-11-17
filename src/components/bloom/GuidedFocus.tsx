@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { isGuided } from "@/lib/guidedSetup";
+import { tr, trx } from "@/i18n";
 
 /**
  * Guided-setup "focus mode" — while she's walking the Today checklist
@@ -58,22 +59,21 @@ export function GuidedFinishBar({
 }: { toolLabel: string; phaseLabel?: string; hint?: string; className?: string; href?: string; ctaLabel?: string }) {
   return (
     <div className={`relative overflow-hidden rounded-2xl border border-petal/60 bg-gradient-to-r from-blush/70 via-white to-petal/40 px-4 py-3 shadow-sm animate-fade-in ${className}`}>
-      <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-hotpink/15 blur-2xl" />
+      <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-hotpink/15 blur-2xl" />
       <div className="relative flex items-center gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-hotpink text-white shadow-md shadow-hotpink/30 animate-icon-breathe">
           <Sparkles className="h-4 w-4" strokeWidth={1.8} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/55">
-            Setting up · {toolLabel}{phaseLabel ? ` · ${phaseLabel}` : ""}
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/55">{tr("Setting up ·")}{" "}{trx(toolLabel)}{phaseLabel ? ` · ${phaseLabel}` : ""}
           </p>
-          <p className="text-sm font-bold text-rose leading-tight">{hint || "This is your plan — the rest fills in on Today."}</p>
+          <p className="text-sm font-bold text-rose leading-tight">{trx(hint) || tr("This is your plan — the rest fills in on Today.")}</p>
         </div>
         <button
           onClick={() => { window.location.href = href; }}
           className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3.5 py-2 text-[11px] font-bold shadow-sm shadow-hotpink/30 active:scale-95 transition animate-cta-bounce"
         >
-          {ctaLabel} <ArrowRight className="h-3 w-3" />
+          {trx(ctaLabel)} <ArrowRight className="rtl:-scale-x-100 h-3 w-3" />
         </button>
       </div>
     </div>
@@ -90,11 +90,10 @@ export function GuidedFocusHero({
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/85 via-hotpink/45 to-hotpink/10" />
       <div className="relative flex items-center min-h-[92px] px-4 py-3">
         <div>
-          <p className="font-script text-2xl sm:text-3xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{label}</p>
+          <p className="font-script text-2xl sm:text-3xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.3)" }}>{trx(label)}</p>
           {phaseLabel && (
             <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink">
-              ✿ {phaseLabel} phase
-            </span>
+              ✿ {tr("{0} phase", { 0: phaseLabel })}</span>
           )}
         </div>
       </div>

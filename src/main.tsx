@@ -2,7 +2,7 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import "./styles.css"
 import "./bloom-motion.css"
-import App from "./App"
+import { loadI18n } from "./i18n"
 import { storePWAPrompt } from "./lib/pwa"
 import { initErrorLogging } from "./lib/errorLog"
 
@@ -38,8 +38,11 @@ navigator.serviceWorker?.addEventListener("message", (event) => {
   if (event.data?.type === "SW_FORCE_RELOAD") window.location.reload();
 })
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-)
+// Translations first (tr() is also used at module level), then the app.
+loadI18n().then(() => import("./App")).then(({ default: App }) => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  )
+})

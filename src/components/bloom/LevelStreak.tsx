@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Flame } from "lucide-react";
 import { readMovementLevel, readSeenLevel, writeSeenLevel } from "@/lib/crossToolData";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================
    LevelStreak — a slim, cute motivation strip + a level-up 🎉.
@@ -44,10 +45,10 @@ export function LevelStreak({ streak, className = "", variant = "bar" }: { strea
   if (variant === "chip") {
     return (
       <>
-        <span className={`inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 pl-1 pr-2 py-1 shrink-0 ${className}`} title={`Lvl ${lvl.level} · ${lvl.name} · ${streak}-day streak`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full border border-petal/60 bg-white/85 ps-1 pe-2 py-1 shrink-0 ${className}`} title={tr("Lvl {0} · {1} · {2}-day streak", { 0: lvl.level, 1: lvl.name, 2: streak })}>
           <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose"><BloomFlower size={12} /></span>
-          <span className="text-[11px] font-bold text-rose leading-none">Lvl {lvl.level}</span>
-          <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-hotpink leading-none"><Flame className="h-3 w-3" fill={streak > 0 ? "currentColor" : "none"} strokeWidth={2} />{streak}</span>
+          <span className="text-[11px] font-bold text-rose leading-none">{tr("Lvl")}{" "}{trx(lvl.level)}</span>
+          <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-hotpink leading-none"><Flame className="h-3 w-3" fill={streak > 0 ? "currentColor" : "none"} strokeWidth={2} />{trx(streak)}</span>
         </span>
         {celebrate && <LevelUpCelebration info={celebrate} onClose={() => setCelebrate(null)} />}
       </>
@@ -65,11 +66,10 @@ export function LevelStreak({ streak, className = "", variant = "bar" }: { strea
         {/* Level name + progress to next */}
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-[12px] font-bold text-rose leading-none truncate">
-              Lvl {lvl.level} · <span className="text-hotpink">{lvl.name}</span>
+            <p className="text-[12px] font-bold text-rose leading-none truncate">{tr("Lvl")}{" "}{trx(lvl.level)} · <span className="text-hotpink">{trx(lvl.name)}</span>
             </p>
             <p className="shrink-0 text-[9px] font-semibold text-rose/55">
-              {lvl.isMax ? "max bloom ✿" : `${lvl.toNext} to next`}
+              {lvl.isMax ? tr("max bloom ✿") : tr("{0} to next", { 0: lvl.toNext })}
             </p>
           </div>
           <div className="mt-1 h-1.5 rounded-full bg-blush overflow-hidden">
@@ -83,10 +83,10 @@ export function LevelStreak({ streak, className = "", variant = "bar" }: { strea
         {/* Streak */}
         <span
           className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blush/70 px-2 py-1 text-[11px] font-bold text-hotpink"
-          title={`${streak}-day streak`}
+          title={tr("{0}-day streak", { 0: streak })}
         >
           <Flame className="h-3.5 w-3.5" fill={streak > 0 ? "currentColor" : "none"} strokeWidth={2} />
-          {streak}
+          {trx(streak)}
         </span>
       </div>
 
@@ -139,20 +139,17 @@ function LevelUpCelebration({ info, onClose }: {
         >
           <BloomFlower size={52} />
         </div>
-        <p className="text-[10px] font-black tracking-[0.42em] uppercase" style={{ color: "#DB2777", opacity: 0.7 }}>Level up</p>
-        <h2 className="font-script leading-none mt-1" style={{ fontSize: "clamp(2rem,8vw,2.75rem)", color: "#DB2777", filter: "drop-shadow(0 3px 10px rgba(236,72,153,0.25))" }}>
-          Lvl {info.level} · {info.name}
+        <p className="text-[10px] font-black tracking-[0.42em] uppercase" style={{ color: "#DB2777", opacity: 0.7 }}>{tr("Level up")}</p>
+        <h2 className="font-script leading-none mt-1" style={{ fontSize: "clamp(2rem,8vw,2.75rem)", color: "#DB2777", filter: "drop-shadow(0 3px 10px rgba(236,72,153,0.25))" }}>{tr("Lvl")}{" "}{trx(info.level)} · {trx(info.name)}
         </h2>
-        <p className="mt-2 text-[13px]" style={{ color: "#9D5C7E" }}>
-          You&apos;ve bloomed into <b style={{ color: "#DB2777" }}>{info.name}</b> ✿
+        <p className="mt-2 text-[13px]" style={{ color: "#9D5C7E" }}>{tr("You've bloomed into")}{" "}<b style={{ color: "#DB2777" }}>{trx(info.name)}</b> ✿
         </p>
         <button
           onClick={onClose}
           className="mt-5 inline-flex items-center gap-2 rounded-full px-7 py-2.5 text-sm font-bold text-white active:scale-95 transition-transform"
           style={{ background: "linear-gradient(135deg,#F472B6 0%,#EC4899 50%,#DB2777 100%)", boxShadow: "0 10px 30px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.5)" }}
         >
-          <Star size={15} color="#fff" /> Keep blooming
-        </button>
+          <Star size={15} color="#fff" />{" "}{tr("Keep blooming")}</button>
       </div>
 
       <style>{`

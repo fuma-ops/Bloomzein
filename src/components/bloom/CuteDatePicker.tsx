@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
+import { tr, trx, localMonths, localWeekdays } from "@/i18n";
 
 interface Props {
   value: string; // "YYYY-MM-DD"
@@ -10,11 +11,12 @@ interface Props {
   className?: string;
 }
 
-const MONTHS = [
+const MONTHS = localMonths([
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
-];
-const WD = ["S", "M", "T", "W", "T", "F", "S"];
+], "long");
+const MONTHS_SHORT = localMonths(MONTHS.map((m) => m.slice(0, 3)), "short");
+const WD = localWeekdays(["S", "M", "T", "W", "T", "F", "S"], "narrow");
 const POPOVER_SIZE = { width: 260, height: 360 };
 
 function pad(n: number) {
@@ -32,7 +34,7 @@ function parse(s: string): Date | null {
 function prettyShort(s: string) {
   const d = parse(s);
   if (!d) return "";
-  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
 }
 
 export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", className = "" }: Props) {
@@ -87,7 +89,7 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
       >
         <CalendarIcon className="h-4 w-4 text-hotpink shrink-0" strokeWidth={1.8} />
         <span className={`truncate ${value ? "text-rose font-semibold" : "text-rose/40"}`}>
-          {value ? prettyShort(value) : placeholder}
+          {value ? prettyShort(value) : trx(placeholder)}
         </span>
       </button>
 
@@ -100,17 +102,17 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
           >
             <div className="flex items-center justify-between mb-2">
               <button type="button" onClick={() => shift(-1)} className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
               </button>
               <p className="font-script text-xl text-hotpink leading-none">
-                {MONTHS[view.m]} {view.y}
+                {trx(MONTHS[view.m])} {trx(view.y)}
               </p>
               <button type="button" onClick={() => shift(1)} className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink hover:bg-petal">
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
               </button>
             </div>
             <div className="grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold text-rose/60 mb-1">
-              {WD.map((d, i) => <div key={i}>{d}</div>)}
+              {WD.map((d, i) => <div key={i}>{trx(d)}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-0.5">
               {cells.map((d, i) => {
@@ -141,7 +143,7 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
                           : "text-rose hover:bg-blush",
                     ].join(" ")}
                   >
-                    {d}
+                    {trx(d)}
                   </button>
                 );
               })}
@@ -151,17 +153,13 @@ export function CuteDatePicker({ value, onChange, placeholder = "Pick a date", c
                 type="button"
                 onClick={() => { onChange(fmt(new Date())); setOpen(false); }}
                 className="text-[11px] font-bold text-hotpink hover:underline"
-              >
-                Today
-              </button>
+              >{tr("Today")}</button>
               {value && (
                 <button
                   type="button"
                   onClick={() => { onChange(""); setOpen(false); }}
                   className="text-[11px] font-bold text-rose/60 hover:text-hotpink"
-                >
-                  Clear
-                </button>
+                >{tr("Clear")}</button>
               )}
             </div>
           </div>,

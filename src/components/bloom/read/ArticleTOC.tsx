@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { ArticleSection } from "./ArticleBody";
+import { tr, trx } from "@/i18n";
 
 /**
  * "On this page" table of contents with scroll-spy. Highlights the section
@@ -48,7 +49,7 @@ export function ArticleTOC({ sections, className = "", collapsible = false }: { 
             <button
               onClick={() => go(s.id)}
               className={[
-                "group flex w-full items-start gap-2.5 rounded-xl px-2 py-1.5 text-left transition",
+                "group flex w-full items-start gap-2.5 rounded-xl px-2 py-1.5 text-start transition",
                 on ? "bg-blush/60" : "hover:bg-blush/40",
               ].join(" ")}
             >
@@ -64,7 +65,7 @@ export function ArticleTOC({ sections, className = "", collapsible = false }: { 
                   on ? "font-semibold text-hotpink" : "text-rose/70 group-hover:text-rose",
                 ].join(" ")}
               >
-                {s.label}
+                {trx(s.label)}
               </span>
             </button>
           </li>
@@ -80,21 +81,19 @@ export function ArticleTOC({ sections, className = "", collapsible = false }: { 
     // (rotating to point up) once opened.
     return (
       <details className={["group", shell, "px-4 py-3", className].join(" ")}>
-        <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-hotpink/80 [&::-webkit-details-marker]:hidden">
-          On this page
-          <span className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink group-open:bg-hotpink group-open:text-white transition">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-[11px] font-bold uppercase tracking-[0.18em] text-hotpink/80 [&::-webkit-details-marker]:hidden">{tr("On this page")}<span className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink group-open:bg-hotpink group-open:text-white transition">
             <ChevronDown className="h-4 w-4 transition group-open:rotate-180 animate-cta-bounce group-open:animate-none" strokeWidth={2.4} />
           </span>
         </summary>
-        <div className="mt-3">{list}</div>
+        <div className="mt-3">{trx(list)}</div>
       </details>
     );
   }
 
   return (
     <nav className={[shell, "p-4 sm:p-5", className].join(" ")}>
-      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-hotpink/80">On this page</p>
-      {list}
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-hotpink/80">{tr("On this page")}</p>
+      {trx(list)}
     </nav>
   );
 }

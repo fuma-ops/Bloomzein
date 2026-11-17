@@ -5,6 +5,7 @@ import { isPremium, setPlan, usePremium, useAccess, openPaywall, OPEN_PAYWALL, t
 import { trackEvent } from "@/lib/analytics";
 import { PADDLE_CONFIGURED, PADDLE_ENV, openCheckout, openInlineCheckout, openCustomerPortal, fetchLocalizedPrices, refreshEntitlement, INLINE_FRAME_CLASS, type LocalizedPrices } from "@/lib/paddle";
 import { useAuth } from "@/contexts/AuthContext";
+import { tr, trx } from "@/i18n";
 
 /* Rose-gold is the single "premium" note, distinct from the app's hotpink. */
 const GOLD = "#B76E79";
@@ -26,10 +27,10 @@ const HEADLINES: Record<PaywallFeature, string> = {
 
 // Bloom+ = the deeper layer on top of the free tools (see entitlements.ts).
 const BENEFITS = [
-  { Icon: Sparkles, text: "Your daily coach — a full plan for every day, synced to your phase" },
-  { Icon: Flame,    text: "Reports & long-term insights from everything you log" },
-  { Icon: Utensils, text: "Smart shopping list & pantry, written from your week" },
-  { Icon: Dumbbell, text: "No ads — plus budget goals & your living phase theme" },
+  { Icon: Sparkles, text: tr("Your daily coach — a full plan for every day, synced to your phase") },
+  { Icon: Flame,    text: tr("Reports & long-term insights from everything you log") },
+  { Icon: Utensils, text: tr("Smart shopping list & pantry, written from your week") },
+  { Icon: Dumbbell, text: tr("No ads — plus budget goals & your living phase theme") },
 ];
 
 /* ─── Inline checkout — Paddle's payment form inside a Bloomzein-styled modal.
@@ -65,21 +66,20 @@ function InlineCheckout({
         className="relative w-full max-w-md overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-hotpink/30 animate-scale-in"
       >
         <div className="relative px-6 pt-6 pb-4 text-center" style={{ background: "linear-gradient(160deg, #FFF1F6, #FCE7F3)" }}>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
+          <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
             <X className="h-4 w-4" />
           </button>
           <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
             <Crown className="h-6 w-6" strokeWidth={1.8} />
           </span>
-          <h2 className="font-script text-2xl text-hotpink leading-none">Complete your Bloom+</h2>
-          <p className="mt-1 text-[12px] text-rose/70">{plan === "annual" ? "Yearly plan" : "Monthly plan"} · 3-day free trial</p>
+          <h2 className="font-script text-2xl text-hotpink leading-none">{tr("Complete your Bloom+")}</h2>
+          <p className="mt-1 text-[12px] text-rose/70">{plan === "annual" ? tr("Yearly plan") : tr("Monthly plan")}{" "}{tr("· 3-day free trial")}</p>
         </div>
         <div className="px-4 pb-4 pt-3">
           {/* Paddle injects the payment form into this container. */}
           <div className={`${INLINE_FRAME_CLASS} min-h-[420px] rounded-2xl bg-white`} />
           <p className="mt-2 flex items-center justify-center gap-1.5 text-[10px] text-rose/50">
-            <Lock className="h-3 w-3" strokeWidth={2.4} /> Secure payment · powered by Paddle
-          </p>
+            <Lock className="h-3 w-3" strokeWidth={2.4} />{" "}{tr("Secure payment · powered by Paddle")}</p>
         </div>
       </div>
     </div>,
@@ -147,22 +147,22 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
       >
         {/* soft premium header wash */}
         <div className="relative px-6 pt-6 pb-5 text-center" style={{ background: `linear-gradient(160deg, #FFF1F6, #FCE7F3)` }}>
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
+          <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-7 w-7 place-items-center rounded-full bg-white/70 text-rose/60 transition hover:text-hotpink active:scale-90">
             <X className="h-4 w-4" />
           </button>
           <span className="mx-auto mb-2 grid h-14 w-14 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
             <Crown className="h-7 w-7" strokeWidth={1.8} />
           </span>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: GOLD }}>Bloom+ Premium</p>
-          <h2 className="mt-1 font-script text-3xl leading-tight text-hotpink">Bloom your whole week</h2>
-          <p className="mt-1.5 text-[12.5px] leading-snug text-rose/75">{HEADLINES[feature]}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: GOLD }}>{tr("Bloom+ Premium")}</p>
+          <h2 className="mt-1 font-script text-3xl leading-tight text-hotpink">{tr("Bloom your whole week")}</h2>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-rose/75">{trx(HEADLINES[feature])}</p>
         </div>
 
         {done ? (
           <div className="px-6 py-8 text-center animate-fade-in">
             <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-emerald-500 text-white animate-icon-breathe"><Check className="h-6 w-6" strokeWidth={3} /></span>
-            <p className="font-script text-2xl text-hotpink">You're Bloom+ ✿</p>
-            <p className="mt-1 text-[12px] text-rose/70">Everything's unlocked — enjoy your full bloom.</p>
+            <p className="font-script text-2xl text-hotpink">{tr("You're Bloom+ ✿")}</p>
+            <p className="mt-1 text-[12px] text-rose/70">{tr("Everything's unlocked — enjoy your full bloom.")}</p>
           </div>
         ) : (
           <div className="px-6 pb-6 pt-4">
@@ -170,7 +170,7 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
               {BENEFITS.map(({ Icon, text }) => (
                 <li key={text} className="flex items-start gap-2.5 text-[12.5px] leading-snug text-[#831843]">
                   <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/10 text-hotpink"><Icon className="h-3 w-3" strokeWidth={2.4} /></span>
-                  {text}
+                  {trx(text)}
                 </li>
               ))}
             </ul>
@@ -178,21 +178,20 @@ export function PaywallSheet({ feature = "general", onClose }: { feature?: Paywa
             {/* price toggle */}
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button onClick={() => setAnnual(false)} className={["rounded-2xl border p-2.5 text-center transition active:scale-95", !annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Monthly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">{prices.monthly ?? "$3"}<span className="text-[10px] font-bold text-rose/50">/mo</span></p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">{tr("Monthly")}</p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{trx(prices.monthly) ?? "$3"}<span className="text-[10px] font-bold text-rose/50">{tr("/mo")}</span></p>
               </button>
               <button onClick={() => setAnnual(true)} className={["relative rounded-2xl border p-2.5 text-center transition active:scale-95", annual ? "border-hotpink bg-hotpink/5" : "border-petal/60 bg-white"].join(" ")}>
-                <span className="absolute -top-2 right-2 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>Save 19%</span>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">Yearly</p>
-                <p className="font-black text-hotpink leading-none mt-0.5">{prices.annual ?? "$29"}<span className="text-[10px] font-bold text-rose/50">/yr</span></p>
+                <span className="absolute -top-2 end-2 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: GOLD }}>{tr("Save 19%")}</span>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50">{tr("Yearly")}</p>
+                <p className="font-black text-hotpink leading-none mt-0.5">{trx(prices.annual) ?? "$29"}<span className="text-[10px] font-bold text-rose/50">{tr("/yr")}</span></p>
               </button>
             </div>
 
             <button onClick={startTrial} className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
-              <Sparkles className="h-4 w-4" strokeWidth={2} /> Start 3-day free trial
-            </button>
-            <p className="mt-1.5 text-center text-[10px] text-rose/50">Then {annual ? `${prices.annual ?? "$29"}/year` : `${prices.monthly ?? "$3"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">cancel anytime</a></p>
-            <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-hotpink/25 bg-white/70 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-hotpink/5 active:scale-[0.99]">Continue with the free version</button>
+              <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Start 3-day free trial")}</button>
+            <p className="mt-1.5 text-center text-[10px] text-rose/50">{tr("Then")}{" "}{annual ? `${prices.annual ?? "$29"}/year` : `${prices.monthly ?? "$3"}/month`} · <a href="/refund" target="_blank" rel="noopener noreferrer" className="underline decoration-rose/30 underline-offset-2 hover:text-hotpink">{tr("cancel anytime")}</a></p>
+            <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-hotpink/25 bg-white/70 py-2.5 text-[13px] font-bold text-hotpink transition hover:bg-hotpink/5 active:scale-[0.99]">{tr("Continue with the free version")}</button>
           </div>
         )}
       </div>
@@ -270,22 +269,21 @@ export function PlusReturn() {
         </span>
         {phase === "done" ? (
           <>
-            <h2 className="font-script text-3xl text-hotpink">Welcome to Bloom+ ✿</h2>
-            <p className="mt-2 text-sm text-rose/80">Your payment went through and everything's unlocked. Enjoy your softest era 🌸</p>
+            <h2 className="font-script text-3xl text-hotpink">{tr("Welcome to Bloom+ ✿")}</h2>
+            <p className="mt-2 text-sm text-rose/80">{tr("Your payment went through and everything's unlocked. Enjoy your softest era 🌸")}</p>
             <button onClick={() => setPhase("idle")} className="bloom-luxury-btn hover-scale mt-5 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white">
-              <Sparkles className="h-4 w-4" strokeWidth={2} /> Start blooming
-            </button>
+              <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Start blooming")}</button>
           </>
         ) : phase === "slow" ? (
           <>
-            <h2 className="font-script text-2xl text-hotpink">Almost there…</h2>
-            <p className="mt-2 text-sm text-rose/80">Your payment was received 💛 Bloom+ is activating — it can take a minute. Pull to refresh if it's not on yet.</p>
-            <button onClick={() => setPhase("idle")} className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-petal/60 py-3 text-sm font-semibold text-rose">Got it</button>
+            <h2 className="font-script text-2xl text-hotpink">{tr("Almost there…")}</h2>
+            <p className="mt-2 text-sm text-rose/80">{tr("Your payment was received 💛 Bloom+ is activating — it can take a minute. Pull to refresh if it's not on yet.")}</p>
+            <button onClick={() => setPhase("idle")} className="mt-5 inline-flex w-full items-center justify-center rounded-full border border-petal/60 py-3 text-sm font-semibold text-rose">{tr("Got it")}</button>
           </>
         ) : (
           <>
-            <h2 className="font-script text-2xl text-hotpink">Activating Bloom+…</h2>
-            <p className="mt-2 text-sm text-rose/80">Thank you 💛 We're unlocking everything for you now.</p>
+            <h2 className="font-script text-2xl text-hotpink">{tr("Activating Bloom+…")}</h2>
+            <p className="mt-2 text-sm text-rose/80">{tr("Thank you 💛 We're unlocking everything for you now.")}</p>
           </>
         )}
       </div>
@@ -301,8 +299,7 @@ export function PremiumBadge({ className = "" }: { className?: string }) {
       className={["inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white", className].join(" ")}
       style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}
     >
-      <Sparkles className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+
-    </span>
+      <Sparkles className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Bloom+")}</span>
   );
 }
 
@@ -310,8 +307,7 @@ export function PremiumBadge({ className = "" }: { className?: string }) {
 export function LockChip() {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-white/25 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
-      <Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+
-    </span>
+      <Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Bloom+")}</span>
   );
 }
 
@@ -323,8 +319,8 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
       <div className="flex items-center gap-3 rounded-3xl border p-4" style={{ borderColor: `${GOLD}55`, background: "linear-gradient(160deg,#FFF7FA,#FFFFFF)" }}>
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}><Crown className="h-5 w-5" strokeWidth={1.8} /></span>
         <div className="min-w-0">
-          <p className="text-sm font-bold text-hotpink">You're Bloom+ ✿</p>
-          <p className="text-[11.5px] text-rose/70 leading-snug">Your coach, reports &amp; insights are unlocked — ad-free.</p>
+          <p className="text-sm font-bold text-hotpink">{tr("You're Bloom+ ✿")}</p>
+          <p className="text-[11.5px] text-rose/70 leading-snug">{tr("Your coach, reports & insights are unlocked — ad-free.")}</p>
         </div>
       </div>
     );
@@ -332,17 +328,17 @@ export function DiscoverBloomPlus({ feature = "general" }: { feature?: PaywallFe
   return (
     <button
       onClick={() => openPaywall(feature)}
-      className="group w-full text-left flex items-center gap-3 rounded-3xl border p-4 transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow"
+      className="group w-full text-start flex items-center gap-3 rounded-3xl border p-4 transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow"
       style={{ borderColor: `${GOLD}66`, background: "linear-gradient(160deg,#FFF1F6,#FCE7F3)" }}
     >
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-white animate-icon-breathe" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
         <Crown className="h-5 w-5" strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-sm font-bold text-hotpink">Discover Bloom+ <PremiumBadge /></p>
-        <p className="text-[11.5px] text-rose/75 leading-snug">Your daily coach, reports &amp; insights — ad-free, from $3/month.</p>
+        <p className="flex items-center gap-1.5 text-sm font-bold text-hotpink">{tr("Discover Bloom+")}{" "}<PremiumBadge /></p>
+        <p className="text-[11.5px] text-rose/75 leading-snug">{tr("Your daily coach, reports & insights — ad-free, from $3/month.")}</p>
       </div>
-      <ChevronRight className="h-5 w-5 shrink-0 text-hotpink" />
+      <ChevronRight className="rtl:-scale-x-100 h-5 w-5 shrink-0 text-hotpink" />
     </button>
   );
 }
@@ -371,18 +367,18 @@ export function ManageSubscription() {
       <button
         onClick={open}
         disabled={loading}
-        className="group flex w-full items-center gap-3 text-left transition active:scale-[0.99] disabled:opacity-70"
+        className="group flex w-full items-center gap-3 text-start transition active:scale-[0.99] disabled:opacity-70"
       >
         <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-white" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
           {loading ? <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2} /> : <CreditCard className="h-5 w-5" strokeWidth={1.8} />}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold text-hotpink">Manage subscription</p>
-          <p className="text-[11.5px] text-rose/70 leading-snug">Update your card, view invoices, or cancel — anytime.</p>
+          <p className="text-sm font-bold text-hotpink">{tr("Manage subscription")}</p>
+          <p className="text-[11.5px] text-rose/70 leading-snug">{tr("Update your card, view invoices, or cancel — anytime.")}</p>
         </div>
-        <ChevronRight className="h-5 w-5 shrink-0 text-hotpink transition group-hover:translate-x-0.5" />
+        <ChevronRight className="rtl:-scale-x-100 h-5 w-5 shrink-0 text-hotpink transition group-hover:translate-x-0.5" />
       </button>
-      {err && <p className="mt-2 text-[11px] text-rose/70">Couldn't open the billing portal — {err}. Please try again.</p>}
+      {err && <p className="mt-2 text-[11px] text-rose/70">{tr("Couldn't open the billing portal —")}{" "}{trx(err)}{tr(". Please try again.")}</p>}
     </div>
   );
 }
@@ -396,12 +392,12 @@ export function PlanToggle() {
     <div className="flex items-center gap-3 rounded-2xl border border-dashed border-hotpink/40 bg-white/60 p-3">
       <Flower2 className="h-4 w-4 shrink-0 text-hotpink" />
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-bold text-[#831843]">Testing as: {premium ? "Bloom+ ✨" : "Free"}</p>
-        <p className="text-[10.5px] text-rose/60 leading-snug">Flip to feel the free vs premium experience.</p>
+        <p className="text-[12px] font-bold text-[#831843]">{tr("Testing as:")}{" "}{premium ? tr("Bloom+ ✨") : tr("Free")}</p>
+        <p className="text-[10.5px] text-rose/60 leading-snug">{tr("Flip to feel the free vs premium experience.")}</p>
       </div>
       <button
         onClick={() => setPlan(premium ? "free" : "plus")}
-        aria-label="Toggle plan"
+        aria-label={tr("Toggle plan")}
         className={["relative h-6 w-11 shrink-0 rounded-full transition-colors", premium ? "bg-hotpink" : "bg-rose/25"].join(" ")}
       >
         <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: premium ? "1.375rem" : "0.125rem" }} />
@@ -444,11 +440,10 @@ export function PlusLock({
             <Lock className="h-5 w-5" strokeWidth={2} />
           </span>
           <div className="mt-2 flex justify-center"><PremiumBadge /></div>
-          <p className="mt-1.5 font-script text-2xl text-hotpink leading-none">{title}</p>
-          {blurb && <p className="mt-1 text-[12px] text-rose/75 leading-snug max-w-[15rem] mx-auto">{blurb}</p>}
+          <p className="mt-1.5 font-script text-2xl text-hotpink leading-none">{trx(title)}</p>
+          {blurb && <p className="mt-1 text-[12px] text-rose/75 leading-snug max-w-[15rem] mx-auto">{trx(blurb)}</p>}
           <span className="mt-2.5 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[12px] font-bold text-white shadow" style={{ background: `linear-gradient(135deg, ${GOLD}, #EC4899)` }}>
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Unlock with Bloom+ ✿
-          </span>
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />{" "}{tr("Unlock with Bloom+ ✿")}</span>
         </div>
       </button>
     </div>

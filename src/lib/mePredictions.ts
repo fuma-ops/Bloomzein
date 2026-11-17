@@ -18,11 +18,12 @@ import { readCycleSettings, phaseForDay, hasCycleSettings } from "@/components/b
 import { readPeriodStarts, avgCycleLength } from "@/lib/periodLog";
 import { goalProjection } from "@/lib/nutritionTargets";
 import { moodByPhaseMap } from "@/lib/predictions";
+import { localMonths } from "@/i18n";
 
 const MS_DAY = 86_400_000;
 const toTime = (iso: string) => new Date(iso + "T00:00:00").getTime();
 const isoFromT = (t: number): string => localDateISO(new Date(t));
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = localMonths(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "short");
 
 export interface DatedValue {
   date: string;

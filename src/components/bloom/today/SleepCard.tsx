@@ -17,6 +17,7 @@ import {
   type SleepEntry,
 } from "@/lib/sleepLog";
 import { toContentPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { tr, trx } from "@/i18n";
 
 const PHASE_TIP: Record<string, string> = {
   period: "Rest deeply — your body is working hard. Warmth and an early night help.",
@@ -86,8 +87,8 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
           <Moon className="h-4 w-4 text-hotpink" strokeWidth={1.9} />
         </span>
         <div>
-          <h2 className="font-script text-2xl text-hotpink leading-none">Last night's sleep</h2>
-          <p className="text-[11px] text-rose/60">How rested do you feel today?</p>
+          <h2 className="font-script text-2xl text-hotpink leading-none">{tr("Last night's sleep")}</h2>
+          <p className="text-[11px] text-rose/60">{tr("How rested do you feel today?")}</p>
         </div>
       </div>
 
@@ -111,7 +112,7 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
               <span
                 className={`text-[9.5px] font-bold leading-none ${on ? "text-hotpink" : "text-rose/55"}`}
               >
-                {o.label}
+                {trx(o.label)}
               </span>
             </button>
           );
@@ -122,12 +123,12 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
       <div className="mt-3">
         {hoursOpen || hours != null ? (
           <div className="flex items-center justify-between rounded-2xl border border-petal/50 bg-white/60 px-3 py-2">
-            <span className="text-[12px] font-bold text-rose/70">Hours slept</span>
+            <span className="text-[12px] font-bold text-rose/70">{tr("Hours slept")}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => bumpHours(-0.5)}
                 className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink active:scale-90"
-                aria-label="Fewer hours"
+                aria-label={tr("Fewer hours")}
               >
                 <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
@@ -137,7 +138,7 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
               <button
                 onClick={() => bumpHours(0.5)}
                 className="grid h-7 w-7 place-items-center rounded-full bg-blush text-hotpink active:scale-90"
-                aria-label="More hours"
+                aria-label={tr("More hours")}
               >
                 <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
@@ -151,15 +152,14 @@ export function SleepCard({ phase }: { phase?: CyclePhase | null }) {
             }}
             className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink hover:underline"
           >
-            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} /> Add hours slept
-          </button>
+            <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />{" "}{tr("Add hours slept")}</button>
         )}
       </div>
 
       {/* insight / phase tip */}
       <p className="mt-3 flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 text-[12px] leading-snug text-[#831843]">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
-        <span>{q != null ? INSIGHT[q] : tip}</span>
+        <span>{q != null ? trx(INSIGHT[q]) : trx(tip)}</span>
       </p>
     </section>
   );

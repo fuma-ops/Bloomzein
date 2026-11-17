@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Droplet, Check, X } from "lucide-react";
 import { shouldAskToday, logPeriodStart, skipPeriodPromptToday, PERIOD_EVENT } from "@/lib/periodLog";
 import { todayISO } from "@/lib/localDate";
+import { tr } from "@/i18n";
 
 /**
  * Around the predicted period day, a soft centred pop-up asks her to confirm the
@@ -44,7 +45,7 @@ export function PeriodConfirm() {
         className="relative w-full max-w-xs rounded-[2rem] bg-white p-6 text-center animate-scale-in"
         style={{ boxShadow: "0 24px 60px rgba(190,24,93,0.35)" }}
       >
-        <button onClick={notYet} aria-label="Dismiss" className="absolute right-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
+        <button onClick={notYet} aria-label={tr("Dismiss")} className="absolute end-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
           <X className="h-4 w-4" />
         </button>
 
@@ -52,16 +53,13 @@ export function PeriodConfirm() {
           <Droplet className="h-8 w-8" strokeWidth={1.8} />
         </span>
 
-        <p className="font-script leading-tight" style={{ fontSize: "28px", color: "#BE185D" }}>Did your period<br />start today?</p>
-        <p className="mt-2 text-[12.5px] leading-snug" style={{ color: "#9D5C7E" }}>Confirm and I'll log the real day &amp; re-tune your cycle and predictions ✿</p>
+        <p className="font-script leading-tight" style={{ fontSize: "28px", color: "#BE185D" }}>{tr("Did your period")}<br />{tr("start today?")}</p>
+        <p className="mt-2 text-[12.5px] leading-snug" style={{ color: "#9D5C7E" }}>{tr("Confirm and I'll log the real day & re-tune your cycle and predictions ✿")}</p>
 
         <div className="mt-4 grid gap-2">
           <button onClick={yes} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: "linear-gradient(135deg,#EC4899,#DB2777)", boxShadow: "0 8px 22px rgba(219,39,119,0.4)" }}>
-            <Check className="h-4 w-4" strokeWidth={3} /> Yes, it started today
-          </button>
-          <button onClick={notYet} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: "#9D5C7E", background: "rgba(252,231,243,0.7)" }}>
-            Not yet
-          </button>
+            <Check className="h-4 w-4" strokeWidth={3} />{" "}{tr("Yes, it started today")}</button>
+          <button onClick={notYet} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: "#9D5C7E", background: "rgba(252,231,243,0.7)" }}>{tr("Not yet")}</button>
         </div>
       </div>
     </div>,

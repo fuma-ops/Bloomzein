@@ -5,17 +5,18 @@ import {
 } from "lucide-react";
 import { BloomBubbles } from "@/components/bloom/BloomBubbles";
 import { BloomFlower } from "@/components/bloom/BloomFlower";
+import { tr, trx } from "@/i18n";
 
 /* ---------- data ---------- */
 type CatKey = "all" | "selfcare" | "beauty" | "cycle" | "active" | "accessories" | "bestsellers";
 
 const CATEGORIES: { key: Exclude<CatKey, "all">; label: string; img: string }[] = [
-  { key: "selfcare",    label: "Self-care",   img: "/images/shop-cat-selfcare.webp" },
-  { key: "beauty",      label: "Beauty",      img: "/images/shop-cat-beauty.webp" },
-  { key: "cycle",       label: "Cycle Care",  img: "/images/shop-cat-cycle.webp" },
-  { key: "active",      label: "Activewear",  img: "/images/shop-cat-active.webp" },
-  { key: "accessories", label: "Accessories", img: "/images/shop-cat-accessories.webp" },
-  { key: "bestsellers", label: "Best sellers", img: "/images/shop-cat-premium.webp" },
+  { key: "selfcare",    label: tr("Self-care"),   img: "/images/shop-cat-selfcare.webp" },
+  { key: "beauty",      label: tr("Beauty"),      img: "/images/shop-cat-beauty.webp" },
+  { key: "cycle",       label: tr("Cycle Care"),  img: "/images/shop-cat-cycle.webp" },
+  { key: "active",      label: tr("Activewear"),  img: "/images/shop-cat-active.webp" },
+  { key: "accessories", label: tr("Accessories"), img: "/images/shop-cat-accessories.webp" },
+  { key: "bestsellers", label: tr("Best sellers"), img: "/images/shop-cat-premium.webp" },
 ];
 
 interface Product {
@@ -41,18 +42,18 @@ export const PRODUCTS: Product[] = [
 ];
 
 const MOODS: { label: string; img: string }[] = [
-  { label: "Romanticize My Day", img: "/images/shop-cat-selfcare.webp" },
-  { label: "Cozy Evening",       img: "/images/shop-cat-premium.webp" },
-  { label: "Glow Up",            img: "/images/shop-cat-beauty.webp" },
-  { label: "PMS Comfort",        img: "/images/shop-cat-cycle.webp" },
-  { label: "Self-care Sunday",   img: "/images/shop-cat-accessories.webp" },
+  { label: tr("Romanticize My Day"), img: "/images/shop-cat-selfcare.webp" },
+  { label: tr("Cozy Evening"),       img: "/images/shop-cat-premium.webp" },
+  { label: tr("Glow Up"),            img: "/images/shop-cat-beauty.webp" },
+  { label: tr("PMS Comfort"),        img: "/images/shop-cat-cycle.webp" },
+  { label: tr("Self-care Sunday"),   img: "/images/shop-cat-accessories.webp" },
 ];
 
 const PERKS: { label: string; icon: typeof Gift }[] = [
-  { label: "Premium products", icon: Gift },
-  { label: "Exclusive content", icon: Sparkles },
-  { label: "Excellent quality", icon: Star },
-  { label: "Member discount", icon: Percent },
+  { label: tr("Premium products"), icon: Gift },
+  { label: tr("Exclusive content"), icon: Sparkles },
+  { label: tr("Excellent quality"), icon: Star },
+  { label: tr("Member discount"), icon: Percent },
 ];
 
 const STORAGE = { cart: "bloom:shop-cart", saved: "bloom:shop-saved" };
@@ -144,27 +145,24 @@ export default function ShopPage() {
         {/* HERO — transparent; the photo lives in the blended background above. */}
         <section className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-[150px] sm:min-h-[200px] animate-card-pop-in" style={{ animationDelay: "0ms" }}>
           <div className="relative z-[1] px-4 pt-5 pb-3 sm:px-8 sm:pt-7 sm:pb-4 max-w-[74%] sm:max-w-md">
-            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-              Bloom Boutique <Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
+            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{tr("Bloom Boutique")}{" "}<Sparkles className="h-6 w-6 sm:h-9 sm:w-9" strokeWidth={1.8} />
             </h1>
-            <p className="animate-fade-in mt-0.5 sm:mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>Curated treasures for your softest era ✿</p>
-            <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">
-              Beauty • Wellness • Self-care • Cycle Care
-            </p>
+            <p className="animate-fade-in mt-0.5 sm:mt-1 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>{tr("Curated treasures for your softest era ✿")}</p>
+            <p className="mt-1 sm:mt-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-hotpink/80">{tr("Beauty • Wellness • Self-care • Cycle Care")}</p>
           </div>
 
           <button
             onClick={() => setOpen(true)}
-            aria-label="Open cart"
+            aria-label={tr("Open cart")}
             className={[
-              "absolute top-2 right-2 sm:top-3 sm:right-4 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
+              "absolute top-2 end-2 sm:top-3 sm:end-4 z-[2] grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/90 border border-petal/60 text-hotpink shadow-md shadow-rose/20 backdrop-blur transition hover:-translate-y-0.5",
               bumped ? "animate-bloom-bounce" : "",
             ].join(" ")}
           >
             <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.8} />
             {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
-                {cartCount}
+              <span className="absolute -end-1 -top-1 min-w-5 h-5 px-1 grid place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold border-2 border-white">
+                {trx(cartCount)}
               </span>
             )}
           </button>
@@ -173,13 +171,13 @@ export default function ShopPage() {
         {/* SEARCH */}
         <section className="mt-3 sm:mt-5 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
           <div className="relative max-w-xs sm:max-w-sm">
-            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
+            <Search className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/60" strokeWidth={2} />
             <input
               id="search-boutique"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search the boutique…"
-              className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-md shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
+              placeholder={tr("Search the boutique…")}
+              className="w-full rounded-full bg-white/95 backdrop-blur border border-petal/60 ps-11 pe-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 shadow-md shadow-rose/10 focus:outline-none focus:ring-4 focus:ring-hotpink/25 focus:border-hotpink transition"
             />
           </div>
         </section>
@@ -187,7 +185,7 @@ export default function ShopPage() {
 
       {/* CATEGORIES */}
       <section ref={categoriesRef} className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "120ms" }}>
-        <SectionTitle hint={active === "all" ? "browse" : "filtering"}>Shop by category</SectionTitle>
+        <SectionTitle hint={active === "all" ? "browse" : "filtering"}>{tr("Shop by category")}</SectionTitle>
         <div className="flex items-start gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar animate-bloom-scroll-hint">
           <CategoryTile
             allMode
@@ -209,24 +207,20 @@ export default function ShopPage() {
       {/* RECOMMENDED FOR YOU */}
       <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
         <div className="mb-1 flex items-center justify-between gap-2">
-          <h2 className="font-script text-3xl sm:text-4xl text-hotpink flex items-center gap-1.5">
-            Recommended for you <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-hotpink/70" strokeWidth={1.8} />
+          <h2 className="font-script text-3xl sm:text-4xl text-hotpink flex items-center gap-1.5">{tr("Recommended for you")}{" "}<Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-hotpink/70" strokeWidth={1.8} />
           </h2>
         </div>
         <div className="-mt-1 mb-3 flex items-center justify-between gap-2">
-          <p className="text-xs sm:text-sm text-rose/75">Curated based on your current phase ✿</p>
+          <p className="text-xs sm:text-sm text-rose/75">{tr("Curated based on your current phase ✿")}</p>
           <button
             onClick={() => setShowWhy((v) => !v)}
             aria-expanded={showWhy}
             className="shrink-0 text-xs font-semibold text-hotpink/80 hover:text-hotpink transition"
-          >
-            Why these picks {showWhy ? "↑" : "→"}
+          >{tr("Why these picks")}{" "}{showWhy ? "↑" : "→"}
           </button>
         </div>
         {showWhy && (
-          <p className="-mt-1 mb-3 rounded-2xl border border-petal/60 bg-white/80 px-3 py-2 text-xs sm:text-sm text-rose/80 animate-fade-in">
-            Curated from your current cycle phase, saved favorites, and the Bloom community's most-loved picks ✿
-          </p>
+          <p className="-mt-1 mb-3 rounded-2xl border border-petal/60 bg-white/80 px-3 py-2 text-xs sm:text-sm text-rose/80 animate-fade-in">{tr("Curated from your current cycle phase, saved favorites, and the Bloom community's most-loved picks ✿")}</p>
         )}
         <div className="-mx-3 sm:mx-0 px-3 sm:px-0 flex gap-2.5 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1 animate-bloom-scroll-hint">
           {recommended.map((p) => (
@@ -252,31 +246,29 @@ export default function ShopPage() {
           <div className="relative z-[2] flex items-center justify-between gap-4">
             <div className="max-w-xs">
               <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white">
-                <Crown className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} /> Bloom Membership
-              </span>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/95">Your soft life toolkit — save up to 30% & unlock everything.</p>
+                <Crown className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2} />{" "}{tr("Bloom Membership")}</span>
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-white/95">{tr("Your soft life toolkit — save up to 30% & unlock everything.")}</p>
               <div className="mt-3 sm:mt-4 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:gap-y-2">
                 {PERKS.map((perk) => (
                   <span key={perk.label} className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold text-white">
-                    <perk.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" strokeWidth={2} /> {perk.label}
+                    <perk.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" strokeWidth={2} /> {trx(perk.label)}
                   </span>
                 ))}
               </div>
               <button
                 onClick={() => setActive("bestsellers")}
                 className="animate-cta-glow mt-3 sm:mt-5 inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-white text-hotpink font-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 shadow-md shadow-rose/30 transition hover:-translate-y-0.5"
-              >
-                Join Blooming <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.4} />
+              >{tr("Join Blooming")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.4} />
               </button>
             </div>
-            <p className="hidden sm:block font-script text-7xl lg:text-8xl text-white/25 leading-none select-none shrink-0">Bloom</p>
+            <p className="hidden sm:block font-script text-7xl lg:text-8xl text-white/25 leading-none select-none shrink-0">{tr("Bloom")}</p>
           </div>
         </div>
       </section>
 
       {/* SHOP BY MOOD */}
       <section className="mt-6 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "300ms" }}>
-        <SectionTitle hint="View all →">Shop by mood</SectionTitle>
+        <SectionTitle hint="View all →">{tr("Shop by mood")}</SectionTitle>
         <div className="relative -mx-3 sm:mx-0 px-3 sm:px-0">
           <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-2">
             {MOODS.map((m) => (
@@ -287,24 +279,24 @@ export default function ShopPage() {
                 <img src={m.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" referrerPolicy="no-referrer" />
                 <div className="absolute inset-0 bg-gradient-to-t from-rose/80 via-rose/15 to-transparent" />
                 <span className="absolute inset-x-2 bottom-2 sm:inset-x-3 sm:bottom-3 text-white font-semibold text-xs sm:text-sm leading-snug drop-shadow-[0_2px_6px_oklch(0_0_0/0.45)]">
-                  {m.label}
+                  {trx(m.label)}
                 </span>
               </div>
             ))}
           </div>
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 start-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 end-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
         </div>
       </section>
 
       {/* BEST SELLERS / FILTERED PRODUCTS */}
       <section className="mt-6 sm:mt-8 mb-2 animate-card-pop-in" style={{ animationDelay: "360ms" }}>
-        <SectionTitle hint={`${filtered.length} items`}>
-          {active === "all" ? "Best sellers" : CATEGORIES.find((c) => c.key === active)?.label}
+        <SectionTitle hint={tr("{0} items", { 0: filtered.length })}>
+          {active === "all" ? tr("Best sellers") : trx(CATEGORIES.find((c) => c.key === active)?.label)}
         </SectionTitle>
         {filtered.length === 0 ? (
           <EmptyState
-            title="Nothing matches yet"
+            title={tr("Nothing matches yet")}
             body="Try a different word or browse another category."
             cta="Clear filters"
             onCta={() => { setQuery(""); setActive("all"); }}
@@ -348,11 +340,10 @@ function ShopComingSoon() {
         <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl text-white shadow-md animate-icon-breathe" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
           <ShoppingBag className="h-6 w-6" strokeWidth={1.8} />
         </span>
-        <p className="mt-3 font-script text-3xl text-hotpink leading-none">The Bloom Shop</p>
+        <p className="mt-3 font-script text-3xl text-hotpink leading-none">{tr("The Bloom Shop")}</p>
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
-          <Sparkles className="h-3 w-3" strokeWidth={2.4} /> Coming soon
-        </p>
-        <p className="mt-3 text-sm text-rose/75 leading-snug">Our curated self-care, beauty &amp; cycle-care collection is blooming. We'll tell you the moment it opens ✿</p>
+          <Sparkles className="h-3 w-3" strokeWidth={2.4} />{" "}{tr("Coming soon")}</p>
+        <p className="mt-3 text-sm text-rose/75 leading-snug">{tr("Our curated self-care, beauty & cycle-care collection is blooming. We'll tell you the moment it opens ✿")}</p>
       </div>
     </div>
   );
@@ -365,7 +356,7 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
       <h2 className="font-script text-3xl sm:text-4xl text-hotpink flex items-center gap-1.5">
         {children} <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-hotpink/70" strokeWidth={1.8} />
       </h2>
-      {hint && <span className="text-xs text-rose/70 shrink-0">{hint}</span>}
+      {hint && <span className="text-xs text-rose/70 shrink-0">{trx(hint)}</span>}
     </div>
   );
 }
@@ -397,7 +388,7 @@ function CategoryTile(
         )}
       </span>
       <span className="text-[9px] sm:text-[11px] font-semibold text-rose text-center leading-tight line-clamp-1 w-full">
-        {props.allMode ? "All" : props.label}
+        {props.allMode ? tr("All") : trx(props.label)}
       </span>
     </button>
   );
@@ -413,9 +404,9 @@ function ProductCard({
         <img src={p.img} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
         <button
           onClick={() => { onSave(); setPopped(true); setTimeout(() => setPopped(false), 400); }}
-          aria-label={saved ? "Unsave" : "Save"}
+          aria-label={saved ? tr("Unsave") : tr("Save")}
           className={[
-            "absolute top-1 right-1 sm:top-2 sm:right-2 grid h-5 w-5 sm:h-9 sm:w-9 place-items-center rounded-full border backdrop-blur transition",
+            "absolute top-1 end-1 sm:top-2 sm:end-2 grid h-5 w-5 sm:h-9 sm:w-9 place-items-center rounded-full border backdrop-blur transition",
             popped && "animate-heart-pop",
             saved ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/40" : "bg-white/85 text-hotpink border-petal/60 hover:scale-105",
           ].filter(Boolean).join(" ")}
@@ -423,29 +414,29 @@ function ProductCard({
           <Heart className="h-2.5 w-2.5 sm:h-4 sm:w-4" strokeWidth={1.8} fill={saved ? "currentColor" : "none"} />
         </button>
         {p.bestseller && (
-          <span className="absolute top-1 left-1 sm:top-2 sm:left-2 inline-flex items-center gap-0.5 sm:gap-1 rounded-full bg-white/90 text-hotpink text-[7px] sm:text-[10px] font-bold uppercase tracking-wider px-1 sm:px-2 py-0.5 border border-petal/60">
-            <Sparkles className="h-2 w-2 sm:h-3 sm:w-3" strokeWidth={2} /> <span className="hidden sm:inline">Loved</span>
+          <span className="absolute top-1 start-1 sm:top-2 sm:start-2 inline-flex items-center gap-0.5 sm:gap-1 rounded-full bg-white/90 text-hotpink text-[7px] sm:text-[10px] font-bold uppercase tracking-wider px-1 sm:px-2 py-0.5 border border-petal/60">
+            <Sparkles className="h-2 w-2 sm:h-3 sm:w-3" strokeWidth={2} /> <span className="hidden sm:inline">{tr("Loved")}</span>
           </span>
         )}
       </div>
       <div className="flex flex-col flex-1 p-1.5 sm:p-4 gap-0.5 sm:gap-0">
-        <h3 className="font-semibold text-rose text-[10px] sm:text-sm leading-snug line-clamp-2">{p.name}</h3>
+        <h3 className="font-semibold text-rose text-[10px] sm:text-sm leading-snug line-clamp-2">{trx(p.name)}</h3>
         <div className="mt-0.5 sm:mt-1 flex items-center gap-0.5 sm:gap-1 text-[9px] sm:text-xs text-rose/75">
           <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-hotpink" strokeWidth={1.8} fill="currentColor" />
           {p.rating.toFixed(1)}
         </div>
         <div className="mt-auto pt-1 sm:pt-3 flex items-center justify-between gap-1">
-          <span className="font-script text-base sm:text-2xl text-hotpink leading-none">${p.price}</span>
+          <span className="font-script text-base sm:text-2xl text-hotpink leading-none">${trx(p.price)}</span>
           <button
             onClick={onAdd}
-            aria-label="Add to bag"
+            aria-label={tr("Add to bag")}
             className="bloom-luxury-btn relative inline-flex items-center justify-center gap-1 text-white text-[11px] sm:text-xs font-semibold h-6 w-6 sm:h-auto sm:w-auto sm:px-3 sm:py-1.5 rounded-full shrink-0"
           >
             <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.4} />
-            <span className="hidden sm:inline">{qty > 0 ? `${qty}` : "Add"}</span>
+            <span className="hidden sm:inline">{qty > 0 ? `${qty}` : tr("Add")}</span>
             {qty > 0 && (
-              <span className="sm:hidden absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 grid place-items-center rounded-full bg-white text-hotpink text-[8px] font-bold border border-hotpink">
-                {qty}
+              <span className="sm:hidden absolute -top-1 -end-1 min-w-3.5 h-3.5 px-0.5 grid place-items-center rounded-full bg-white text-hotpink text-[8px] font-bold border border-hotpink">
+                {trx(qty)}
               </span>
             )}
           </button>
@@ -458,13 +449,13 @@ function ProductCard({
 function EmptyState({ title, body, cta, onCta }: { title: string; body: string; cta: string; onCta: () => void }) {
   return (
     <div className="rounded-3xl bg-white/85 backdrop-blur p-8 text-center border border-petal/60">
-      <p className="font-script text-3xl text-hotpink">{title}</p>
-      <p className="mt-1 text-sm text-rose/80">{body}</p>
+      <p className="font-script text-3xl text-hotpink">{trx(title)}</p>
+      <p className="mt-1 text-sm text-rose/80">{trx(body)}</p>
       <button
         onClick={onCta}
         className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 text-white font-semibold text-sm px-5 py-2.5"
       >
-        {cta}
+        {trx(cta)}
       </button>
     </div>
   );
@@ -486,17 +477,17 @@ function CartPanel({
   return (
     <div className="fixed inset-0 z-[60]">
       <button
-        aria-label="Close cart"
+        aria-label={tr("Close cart")}
         onClick={onClose}
         className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in"
       />
-      <aside className="fixed right-0 top-0 h-full w-full sm:w-[26rem] bg-gradient-to-b from-blush/95 to-white/95 backdrop-blur-xl border-l border-petal/60 shadow-2xl shadow-rose/30 flex flex-col z-[60]">
+      <aside className="fixed end-0 top-0 h-full w-full sm:w-[26rem] bg-gradient-to-b from-blush/95 to-white/95 backdrop-blur-xl border-s border-petal/60 shadow-2xl shadow-rose/30 flex flex-col z-[60]">
         <header className="flex items-center justify-between px-5 py-4 border-b border-petal/50">
           <div>
-            <h3 className="font-script text-3xl text-hotpink leading-none">Your bag</h3>
-            <p className="text-xs text-rose/70">{items.length} {items.length === 1 ? "item" : "items"}</p>
+            <h3 className="font-script text-3xl text-hotpink leading-none">{tr("Your bag")}</h3>
+            <p className="text-xs text-rose/70">{trx(items.length)} {items.length === 1 ? "item" : "items"}</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full bg-white/85 text-hotpink border border-petal/60 hover:scale-105 transition">
+          <button onClick={onClose} aria-label={tr("Close")} className="grid h-9 w-9 place-items-center rounded-full bg-white/85 text-hotpink border border-petal/60 hover:scale-105 transition">
             <X className="h-4 w-4" strokeWidth={2} />
           </button>
         </header>
@@ -507,13 +498,12 @@ function CartPanel({
               <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-blush text-hotpink">
                 <ShoppingBag className="h-6 w-6" strokeWidth={1.6} />
               </div>
-              <p className="mt-3 font-script text-2xl text-hotpink">Your bag is empty</p>
-              <p className="mt-1 text-sm text-rose/80">Find a little something to soften your day.</p>
+              <p className="mt-3 font-script text-2xl text-hotpink">{tr("Your bag is empty")}</p>
+              <p className="mt-1 text-sm text-rose/80">{tr("Find a little something to soften your day.")}</p>
               <button
                 onClick={onClose}
                 className="bloom-luxury-btn mt-4 inline-flex items-center gap-2 text-white font-semibold text-sm px-5 py-2.5"
-              >
-                Explore the shop <ArrowRight className="h-4 w-4" strokeWidth={2} />
+              >{tr("Explore the shop")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2} />
               </button>
             </div>
           ) : (
@@ -522,16 +512,16 @@ function CartPanel({
                 <img src={p.img} alt="" loading="lazy" className="h-20 w-20 rounded-xl object-cover" referrerPolicy="no-referrer" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <h4 className="text-sm font-semibold text-rose leading-snug line-clamp-2">{p.name}</h4>
-                    <button onClick={() => onRemove(p.id)} className="text-rose/60 hover:text-hotpink transition" aria-label="Remove">
+                    <h4 className="text-sm font-semibold text-rose leading-snug line-clamp-2">{trx(p.name)}</h4>
+                    <button onClick={() => onRemove(p.id)} className="text-rose/60 hover:text-hotpink transition" aria-label={tr("Remove")}>
                       <X className="h-4 w-4" strokeWidth={2} />
                     </button>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <div className="inline-flex items-center gap-1 rounded-full bg-blush border border-petal/60 p-0.5">
-                      <button onClick={() => onDec(p.id)} aria-label="Decrease" className="grid h-6 w-6 place-items-center rounded-full text-hotpink hover:bg-white"><Minus className="h-3 w-3" strokeWidth={2} /></button>
-                      <span className="text-xs font-bold text-rose w-5 text-center">{q}</span>
-                      <button onClick={() => onInc(p.id)} aria-label="Increase" className="grid h-6 w-6 place-items-center rounded-full text-hotpink hover:bg-white"><Plus className="h-3 w-3" strokeWidth={2} /></button>
+                      <button onClick={() => onDec(p.id)} aria-label={tr("Decrease")} className="grid h-6 w-6 place-items-center rounded-full text-hotpink hover:bg-white"><Minus className="h-3 w-3" strokeWidth={2} /></button>
+                      <span className="text-xs font-bold text-rose w-5 text-center">{trx(q)}</span>
+                      <button onClick={() => onInc(p.id)} aria-label={tr("Increase")} className="grid h-6 w-6 place-items-center rounded-full text-hotpink hover:bg-white"><Plus className="h-3 w-3" strokeWidth={2} /></button>
                     </div>
                     <span className="font-script text-xl text-hotpink leading-none">${p.price * q}</span>
                   </div>
@@ -544,17 +534,16 @@ function CartPanel({
         {items.length > 0 && (
           <footer className="border-t border-petal/50 px-5 py-4 space-y-3 bg-white/70">
             <div className="flex items-center justify-between text-sm text-rose/80">
-              <span>Subtotal</span>
-              <span className="font-semibold text-rose">${subtotal}</span>
+              <span>{tr("Subtotal")}</span>
+              <span className="font-semibold text-rose">${trx(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="font-script text-2xl text-hotpink leading-none">Total</span>
-              <span className="font-script text-3xl text-hotpink leading-none">${subtotal}</span>
+              <span className="font-script text-2xl text-hotpink leading-none">{tr("Total")}</span>
+              <span className="font-script text-3xl text-hotpink leading-none">${trx(subtotal)}</span>
             </div>
-            <button className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 text-white font-semibold text-sm px-5 py-3">
-              Checkout <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            <button className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 text-white font-semibold text-sm px-5 py-3">{tr("Checkout")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2} />
             </button>
-            <p className="text-center text-[11px] text-rose/60">Soft & secure — no card needed for sample.</p>
+            <p className="text-center text-[11px] text-rose/60">{tr("Soft & secure — no card needed for sample.")}</p>
           </footer>
         )}
       </aside>

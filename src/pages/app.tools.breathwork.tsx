@@ -10,23 +10,24 @@ import {
   ArrowLeft, Play, Pause, RotateCcw, Music2, Timer as TimerIcon, Heart,
   SlidersHorizontal, X, Check, Sparkles, Wind,
 } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 type PhaseKey = "inhale" | "hold" | "exhale" | "hold2";
 type Phase = { key: PhaseKey; label: string; secs: number };
 type Pattern = { id: string; name: string; tagline: string; phases: Phase[] };
 
 const PATTERNS: Pattern[] = [
-  { id: "478", name: "4-7-8 Breathing", tagline: "Deep calm & better sleep", phases: [
-    { key: "inhale", label: "Inhale", secs: 4 }, { key: "hold", label: "Hold", secs: 7 }, { key: "exhale", label: "Exhale", secs: 8 },
+  { id: "478", name: "4-7-8 Breathing", tagline: tr("Deep calm & better sleep"), phases: [
+    { key: "inhale", label: tr("Inhale"), secs: 4 }, { key: "hold", label: tr("Hold"), secs: 7 }, { key: "exhale", label: tr("Exhale"), secs: 8 },
   ] },
-  { id: "box", name: "Box Breathing", tagline: "Focus & reset", phases: [
-    { key: "inhale", label: "Inhale", secs: 4 }, { key: "hold", label: "Hold", secs: 4 }, { key: "exhale", label: "Exhale", secs: 4 }, { key: "hold2", label: "Hold", secs: 4 },
+  { id: "box", name: "Box Breathing", tagline: tr("Focus & reset"), phases: [
+    { key: "inhale", label: tr("Inhale"), secs: 4 }, { key: "hold", label: tr("Hold"), secs: 4 }, { key: "exhale", label: tr("Exhale"), secs: 4 }, { key: "hold2", label: tr("Hold"), secs: 4 },
   ] },
-  { id: "calm", name: "Calm Breath", tagline: "Ease anxiety gently", phases: [
-    { key: "inhale", label: "Inhale", secs: 4 }, { key: "exhale", label: "Exhale", secs: 6 },
+  { id: "calm", name: "Calm Breath", tagline: tr("Ease anxiety gently"), phases: [
+    { key: "inhale", label: tr("Inhale"), secs: 4 }, { key: "exhale", label: tr("Exhale"), secs: 6 },
   ] },
-  { id: "energize", name: "Morning Lift", tagline: "Wake up softly", phases: [
-    { key: "inhale", label: "Inhale", secs: 6 }, { key: "exhale", label: "Exhale", secs: 2 },
+  { id: "energize", name: "Morning Lift", tagline: tr("Wake up softly"), phases: [
+    { key: "inhale", label: tr("Inhale"), secs: 6 }, { key: "exhale", label: tr("Exhale"), secs: 2 },
   ] },
 ];
 const DURATIONS = [2, 5, 10]; // minutes
@@ -152,23 +153,20 @@ export default function BreathworkPage() {
   return (
     <div className="relative isolate animate-fade-in pb-10">
       <a href="/app/tools" className="mb-3 inline-flex items-center gap-1 text-sm font-semibold text-[#831843] transition hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("All tools")}</a>
 
       {/* header */}
       <header className="text-center">
-        <h1 className="font-serif text-[2rem] font-bold leading-tight text-[#7a1247] sm:text-[2.5rem]">Meditation &amp; Breathwork</h1>
-        <p className="mt-0.5 font-script text-2xl text-hotpink sm:text-3xl">{pattern.name}</p>
-        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-rose/80 shadow-sm backdrop-blur">
-          A calmer mind <Heart className="h-3.5 w-3.5 fill-hotpink text-hotpink" /> A happier you
-        </span>
+        <h1 className="font-serif text-[2rem] font-bold leading-tight text-[#7a1247] sm:text-[2.5rem]">{tr("Meditation & Breathwork")}</h1>
+        <p className="mt-0.5 font-script text-2xl text-hotpink sm:text-3xl">{trx(pattern.name)}</p>
+        <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/60 px-3.5 py-1.5 text-[12.5px] font-bold text-rose/80 shadow-sm backdrop-blur">{tr("A calmer mind")}{" "}<Heart className="h-3.5 w-3.5 fill-hotpink text-hotpink" />{" "}{tr("A happier you")}</span>
       </header>
 
       {/* breathing ring */}
       <div className="mx-auto mt-6 grid place-items-center">
         <button
           onClick={toggle}
-          aria-label={running ? "Pause" : "Start"}
+          aria-label={running ? tr("Pause") : tr("Start")}
           className="relative grid h-[280px] w-[280px] place-items-center rounded-full outline-none sm:h-[320px] sm:w-[320px]"
         >
           {/* soft glow */}
@@ -197,18 +195,18 @@ export default function BreathworkPage() {
             <Lotus className="h-16 w-16 sm:h-[70px] sm:w-[70px]" style={{ transform: `scale(${running || done ? scale : 1})`, transition: "transform 160ms linear" }} />
             {done ? (
               <>
-                <span className="mt-2 font-script text-[2rem] leading-none text-hotpink">Beautiful ✿</span>
-                <span className="mt-1 text-[13px] font-semibold text-rose/70">{cycles} calm breaths</span>
+                <span className="mt-2 font-script text-[2rem] leading-none text-hotpink">{tr("Beautiful ✿")}</span>
+                <span className="mt-1 text-[13px] font-semibold text-rose/70">{trx(cycles)}{" "}{tr("calm breaths")}</span>
               </>
             ) : running ? (
               <>
                 <span className="mt-2 text-[3.2rem] font-extrabold leading-none text-[#7a1247] tabular-nums">{String(countdown).padStart(2, "0")}</span>
-                <span className="mt-0.5 font-script text-2xl text-hotpink">{phase.label}…</span>
+                <span className="mt-0.5 font-script text-2xl text-hotpink">{trx(phase.label)}…</span>
               </>
             ) : (
               <>
-                <span className="mt-2 inline-flex items-center gap-1.5 text-[1.6rem] font-extrabold text-[#7a1247]"><Play className="h-6 w-6 fill-hotpink text-hotpink" /> Begin</span>
-                <span className="mt-0.5 text-[12.5px] font-semibold text-rose/65">{pattern.tagline}</span>
+                <span className="mt-2 inline-flex items-center gap-1.5 text-[1.6rem] font-extrabold text-[#7a1247]"><Play className="h-6 w-6 fill-hotpink text-hotpink" />{" "}{tr("Begin")}</span>
+                <span className="mt-0.5 text-[12.5px] font-semibold text-rose/65">{trx(pattern.tagline)}</span>
               </>
             )}
           </span>
@@ -227,11 +225,11 @@ export default function BreathworkPage() {
             ].join(" ")}>
               <span className="mx-auto grid h-9 w-9 place-items-center">
                 {active
-                  ? <button onClick={toggle} aria-label={running ? "Pause" : "Resume"} className="grid h-9 w-9 place-items-center rounded-full bg-white/25 text-white active:scale-90">{running ? <Pause className="h-5 w-5 fill-white" /> : <Play className="h-5 w-5 fill-white" />}</button>
+                  ? <button onClick={toggle} aria-label={running ? tr("Pause") : tr("Resume")} className="grid h-9 w-9 place-items-center rounded-full bg-white/25 text-white active:scale-90">{running ? <Pause className="h-5 w-5 fill-white" /> : <Play className="h-5 w-5 fill-white" />}</button>
                   : <Wind className={`h-5 w-5 ${p.key === "hold" || p.key === "hold2" ? "text-hotpink/70" : "text-hotpink"}`} strokeWidth={2} />}
               </span>
-              <p className={`mt-1 text-[14px] font-extrabold leading-none ${active ? "text-white" : "text-hotpink"}`}>{p.label}</p>
-              <p className={`mt-1 text-[11.5px] font-semibold ${active ? "text-white/85" : "text-rose/60"}`}>{p.secs} sec</p>
+              <p className={`mt-1 text-[14px] font-extrabold leading-none ${active ? "text-white" : "text-hotpink"}`}>{trx(p.label)}</p>
+              <p className={`mt-1 text-[11.5px] font-semibold ${active ? "text-white/85" : "text-rose/60"}`}>{trx(p.secs)}{" "}{tr("sec")}</p>
             </div>
           );
         })}
@@ -239,67 +237,66 @@ export default function BreathworkPage() {
 
       {/* controls row */}
       <div className="mx-auto mt-5 grid max-w-md grid-cols-4 gap-2">
-        <ControlIcon Icon={Music2} label="Sounds" active={sound} onClick={() => setSound((s) => !s)} />
-        <ControlIcon Icon={TimerIcon} label="Timer" onClick={() => setSheet("timer")} />
-        <ControlIcon Icon={Heart} label="Benefits" onClick={() => setSheet("benefits")} />
-        <ControlIcon Icon={SlidersHorizontal} label="Settings" onClick={() => setSheet("settings")} />
+        <ControlIcon Icon={Music2} label={tr("Sounds")} active={sound} onClick={() => setSound((s) => !s)} />
+        <ControlIcon Icon={TimerIcon} label={tr("Timer")} onClick={() => setSheet("timer")} />
+        <ControlIcon Icon={Heart} label={tr("Benefits")} onClick={() => setSheet("benefits")} />
+        <ControlIcon Icon={SlidersHorizontal} label={tr("Settings")} onClick={() => setSheet("settings")} />
       </div>
 
       {/* session line + reset */}
       <div className="mx-auto mt-4 flex max-w-md items-center justify-center gap-3 text-[12.5px] font-semibold text-rose/70">
-        <span className="tabular-nums">{fmt(total)} / {minutes}:00</span>
+        <span className="tabular-nums">{fmt(total)} / {trx(minutes)}:00</span>
         <span className="text-rose/30">·</span>
-        <span>{cycles} breath{cycles === 1 ? "" : "s"}</span>
+        <span>{trx(cycles)}{" "}{tr("breath")}{cycles === 1 ? "" : "s"}</span>
         {(running || total > 0 || done) && (
           <button onClick={reset} className="inline-flex items-center gap-1 text-hotpink transition hover:opacity-80">
-            <RotateCcw className="h-3.5 w-3.5" /> Reset
-          </button>
+            <RotateCcw className="h-3.5 w-3.5" />{" "}{tr("Reset")}</button>
         )}
       </div>
 
       {/* quote */}
       <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2.5 rounded-2xl border border-white/70 bg-white/55 px-4 py-3 text-center shadow-sm backdrop-blur">
         <Lotus className="h-6 w-6 shrink-0" />
-        <p className="font-script text-lg text-hotpink">“{quote}”</p>
+        <p className="font-script text-lg text-hotpink">“{trx(quote)}”</p>
       </div>
 
       {sheet && <Sheet onClose={() => setSheet(null)}>
         {sheet === "timer" && (
-          <SheetBody title="Session length" subtitle="How long would you like to breathe?">
+          <SheetBody title={tr("Session length")} subtitle="How long would you like to breathe?">
             <div className="grid grid-cols-3 gap-2.5">
               {DURATIONS.map((m) => (
                 <button key={m} onClick={() => { setMinutes(m); reset(); setSheet(null); }} className={pick(minutes === m)}>
-                  <span className="text-[1.5rem] font-extrabold leading-none text-hotpink">{m}</span>
-                  <span className="text-[11px] font-bold text-rose/60">minutes</span>
+                  <span className="text-[1.5rem] font-extrabold leading-none text-hotpink">{trx(m)}</span>
+                  <span className="text-[11px] font-bold text-rose/60">{tr("minutes")}</span>
                 </button>
               ))}
             </div>
           </SheetBody>
         )}
         {sheet === "settings" && (
-          <SheetBody title="Breathing pattern" subtitle="Pick the rhythm that feels right today.">
+          <SheetBody title={tr("Breathing pattern")} subtitle="Pick the rhythm that feels right today.">
             <div className="space-y-2">
               {PATTERNS.map((p) => (
                 <button key={p.id} onClick={() => { setPatternId(p.id); setSheet(null); }} className={[
-                  "flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-left transition active:scale-[0.99]",
+                  "flex w-full items-center justify-between rounded-2xl border px-3.5 py-3 text-start transition active:scale-[0.99]",
                   p.id === patternId ? "border-hotpink bg-hotpink/10 ring-1 ring-hotpink/30" : "border-white/70 bg-white/70",
                 ].join(" ")}>
                   <span>
-                    <span className="block text-[14.5px] font-extrabold text-hotpink">{p.name}</span>
-                    <span className="block text-[12px] font-semibold text-rose/65">{p.tagline} · {p.phases.map((x) => x.secs).join("-")}</span>
+                    <span className="block text-[14.5px] font-extrabold text-hotpink">{trx(p.name)}</span>
+                    <span className="block text-[12px] font-semibold text-rose/65">{trx(p.tagline)} · {p.phases.map((x) => x.secs).join("-")}</span>
                   </span>
                   {p.id === patternId && <Check className="h-5 w-5 text-hotpink" strokeWidth={3} />}
                 </button>
               ))}
             </div>
             <button onClick={() => { setSound((s) => !s); }} className="mt-3 flex w-full items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-3.5 py-3">
-              <span className="inline-flex items-center gap-2 text-[14px] font-bold text-rose"><Music2 className="h-4 w-4 text-hotpink" /> Gentle cue sounds</span>
-              <span className={`relative h-6 w-11 rounded-full transition ${sound ? "bg-hotpink" : "bg-rose/25"}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${sound ? "left-[22px]" : "left-0.5"}`} /></span>
+              <span className="inline-flex items-center gap-2 text-[14px] font-bold text-rose"><Music2 className="h-4 w-4 text-hotpink" />{" "}{tr("Gentle cue sounds")}</span>
+              <span className={`relative h-6 w-11 rounded-full transition ${sound ? "bg-hotpink" : "bg-rose/25"}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${sound ? "start-[22px]" : "start-0.5"}`} /></span>
             </button>
           </SheetBody>
         )}
         {sheet === "benefits" && (
-          <SheetBody title={`Why ${pattern.name}?`} subtitle="A few minutes is all it takes.">
+          <SheetBody title={tr("Why {0}?", { 0: pattern.name })} subtitle="A few minutes is all it takes.">
             <ul className="space-y-2.5">
               {[
                 "Calms your nervous system — lower stress & racing thoughts",
@@ -309,7 +306,7 @@ export default function BreathworkPage() {
                 "A soothing ritual for cramps and low-energy days",
               ].map((t) => (
                 <li key={t} className="flex items-start gap-2.5 text-[13.5px] font-semibold leading-snug text-rose/85">
-                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><Sparkles className="h-3 w-3 text-hotpink" /></span>{t}
+                  <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><Sparkles className="h-3 w-3 text-hotpink" /></span>{trx(t)}
                 </li>
               ))}
             </ul>
@@ -329,7 +326,7 @@ function ControlIcon({ Icon, label, active, onClick }: { Icon: typeof Heart; lab
       ].join(" ")}>
         <Icon className="h-6 w-6" strokeWidth={2} />
       </span>
-      <span className="text-[12px] font-bold text-rose/75">{label}</span>
+      <span className="text-[12px] font-bold text-rose/75">{trx(label)}</span>
     </button>
   );
 }
@@ -346,7 +343,7 @@ function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () =
     <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center sm:p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-rose/25 backdrop-blur-[3px] animate-fade-in" />
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-t-[1.75rem] bg-white p-5 shadow-2xl animate-scale-in sm:rounded-[1.75rem]" style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}>
-        <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
+        <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
         {children}
       </div>
     </div>
@@ -355,8 +352,8 @@ function Sheet({ children, onClose }: { children: React.ReactNode; onClose: () =
 function SheetBody({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="font-script text-[1.7rem] leading-none text-hotpink">{title}</h2>
-      <p className="mt-1 text-[12.5px] font-semibold text-rose/65">{subtitle}</p>
+      <h2 className="font-script text-[1.7rem] leading-none text-hotpink">{trx(title)}</h2>
+      <p className="mt-1 text-[12.5px] font-semibold text-rose/65">{trx(subtitle)}</p>
       <div className="mt-4">{children}</div>
     </div>
   );

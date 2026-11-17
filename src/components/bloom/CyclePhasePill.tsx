@@ -1,5 +1,6 @@
 import { Sparkles, TrendingUp, Zap, Battery, Leaf, type LucideIcon } from "lucide-react";
 import { phaseForDay, readCycleSettings, hasCycleSettings, PHASE_LABEL, type CyclePhase } from "./cyclePhase";
+import { tr, trx } from "@/i18n";
 
 /** Energy read-out per phase — mirrors the Today page so every hero matches. */
 const PHASE_ENERGY: Record<Exclude<CyclePhase, "any">, string> = {
@@ -40,8 +41,7 @@ export function CyclePhasePill({ className = "", hideWhenUnset = false }: { clas
     if (hideWhenUnset) return null;
     return (
       <a href="/app/tools/cycle" className={[base, "transition hover:bg-hotpink active:scale-95", className].join(" ")}>
-        <Sparkles className="h-3 w-3 animate-icon-breathe" strokeWidth={2.2} /> Set up your cycle
-      </a>
+        <Sparkles className="h-3 w-3 animate-icon-breathe" strokeWidth={2.2} />{" "}{tr("Set up your cycle")}</a>
     );
   }
 
@@ -53,9 +53,9 @@ export function CyclePhasePill({ className = "", hideWhenUnset = false }: { clas
   // Today page where Energy sits on its own row rather than beside the phase.
   return (
     <div className={["flex flex-col items-start gap-1.5", className].join(" ")}>
-      <span className={base}>✿ Day {day} · {PHASE_LABEL[phase]}</span>
+      <span className={base}>{tr("✿ Day")}{" "}{trx(day)} · {trx(PHASE_LABEL[phase])}</span>
       <span className={soft}>
-        <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> Energy {energy}
+        <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} />{" "}{tr("Energy")}{" "}{trx(energy)}
       </span>
     </div>
   );

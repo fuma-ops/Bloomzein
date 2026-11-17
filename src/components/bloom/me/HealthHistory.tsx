@@ -60,8 +60,9 @@ import {
   type HealthHistory,
 } from "@/lib/healthHistory";
 import { downloadHealthReport, downloadHealthCSV } from "@/lib/healthReport";
+import { tr, trx, localMonths } from "@/i18n";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = localMonths(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "short");
 const shortDay = (iso: string) => {
   const d = new Date(iso + "T00:00:00");
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;
@@ -104,9 +105,9 @@ function StatTile({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="min-w-0">
-        <p className="text-xl sm:text-2xl font-black text-magenta leading-none">{value}</p>
+        <p className="text-xl sm:text-2xl font-black text-magenta leading-none">{trx(value)}</p>
         <p className="mt-1 text-[10.5px] font-bold uppercase tracking-wide text-rose/55 leading-tight">
-          {label}
+          {trx(label)}
         </p>
       </div>
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-blush to-petal/70">
@@ -141,7 +142,7 @@ function Panel({
           alt=""
           aria-hidden
           loading="lazy"
-          className="pointer-events-none absolute bottom-0 right-0 h-[62%] w-[46%] object-cover opacity-45"
+          className="pointer-events-none absolute bottom-0 end-0 h-[62%] w-[46%] object-cover opacity-45"
           style={{
             // Fade the corner peek out toward the top-left so it dissolves into
             // the white card — only the very corner shows the design.
@@ -161,9 +162,9 @@ function PanelHead({ Icon, title, hint }: { Icon: typeof Flame; title: string; h
   return (
     <div className="mb-3 flex items-center justify-between gap-2">
       <p className="inline-flex items-center gap-1.5 font-script text-2xl text-hotpink leading-none">
-        <Icon className="h-4 w-4" strokeWidth={2} /> {title}
+        <Icon className="h-4 w-4" strokeWidth={2} /> {trx(title)}
       </p>
-      {hint && <span className="shrink-0 text-[11px] font-semibold text-rose/50">{hint}</span>}
+      {hint && <span className="shrink-0 text-[11px] font-semibold text-rose/50">{trx(hint)}</span>}
     </div>
   );
 }
@@ -194,15 +195,15 @@ function ChartFooter({
       <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
         {sel ? (
           <span className="text-[#831843]">
-            <b className="text-hotpink">{sel.label}</b> · {sel.readout}
+            <b className="text-hotpink">{trx(sel.label)}</b> · {trx(sel.readout)}
           </span>
         ) : (
-          <span className="text-rose/50">{hint}</span>
+          <span className="text-rose/50">{trx(hint)}</span>
         )}
       </div>
       <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
         <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
-        <span>{interpretation}</span>
+        <span>{trx(interpretation)}</span>
       </p>
     </>
   );
@@ -218,9 +219,7 @@ function PredictionNote({ children }: { children: React.ReactNode }) {
       <button
         onClick={() => setOpen((o) => !o)}
         className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-hotpink/70 transition hover:text-hotpink"
-      >
-        How this prediction works
-        <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} strokeWidth={2.4} />
+      >{tr("How this prediction works")}<ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} strokeWidth={2.4} />
       </button>
       {open && (
         <p
@@ -318,7 +317,7 @@ function BarsChart({
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Bar chart with axes"
+        aria-label={tr("Bar chart with axes")}
       >
         <defs>
           {/* premium gradient: a richer pink edge at the top, melting to a pale base */}
@@ -329,7 +328,7 @@ function BarsChart({
           </linearGradient>
         </defs>
         <text x={x1} y={mT + 2} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-          {unit}
+          {trx(unit)}
         </text>
         {ticks.map((t) => (
           <g key={t}>
@@ -357,9 +356,7 @@ function BarsChart({
               ))}
               <path d={line} fill="none" stroke={color} strokeOpacity={0.3} strokeWidth={1.3} strokeDasharray="3 3" strokeLinecap="round" strokeLinejoin="round" />
               {hs.map((f, i) => <circle key={i} cx={cx(i)} cy={cy(f)} r={1.5} fill={color} fillOpacity={0.38} />)}
-              <text x={(x0 + x1) / 2} y={cy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: color, fillOpacity: 0.6, fontWeight: 700 }}>
-                your rhythm blooms here ✿
-              </text>
+              <text x={(x0 + x1) / 2} y={cy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: color, fillOpacity: 0.6, fontWeight: 700 }}>{tr("your rhythm blooms here ✿")}</text>
             </g>
           );
         })()}
@@ -422,7 +419,7 @@ function BarsChart({
                 textAnchor="middle"
                 style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
               >
-                {shown[i].label}
+                {trx(shown[i].label)}
               </text>
             ),
         )}
@@ -462,9 +459,7 @@ function LineChart({
   if (shown.length < 2) {
     return (
       <div>
-        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
-          Not enough points yet
-        </div>
+        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">{tr("Not enough points yet")}</div>
         <ChartFooter sel={selPoint} hint={tapHint} interpretation={interpretation} />
       </div>
     );
@@ -492,7 +487,7 @@ function LineChart({
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Line chart with axes"
+        aria-label={tr("Line chart with axes")}
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
@@ -501,7 +496,7 @@ function LineChart({
           </linearGradient>
         </defs>
         <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-          {unit}
+          {trx(unit)}
         </text>
         {ticks.map((t, i) => (
           <g key={i}>
@@ -551,7 +546,7 @@ function LineChart({
                 textAnchor={i === 0 ? "start" : i === shown.length - 1 ? "end" : "middle"}
                 style={{ fontSize: 8, fill: LABEL, fontWeight: 600 }}
               >
-                {shown[i].label}
+                {trx(shown[i].label)}
               </text>
             ),
         )}
@@ -641,19 +636,17 @@ function ForecastLineChart({
     const gline = hs.map((f, i) => `${i === 0 ? "M" : "L"} ${gx(i).toFixed(1)} ${gy(f).toFixed(1)}`).join(" ");
     return (
       <div>
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Preview">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={tr("Preview")}>
           <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
           <g aria-hidden>
             <path d={`${gline} L ${gx(gN - 1).toFixed(1)} ${y1.toFixed(1)} L ${gx(0).toFixed(1)} ${y1.toFixed(1)} Z`} fill={gcol} fillOpacity={0.06} />
             <path d={gline} fill="none" stroke={gcol} strokeOpacity={0.3} strokeWidth={1.5} strokeDasharray="3 3" strokeLinecap="round" strokeLinejoin="round" />
             {hs.map((f, i) => <circle key={i} cx={gx(i)} cy={gy(f)} r={1.5} fill={gcol} fillOpacity={0.38} />)}
-            <text x={(x0 + x1) / 2} y={gy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: gcol, fillOpacity: 0.6, fontWeight: 700 }}>
-              your rhythm blooms here ✿
-            </text>
+            <text x={(x0 + x1) / 2} y={gy(0.5) + 3} textAnchor="middle" style={{ fontSize: 8, fill: gcol, fillOpacity: 0.6, fontWeight: 700 }}>{tr("your rhythm blooms here ✿")}</text>
           </g>
         </svg>
         <ChartFooter sel={null} hint={tapHint} interpretation={interpretation} />
-        <PredictionNote>{note}</PredictionNote>
+        <PredictionNote>{trx(note)}</PredictionNote>
       </div>
     );
   }
@@ -699,15 +692,15 @@ function ForecastLineChart({
       <div className="mb-2 flex flex-wrap gap-x-3 gap-y-1">
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70">
           <span className="h-0 w-3 border-t-2 border-dashed" style={{ borderColor: predictedColor }} />
-          {predictedLabel}
+          {trx(predictedLabel)}
         </span>
         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70">
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: LINE_C }} />
-          {actualLabel}
+          {trx(actualLabel)}
         </span>
       </div>
 
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Forecast vs logged">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={tr("Forecast vs logged")}>
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={LINE_C} stopOpacity="0.22" />
@@ -715,7 +708,7 @@ function ForecastLineChart({
           </linearGradient>
         </defs>
         <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-          {unit}
+          {trx(unit)}
         </text>
         {ticks.map((t, i) => (
           <g key={i}>
@@ -787,17 +780,17 @@ function ForecastLineChart({
       <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
         {selDay ? (
           <span className="text-[#831843]">
-            <b className="text-hotpink">{shortDay(selDay.date)}</b> · {selDay.readout}
+            <b className="text-hotpink">{shortDay(selDay.date)}</b> · {trx(selDay.readout)}
           </span>
         ) : (
-          <span className="text-rose/50">{tapHint}</span>
+          <span className="text-rose/50">{trx(tapHint)}</span>
         )}
       </div>
       <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
         <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
-        <span>{interpretation}</span>
+        <span>{trx(interpretation)}</span>
       </p>
-      <PredictionNote>{note}</PredictionNote>
+      <PredictionNote>{trx(note)}</PredictionNote>
     </div>
   );
 }
@@ -805,15 +798,15 @@ function ForecastLineChart({
 const REG_META = {
   regular: {
     cls: "bg-emerald-100 text-emerald-700",
-    text: "Your recent cycles vary by 3 days or less — a regular rhythm.",
+    text: tr("Your recent cycles vary by 3 days or less — a regular rhythm."),
   },
   irregular: {
     cls: "bg-amber-100 text-amber-700",
-    text: "Your recent cycles vary by more than 3 days — worth keeping an eye on.",
+    text: tr("Your recent cycles vary by more than 3 days — worth keeping an eye on."),
   },
   learning: {
     cls: "bg-blush text-hotpink",
-    text: "Log at least two period starts and your rhythm shows here.",
+    text: tr("Log at least two period starts and your rhythm shows here."),
   },
 } as const;
 
@@ -837,7 +830,7 @@ const burnForecast = (plannedWeekdays: string[], kcal: number, label: string): C
     const d = new Date(base.getTime() + n * DAY);
     if (!planned.has(WK_LABELS[d.getDay()])) continue;
     const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    out.push({ key: iso, label: shortDay(iso), value: kcal, readout: `~${kcal} kcal · ${label} (planned)`, predicted: true });
+    out.push({ key: iso, label: shortDay(iso), value: kcal, readout: tr("~{0} kcal · {1} (planned)", { 0: kcal, 1: label }), predicted: true });
   }
   return out;
 };
@@ -846,14 +839,12 @@ const burnPoints = (days: DayBurn[]): ChartPoint[] =>
     key: d.date,
     label: shortDay(d.date),
     value: d.kcal,
-    readout: `${d.kcal} kcal · ${d.sessions} session${d.sessions === 1 ? "" : "s"}${
-      d.items[0]?.name
+    readout: tr("{0} kcal · {1} session{2}{3}", { 0: d.kcal, 1: d.sessions, 2: d.sessions === 1 ? "" : "s", 3: d.items[0]?.name
         ? ` · ${d.items
             .map((i) => i.name)
             .slice(0, 2)
             .join(", ")}`
-        : ""
-    }`,
+        : "" }),
   }));
 const symptomPoints = (daily: SymptomDay[]): ChartPoint[] =>
   daily.map((d) => ({
@@ -877,7 +868,7 @@ const cyclePoints = (cycles: Cycle[]): ChartPoint[] =>
     label: c.ongoing ? "now" : monthOf(c.startISO),
     value: c.lengthDays,
     faded: c.ongoing,
-    readout: `${prettyDate(c.startISO)} → ${prettyDate(c.endISO)} · ${c.lengthDays} days${c.ongoing ? " (ongoing)" : ""}`,
+    readout: tr("{0} → {1} · {2} days{3}", { 0: prettyDate(c.startISO), 1: prettyDate(c.endISO), 2: c.lengthDays, 3: c.ongoing ? " (ongoing)" : "" }),
   }));
 
 /* ---------- combined "cycle × your body" chart ---------- */
@@ -1005,7 +996,7 @@ function CycleOverlayChart({
               style={on ? { background: c } : undefined}
             >
               <span className="h-2 w-2 rounded-full" style={{ background: on ? "#fff" : c }} />
-              {m.label}
+              {trx(m.label)}
             </button>
           );
         })}
@@ -1019,7 +1010,7 @@ function CycleOverlayChart({
           height={H}
           style={{ maxWidth: "none" }}
           role="img"
-          aria-label="Metrics over time, coloured by cycle phase"
+          aria-label={tr("Metrics over time, coloured by cycle phase")}
         >
           <defs>
             {metrics.map((m) => {
@@ -1077,20 +1068,15 @@ function CycleOverlayChart({
                   x={cx + 3}
                   y={y0 + 6}
                   style={{ fontSize: 7.5, fill: "#8b5aa0", fontWeight: 800 }}
-                >
-                  Cycle {i + 1}
+                >{tr("Cycle")}{" "}{i + 1}
                 </text>
               </g>
             );
           })}
 
           {/* y High/Low + baseline */}
-          <text x="2" y={y0 + 4} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-            High
-          </text>
-          <text x="2" y={y1} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-            Low
-          </text>
+          <text x="2" y={y0 + 4} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>{tr("High")}</text>
+          <text x="2" y={y1} style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>{tr("Low")}</text>
           <line x1={x0} x2={x1} y1={y1} y2={y1} stroke={AXIS} strokeWidth={1} />
 
           {/* one soft area + line + dots per visible metric */}
@@ -1160,16 +1146,14 @@ function CycleOverlayChart({
               textAnchor="middle"
               style={{ fontSize: 8.5, fill: LABEL, fontWeight: 700 }}
             >
-              {mo.label}
+              {trx(mo.label)}
             </text>
           ))}
         </svg>
       </div>
 
       {days > 45 && (
-        <p className="mt-1 text-center text-[10px] text-rose/45">
-          ← scroll to move through the months →
-        </p>
+        <p className="mt-1 text-center text-[10px] text-rose/45">{tr("← scroll to move through the months →")}</p>
       )}
 
       {/* phase legend */}
@@ -1183,7 +1167,7 @@ function CycleOverlayChart({
               className="h-2.5 w-2.5 rounded-[3px]"
               style={{ background: PHASE_FILL[p], opacity: 0.6 }}
             />
-            {PHASE_LABEL[p]}
+            {trx(PHASE_LABEL[p])}
           </span>
         ))}
       </div>
@@ -1192,15 +1176,12 @@ function CycleOverlayChart({
         {selPt && selMetric ? (
           <span className="text-[#831843]">
             <b className="text-hotpink">{prettyDate(selPt.date)}</b>
-            {selPhase ? <> · {PHASE_LABEL[selPhase]} phase</> : null} · {selMetric.label}{" "}
+            {selPhase ? <> · {tr("{0} phase", { 0: PHASE_LABEL[selPhase] })}</> : null} · {trx(selMetric.label)}{" "}
             {fmtNum(selPt.value)}
             {selMetric.unit && selMetric.unit !== "count" ? ` ${selMetric.unit}` : ""}
           </span>
         ) : (
-          <span className="text-rose/50">
-            Tap a point on any line to see its value &amp; which phase you were in. Use the chips to
-            show or hide each line.
-          </span>
+          <span className="text-rose/50">{tr("Tap a point on any line to see its value & which phase you were in. Use the chips to show or hide each line.")}</span>
         )}
       </div>
     </div>
@@ -1222,29 +1203,29 @@ function ByPhaseCards({ byPhase }: { byPhase: PhaseStat[] }) {
           className="rounded-2xl border border-petal/50 bg-white/70 p-3"
           style={{ borderTop: `3px solid ${PHASE_FILL[p.phase]}` }}
         >
-          <p className="text-[12px] font-black text-magenta leading-none">{p.label}</p>
+          <p className="text-[12px] font-black text-magenta leading-none">{trx(p.label)}</p>
           <ul className="mt-2 space-y-1 text-[11px] text-rose/70">
             <li className="flex justify-between gap-1">
-              <span>Mood</span>
+              <span>{tr("Mood")}</span>
               <b className="text-[#831843]">{p.moodAvg != null ? `${p.moodAvg}/5` : "—"}</b>
             </li>
             <li className="flex justify-between gap-1">
-              <span>Burn</span>
+              <span>{tr("Burn")}</span>
               <b className="text-[#831843]">
                 {p.burnKcal ? `${p.burnKcal.toLocaleString()}` : "—"}
               </b>
             </li>
             <li className="flex justify-between gap-1">
-              <span>Sleep</span>
+              <span>{tr("Sleep")}</span>
               <b className="text-[#831843]">{p.sleepAvg != null ? `${p.sleepAvg}/5` : "—"}</b>
             </li>
             <li className="flex justify-between gap-1">
-              <span>Sessions</span>
-              <b className="text-[#831843]">{p.sessions || "—"}</b>
+              <span>{tr("Sessions")}</span>
+              <b className="text-[#831843]">{trx(p.sessions) || "—"}</b>
             </li>
             <li className="flex justify-between gap-1">
-              <span>Symptom days</span>
-              <b className="text-[#831843]">{p.symptomDays || "—"}</b>
+              <span>{tr("Symptom days")}</span>
+              <b className="text-[#831843]">{trx(p.symptomDays) || "—"}</b>
             </li>
           </ul>
         </div>
@@ -1264,29 +1245,29 @@ function buildMetrics(h: HealthHistory): Metric[] {
   return [
     {
       key: "mood",
-      label: "Mood",
+      label: tr("Mood"),
       unit: "/5",
       color: "#db2777",
       points: h.mood.series.map((m) => ({ date: m.date, value: m.score })),
     },
-    { key: "burn", label: "Burn", unit: "kcal", color: "#0891b2", points: burn },
+    { key: "burn", label: tr("Burn"), unit: "kcal", color: "#0891b2", points: burn },
     {
       key: "weight",
-      label: "Weight",
+      label: tr("Weight"),
       unit: "kg",
       color: "#4338ca",
       points: h.weight.series.map((w) => ({ date: w.date, value: w.kg })),
     },
     {
       key: "symptoms",
-      label: "Symptoms",
+      label: tr("Symptoms"),
       unit: "count",
       color: "#9333ea",
       points: h.symptoms.daily.map((s) => ({ date: s.date, value: s.labels.length })),
     },
     {
       key: "sleep",
-      label: "Sleep",
+      label: tr("Sleep"),
       unit: "/5",
       color: METRIC_COLOR.sleep,
       points: h.sleep.series.map((d) => ({ date: d.date, value: d.quality })),
@@ -1324,9 +1305,7 @@ function PlannedVsLoggedChart({
   if (shown.length < 2) {
     return (
       <div>
-        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">
-          Plan your meals & tick a few off to see this
-        </div>
+        <div className="grid h-28 place-items-center rounded-xl bg-blush/30 text-[12px] text-rose/50">{tr("Plan your meals & tick a few off to see this")}</div>
         <ChartFooter sel={null} hint={tapHint} interpretation={interpretation} />
       </div>
     );
@@ -1356,7 +1335,7 @@ function PlannedVsLoggedChart({
             className="inline-flex items-center gap-1 text-[11px] font-bold text-rose/70"
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: c }} />
-            {label}
+            {trx(label)}
           </span>
         ))}
       </div>
@@ -1365,7 +1344,7 @@ function PlannedVsLoggedChart({
         viewBox={`0 0 ${W} ${H}`}
         className="w-full h-auto"
         role="img"
-        aria-label="Planned vs logged calories"
+        aria-label={tr("Planned vs logged calories")}
       >
         <defs>
           <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
@@ -1373,9 +1352,7 @@ function PlannedVsLoggedChart({
             <stop offset="100%" stopColor={LOG_C} stopOpacity="0" />
           </linearGradient>
         </defs>
-        <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>
-          kcal
-        </text>
+        <text x={x1} y={y0 - 1} textAnchor="end" style={{ fontSize: 8, fill: LABEL, fontWeight: 700 }}>{tr("kcal")}</text>
         {ticks.map((t) => (
           <g key={t}>
             <line x1={x0} x2={x1} y1={y(t)} y2={y(t)} stroke={GRID} strokeWidth={1} />
@@ -1445,17 +1422,16 @@ function PlannedVsLoggedChart({
       <div className="mt-2.5 min-h-[2.1rem] rounded-xl border border-petal/50 bg-blush/40 px-3 py-2 text-[12px] leading-snug">
         {selDay ? (
           <span className="text-[#831843]">
-            <b className="text-hotpink">{shortDay(selDay.date)}</b> · ate{" "}
-            {selDay.logged.toLocaleString()} of {selDay.planned.toLocaleString()} planned kcal
-            {selDay.planned > 0 ? ` · ${Math.round((selDay.logged / selDay.planned) * 100)}%` : ""}
+            <b className="text-hotpink">{shortDay(selDay.date)}</b>{" "}{tr("· ate")}{" "}
+            {selDay.logged.toLocaleString()}{" "}{tr("of")}{" "}{selDay.planned.toLocaleString()}{" "}{tr("planned kcal")}{selDay.planned > 0 ? ` · ${Math.round((selDay.logged / selDay.planned) * 100)}%` : ""}
           </span>
         ) : (
-          <span className="text-rose/50">{tapHint}</span>
+          <span className="text-rose/50">{trx(tapHint)}</span>
         )}
       </div>
       <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
         <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
-        <span>{interpretation}</span>
+        <span>{trx(interpretation)}</span>
       </p>
     </div>
   );
@@ -1501,16 +1477,16 @@ function makePreview() {
   for (let n = N; n >= 0; n -= 2)
     sleepLine.push({ date: iso(n), value: 3.2 + 1.3 * Math.sin(((N - n) / N) * 6.5 + 1) });
   const metrics: Metric[] = [
-    { key: "mood", label: "Mood", unit: "/5", color: METRIC_COLOR.mood, points: moodLine },
-    { key: "burn", label: "Burn", unit: "kcal", color: METRIC_COLOR.burn, points: burnLine },
-    { key: "sleep", label: "Sleep", unit: "/5", color: METRIC_COLOR.sleep, points: sleepLine },
+    { key: "mood", label: tr("Mood"), unit: "/5", color: METRIC_COLOR.mood, points: moodLine },
+    { key: "burn", label: tr("Burn"), unit: "kcal", color: METRIC_COLOR.burn, points: burnLine },
+    { key: "sleep", label: tr("Sleep"), unit: "/5", color: METRIC_COLOR.sleep, points: sleepLine },
   ];
 
   // Per-chart example points
   const cycles: ChartPoint[] = [
-    { key: "c1", label: "Apr", value: 28, readout: "28 days" },
-    { key: "c2", label: "May", value: 29, readout: "29 days" },
-    { key: "c3", label: "Jun", value: 27, readout: "27 days" },
+    { key: "c1", label: tr("Apr"), value: 28, readout: "28 days" },
+    { key: "c2", label: tr("May"), value: 29, readout: "29 days" },
+    { key: "c3", label: tr("Jun"), value: 27, readout: "27 days" },
     { key: "c4", label: "now", value: 12, faded: true, readout: "12 days (ongoing)" },
   ];
   const weight: ChartPoint[] = [];
@@ -1526,7 +1502,7 @@ function makePreview() {
   }
   for (let n = N; n >= 0; n -= 3) {
     const k = Math.round(200 + 90 * Math.abs(Math.sin((N - n) / 5)));
-    workout.push({ key: `wo${n}`, label: lbl(n), value: k, readout: `${k} kcal · 1 session` });
+    workout.push({ key: `wo${n}`, label: lbl(n), value: k, readout: tr("{0} kcal · 1 session", { 0: k }) });
     const p = 1720;
     const g = Math.round(p * (0.72 + 0.28 * Math.abs(Math.sin((N - n) / 4))));
     nutrition.push({ date: iso(n), planned: p, logged: g });
@@ -1535,7 +1511,7 @@ function makePreview() {
   }
   for (let n = N; n >= 0; n -= 4) {
     const k = Math.round(70 + 30 * Math.abs(Math.sin((N - n) / 4)));
-    yoga.push({ key: `y${n}`, label: lbl(n), value: k, readout: `${k} kcal · 1 flow` });
+    yoga.push({ key: `y${n}`, label: lbl(n), value: k, readout: tr("{0} kcal · 1 flow", { 0: k }) });
   }
   for (let n = N; n >= 0; n -= 2) {
     const m = clamp(Math.round(3 + 1.5 * Math.sin(((N - n) / N) * 6.5)), 1, 5);
@@ -1553,11 +1529,8 @@ function EmptyPreview() {
   return (
     <div className="space-y-4">
       <Panel>
-        <p className="font-script text-2xl text-hotpink">Your history starts today ✿</p>
-        <p className="mt-1 text-[13px] text-rose/75 leading-snug">
-          Right now this is empty — but it fills itself in from the things you already do. Here's
-          how it grows:
-        </p>
+        <p className="font-script text-2xl text-hotpink">{tr("Your history starts today ✿")}</p>
+        <p className="mt-1 text-[13px] text-rose/75 leading-snug">{tr("Right now this is empty — but it fills itself in from the things you already do. Here's how it grows:")}</p>
         <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12.5px] text-[#831843]">
           {[
             ["Confirm your period days", "your cycle rhythm & regularity"],
@@ -1571,7 +1544,7 @@ function EmptyPreview() {
             >
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
               <span>
-                <b>{a}</b> → {b}
+                <b>{trx(a)}</b> → {trx(b)}
               </span>
             </li>
           ))}
@@ -1580,50 +1553,46 @@ function EmptyPreview() {
         <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-hotpink/10 border border-hotpink/25 px-3 py-2 text-[12px] leading-snug text-[#831843]">
           <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2.2} />
           <span>
-            <b>Most of these start drawing in your very first week</b> — log a little each day and
-            you'll watch them fill in fast. Here's a preview of every chart your report will hold 👇
-          </span>
+            <b>{tr("Most of these start drawing in your very first week")}</b>{" "}{tr("— log a little each day and you'll watch them fill in fast. Here's a preview of every chart your report will hold 👇")}</span>
         </p>
       </Panel>
 
       {/* Faded example of the FULL report — every chart, clearly a preview */}
       <div className="relative">
-        <span className="absolute right-3 top-3 z-10 rounded-full bg-white/90 border border-petal/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink shadow-sm">
-          Example preview
-        </span>
+        <span className="absolute end-3 top-3 z-10 rounded-full bg-white/90 border border-petal/60 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink shadow-sm">{tr("Example preview")}</span>
         <div className={`space-y-4 opacity-[0.72] ${faded}`} aria-hidden>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.cycle}>
-              <PanelHead Icon={HeartPulse} title="Cycle by cycle" hint="example" />
+              <PanelHead Icon={HeartPulse} title={tr("Cycle by cycle")} hint="example" />
               <BarsChart points={p.cycles} unit="days" color={BAR_C} valueLabels perBarLabels tapHint="" interpretation="Each cycle's length, side by side." />
             </Panel>
             <Panel bg={CHART_BG.weight}>
-              <PanelHead Icon={Scale} title="Weight by day" hint="example" />
+              <PanelHead Icon={Scale} title={tr("Weight by day")} hint="example" />
               <LineChart points={p.weight} unit="kg" color={LINE_C} tapHint="" interpretation="Your weight trend over time." />
             </Panel>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.workout}>
-              <PanelHead Icon={Dumbbell} title="Workout burn" hint="example" />
+              <PanelHead Icon={Dumbbell} title={tr("Workout burn")} hint="example" />
               <BarsChart points={p.workout} unit="kcal" color={BAR_C} tapHint="" interpretation="Calories burned per workout." />
             </Panel>
             <Panel bg={CHART_BG.yoga}>
-              <PanelHead Icon={Sparkles} title="Yoga burn" hint="example" />
+              <PanelHead Icon={Sparkles} title={tr("Yoga burn")} hint="example" />
               <BarsChart points={p.yoga} unit="kcal" color={BAR_C} tapHint="" interpretation="Calories burned per flow." />
             </Panel>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.mood}>
-              <PanelHead Icon={Smile} title="Mood over time" hint="example" />
+              <PanelHead Icon={Smile} title={tr("Mood over time")} hint="example" />
               <LineChart points={p.mood} unit="score" color={LINE_C} yMin={1} yMax={5} tapHint="" interpretation="How your mood moves day to day." />
             </Panel>
             <Panel bg={CHART_BG.symptoms}>
-              <PanelHead Icon={Activity} title="Symptoms by day" hint="example" />
+              <PanelHead Icon={Activity} title={tr("Symptoms by day")} hint="example" />
               <BarsChart points={p.symptoms} unit="count" color={BAR_C} tapHint="" interpretation="Which symptoms show, and when." />
             </Panel>
           </div>
           <Panel bg={CHART_BG.nourish}>
-            <PanelHead Icon={FileText} title="Nourishment" hint="example" />
+            <PanelHead Icon={FileText} title={tr("Nourishment")} hint="example" />
             <div className="grid grid-cols-3 gap-2">
               {[
                 ["24", "Days logged"],
@@ -1631,34 +1600,29 @@ function EmptyPreview() {
                 ["18", "Full days"],
               ].map(([v, l]) => (
                 <div key={l} className="rounded-xl bg-blush/40 p-2.5 text-center">
-                  <p className="text-lg font-black text-magenta leading-none">{v}</p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{l}</p>
+                  <p className="text-lg font-black text-magenta leading-none">{trx(v)}</p>
+                  <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{trx(l)}</p>
                 </div>
               ))}
             </div>
           </Panel>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.nourish}>
-              <PanelHead Icon={UtensilsCrossed} title="Planned vs eaten" hint="example" />
+              <PanelHead Icon={UtensilsCrossed} title={tr("Planned vs eaten")} hint="example" />
               <PlannedVsLoggedChart series={p.nutrition} tapHint="" interpretation="What you planned vs what you ate." />
             </Panel>
             <Panel bg={CHART_BG.sleep}>
-              <PanelHead Icon={Moon} title="Sleep over time" hint="example" />
+              <PanelHead Icon={Moon} title={tr("Sleep over time")} hint="example" />
               <LineChart points={p.sleep} unit="score" color={LINE_C} yMin={1} yMax={5} tapHint="" interpretation="How rested you feel each night." />
             </Panel>
           </div>
           <Panel className="border-hotpink/25 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
-            <PanelHead Icon={Sparkles} title="Your cycle × your body" hint="example" />
+            <PanelHead Icon={Sparkles} title={tr("Your cycle × your body")} hint="example" />
             <CycleOverlayChart range={p.range} segments={p.segments} metrics={p.metrics} />
           </Panel>
         </div>
-        <p className="mt-3 text-center text-[12px] font-semibold text-hotpink">
-          Start logging on{" "}
-          <a href="/app/today" className="underline">
-            Today
-          </a>{" "}
-          and watch these become yours ✿
-        </p>
+        <p className="mt-3 text-center text-[12px] font-semibold text-hotpink">{tr("Start logging on")}{" "}
+          <a href="/app/today" className="underline">{tr("Today")}</a>{" "}{tr("and watch these become yours ✿")}</p>
       </div>
     </div>
   );
@@ -1696,7 +1660,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
   const symptomForecast: ChartPoint[] = symptomPred
     .filter((d) => d.date > futureISO(0) && Math.round(d.value) > 0)
     .slice(0, 6)
-    .map((d) => ({ key: d.date, label: shortDay(d.date), value: Math.round(d.value), predicted: true, readout: `~${Math.round(d.value)} expected · by phase` }));
+    .map((d) => ({ key: d.date, label: shortDay(d.date), value: Math.round(d.value), predicted: true, readout: tr("~{0} expected · by phase", { 0: Math.round(d.value) }) }));
 
   // Cycle bars = her real cycles + a few faded predicted ones, so it's never empty.
   const cycleAllPoints: ChartPoint[] = [
@@ -1706,7 +1670,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
       label: c.label,
       value: c.value,
       predicted: true,
-      readout: `~${c.value} days predicted`,
+      readout: tr("~{0} days predicted", { 0: c.value }),
     })),
   ];
 
@@ -1741,9 +1705,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
     key: d.date,
     date: d.date,
     value: d.logged,
-    readout: `ate ${d.logged.toLocaleString()} of ${d.planned.toLocaleString()} planned kcal${
-      d.planned > 0 ? ` · ${Math.round((d.logged / d.planned) * 100)}%` : ""
-    }`,
+    readout: tr("ate {0} of {1} planned kcal{2}", { 0: d.logged.toLocaleString(), 1: d.planned.toLocaleString(), 2: d.planned > 0 ? ` · ${Math.round((d.logged / d.planned) * 100)}%` : "" }),
   }));
 
   const hasAnything =
@@ -1768,42 +1730,35 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
       <div className="rounded-[1.4rem] border border-white/55 bg-white/55 backdrop-blur-xl p-4 sm:p-5 shadow-[0_8px_30px_-10px_rgba(219,39,119,0.30)]">
         {/* Title + compact export actions on ONE line */}
         <div className="flex items-center justify-between gap-2">
-          <h2 className="min-w-0 font-script text-3xl sm:text-4xl text-hotpink leading-none">
-            Your history
-          </h2>
+          <h2 className="min-w-0 font-script text-3xl sm:text-4xl text-hotpink leading-none">{tr("Your history")}</h2>
           <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={() => downloadHealthReport(h, userName)}
               className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-magenta px-2.5 py-1.5 text-[11px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 animate-selected-glow"
             >
-              <Download className="h-3.5 w-3.5" strokeWidth={2.2} /> Report
-            </button>
+              <Download className="h-3.5 w-3.5" strokeWidth={2.2} />{" "}{tr("Report")}</button>
             <button
               onClick={() => downloadHealthCSV(h)}
               className="inline-flex items-center gap-1 rounded-full border border-hotpink/40 bg-white px-2.5 py-1.5 text-[11px] font-bold text-hotpink transition hover:bg-blush/50 active:scale-95"
             >
-              <FileText className="h-3.5 w-3.5" strokeWidth={2} /> CSV
-            </button>
+              <FileText className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("CSV")}</button>
           </div>
         </div>
-        <p className="mt-1.5 text-[12.5px] text-rose/70 leading-snug">
-          Everything you've really logged, from day one — tap any chart for the details, then
-          download it all as a report for your doctor.
-        </p>
+        <p className="mt-1.5 text-[12.5px] text-rose/70 leading-snug">{tr("Everything you've really logged, from day one — tap any chart for the details, then download it all as a report for your doctor.")}</p>
         <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose/55">
           <CalendarDays className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />
           {h.trackingSince
-            ? `Tracking since ${prettyDate(h.trackingSince)} · ${h.daysTracked} day${h.daysTracked === 1 ? "" : "s"}`
-            : "No data logged yet"}
+            ? tr("Tracking since {0} · {1} day{2}", { 0: prettyDate(h.trackingSince), 1: h.daysTracked, 2: h.daysTracked === 1 ? "" : "s" })
+            : tr("No data logged yet")}
         </p>
 
         {/* Summary tiles — inside the same white section as the header text */}
         {hasAnything && (
           <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            <StatTile Icon={CalendarDays} value={String(h.daysTracked)} label="Days tracked" delay={0} />
-            <StatTile Icon={Activity} value={String(h.movement.totalSessions)} label="Sessions done" delay={60} />
-            <StatTile Icon={Flame} value={h.movement.totalKcal.toLocaleString()} label="Calories burned" delay={120} />
-            <StatTile Icon={HeartPulse} value={String(h.cycle.cyclesMeasured)} label="Cycles measured" delay={180} />
+            <StatTile Icon={CalendarDays} value={String(h.daysTracked)} label={tr("Days tracked")} delay={0} />
+            <StatTile Icon={Activity} value={String(h.movement.totalSessions)} label={tr("Sessions done")} delay={60} />
+            <StatTile Icon={Flame} value={h.movement.totalKcal.toLocaleString()} label={tr("Calories burned")} delay={120} />
+            <StatTile Icon={HeartPulse} value={String(h.cycle.cyclesMeasured)} label={tr("Cycles measured")} delay={180} />
           </div>
         )}
       </div>
@@ -1820,19 +1775,17 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel bg={CHART_BG.cycle}>
               <PanelHead
                 Icon={HeartPulse}
-                title="Cycle by cycle"
-                hint={h.cycle.count ? `${h.cycle.count} confirmed starts` : undefined}
+                title={tr("Cycle by cycle")}
+                hint={h.cycle.count ? tr("{0} confirmed starts", { 0: h.cycle.count }) : undefined}
               />
               <div className="mb-3 flex flex-wrap items-center gap-2">
                 <span
                   className={`inline-block rounded-full px-3 py-1 text-[12px] font-black uppercase tracking-wide ${reg.cls}`}
                 >
-                  {h.cycle.regularity}
+                  {trx(h.cycle.regularity)}
                 </span>
                 {h.cycle.avgLength != null && (
-                  <span className="text-[12.5px] font-bold text-rose/70">
-                    avg {h.cycle.avgLength} days
-                  </span>
+                  <span className="text-[12.5px] font-bold text-rose/70">{tr("avg")}{" "}{trx(h.cycle.avgLength)}{" "}{tr("days")}</span>
                 )}
               </div>
               <BarsChart
@@ -1844,21 +1797,16 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 tapHint="Tap a cycle to see its dates & length. Dashed bars are predicted."
                 interpretation={h.patterns.cycle}
               />
-              <PredictionNote>
-                The dashed bars are your next cycles, predicted from your average length
-                (~{cyclePredLen} days) and your most recent confirmed start. Each time you confirm a
-                new period start, that average — and this forecast — re-tunes to you, so it grows
-                more accurate the more you log.
-              </PredictionNote>
+              <PredictionNote>{tr("The dashed bars are your next cycles, predicted from your average length (~")}{trx(cyclePredLen)}{" "}{tr("days) and your most recent confirmed start. Each time you confirm a new period start, that average — and this forecast — re-tunes to you, so it grows more accurate the more you log.")}</PredictionNote>
             </Panel>
 
             <Panel bg={CHART_BG.weight}>
-              <PanelHead Icon={Scale} title="Weight by day" hint={titleCase(h.weight.goal)} />
+              <PanelHead Icon={Scale} title={tr("Weight by day")} hint={titleCase(h.weight.goal)} />
               {h.weight.currentKg != null && (
                 <div className="mb-2 flex items-baseline gap-2">
                   <span className="text-2xl font-black text-magenta">
-                    {h.weight.currentKg}
-                    <span className="text-sm font-bold text-rose/60"> kg</span>
+                    {trx(h.weight.currentKg)}
+                    <span className="text-sm font-bold text-rose/60">{" "}{tr("kg")}</span>
                   </span>
                   {h.weight.changeKg != null && (
                     <span
@@ -1866,8 +1814,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                     >
                       <ChangeIcon className="h-3.5 w-3.5" strokeWidth={2.4} />
                       {h.weight.changeKg > 0 ? "+" : ""}
-                      {h.weight.changeKg} kg
-                    </span>
+                      {trx(h.weight.changeKg)}{" "}{tr("kg")}</span>
                   )}
                 </div>
               )}
@@ -1883,18 +1830,9 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 interpretation={h.patterns.weight}
                 note={
                   proj && weightPred ? (
-                    <>
-                      The dashed line is where your weight should track if you stick to your plan —
-                      about {Math.abs(proj.weeklyRateKg)} kg/week toward your {proj.target} kg goal,
-                      worked out from your calorie plan
-                      {proj.etaWeeks ? ` (~${proj.etaWeeks} weeks to go)` : ""}. It re-draws from your
-                      latest weigh-in, so every time you log, the path corrects to reality.
-                    </>
+                    <>{tr("The dashed line is where your weight should track if you stick to your plan — about")}{" "}{Math.abs(proj.weeklyRateKg)}{" "}{tr("kg/week toward your")}{" "}{trx(proj.target)}{" "}{tr("kg goal, worked out from your calorie plan")}{proj.etaWeeks ? tr(" (~{0} weeks to go)", { 0: proj.etaWeeks }) : ""}{tr(". It re-draws from your latest weigh-in, so every time you log, the path corrects to reality.")}</>
                   ) : (
-                    <>
-                      Set a goal weight and pace in your Diet plan and a dashed target path will
-                      appear here — showing where you'd track week by week if you stay on plan.
-                    </>
+                    <>{tr("Set a goal weight and pace in your Diet plan and a dashed target path will appear here — showing where you'd track week by week if you stay on plan.")}</>
                   )
                 }
               />
@@ -1904,7 +1842,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
           {/* Burn — workout + yoga, side by side on desktop */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Panel bg={CHART_BG.workout}>
-              <PanelHead Icon={Dumbbell} title="Workout burn" hint="per day" />
+              <PanelHead Icon={Dumbbell} title={tr("Workout burn")} hint="per day" />
               <BarsChart
                 points={[...burnPoints(h.movement.workoutDaily), ...burnForecast(readWorkoutPlanDays(), avgBurn(h.movement.workoutDaily) || 210, "workout")]}
                 unit="kcal"
@@ -1915,7 +1853,7 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
               />
             </Panel>
             <Panel bg={CHART_BG.yoga}>
-              <PanelHead Icon={Sparkles} title="Yoga burn" hint="per day" />
+              <PanelHead Icon={Sparkles} title={tr("Yoga burn")} hint="per day" />
               <BarsChart
                 points={[...burnPoints(h.movement.yogaDaily), ...burnForecast(readYogaPlanDays(), avgBurn(h.movement.yogaDaily) || 130, "yoga flow")]}
                 unit="kcal"
@@ -1932,8 +1870,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel bg={CHART_BG.mood}>
               <PanelHead
                 Icon={Smile}
-                title="Mood over time"
-                hint={h.mood.avgScore != null ? `avg ${h.mood.avgScore}/5` : undefined}
+                title={tr("Mood over time")}
+                hint={h.mood.avgScore != null ? tr("avg {0}/5", { 0: h.mood.avgScore }) : undefined}
               />
               <ForecastLineChart
                 actual={moodActual}
@@ -1948,20 +1886,16 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 ghostShape={[0.5, 0.68, 0.55, 0.72, 0.62, 0.85, 0.8]}
                 interpretation={h.patterns.mood}
                 note={
-                  <>
-                    The dashed line is how each day tends to feel across your cycle — brighter around
-                    ovulation, softer in the days before your period. It starts from the typical
-                    hormonal curve and, once you've logged a few moods in each phase, shifts toward{" "}
-                    <b>your</b> real pattern.
-                  </>
+                  <>{tr("The dashed line is how each day tends to feel across your cycle — brighter around ovulation, softer in the days before your period. It starts from the typical hormonal curve and, once you've logged a few moods in each phase, shifts toward")}{" "}
+                    <b>{tr("your")}</b>{" "}{tr("real pattern.")}</>
                 }
               />
             </Panel>
             <Panel bg={CHART_BG.symptoms}>
               <PanelHead
                 Icon={Activity}
-                title="Symptoms by day"
-                hint={h.symptoms.days ? `${h.symptoms.days} days` : undefined}
+                title={tr("Symptoms by day")}
+                hint={h.symptoms.days ? tr("{0} days", { 0: h.symptoms.days }) : undefined}
               />
               <BarsChart
                 points={[...symptomPoints(h.symptoms.daily), ...symptomForecast]}
@@ -1976,36 +1910,28 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
 
           {/* Nourishment */}
           <Panel bg={CHART_BG.nourish}>
-            <PanelHead Icon={FileText} title="Nourishment" hint="meals logged" />
+            <PanelHead Icon={FileText} title={tr("Nourishment")} hint="meals logged" />
             <div className="grid grid-cols-3 gap-2">
               <div className="rounded-xl bg-blush/40 p-2.5 text-center">
                 <p className="text-lg font-black text-magenta leading-none">
-                  {h.nourish.daysLogged}
+                  {trx(h.nourish.daysLogged)}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  Days logged
-                </p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{tr("Days logged")}</p>
               </div>
               <div className="rounded-xl bg-blush/40 p-2.5 text-center">
                 <p className="text-lg font-black text-magenta leading-none">
-                  {h.nourish.mealsLogged}
+                  {trx(h.nourish.mealsLogged)}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  Meals
-                </p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{tr("Meals")}</p>
               </div>
               <div className="rounded-xl bg-blush/40 p-2.5 text-center">
                 <p className="text-lg font-black text-magenta leading-none">
-                  {h.nourish.daysFullLogged}
+                  {trx(h.nourish.daysFullLogged)}
                 </p>
-                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">
-                  Full days
-                </p>
+                <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wide text-rose/55">{tr("Full days")}</p>
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-rose/55 leading-snug">
-              We track how consistently you log meals — real, not reconstructed.
-            </p>
+            <p className="mt-3 text-[11px] text-rose/55 leading-snug">{tr("We track how consistently you log meals — real, not reconstructed.")}</p>
           </Panel>
 
           {/* Planned-vs-eaten calories + Sleep — fuel & rest, paired right under
@@ -2014,10 +1940,10 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel bg={CHART_BG.nourish}>
               <PanelHead
                 Icon={UtensilsCrossed}
-                title="Planned vs eaten"
+                title={tr("Planned vs eaten")}
                 hint={
                   h.nutrition.adherencePct != null
-                    ? `${h.nutrition.adherencePct}% on plan`
+                    ? tr("{0}% on plan", { 0: h.nutrition.adherencePct })
                     : "calories"
                 }
               />
@@ -2033,19 +1959,15 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 tapHint="Tap a day to see what you ate vs what you planned."
                 interpretation={h.patterns.nutrition}
                 note={
-                  <>
-                    The dashed line is what your meal plan proposes for every day this month — your
-                    weekly template, repeated. The solid line is only the days you actually ticked
-                    meals eaten, so the gap between plan and plate is the real, honest story.
-                  </>
+                  <>{tr("The dashed line is what your meal plan proposes for every day this month — your weekly template, repeated. The solid line is only the days you actually ticked meals eaten, so the gap between plan and plate is the real, honest story.")}</>
                 }
               />
             </Panel>
             <Panel bg={CHART_BG.sleep}>
               <PanelHead
                 Icon={Moon}
-                title="Sleep over time"
-                hint={h.sleep.avgQuality != null ? `avg ${h.sleep.avgQuality}/5` : undefined}
+                title={tr("Sleep over time")}
+                hint={h.sleep.avgQuality != null ? tr("avg {0}/5", { 0: h.sleep.avgQuality }) : undefined}
               />
               <ForecastLineChart
                 actual={sleepActual}
@@ -2060,11 +1982,8 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
                 ghostShape={[0.62, 0.7, 0.6, 0.72, 0.55, 0.68, 0.58]}
                 interpretation={h.patterns.sleep}
                 note={
-                  <>
-                    The light line is how well you tend to sleep across your cycle — often lighter in
-                    the days before your period. It starts from that typical pattern and shifts toward{" "}
-                    <b>your</b> real nights as you log them.
-                  </>
+                  <>{tr("The light line is how well you tend to sleep across your cycle — often lighter in the days before your period. It starts from that typical pattern and shifts toward")}{" "}
+                    <b>{tr("your")}</b>{" "}{tr("real nights as you log them.")}</>
                 }
               />
             </Panel>
@@ -2075,40 +1994,25 @@ export function HealthHistoryPanel({ userName }: { userName: string }) {
             <Panel className="border-hotpink/25 bg-gradient-to-br from-blush/40 via-white/70 to-petal/25">
               <PanelHead
                 Icon={Sparkles}
-                title="Your cycle × your body"
+                title={tr("Your cycle × your body")}
                 hint="by phase & over time"
               />
-              <p className="mb-2 text-[12px] leading-snug text-rose/70">
-                The whole picture: every metric over time, with the background coloured by your
-                cycle phase — so you can see how each phase shapes how you feel and move. Tap the
-                chips to show or hide a line, and scroll sideways to travel through the months.
-              </p>
+              <p className="mb-2 text-[12px] leading-snug text-rose/70">{tr("The whole picture: every metric over time, with the background coloured by your cycle phase — so you can see how each phase shapes how you feel and move. Tap the chips to show or hide a line, and scroll sideways to travel through the months.")}</p>
               <CycleOverlayChart range={h.range} segments={h.phaseSegments} metrics={metrics} />
-              <p className="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">
-                How you do in each phase
-              </p>
+              <p className="mt-3 mb-2 text-[11px] font-bold uppercase tracking-wide text-rose/50">{tr("How you do in each phase")}</p>
               <ByPhaseCards byPhase={h.byPhase} />
               <p className="mt-2 flex items-start gap-1.5 text-[11.5px] italic leading-snug text-rose/70">
                 <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
-                <span>{h.patterns.combined}</span>
+                <span>{trx(h.patterns.combined)}</span>
               </p>
-              <PredictionNote>
-                The coloured phase bands are worked out from your cycle — your confirmed period
-                starts when you have them, or your cycle setup as a forecast until then. Your logged
-                metrics are laid over the real timeline, so you can see how each phase tends to shape
-                how you feel and move — and it sharpens every time you confirm a start.
-              </PredictionNote>
+              <PredictionNote>{tr("The coloured phase bands are worked out from your cycle — your confirmed period starts when you have them, or your cycle setup as a forecast until then. Your logged metrics are laid over the real timeline, so you can see how each phase tends to shape how you feel and move — and it sharpens every time you confirm a start.")}</PredictionNote>
             </Panel>
           )}
 
           {/* Honest-data footnote */}
           <p className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-3.5 py-2.5 text-[11.5px] leading-snug text-rose/70">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
-            <span>
-              Every number here is something you confirmed or logged yourself — a personal wellness
-              summary, not a medical record. Charts are interactive here; in the downloadable report
-              each one comes with a table of all its points, so nothing is lost on paper.
-            </span>
+            <span>{tr("Every number here is something you confirmed or logged yourself — a personal wellness summary, not a medical record. Charts are interactive here; in the downloadable report each one comes with a table of all its points, so nothing is lost on paper.")}</span>
           </p>
         </div>
       )}

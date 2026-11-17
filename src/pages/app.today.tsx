@@ -54,6 +54,7 @@ import {
   cancelScheduledNotifications,
   fetchWaterAcks,
 } from "@/lib/push";
+import { tr, trx, DATE_LOCALE, RTL } from "@/i18n";
 
 // ── Storage keys ────────────────────────────────────────────────────────────
 const KEYS = {
@@ -106,7 +107,7 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
       const data = userId
         ? { url: "/app/today", kind: "water" as const, reminderId: "water", doseKey, dedupePrefix: doseKey, confirmToken: doseConfirmToken(userId, "water", doseKey) }
         : undefined;
-      out.push({ dedupeKey: doseKey, fireAt, body: `${left} more glass${left > 1 ? "es" : ""} to reach your ${waterGoal} glasses today 💧`, data });
+      out.push({ dedupeKey: doseKey, fireAt, body: tr("{0} more glass{1} to reach your {2} glasses today 💧", { 0: left, 1: left > 1 ? "es" : "", 2: waterGoal }), data });
     }
   }
   return out;
@@ -114,12 +115,12 @@ function upcomingWaterFires(waterCount: number, waterGoal: number, from: Date, u
 
 // ── Mood ─────────────────────────────────────────────────────────────────────
 const MOODS = [
-  { key: "calm",      label: "Calm",      Icon: Cloud },
-  { key: "happy",     label: "Happy",     Icon: Smile },
-  { key: "energetic", label: "Energetic", Icon: Sparkles },
-  { key: "sensitive", label: "Sensitive", Icon: Heart },
-  { key: "sad",       label: "Sad",       Icon: CloudRain },
-  { key: "tired",     label: "Tired",     Icon: Battery },
+  { key: "calm",      label: tr("Calm"),      Icon: Cloud },
+  { key: "happy",     label: tr("Happy"),     Icon: Smile },
+  { key: "energetic", label: tr("Energetic"), Icon: Sparkles },
+  { key: "sensitive", label: tr("Sensitive"), Icon: Heart },
+  { key: "sad",       label: tr("Sad"),       Icon: CloudRain },
+  { key: "tired",     label: tr("Tired"),     Icon: Battery },
 ] as const;
 
 const MOOD_LABEL: Record<string, string> = {
@@ -130,10 +131,10 @@ const MOOD_LABEL: Record<string, string> = {
 // menu instead of empty placeholders — so she understands what each tool does
 // and how they connect (goal → every tool, phase, programs).
 const PLAN_SETUP = [
-  { title: "Set your goal in Diet",  desc: "Pick a goal once and every tool balances your energy around it.",          href: "/app/tools/diet",    Icon: Apple },
-  { title: "Plan your meals",        desc: "Set a goal and we plan your week — synced to your phase, workouts & yoga.", href: "/app/tools/meals",   Icon: UtensilsCrossed },
-  { title: "Plan your workouts",     desc: "Phase-matched, freestyle or a program — and fuel it from your meals.",      href: "/app/tools/workout", Icon: Dumbbell },
-  { title: "Flow with yoga",         desc: "Sync to your phase, freestyle, or follow a soft program.",                  href: "/app/tools/yoga",    Icon: Flower2 },
+  { title: tr("Set your goal in Diet"),  desc: tr("Pick a goal once and every tool balances your energy around it."),          href: "/app/tools/diet",    Icon: Apple },
+  { title: tr("Plan your meals"),        desc: tr("Set a goal and we plan your week — synced to your phase, workouts & yoga."), href: "/app/tools/meals",   Icon: UtensilsCrossed },
+  { title: tr("Plan your workouts"),     desc: tr("Phase-matched, freestyle or a program — and fuel it from your meals."),      href: "/app/tools/workout", Icon: Dumbbell },
+  { title: tr("Flow with yoga"),         desc: tr("Sync to your phase, freestyle, or follow a soft program."),                  href: "/app/tools/yoga",    Icon: Flower2 },
 ] as const;
 
 
@@ -281,21 +282,21 @@ function buildPlanItems(phase: Exclude<CyclePhase, "any">): PlanItem[] {
     { id: "meal",    label: p.meal.title,    time: p.meal.time,    Icon: Heart,     tool: "/app/tools/meals",   image: p.meal.image,    blurb: p.meal.blurb },
     { id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell,  tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } },
     { id: "yoga",    label: p.yoga.title,    time: p.yoga.time,    Icon: Flower2,   tool: "/app/tools/yoga",    image: p.yoga.image,    blurb: p.yoga.blurb,    launch: { key: LAUNCH_YOGA_KEY, val: p.yoga.launch } },
-    { id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
+    { id: "journal", label: tr("Journal prompt"), time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary",  image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt },
   ];
   return items.sort((a, b) => a.time.localeCompare(b.time));
 }
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 5)  return { text: "Good night",     Icon: Moon };
-  if (h < 12) return { text: "Good morning",   Icon: Sun };
-  if (h < 18) return { text: "Good afternoon", Icon: Sun };
-  return       { text: "Good evening",         Icon: Moon };
+  if (h < 5)  return { text: tr("Good night"),     Icon: Moon };
+  if (h < 12) return { text: tr("Good morning"),   Icon: Sun };
+  if (h < 18) return { text: tr("Good afternoon"), Icon: Sun };
+  return       { text: tr("Good evening"),         Icon: Moon };
 }
 
 function fmtDate() {
-  return new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  return new Date().toLocaleDateString(DATE_LOCALE, { weekday: "long", month: "long", day: "numeric" });
 }
 
 function cycleDayNumber() {
@@ -623,7 +624,7 @@ export default function TodayPage() {
       const items = upcomingWaterFires(waterCount, waterGoal, new Date(), userId).map((fire) => ({
         dedupeKey: fire.dedupeKey,
         fireAt: fire.fireAt.toISOString(),
-        title: "Bloomzein — Hydratation 💧",
+        title: tr("Bloomzein — Hydratation 💧"),
         body: fire.body,
         data: fire.data ?? { url: "/app/today" },
       }));
@@ -643,7 +644,7 @@ export default function TodayPage() {
         try { localStorage.setItem(KEYS.waterReminders, "false"); } catch {}
         await cancelScheduledNotifications("hydration", "water:");
       } else {
-        if (!isPushSupported()) { alert("Les notifications ne sont pas disponibles sur cet appareil/navigateur."); return; }
+        if (!isPushSupported()) { alert(tr("Les notifications ne sont pas disponibles sur cet appareil/navigateur.")); return; }
         const { error } = await subscribeToPush();
         if (error) { alert(error); return; }
         setWaterRemindersEnabled(true);
@@ -739,15 +740,15 @@ export default function TodayPage() {
       if (r) return {
         id: `meal-${slot}`, label: r.name, time: MEAL_SLOT_TIME[slot], Icon: Heart,
         tool: "/app/tools/meals", image: recipeImageSrc(r), fallback: MEAL_PLACEHOLDER,
-        blurb: `${MEAL_SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`,
+        blurb: tr("{0} · {1} kcal · {2}g protein", { 0: MEAL_SLOT_LABEL[slot], 1: r.macros.calories, 2: r.macros.protein }),
         launch: { key: LAUNCH_MEAL_KEY, val: r.id },
       };
       return {
-        id: `meal-${slot}`, label: `Plan your ${MEAL_SLOT_LABEL[slot].toLowerCase()}`, time: MEAL_SLOT_TIME[slot], Icon: Heart,
+        id: `meal-${slot}`, label: tr("Plan your {0}", { 0: MEAL_SLOT_LABEL[slot].toLowerCase() }), time: MEAL_SLOT_TIME[slot], Icon: Heart,
         tool: "/app/tools/meals", image: MEAL_PLACEHOLDER,
         blurb: cycleReady
-          ? `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} for your ${PHASE_LABEL[phase]} phase ✿`
-          : `Tap to add a ${MEAL_SLOT_LABEL[slot].toLowerCase()} ✿`,
+          ? tr("Tap to add a {0} for your {1} phase ✿", { 0: MEAL_SLOT_LABEL[slot].toLowerCase(), 1: PHASE_LABEL[phase] })
+          : tr("Tap to add a {0} ✿", { 0: MEAL_SLOT_LABEL[slot].toLowerCase() }),
       };
     };
     const items: PlanItem[] = [];
@@ -767,7 +768,7 @@ export default function TodayPage() {
     items.push(mealItem("snack"));
     if (workoutPlanned) items.push({ id: "workout", label: p.workout.title, time: p.workout.time, Icon: Dumbbell, tool: "/app/tools/workout", image: p.workout.image, blurb: p.workout.blurb, launch: { key: LAUNCH_WORKOUT_KEY, val: p.workout.launch } });
     items.push(mealItem("dinner"));
-    items.push({ id: "journal", label: "Journal prompt", time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
+    items.push({ id: "journal", label: tr("Journal prompt"), time: p.journal.time, Icon: BookHeart, tool: "/app/tools/diary", image: "/images/diary-hero.webp", blurb: p.journal.prompt, prompt: p.journal.prompt });
     return items;
   }, [phase, todayMeals, cycleReady]);
   const moodHint  = MOODS[moodHintIdx];
@@ -808,18 +809,18 @@ export default function TodayPage() {
     const mealsDone = mealItems.filter(isItemDone).length;
     const moveDone  = moveItems.filter(isItemDone).length;
     const rows: { key: string; label: string; sub: string; done: boolean; Icon: typeof Heart; href: string; tool: string }[] = [
-      { key: "mood",  label: "Log your mood",  sub: mood ? "Logged today ✓" : "Not logged yet", done: !!mood,                  Icon: Smile,   href: "",           tool: "" },
-      { key: "water", label: "Hit water goal", sub: `${waterCount} / ${waterGoal} L`,           done: waterCount >= waterGoal, Icon: Droplet, href: "#hydration", tool: "" },
+      { key: "mood",  label: tr("Log your mood"),  sub: mood ? "Logged today ✓" : "Not logged yet", done: !!mood,                  Icon: Smile,   href: "",           tool: "" },
+      { key: "water", label: tr("Hit water goal"), sub: `${waterCount} / ${waterGoal} L`,           done: waterCount >= waterGoal, Icon: Droplet, href: "#hydration", tool: "" },
     ];
     if (mealItems.length)
-      rows.push({ key: "meals", label: `Eat your meals (${mealsDone}/${mealItems.length})`, sub: `${mealsDone} of ${mealItems.length} completed`, done: mealsDone === mealItems.length, Icon: UtensilsCrossed, href: "/app/tools/meals", tool: "/app/tools/meals" });
+      rows.push({ key: "meals", label: tr("Eat your meals ({0}/{1})", { 0: mealsDone, 1: mealItems.length }), sub: tr("{0} of {1} completed", { 0: mealsDone, 1: mealItems.length }), done: mealsDone === mealItems.length, Icon: UtensilsCrossed, href: "/app/tools/meals", tool: "/app/tools/meals" });
     if (moveItems.length) {
       const md = moveDone === moveItems.length;
-      rows.push({ key: "move", label: moveItems.length > 1 ? `Move your body (${moveDone}/${moveItems.length})` : (moveItems[0].label ?? "Move"), sub: md ? "Completed ✓" : moveItems.length > 1 ? `${moveDone} of ${moveItems.length} completed` : "Not started", done: md, Icon: moveItems[0].Icon, href: moveItems[0].tool, tool: moveItems[0].tool });
+      rows.push({ key: "move", label: moveItems.length > 1 ? tr("Move your body ({0}/{1})", { 0: moveDone, 1: moveItems.length }) : (moveItems[0].label ?? "Move"), sub: md ? "Completed ✓" : moveItems.length > 1 ? tr("{0} of {1} completed", { 0: moveDone, 1: moveItems.length }) : "Not started", done: md, Icon: moveItems[0].Icon, href: moveItems[0].tool, tool: moveItems[0].tool });
     }
     if (journalItem) {
       const jd = isItemDone(journalItem);
-      rows.push({ key: "journal", label: "Write in diary", sub: jd ? "Completed ✓" : "Not started", done: jd, Icon: BookHeart, href: "/app/tools/diary", tool: "/app/tools/diary" });
+      rows.push({ key: "journal", label: tr("Write in diary"), sub: jd ? "Completed ✓" : "Not started", done: jd, Icon: BookHeart, href: "/app/tools/diary", tool: "/app/tools/diary" });
     }
     return rows;
   }, [mood, waterCount, waterGoal, planDone, eatenSlots, autoDone, mealItems, moveItems, journalItem]);
@@ -894,11 +895,11 @@ export default function TodayPage() {
   // immediately on the first-ever Today, then only on scroll (affirmReveal),
   // always dismissible with the X. One soft line, self-writing, with a love tap.
   const affirmationCard = (!affirmDismissed && !isFresh && affirmReveal) ? (
-    <div className="relative mt-2.5 rounded-2xl border border-petal/50 bg-blush/25 pl-3 pr-8 py-2 animate-fade-in">
+    <div className="relative mt-2.5 rounded-2xl border border-petal/50 bg-blush/25 ps-3 pe-8 py-2 animate-fade-in">
       <button
         onClick={() => setAffirmDismissed(true)}
-        aria-label="Dismiss affirmation"
-        className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-white hover:text-hotpink active:scale-90"
+        aria-label={tr("Dismiss affirmation")}
+        className="absolute end-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-rose/40 transition hover:bg-white hover:text-hotpink active:scale-90"
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -911,12 +912,12 @@ export default function TodayPage() {
           className="font-script text-base sm:text-lg text-hotpink leading-snug"
         />
       </div>
-      <div className="mt-1 flex items-center gap-2 pl-6">
-        <span className="text-[8px] font-bold uppercase tracking-widest text-hotpink/50">Today's affirmation</span>
+      <div className="mt-1 flex items-center gap-2 ps-6">
+        <span className="text-[8px] font-bold uppercase tracking-widest text-hotpink/50">{tr("Today's affirmation")}</span>
         <button
           onClick={toggleAffirmLike}
           aria-pressed={affirmLiked}
-          aria-label={affirmLiked ? "Unlove this affirmation" : "Love this affirmation"}
+          aria-label={affirmLiked ? tr("Unlove this affirmation") : tr("Love this affirmation")}
           className="inline-flex items-center gap-1 text-[10px] font-bold tabular-nums text-hotpink/70 transition hover:text-hotpink active:scale-90"
         >
           <Heart className={["h-3 w-3", affirmLiked ? "fill-hotpink text-hotpink animate-icon-breathe" : ""].join(" ")} strokeWidth={2} />
@@ -942,26 +943,25 @@ export default function TodayPage() {
         <div className="relative z-[1] flex flex-col items-start px-4 pt-4 pb-2 sm:px-8 sm:pt-6 sm:pb-2 w-[74%] sm:max-w-md">
           {/* Phone: greeting on one line, name beneath. Tablet/desktop: one flow. */}
           <h1
-            className="animate-text-pop font-script text-[2.4rem] sm:text-4xl text-hotpink leading-[0.92] sm:leading-tight text-left"
+            className="animate-text-pop font-script text-[2.4rem] sm:text-4xl text-hotpink leading-[0.92] sm:leading-tight text-start"
             style={{ textShadow: "0 1px 10px rgba(255,255,255,0.9), 0 2px 4px rgba(255,255,255,0.65)" }}
           >
-            <span className="block whitespace-nowrap sm:inline">{hello}<span className="hidden sm:inline">, </span></span>
-            <span className="block sm:inline">{displayName}</span>
+            <span className="block whitespace-nowrap sm:inline">{trx(hello)}<span className="hidden sm:inline">{RTL ? "، " : ", "}</span></span>
+            <span className="block sm:inline">{trx(displayName)}</span>
           </h1>
           <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-2.5 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-            <HelloIcon className="h-3 w-3" strokeWidth={2} /> {today}
+            <HelloIcon className="h-3 w-3" strokeWidth={2} /> {trx(today)}
           </div>
 
           {/* Blooming-day streak — now sits in front of the phase/energy labels */}
           <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/85 backdrop-blur border border-petal/60 text-hotpink text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
             <span className="text-[12px] leading-none">✿</span>
-            {bloomDays > 0 ? <>{shownStreak} {bloomDays === 1 ? "day" : "days"} blooming</> : "Fresh start"}
+            {bloomDays > 0 ? <>{tr("{0} days blooming", { 0: shownStreak })}</> : tr("Fresh start")}
           </div>
 
           {cycleReady ? (
             <>
-              <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">
-                ✿ Day {cycleDay} · {PHASE_LABEL[phase]}
+              <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1">{tr("✿ Day")}{" "}{trx(cycleDay)} · {trx(PHASE_LABEL[phase])}
               </div>
 
               {/* ENERGY — its own label, sitting ABOVE the subtitle. Same pill
@@ -971,7 +971,7 @@ export default function TodayPage() {
                 const EnergyIcon = ENERGY_ICON[PHASE_ENERGY[phase]] ?? Zap;
                 return (
                   <div className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
-                    <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> Energy {PHASE_ENERGY[phase]}
+                    <EnergyIcon className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} />{" "}{tr("Energy")}{" "}{trx(PHASE_ENERGY[phase])}
                   </div>
                 );
               })()}
@@ -979,20 +979,15 @@ export default function TodayPage() {
               {/* Phase quote — hidden on phone (title carries the hero there),
                   shown on tablet/desktop. */}
               <p className="mt-1.5 sm:mt-2 hidden sm:block font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
-                {PHASE_QUOTES[phase].map((line, i, arr) => (
-                  <span key={i} className="block sm:inline">{line}{i < arr.length - 1 ? " " : ""}</span>
-                ))}
+                {trx(PHASE_QUOTES[phase].join(" "))}
               </p>
             </>
           ) : (
             <>
               <a href="/app/tools/cycle" className="mt-1.5 sm:mt-2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-hotpink/90 text-white text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 transition hover:bg-hotpink active:scale-95">
-                <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Set up your cycle
-              </a>
+                <Sparkles className="h-3 w-3" strokeWidth={2.2} />{" "}{tr("Set up your cycle")}</a>
 
-              <p className="mt-1 sm:mt-1.5 hidden sm:block font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">
-                Welcome to your Bloom ✿ Let's set up your world — start below.
-              </p>
+              <p className="mt-1 sm:mt-1.5 hidden sm:block font-script text-lg sm:text-2xl text-rose leading-tight max-w-[180px] sm:max-w-[280px]">{tr("Welcome to your Bloom ✿ Let's set up your world — start below.")}</p>
             </>
           )}
 
@@ -1000,7 +995,7 @@ export default function TodayPage() {
 
         {/* Notification bell — top-right (where the streak used to be); tap to
             open the notification centre. The streak now sits by the labels. */}
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-[3]">
+        <div className="absolute top-3 end-3 sm:top-4 sm:end-4 z-[3]">
           <NotificationBell />
         </div>
 
@@ -1056,18 +1051,13 @@ export default function TodayPage() {
             <div className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full" style={{ background: "linear-gradient(180deg,#FF7FBE,#EC0F86)" }}>
               <Sparkles className="h-8 w-8 text-white" />
             </div>
-            <h3 className="font-script text-3xl leading-none text-hotpink">Let's set up your Today first</h3>
-            <p className="mt-2 text-sm leading-relaxed text-rose/80">
-              A few gentle taps and your whole app syncs to your cycle — your meals, movement,
-              mood and more all tune to you. Then every tool is ready ✿
-            </p>
+            <h3 className="font-script text-3xl leading-none text-hotpink">{tr("Let's set up your Today first")}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-rose/80">{tr("A few gentle taps and your whole app syncs to your cycle — your meals, movement, mood and more all tune to you. Then every tool is ready ✿")}</p>
             <button
               onClick={() => { startGuide(); setSetupNudge(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-base font-bold text-white shadow-lg active:scale-95 transition"
-              style={{ background: "linear-gradient(180deg,#FF57AC,#EC0F86 52%,#D30D78)", boxShadow: "0 16px 36px -14px rgba(219,39,119,0.85)" }}>
-              Set up my Today ✿
-            </button>
-            <button onClick={() => setSetupNudge(false)} className="mt-2 text-xs font-semibold text-rose/60">Maybe later</button>
+              style={{ background: "linear-gradient(180deg,#FF57AC,#EC0F86 52%,#D30D78)", boxShadow: "0 16px 36px -14px rgba(219,39,119,0.85)" }}>{tr("Set up my Today ✿")}</button>
+            <button onClick={() => setSetupNudge(false)} className="mt-2 text-xs font-semibold text-rose/60">{tr("Maybe later")}</button>
           </div>
         </div>
       )}
@@ -1075,7 +1065,7 @@ export default function TodayPage() {
       {finaleOpen && (
         <SpotlightCoach
           targetId="daily-checkin"
-          title="Your Bloom is all set ✿"
+          title={tr("Your Bloom is all set ✿")}
           message="Congratulations! Your cycle, energy, meals, movement and goals are all planned and in sync — one connected plan, tuned to you. One soft last touch: check in each day here — your mood, sleep, symptoms and water."
           primaryLabel="Start my day ✿"
           onPrimary={() => setFinaleOpen(false)}
@@ -1105,20 +1095,20 @@ export default function TodayPage() {
       <div id="daily-checkin" className="relative z-[1] mt-2 sm:mt-3">
         <div className="grid grid-cols-4 gap-1.5 sm:flex sm:flex-wrap sm:justify-start sm:gap-2.5">
           <button ref={moodTileRef} onClick={() => setMoodPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={moodPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-start sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="clay-blob animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full text-white"><MoodIcon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.8} /></span>
             <span className="min-w-0 sm:flex-none">
-              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Mood</span>
-              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{mood ? MOOD_LABEL[mood] : "Tap in"}</span>
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">{tr("Mood")}</span>
+              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{mood ? trx(MOOD_LABEL[mood]) : tr("Tap in")}</span>
             </span>
           </button>
 
           <button ref={symptomTileRef} onClick={() => setSymptomPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={symptomPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-start sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Activity className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} /></span>
             <span className="min-w-0 sm:flex-none">
-              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Symptom</span>
-              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? `${symptomsToday.length} noted` : "Check in"}</span>
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">{tr("Symptom")}</span>
+              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{symptomsToday.length ? tr("{0} noted", { 0: symptomsToday.length }) : tr("Check in")}</span>
             </span>
           </button>
 
@@ -1127,9 +1117,9 @@ export default function TodayPage() {
             const C = 2 * Math.PI * 15; // ring circumference (r=15 in a 36-box)
             return (
               <button ref={waterTileRef} onClick={() => setWaterPopoverOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={waterPopoverOpen}
-                className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
+                className="relative group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-start sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
                 {/* corner water drop — signals this chip is your water insight */}
-                <Droplet aria-hidden className="absolute right-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
+                <Droplet aria-hidden className="absolute end-1 top-1 h-2.5 w-2.5 text-hotpink/70" fill="currentColor" strokeWidth={0} />
                 {/* progress ring — fills with the % of your water goal reached */}
                 <span className="relative grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center">
                   <svg viewBox="0 0 36 36" className="absolute inset-0 h-full w-full -rotate-90">
@@ -1137,11 +1127,11 @@ export default function TodayPage() {
                     <circle cx="18" cy="18" r="15" fill="none" stroke="#EC4899" strokeWidth="4" strokeLinecap="round"
                       strokeDasharray={C} strokeDashoffset={C * (1 - wp / 100)} style={{ transition: "stroke-dashoffset .5s ease" }} />
                   </svg>
-                  <span className="text-[7px] sm:text-[10px] font-black leading-none text-hotpink tabular-nums">{wp}%</span>
+                  <span className="text-[7px] sm:text-[10px] font-black leading-none text-hotpink tabular-nums">{trx(wp)}%</span>
                 </span>
                 <span className="min-w-0 sm:flex-none">
-                  <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Water</span>
-                  <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{waterCount}/{waterGoal}</span>
+                  <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">{tr("Water")}</span>
+                  <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{trx(waterCount)}/{trx(waterGoal)}</span>
                 </span>
               </button>
             );
@@ -1151,13 +1141,13 @@ export default function TodayPage() {
               so last night's rest is logged in one touch (the fuller card lives
               in the smart panel, mirroring water's chip + dashboard pairing). */}
           <button ref={sleepTileRef} onClick={() => setSleepPickerOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={sleepPickerOpen}
-            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-left sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
+            className="group flex flex-col items-center text-center gap-0.5 sm:flex-row sm:text-start sm:gap-2.5 rounded-2xl bg-white/40 backdrop-blur-xl border border-white/50 ring-1 ring-white/40 px-1 py-1.5 sm:px-3.5 sm:py-2 sm:w-auto shadow-lg shadow-hotpink/10 transition hover:-translate-y-0.5 hover:bg-white/55 active:scale-[0.98]">
             <span className="animate-icon-breathe grid h-6 w-6 sm:h-9 sm:w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink">
               {sleepEntry ? <SleepGlyph q={sleepEntry.q} className="h-3.5 w-3.5 sm:h-5 sm:w-5 text-hotpink" /> : <Moon className="h-3.5 w-3.5 sm:h-5 sm:w-5" strokeWidth={1.9} />}
             </span>
             <span className="min-w-0 sm:flex-none">
-              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">Sleep</span>
-              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{sleepEntry ? sleepQualityLabel(sleepEntry.q) : "Tap in"}</span>
+              <span className="block text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-rose/60 leading-none">{tr("Sleep")}</span>
+              <span className="mt-0.5 block font-script text-[13px] sm:text-lg leading-none text-hotpink truncate">{sleepEntry ? sleepQualityLabel(sleepEntry.q) : tr("Tap in")}</span>
             </span>
           </button>
         </div>
@@ -1193,11 +1183,10 @@ export default function TodayPage() {
              planned; nothing at all for a brand-new user (the checklist guides her). ── */}
       {!hasPlanContent && cycleReady && (
         <section data-reveal className="mt-4 sm:mt-6">
-          <SectionTitle>Today's Plan ✿</SectionTitle>
-          <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">
-            Nothing planned yet — set up a tool and Today fills itself. Everything syncs to your <span className="font-bold text-hotpink">goal</span> &amp; <span className="font-bold text-hotpink">phase</span> ✿
+          <SectionTitle>{tr("Today's Plan ✿")}</SectionTitle>
+          <p className="-mt-1 mb-2.5 text-[11px] sm:text-xs text-rose/65 leading-snug px-0.5">{tr("Nothing planned yet — set up a tool and Today fills itself. Everything syncs to your")}{" "}<span className="font-bold text-hotpink">{tr("goal")}</span> &amp; <span className="font-bold text-hotpink">{tr("phase")}</span> ✿
           </p>
-          {affirmationCard && <div className="mb-2.5">{affirmationCard}</div>}
+          {affirmationCard && <div className="mb-2.5">{trx(affirmationCard)}</div>}
           <div className="bloom-pearl-card pearl-sheen rounded-3xl overflow-hidden divide-y divide-petal/20">
             {PLAN_SETUP.map((t, i) => (
               <a key={t.href} href={t.href} className="flex items-center gap-3 px-3 py-3 sm:px-4 sm:py-3.5 transition hover:bg-blush/20 active:scale-[0.99]" style={{ animationDelay: `${i * 60}ms` }}>
@@ -1205,11 +1194,11 @@ export default function TodayPage() {
                   <t.Icon className="h-5 w-5" strokeWidth={1.8} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-[#831843] leading-tight">{t.title}</p>
-                  <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{t.desc}</p>
+                  <p className="text-sm font-bold text-[#831843] leading-tight">{trx(t.title)}</p>
+                  <p className="mt-0.5 text-[11px] text-rose/60 leading-snug">{trx(t.desc)}</p>
                 </div>
                 <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow">
-                  <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                  <ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
                 </span>
               </a>
             ))}
@@ -1223,26 +1212,23 @@ export default function TodayPage() {
         {/* Card header — a big personal title, phase blurb, the day's affirmation
             (tucked under the title) & a gentle nudge, all contained. */}
         <div className="px-4 pt-4 pb-3 sm:px-5 sm:pt-5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-hotpink/55">Today's Plan ✿</p>
-          <h2 className="mt-0.5 font-script text-[2rem] sm:text-[2.6rem] text-hotpink leading-[1.05] drop-shadow-[0_1px_4px_rgba(219,39,119,0.12)]">
-            Your {cycleReady ? PHASE_DAYWORD[phase] : "bloom"} day
-          </h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-hotpink/55">{tr("Today's Plan ✿")}</p>
+          <h2 className="mt-0.5 font-script text-[2rem] sm:text-[2.6rem] text-hotpink leading-[1.05] drop-shadow-[0_1px_4px_rgba(219,39,119,0.12)]">{tr("Your {0} day", { 0: cycleReady ? PHASE_DAYWORD[phase] : "bloom" })}</h2>
           <p className="mt-1.5 text-[11px] sm:text-xs text-rose/65 leading-snug">
             {cycleReady ? (
-              <>Tailored to your <span className="font-bold text-hotpink">{PHASE_LABEL[phase]}</span> phase ({PHASE_ENERGY[phase].toLowerCase()} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.</>
+              <>{tr("Tailored to your {0} phase ({1} energy) — a balanced day to eat, move, flow and reflect. Tap any item to start it.", { 0: PHASE_LABEL[phase], 1: PHASE_ENERGY[phase].toLowerCase() })}</>
             ) : (
-              <>A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.</>
+              <>{tr("A balanced day to eat, move, flow and reflect. Tap any item to start it — set up your cycle to tailor it to your phase.")}</>
             )}
           </p>
 
           {/* Daily affirmation — appears here, softly, under the title */}
-          {affirmationCard}
+          {trx(affirmationCard)}
 
           <div className="mt-2 hidden sm:inline-flex items-center gap-1.5 rounded-full bg-blush/50 px-2.5 py-1 text-[10px] font-semibold leading-snug text-hotpink/80">
-            <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} /> Tick each item as you go — every one grows your daily Bloom ✿
-          </div>
+            <Sparkles className="h-3 w-3 shrink-0" strokeWidth={2} />{" "}{tr("Tick each item as you go — every one grows your daily Bloom ✿")}</div>
         </div>
-        <PlusLock feature="coach" title="Today's Plan" blurb="Your whole day — meals, movement, flow & reflection, synced to your phase.">
+        <PlusLock feature="coach" title={tr("Today's Plan")} blurb="Your whole day — meals, movement, flow & reflection, synced to your phase.">
         <div data-reveal-stagger className="divide-y divide-petal/20 border-t border-petal/30">
           {planItems.map((item, i) => {
             const done   = isItemDone(item);
@@ -1263,7 +1249,7 @@ export default function TodayPage() {
                 <div className="relative flex w-9 sm:w-11 shrink-0 flex-col items-center justify-center">
                   <span aria-hidden className={["absolute left-1/2 -translate-x-1/2 w-[2px] bg-gradient-to-b from-petal/40 via-petal/70 to-petal/40",
                     isFirst ? "top-[18px]" : "top-0", isLast ? "bottom-[18px]" : "bottom-0"].join(" ")} />
-                  {item.time && <span className="relative z-[1] mb-1 text-[9px] sm:text-[9.5px] font-bold tabular-nums text-rose/50">{item.time}</span>}
+                  {item.time && <span className="relative z-[1] mb-1 text-[9px] sm:text-[9.5px] font-bold tabular-nums text-rose/50">{trx(item.time)}</span>}
                   <span className={["relative z-[1] grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-full border-2 transition",
                     done ? "border-hotpink bg-hotpink text-white"
                     : timing === "now" ? "border-hotpink bg-white text-hotpink animate-selected-glow"
@@ -1275,7 +1261,7 @@ export default function TodayPage() {
                 {/* Tapping the image / text opens a centred detail popup */}
                 <button
                   onClick={() => setActivePlan(item)}
-                  className="flex flex-1 min-w-0 items-center gap-3 sm:gap-3.5 text-left transition active:scale-[0.99]"
+                  className="flex flex-1 min-w-0 items-center gap-3 sm:gap-3.5 text-start transition active:scale-[0.99]"
                 >
                   {/* Image — a strong-pink ring marks it done/selected (never hides it) */}
                   <div className={["relative shrink-0 h-[108px] w-[108px] sm:h-[132px] sm:w-[132px] overflow-hidden rounded-2xl transition",
@@ -1294,20 +1280,17 @@ export default function TodayPage() {
                         </span>
                       )}
                       <p className="text-[15px] sm:text-base font-bold leading-snug text-[#831843]">
-                        {item.label}
+                        {trx(item.label)}
                       </p>
                       {timing === "now" && (
-                        <span className="rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">
-                          Now
-                        </span>
+                        <span className="rounded-full bg-hotpink text-white px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide animate-cta-bounce">{tr("Now")}</span>
                       )}
                     </div>
-                    <p className={["mt-0.5 text-[11.5px] sm:text-[12.5px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/60"].join(" ")}>{item.prompt ? `"${item.blurb}"` : item.blurb}</p>
+                    <p className={["mt-0.5 text-[11.5px] sm:text-[12.5px] leading-snug", item.prompt ? "italic text-hotpink/70" : "text-rose/60"].join(" ")}>{item.prompt ? `"${item.blurb}"` : trx(item.blurb)}</p>
                     {cycleReady && (
                       <div className="mt-1 flex items-center gap-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-hotpink/60">
-                          ✿ {PHASE_LABEL[phase]} phase
-                        </span>
+                          ✿ {tr("{0} phase", { 0: PHASE_LABEL[phase] })}</span>
                       </div>
                     )}
                   </div>
@@ -1319,19 +1302,18 @@ export default function TodayPage() {
                     if (item.launch) writeLaunch(item.launch.key, item.launch.val);
                     if (item.prompt) { try { localStorage.setItem(DIARY_PROMPT_KEY, item.prompt); } catch {} }
                   }}
-                  aria-label={`Open ${item.label}`}
-                  title="Open tool"
+                  aria-label={tr("Open {0}", { 0: item.label })}
+                  title={tr("Open tool")}
                   className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow hover:bg-hotpink hover:text-white transition active:scale-90"
                 >
-                  <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                  <ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
                 </a>
               </div>
             );
           })}
         </div>
         </PlusLock>
-        <a href="/app/calendar" className="flex items-center justify-center gap-1 border-t border-petal/30 px-4 py-2.5 text-[11px] font-bold text-hotpink animate-soft-glow">
-          Full calendar <ArrowRight className="h-3 w-3" strokeWidth={2} />
+        <a href="/app/calendar" className="flex items-center justify-center gap-1 border-t border-petal/30 px-4 py-2.5 text-[11px] font-bold text-hotpink animate-soft-glow">{tr("Full calendar")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2} />
         </a>
         </div>
       </section>
@@ -1343,7 +1325,7 @@ export default function TodayPage() {
       {(cycleReady || mealPlanned) && (
         <section data-reveal className="mt-4 sm:mt-6">
           {/* Bloom+ : the real energy engine (target / eaten / burned numbers). */}
-          <PlusLock feature="diet" title="Your energy numbers" blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[190px]">
+          <PlusLock feature="diet" title={tr("Your energy numbers")} blurb="Your real daily target, what you've eaten & burned — the full picture." minH="min-h-[190px]">
             <TodayEnergyStrip e={energyBalance()} />
           </PlusLock>
         </section>
@@ -1353,17 +1335,16 @@ export default function TodayPage() {
              sits under the fuel as a blurred "coming soon" teaser. ── */}
       {(cycleReady || mealPlanned) && (
         <section data-reveal className="relative mt-4 sm:mt-6 overflow-hidden rounded-[1.75rem]">
-          <span className="absolute right-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
-            <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Coming soon
-          </span>
+          <span className="absolute end-4 top-4 z-20 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-md">
+            <Sparkles className="h-3 w-3" strokeWidth={2.5} />{" "}{tr("Coming soon")}</span>
           <div className="pointer-events-none select-none blur-[3px] opacity-80" aria-hidden>
             <CoachTodayCompact coach={coach} />
           </div>
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 px-6 text-center">
             <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/85 text-hotpink shadow-lg shadow-hotpink/20"><Sparkles className="h-6 w-6" strokeWidth={2} /></span>
-            <p className="font-script text-2xl text-hotpink leading-none">Bloom Inspiration</p>
-            <p className="text-[12.5px] font-bold text-[#831843]">Coming soon ✿</p>
-            <p className="max-w-[260px] text-[11px] text-rose/60 leading-snug">Daily inspiration &amp; gentle guidance to keep you blooming — we're putting the finishing touches on it.</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{tr("Bloom Inspiration")}</p>
+            <p className="text-[12.5px] font-bold text-[#831843]">{tr("Coming soon ✿")}</p>
+            <p className="max-w-[260px] text-[11px] text-rose/60 leading-snug">{tr("Daily inspiration & gentle guidance to keep you blooming — we're putting the finishing touches on it.")}</p>
           </div>
         </section>
       )}
@@ -1394,14 +1375,14 @@ export default function TodayPage() {
             <div className="flex items-center gap-2.5">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><BloomFlower className="h-[22px] w-[22px] text-white" /></span>
               <div className="min-w-0">
-                <h2 className="inline-flex items-center gap-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-none">Your bloom today <Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
-                <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-hotpink/60">Daily progress</p>
+                <h2 className="inline-flex items-center gap-1.5 font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("Your bloom today")}{" "}<Sparkles className="h-4 w-4" strokeWidth={2} /></h2>
+                <p className="mt-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-hotpink/60">{tr("Daily progress")}</p>
               </div>
             </div>
 
             {/* Encouraging message */}
             <p className="mt-2.5 text-[13px] font-semibold text-[#831843] leading-snug">
-              {bloomFull ? "Fully bloomed — you're amazing today ✿" : bloomMessage} <span className="text-hotpink">🩷</span>
+              {bloomFull ? tr("Fully bloomed — you're amazing today ✿") : trx(bloomMessage)} <span className="text-hotpink">🩷</span>
             </p>
 
             {/* Ring + tip on top; checklist full-width below (roomy labels) */}
@@ -1428,8 +1409,8 @@ export default function TodayPage() {
                     {bloomFull && ringPercent >= 100
                       ? <Star className="h-8 w-8 text-hotpink animate-icon-breathe" strokeWidth={1.5} fill="currentColor" />
                       : <>
-                          <p className="font-script text-[2rem] text-hotpink leading-none">{ringPercent}%</p>
-                          <p className="mt-0.5 text-[8.5px] font-black uppercase tracking-[0.15em] text-hotpink/70">Bloomed</p>
+                          <p className="font-script text-[2rem] text-hotpink leading-none">{trx(ringPercent)}%</p>
+                          <p className="mt-0.5 text-[8.5px] font-black uppercase tracking-[0.15em] text-hotpink/70">{tr("Bloomed")}</p>
                         </>
                     }
                   </div>
@@ -1437,30 +1418,30 @@ export default function TodayPage() {
                 {/* Tip */}
                 <div className="w-full rounded-2xl bg-white/70 border border-petal/50 px-3 py-2 flex items-start gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink mt-0.5" strokeWidth={2} />
-                  <p className="text-[11px] font-medium text-[#831843] leading-snug">{bloomFull ? "You did it — soak it in ✨" : "Small steps today, big changes tomorrow."}</p>
+                  <p className="text-[11px] font-medium text-[#831843] leading-snug">{bloomFull ? tr("You did it — soak it in ✨") : tr("Small steps today, big changes tomorrow.")}</p>
                 </div>
               </div>
 
               {/* Checklist — full-width cards on a soft dotted rail */}
-              <div className="relative mt-3 min-w-0 space-y-2 before:absolute before:left-[7px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[repeating-linear-gradient(to_bottom,rgba(236,72,153,0.35)_0_3px,transparent_3px_7px)]">
+              <div className="relative mt-3 min-w-0 space-y-2 before:absolute before:start-[7px] before:top-3 before:bottom-3 before:w-[2px] before:bg-[repeating-linear-gradient(to_bottom,rgba(236,72,153,0.35)_0_3px,transparent_3px_7px)]">
                 {checklist.map((c) => (
                   <button
                     key={c.key}
                     onClick={() => c.key === "mood" ? setMoodPickerOpen((v) => !v) : focusPlanStep(c.key)}
-                    className="group relative flex w-full items-center gap-2.5 rounded-2xl bg-white/85 border border-petal/50 pl-5 pr-2.5 py-2 text-left shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+                    className="group relative flex w-full items-center gap-2.5 rounded-2xl bg-white/85 border border-petal/50 ps-5 pe-2.5 py-2 text-start shadow-sm shadow-hotpink/5 transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
                   >
                     {/* rail dot */}
-                    <span className={["absolute -left-[1px] top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full ring-2 ring-white transition", c.done ? "bg-hotpink" : "bg-petal"].join(" ")} />
+                    <span className={["absolute -start-[1px] top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full ring-2 ring-white transition", c.done ? "bg-hotpink" : "bg-petal"].join(" ")} />
                     <span className={["grid h-9 w-9 shrink-0 place-items-center rounded-full transition", c.done ? "bg-gradient-to-br from-hotpink to-magenta text-white" : "bg-blush text-hotpink"].join(" ")}>
                       <c.Icon className="h-[18px] w-[18px]" strokeWidth={1.9} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={["block text-[13px] font-bold leading-tight truncate", c.done ? "text-[#831843]" : "text-[#831843]"].join(" ")}>{c.label}</span>
-                      <span className={["block text-[10.5px] font-semibold leading-tight", c.done ? "text-hotpink" : "text-rose/55"].join(" ")}>{c.sub}</span>
+                      <span className={["block text-[13px] font-bold leading-tight truncate", c.done ? "text-[#831843]" : "text-[#831843]"].join(" ")}>{trx(c.label)}</span>
+                      <span className={["block text-[10.5px] font-semibold leading-tight", c.done ? "text-hotpink" : "text-rose/55"].join(" ")}>{trx(c.sub)}</span>
                     </span>
                     {c.done
                       ? <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
-                      : <ChevronRight className="h-4 w-4 shrink-0 text-hotpink/50 transition group-hover:text-hotpink" strokeWidth={2.5} />}
+                      : <ChevronRight className="rtl:-scale-x-100 h-4 w-4 shrink-0 text-hotpink/50 transition group-hover:text-hotpink" strokeWidth={2.5} />}
                   </button>
                 ))}
               </div>
@@ -1472,15 +1453,14 @@ export default function TodayPage() {
             <div className="flex items-center gap-2 min-w-0">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><BloomFlower className="h-4 w-4 text-hotpink" /></span>
               <div className="min-w-0">
-                <p className="text-[12px] font-black text-hotpink leading-tight">You're doing great!</p>
-                <p className="text-[10px] text-rose/60 leading-tight truncate">Every little action brings you closer to your best self.</p>
+                <p className="text-[12px] font-black text-hotpink leading-tight">{tr("You're doing great!")}</p>
+                <p className="text-[10px] text-rose/60 leading-tight truncate">{tr("Every little action brings you closer to your best self.")}</p>
               </div>
             </div>
             <button
               onClick={() => { try { document.getElementById("todays-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }); } catch {} }}
               className="shrink-0 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-magenta px-3.5 py-1.5 text-[11.5px] font-bold text-white shadow-sm shadow-hotpink/25 transition hover:brightness-105 active:scale-95"
-            >
-              See my plan <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            >{tr("See my plan")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -1513,7 +1493,7 @@ export default function TodayPage() {
       {/* ── 3. DUE TODAY ─────────────────────────────────────────────────────── */}
       {hasDueItems && !isFresh && (
         <section data-reveal className="mt-4 sm:mt-6">
-          <SectionTitle hint="don't forget">Due Today</SectionTitle>
+          <SectionTitle hint="don't forget">{tr("Due Today")}</SectionTitle>
           <div className="bloom-pearl-card pearl-sheen rounded-3xl p-3 sm:p-4 flex flex-col gap-2">
             {/* Daily pill */}
             <button
@@ -1525,9 +1505,9 @@ export default function TodayPage() {
               <span className={["clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white transition", pillTaken ? "" : "animate-icon-breathe"].join(" ")}>
                 <Pill className="h-3.5 w-3.5" strokeWidth={1.8} />
               </span>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-bold text-[#831843]">Daily {pillLabel}</p>
-                <p className="text-[10px] text-rose/60">{pillTaken ? "Taken ✓" : "Tap to confirm you took it"}</p>
+              <div className="flex-1 min-w-0 text-start">
+                <p className="text-xs font-bold text-[#831843]">{tr("Daily")}{" "}{trx(pillLabel)}</p>
+                <p className="text-[10px] text-rose/60">{pillTaken ? tr("Taken ✓") : tr("Tap to confirm you took it")}</p>
               </div>
               <span className={["grid h-5 w-5 shrink-0 place-items-center rounded-full transition", pillTaken ? "bg-hotpink" : "bg-blush/60"].join(" ")}>
                 <Check className="h-3 w-3 text-white" strokeWidth={3} />
@@ -1539,13 +1519,13 @@ export default function TodayPage() {
               <button
                 key={rem.id}
                 onClick={() => markReminderDone(rem.id)}
-                className="flex items-center gap-3 rounded-2xl bg-white/70 hover:bg-blush/40 px-3 py-2.5 transition active:scale-95 text-left"
+                className="flex items-center gap-3 rounded-2xl bg-white/70 hover:bg-blush/40 px-3 py-2.5 transition active:scale-95 text-start"
               >
                 <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white animate-icon-breathe">
                   <AlarmClock className="h-3.5 w-3.5" strokeWidth={1.8} />
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-[#831843] truncate">{rem.title}</p>
+                  <p className="text-xs font-bold text-[#831843] truncate">{trx(rem.title)}</p>
                   <p className="text-[10px] text-rose/60">
                     {rem.kind === "medication" && rem.times.length > 0 ? rem.times.join(" · ") : rem.time ?? rem.kind}
                   </p>
@@ -1567,23 +1547,21 @@ export default function TodayPage() {
       {waterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setWaterModalOpen(false)}>
           <div className="bloom-pearl-card pearl-sheen relative w-full max-w-xs rounded-3xl p-5 sm:p-6" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setWaterModalOpen(false)} aria-label="Close" className="absolute top-3 right-3 grid h-7 w-7 place-items-center rounded-full bg-blush text-rose/70">
+            <button onClick={() => setWaterModalOpen(false)} aria-label={tr("Close")} className="absolute top-3 end-3 grid h-7 w-7 place-items-center rounded-full bg-blush text-rose/70">
               <X className="h-4 w-4" strokeWidth={2} />
             </button>
-            <p className="font-script text-2xl text-hotpink leading-none text-center">Daily Water Goal ✿</p>
-            <p className="mt-1.5 text-center text-xs text-rose/60">How many glasses per day?</p>
+            <p className="font-script text-2xl text-hotpink leading-none text-center">{tr("Daily Water Goal ✿")}</p>
+            <p className="mt-1.5 text-center text-xs text-rose/60">{tr("How many glasses per day?")}</p>
             <div className="mt-4 flex items-center justify-center gap-4">
-              <button onClick={() => saveWaterGoal(waterGoal - 1)} className="clay-blob grid h-10 w-10 place-items-center rounded-full text-white" aria-label="Decrease">
+              <button onClick={() => saveWaterGoal(waterGoal - 1)} className="clay-blob grid h-10 w-10 place-items-center rounded-full text-white" aria-label={tr("Decrease")}>
                 <Minus className="h-4 w-4" strokeWidth={2.5} />
               </button>
-              <span className="font-script text-4xl text-hotpink leading-none w-14 text-center">{waterGoal}</span>
-              <button onClick={() => saveWaterGoal(waterGoal + 1)} className="clay-blob grid h-10 w-10 place-items-center rounded-full text-white" aria-label="Increase">
+              <span className="font-script text-4xl text-hotpink leading-none w-14 text-center">{trx(waterGoal)}</span>
+              <button onClick={() => saveWaterGoal(waterGoal + 1)} className="clay-blob grid h-10 w-10 place-items-center rounded-full text-white" aria-label={tr("Increase")}>
                 <Plus className="h-4 w-4" strokeWidth={2.5} />
               </button>
             </div>
-            <button onClick={() => setWaterModalOpen(false)} className="bloom-luxury-btn mt-5 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white">
-              Save goal
-            </button>
+            <button onClick={() => setWaterModalOpen(false)} className="bloom-luxury-btn mt-5 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-semibold text-white">{tr("Save goal")}</button>
           </div>
         </div>
       )}
@@ -1623,23 +1601,17 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
         className="relative overflow-hidden rounded-3xl p-5 sm:p-6 animate-card-pop-in"
         style={{ background: "linear-gradient(135deg,#FDF2F8,#FCE7F3 55%,#FBCFE8)", animationDelay: "40ms" }}
       >
-        <BloomFlower className="pointer-events-none absolute -right-7 -top-7 h-32 w-32 text-hotpink/10 animate-icon-breathe" />
+        <BloomFlower className="pointer-events-none absolute -end-7 -top-7 h-32 w-32 text-hotpink/10 animate-icon-breathe" />
         <p className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink border border-petal/60">
-          <Sparkles className="h-3 w-3" strokeWidth={2.2} /> A peek at your bloom
-        </p>
-        <h2 className="mt-2 font-script text-2xl sm:text-3xl text-hotpink leading-tight">
-          Set up your world &amp; watch Today bloom ✿
-        </h2>
-        <p className="mt-1.5 text-[12.5px] sm:text-sm text-rose/75 leading-snug max-w-md">
-          Every tool you set up pours into this space — a whole day made just for you,
-          matched to your phase, your energy &amp; your goals. Here's a little taste ↓
-        </p>
+          <Sparkles className="h-3 w-3" strokeWidth={2.2} />{" "}{tr("A peek at your bloom")}</p>
+        <h2 className="mt-2 font-script text-2xl sm:text-3xl text-hotpink leading-tight">{tr("Set up your world & watch Today bloom ✿")}</h2>
+        <p className="mt-1.5 text-[12.5px] sm:text-sm text-rose/75 leading-snug max-w-md">{tr("Every tool you set up pours into this space — a whole day made just for you, matched to your phase, your energy & your goals. Here's a little taste ↓")}</p>
       </div>
 
       {/* Phase yoga flow — a real flow she can start right now */}
       <button
         onClick={launchYoga}
-        className="group relative block w-full overflow-hidden rounded-3xl text-left animate-card-pop-in hover-scale active:scale-[0.99] transition"
+        className="group relative block w-full overflow-hidden rounded-3xl text-start animate-card-pop-in hover-scale active:scale-[0.99] transition"
         style={{ animationDelay: "90ms" }}
       >
         <img src={plan.yoga.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
@@ -1649,9 +1621,9 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
             <Play className="h-5 w-5 fill-hotpink" />
           </span>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">Yoga · {PHASE_LABEL[phase]} phase</p>
-            <p className="font-script text-2xl text-white leading-tight drop-shadow">{plan.yoga.title}</p>
-            <p className="text-[12px] text-white/85 leading-snug max-w-xs">{plan.yoga.blurb}</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-white/80">{tr("Yoga ·")}{" "}{tr("{0} phase", { 0: PHASE_LABEL[phase] })}</p>
+            <p className="font-script text-2xl text-white leading-tight drop-shadow">{trx(plan.yoga.title)}</p>
+            <p className="text-[12px] text-white/85 leading-snug max-w-xs">{trx(plan.yoga.blurb)}</p>
           </div>
         </div>
       </button>
@@ -1667,10 +1639,10 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
             <img src={recipeImageSrc(snack)} alt={snack.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
           </div>
           <div className="flex-1 min-w-0 p-4">
-            <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-hotpink/70"><Apple className="h-3 w-3" /> Snack · {PHASE_LABEL[phase]} phase</p>
-            <p className="mt-1 font-script text-xl text-hotpink leading-tight">{snack.name}</p>
-            <p className="text-[12px] text-rose/70 leading-snug">{snack.macros.calories} kcal · {snack.macros.protein}g protein · {snack.cuisine}</p>
-            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">See it in Meals <ArrowRight className="h-3 w-3" /></span>
+            <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-hotpink/70"><Apple className="h-3 w-3" />{" "}{tr("Snack ·")}{" "}{tr("{0} phase", { 0: PHASE_LABEL[phase] })}</p>
+            <p className="mt-1 font-script text-xl text-hotpink leading-tight">{trx(snack.name)}</p>
+            <p className="text-[12px] text-rose/70 leading-snug">{trx(snack.macros.calories)}{" "}{tr("kcal ·")}{" "}{trx(snack.macros.protein)}{tr("g protein ·")}{" "}{trx(snack.cuisine)}</p>
+            <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">{tr("See it in Meals")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" /></span>
           </div>
         </a>
       )}
@@ -1678,8 +1650,8 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
       {/* Read — phase-tuned blogs with SQUARE covers */}
       <div className="animate-card-pop-in" style={{ animationDelay: "190ms" }}>
         <div className="mb-2 flex items-center justify-between">
-          <p className="font-script text-2xl text-hotpink">Read for your phase ✿</p>
-          <a href="/app/read" className="text-[11px] font-bold text-hotpink inline-flex items-center gap-1">All reads <ArrowRight className="h-3 w-3" /></a>
+          <p className="font-script text-2xl text-hotpink">{tr("Read for your phase ✿")}</p>
+          <a href="/app/read" className="text-[11px] font-bold text-hotpink inline-flex items-center gap-1">{tr("All reads")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" /></a>
         </div>
         <div className="grid grid-cols-3 gap-2.5">
           {reads.map((a, i) => (
@@ -1687,10 +1659,10 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
               <div className="relative aspect-square overflow-hidden rounded-2xl bloom-pearl-card">
                 <img src={a.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 to-transparent p-2">
-                  <p className="text-[11px] font-bold text-white leading-tight line-clamp-2">{a.title}</p>
+                  <p className="text-[11px] font-bold text-white leading-tight line-clamp-2">{trx(a.title)}</p>
                 </div>
               </div>
-              <p className="mt-1 text-[10px] text-rose/60 font-semibold">{a.minutes} min read</p>
+              <p className="mt-1 text-[10px] text-rose/60 font-semibold">{trx(a.minutes)}{" "}{tr("min read")}</p>
             </a>
           ))}
         </div>
@@ -1702,13 +1674,11 @@ function FreshReveal({ phase }: { phase: CyclePhase }) {
         className="group relative block overflow-hidden rounded-3xl p-5 text-white animate-card-pop-in hover-scale active:scale-[0.99] transition"
         style={{ background: "linear-gradient(125deg,#EC4899,#DB2777 60%,#9D174D)", animationDelay: "300ms" }}
       >
-        <BloomFlower className="pointer-events-none absolute -right-4 -bottom-7 h-28 w-28 text-white/10 animate-icon-breathe" />
-        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/80"><Heart className="h-3 w-3 fill-white/80" /> Your coach today</p>
-        <p className="mt-1 font-script text-2xl leading-tight">Cycle nutrition, made personal</p>
-        <p className="mt-1 text-[12.5px] text-white/85 leading-snug max-w-sm">
-          Set your goal and I'll coach your meals, energy &amp; cravings through every phase — gently, and just for you.
-        </p>
-        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[12px] font-bold">Meet your coach <ArrowRight className="h-3.5 w-3.5" /></span>
+        <BloomFlower className="pointer-events-none absolute -end-4 -bottom-7 h-28 w-28 text-white/10 animate-icon-breathe" />
+        <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-white/80"><Heart className="h-3 w-3 fill-white/80" />{" "}{tr("Your coach today")}</p>
+        <p className="mt-1 font-script text-2xl leading-tight">{tr("Cycle nutrition, made personal")}</p>
+        <p className="mt-1 text-[12.5px] text-white/85 leading-snug max-w-sm">{tr("Set your goal and I'll coach your meals, energy & cravings through every phase — gently, and just for you.")}</p>
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[12px] font-bold">{tr("Meet your coach")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></span>
       </a>
     </section>
   );
@@ -1718,7 +1688,7 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
   return (
     <div className="mb-2.5 flex items-end justify-between gap-3">
       <h2 className="font-script text-3xl sm:text-4xl text-hotpink">{children}</h2>
-      {hint && <span className="text-xs text-rose/60 pb-1">{hint}</span>}
+      {hint && <span className="text-xs text-rose/60 pb-1">{trx(hint)}</span>}
     </div>
   );
 }
@@ -1788,7 +1758,7 @@ function PlanDetailModal({
   // Highlight the phase phrase inside the narrative (e.g. "period phase").
   const phaseRe = new RegExp(`(${phaseLabel}[- ]phase)`, "i");
   const hl = (text: string) => text.split(new RegExp(`(${phaseLabel}[- ]phase)`, "i")).map((p, i) =>
-    p && phaseRe.test(p) ? <b key={i} className="font-semibold text-hotpink">{p}</b> : <span key={i}>{p}</span>);
+    p && phaseRe.test(p) ? <b key={i} className="font-semibold text-hotpink">{trx(p)}</b> : <span key={i}>{trx(p)}</span>);
   const cardPrefix = (k: string) => k === "cycle" ? "Supports today's" : k === "goal" ? "Supports your goal:" : k === "movement" && reason.type === "meal" ? "Pairs with" : "";
   const NUT = reason.nutrition ? [
     { l: "kcal", v: `${reason.nutrition.calories}`, Icon: Flame, color: "#EC4899" },
@@ -1808,7 +1778,7 @@ function PlanDetailModal({
         className="relative w-full max-w-sm max-h-[92vh] flex flex-col overflow-hidden rounded-[2rem] bg-[#FFF5F9] shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-rose shadow-md hover:bg-blush transition active:scale-90">
+        <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-full bg-white text-rose shadow-md hover:bg-blush transition active:scale-90">
           <X className="h-4 w-4" strokeWidth={2.5} />
         </button>
 
@@ -1819,24 +1789,24 @@ function PlanDetailModal({
               src={item.image} alt="" className="aspect-square w-full rounded-2xl object-cover"
               onError={(e) => { if (item.fallback && e.currentTarget.src !== item.fallback) { e.currentTarget.onerror = null; e.currentTarget.src = item.fallback; } }}
             />
-            <button onClick={toggleSaved} aria-label="Save" className="absolute left-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-hotpink shadow active:scale-90">
+            <button onClick={toggleSaved} aria-label={tr("Save")} className="absolute start-1.5 top-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-hotpink shadow active:scale-90">
               <Heart className={["h-3.5 w-3.5", saved ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} />
             </button>
           </div>
-          <div className="min-w-0 flex-1 pr-6">
+          <div className="min-w-0 flex-1 pe-6">
             <h3 className="font-serif text-[19px] font-bold text-[#9D174D] leading-tight">
-              {item.label} <BloomFlower className="inline h-3.5 w-3.5 text-hotpink" />
+              {trx(item.label)} <BloomFlower className="inline h-3.5 w-3.5 text-hotpink" />
             </h3>
             <div className="mt-1 flex items-center gap-2">
-              <span className="rounded-md bg-blush px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-hotpink">{reason.typeLabel}</span>
-              {reason.kcal != null && <span className="text-[11px] font-bold text-hotpink">{reason.kcal} kcal</span>}
+              <span className="rounded-md bg-blush px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-hotpink">{trx(reason.typeLabel)}</span>
+              {reason.kcal != null && <span className="text-[11px] font-bold text-hotpink">{trx(reason.kcal)}{" "}{tr("kcal")}</span>}
             </div>
             {reason.tags.length > 0 && <p className="mt-1 text-[10.5px] text-rose/70">{reason.tags.join("  ·  ")}</p>}
             <div className="mt-2 flex items-start gap-1.5 rounded-xl bg-blush/60 px-2.5 py-1.5">
               <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-hotpink" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[10px] font-bold text-hotpink leading-tight">AI selected for you today</p>
-                <p className="text-[9px] text-rose/60 leading-tight">Based on your cycle, movement and goals.</p>
+                <p className="text-[10px] font-bold text-hotpink leading-tight">{tr("AI selected for you today")}</p>
+                <p className="text-[9px] text-rose/60 leading-tight">{tr("Based on your cycle, movement and goals.")}</p>
               </div>
             </div>
           </div>
@@ -1847,8 +1817,7 @@ function PlanDetailModal({
           {/* Why + 4 cards (one white card) */}
           <div className="rounded-2xl bg-white p-3">
             <p className="flex items-start gap-1.5 text-[13px] font-bold text-[#9D174D] leading-tight">
-              <BloomFlower className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" /> Why Bloomzein chose this {whyNoun} for you today
-            </p>
+              <BloomFlower className="mt-0.5 h-3.5 w-3.5 shrink-0 text-hotpink" />{" "}{tr("Why Bloomzein chose this")}{" "}{trx(whyNoun)}{" "}{tr("for you today")}</p>
             <p className="mt-1 text-[11.5px] text-rose/80 leading-relaxed">{hl(reason.narrative)}</p>
 
             <div className={["mt-2.5 grid gap-1.5", cardCols].join(" ")}>
@@ -1858,14 +1827,14 @@ function PlanDetailModal({
                 return (
                   <div key={c.key} className="flex flex-col items-center rounded-xl bg-blush/40 p-1.5 text-center">
                     <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink"><Ic className="h-3 w-3" strokeWidth={2} /></span>
-                    <p className="mt-1 text-[9.5px] font-bold text-hotpink leading-none">{c.title}</p>
+                    <p className="mt-1 text-[9.5px] font-bold text-hotpink leading-none">{trx(c.title)}</p>
                     <p className="mt-0.5 text-[7.5px] leading-tight">
-                      {prefix ? <><span className="text-rose/50">{prefix} </span><b className="text-rose/80">{c.supports}</b></> : <span className="text-rose/60">{c.supports}</span>}
+                      {prefix ? <><span className="text-rose/50">{trx(prefix)} </span><b className="text-rose/80">{trx(c.supports)}</b></> : <span className="text-rose/60">{trx(c.supports)}</span>}
                     </p>
-                    <ul className="mt-1 w-full space-y-0.5 text-left">
+                    <ul className="mt-1 w-full space-y-0.5 text-start">
                       {c.bullets.map((b, i) => (
                         <li key={i} className="flex items-start gap-0.5 text-[7.5px] text-rose/70 leading-tight">
-                          <Check className="mt-[1px] h-2 w-2 shrink-0 text-hotpink" strokeWidth={3} />{b}
+                          <Check className="mt-[1px] h-2 w-2 shrink-0 text-hotpink" strokeWidth={3} />{trx(b)}
                         </li>
                       ))}
                     </ul>
@@ -1880,15 +1849,15 @@ function PlanDetailModal({
           {reason.nutrition && (
             <div className="rounded-2xl bg-white p-3">
               <div className="mb-2 flex items-center justify-between">
-                <p className="flex items-center gap-1 text-[12px] font-bold text-[#9D174D]"><BloomFlower className="h-3 w-3 text-hotpink" /> Nutrition breakdown</p>
-                <a href="/app/tools/diet?tab=cycle" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-hotpink">More details <ChevronRight className="h-3 w-3" /></a>
+                <p className="flex items-center gap-1 text-[12px] font-bold text-[#9D174D]"><BloomFlower className="h-3 w-3 text-hotpink" />{" "}{tr("Nutrition breakdown")}</p>
+                <a href="/app/tools/diet?tab=cycle" className="inline-flex items-center gap-0.5 text-[10px] font-bold text-hotpink">{tr("More details")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3 w-3" /></a>
               </div>
               <div className="grid grid-cols-5 gap-1.5 text-center">
                 {NUT.map((n) => (
                   <div key={n.l} className="flex flex-col items-center rounded-xl bg-blush/40 py-1.5">
                     <n.Icon className="h-3.5 w-3.5" style={{ color: n.color }} strokeWidth={2} />
-                    <p className="mt-0.5 text-[11px] font-bold text-[#9D174D] leading-none">{n.v}</p>
-                    <p className="text-[7.5px] text-rose/50">{n.l}</p>
+                    <p className="mt-0.5 text-[11px] font-bold text-[#9D174D] leading-none">{trx(n.v)}</p>
+                    <p className="text-[7.5px] text-rose/50">{trx(n.l)}</p>
                   </div>
                 ))}
               </div>
@@ -1896,7 +1865,7 @@ function PlanDetailModal({
                 <div className="mt-2.5 grid grid-cols-4 gap-1 text-center">
                   {reason.micros.map((m) => (
                     <div key={m.label}>
-                      <p className="mb-0.5 text-[8.5px] text-rose/70">{m.label}</p>
+                      <p className="mb-0.5 text-[8.5px] text-rose/70">{trx(m.label)}</p>
                       <span className="flex justify-center">
                         {[0, 1, 2, 3, 4].map((i) => (
                           <Star key={i} className={["h-2 w-2", i < Math.round(m.stars) ? "fill-hotpink text-hotpink" : "text-petal"].join(" ")} strokeWidth={1.5} />
@@ -1910,31 +1879,31 @@ function PlanDetailModal({
           )}
 
           {/* Did you know — decorative right */}
-          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pr-14">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Lightbulb className="h-3 w-3" strokeWidth={2} /></span> Did you know?</p>
-            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{reason.didYouKnow}</p>
-            <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-80">🌸</span>
+          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pe-14">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Lightbulb className="h-3 w-3" strokeWidth={2} /></span>{" "}{tr("Did you know?")}</p>
+            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{trx(reason.didYouKnow)}</p>
+            <span aria-hidden className="pointer-events-none absolute -bottom-1 end-1 text-4xl opacity-80">🌸</span>
           </div>
 
           {/* Bloom tip — decorative right */}
-          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pr-14">
-            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Sparkles className="h-3 w-3" strokeWidth={2} /></span> Bloom tip for today</p>
-            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{reason.bloomTip}</p>
-            <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-80">{reason.type === "meal" ? "🍵" : "🌙"}</span>
+          <div className="relative overflow-hidden rounded-2xl bg-blush/50 p-3 pe-14">
+            <p className="flex items-center gap-1.5 text-[11px] font-bold text-hotpink"><span className="grid h-5 w-5 place-items-center rounded-full bg-white"><Sparkles className="h-3 w-3" strokeWidth={2} /></span>{" "}{tr("Bloom tip for today")}</p>
+            <p className="mt-1 text-[10.5px] text-rose/70 leading-snug">{trx(reason.bloomTip)}</p>
+            <span aria-hidden className="pointer-events-none absolute -bottom-1 end-1 text-4xl opacity-80">{reason.type === "meal" ? "🍵" : "🌙"}</span>
           </div>
 
           {/* Why Bloom didn't choose — decorative right */}
           {reason.avoided && (
-            <div className="relative overflow-hidden rounded-2xl bg-white p-3 pr-14">
-              <p className="flex items-center gap-1.5 text-[11px] font-bold text-rose/70"><span className="grid h-5 w-5 place-items-center rounded-full bg-blush/70"><X className="h-3 w-3" strokeWidth={2.5} /></span> Why Bloom didn't choose…</p>
-              <p className="mt-1 text-[10.5px] text-rose/60 leading-snug">{reason.avoided}</p>
-              <span aria-hidden className="pointer-events-none absolute -bottom-1 right-1 text-4xl opacity-70">🧁</span>
+            <div className="relative overflow-hidden rounded-2xl bg-white p-3 pe-14">
+              <p className="flex items-center gap-1.5 text-[11px] font-bold text-rose/70"><span className="grid h-5 w-5 place-items-center rounded-full bg-blush/70"><X className="h-3 w-3" strokeWidth={2.5} /></span>{" "}{tr("Why Bloom didn't choose…")}</p>
+              <p className="mt-1 text-[10.5px] text-rose/60 leading-snug">{trx(reason.avoided)}</p>
+              <span aria-hidden className="pointer-events-none absolute -bottom-1 end-1 text-4xl opacity-70">🧁</span>
             </div>
           )}
 
           {/* Explore more */}
           <div>
-            <p className="mb-1.5 flex items-center gap-1 text-[11px] font-bold text-hotpink"><BloomFlower className="h-3 w-3" /> Explore more</p>
+            <p className="mb-1.5 flex items-center gap-1 text-[11px] font-bold text-hotpink"><BloomFlower className="h-3 w-3" />{" "}{tr("Explore more")}</p>
             <div className="grid grid-cols-3 gap-1.5">
               {reason.explore.map((e) => {
                 const EIc = e.kind === "read" ? BookOpen : e.kind === "meditation" ? Headphones : Flower2;
@@ -1948,10 +1917,10 @@ function PlanDetailModal({
                     <div className="p-2">
                       <div className="flex items-center justify-between">
                         <span className="grid h-5 w-5 place-items-center rounded-lg bg-blush/60 text-hotpink"><EIc className="h-3 w-3" strokeWidth={2} /></span>
-                        <ArrowRight className="h-3 w-3 text-hotpink/50" />
+                        <ArrowRight className="rtl:-scale-x-100 h-3 w-3 text-hotpink/50" />
                       </div>
-                      <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{e.label}</p>
-                      <p className="text-[8px] text-rose/55 leading-tight line-clamp-2">{e.sub}</p>
+                      <p className="mt-1 text-[10px] font-bold text-hotpink leading-tight">{trx(e.label)}</p>
+                      <p className="text-[8px] text-rose/55 leading-tight line-clamp-2">{trx(e.sub)}</p>
                     </div>
                   </a>
                 );
@@ -1964,20 +1933,20 @@ function PlanDetailModal({
         <div className="shrink-0 flex items-center gap-1.5 border-t border-petal/40 bg-white px-2.5 py-2.5">
           {reason.type === "meal" ? (
             <>
-              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Repeat className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">Swap</span></a>
-              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><BookOpen className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">Recipe</span></a>
+              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Repeat className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">{tr("Swap")}</span></a>
+              <a href={item.tool} onClick={openTool} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><BookOpen className="h-4 w-4" strokeWidth={2} /><span className="text-[8px] font-bold">{tr("Recipe")}</span></a>
               <button onClick={onToggleDone} aria-pressed={done} className={["flex-1 inline-flex items-center justify-center gap-1 rounded-full px-3 py-2.5 text-[12px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}>
-                {done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}{doneLabel}
+                {done && <Check className="h-3.5 w-3.5" strokeWidth={3} />}{trx(doneLabel)}
               </button>
-              <button onClick={toggleSaved} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Heart className={["h-4 w-4", saved ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} /><span className="text-[8px] font-bold">Save</span></button>
+              <button onClick={toggleSaved} className="flex flex-col items-center gap-0.5 rounded-xl px-2 py-1 text-hotpink active:scale-95"><Heart className={["h-4 w-4", saved ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} /><span className="text-[8px] font-bold">{tr("Save")}</span></button>
             </>
           ) : (
             <>
               <a href={item.tool} onClick={openTool} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white px-4 py-2.5 text-[13px] font-bold text-hotpink active:scale-95 transition">
-                {primaryLabel} <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                {trx(primaryLabel)} <ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" strokeWidth={2.5} />
               </a>
               <button onClick={onToggleDone} aria-pressed={done} className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-[13px] font-bold active:scale-95 transition", done ? "bg-emerald-500 text-white" : "bloom-luxury-btn text-white animate-selected-glow"].join(" ")}>
-                {done && <Check className="h-4 w-4" strokeWidth={3} />}{doneLabel}
+                {done && <Check className="h-4 w-4" strokeWidth={3} />}{trx(doneLabel)}
               </button>
             </>
           )}
@@ -2020,7 +1989,7 @@ function MoodPopover({
       style={style}
       className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
     >
-      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW ARE YOU FEELING? ✿</p>
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">{tr("HOW ARE YOU FEELING? ✿")}</p>
       <div className="grid grid-cols-3 gap-1.5">
         {MOODS.map((m, i) => (
           <button
@@ -2032,7 +2001,7 @@ function MoodPopover({
             <span className="clay-blob animate-icon-breathe grid h-8 w-8 place-items-center rounded-full text-white">
               <m.Icon className="h-4 w-4" strokeWidth={1.8} />
             </span>
-            <span className="text-[10px] font-semibold text-rose">{m.label}</span>
+            <span className="text-[10px] font-semibold text-rose">{trx(m.label)}</span>
           </button>
         ))}
       </div>
@@ -2081,7 +2050,7 @@ function WaterPopover({
       style={style}
       className="rounded-3xl bg-white/95 backdrop-blur-xl p-3.5 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
     >
-      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">WATER TODAY 💧</p>
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">{tr("WATER TODAY 💧")}</p>
 
       {/* Tappable glasses — fill up to the one you tap, or tap a filled one to undo. */}
       <div className="mb-2.5 flex flex-wrap items-center justify-center gap-1">
@@ -2091,7 +2060,7 @@ function WaterPopover({
             <button
               key={i}
               onClick={() => onLog(i)}
-              aria-label={`Glass ${i + 1}`}
+              aria-label={tr("Glass {0}", { 0: i + 1 })}
               className="grid h-6 w-6 place-items-center rounded-full transition active:scale-90"
             >
               <Droplet
@@ -2105,7 +2074,7 @@ function WaterPopover({
       </div>
 
       <p className="mb-2.5 text-center font-script text-xl leading-none text-hotpink">
-        {count} / {goal} glasses{reached ? " ✿" : ""}
+        {trx(count)} / {trx(goal)}{" "}{tr("glasses")}{reached ? " ✿" : ""}
       </p>
 
       <button
@@ -2114,15 +2083,13 @@ function WaterPopover({
         className="bloom-luxury-btn hover-scale animate-cta-bounce inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-sm font-bold text-white disabled:opacity-60 disabled:animate-none"
       >
         <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={0} />
-        {reached ? "Goal reached ✿" : "I drank a glass"}
+        {reached ? tr("Goal reached ✿") : tr("I drank a glass")}
       </button>
 
       <button
         onClick={onEditGoal}
         className="mt-1.5 block w-full text-center text-[10.5px] font-semibold text-rose/50 transition hover:text-hotpink"
-      >
-        Daily goal: {goal} · edit
-      </button>
+      >{tr("Daily goal:")}{" "}{trx(goal)}{" "}{tr("· edit")}</button>
     </div>,
     document.body
   );
@@ -2161,7 +2128,7 @@ function SymptomPopover({
       style={style}
       className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
     >
-      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW'S YOUR BODY? ✿</p>
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">{tr("HOW'S YOUR BODY? ✿")}</p>
       <div className="flex flex-wrap justify-center gap-1.5" style={{ maxWidth: 224 }}>
         {SYMPTOM_OPTIONS.map((s) => {
           const active = selected.includes(s);
@@ -2174,7 +2141,7 @@ function SymptomPopover({
                   ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30"
                   : "bg-blush/50 text-rose border-petal/50 hover:bg-blush/70"].join(" ")}
             >
-              {s}
+              {trx(s)}
             </button>
           );
         })}
@@ -2182,9 +2149,7 @@ function SymptomPopover({
       <button
         onClick={onClose}
         className="mt-2.5 w-full rounded-full bg-hotpink py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
-      >
-        Done ✿
-      </button>
+      >{tr("Done ✿")}</button>
     </div>,
     document.body
   );
@@ -2231,7 +2196,7 @@ function SleepPopover({
       style={{ ...style, width: 252 }}
       className="rounded-3xl bg-white/95 backdrop-blur-xl p-3 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
     >
-      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">HOW DID YOU SLEEP? ✿</p>
+      <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">{tr("HOW DID YOU SLEEP? ✿")}</p>
       <div className="grid grid-cols-5 gap-1">
         {SLEEP_OPTIONS.map((o) => {
           const on = q === o.q;
@@ -2244,7 +2209,7 @@ function SleepPopover({
                 on ? "border-hotpink bg-hotpink/10 shadow-sm" : "border-petal/50 bg-white/60 hover:bg-blush/50"].join(" ")}
             >
               <SleepGlyph q={o.q} className="h-4 w-4 text-hotpink" />
-              <span className={`text-[8.5px] font-bold leading-none ${on ? "text-hotpink" : "text-rose/55"}`}>{o.label}</span>
+              <span className={`text-[8.5px] font-bold leading-none ${on ? "text-hotpink" : "text-rose/55"}`}>{trx(o.label)}</span>
             </button>
           );
         })}
@@ -2252,13 +2217,13 @@ function SleepPopover({
 
       {/* optional hours — same pink stepper as the fuller card */}
       <div className="mt-2 flex items-center justify-between rounded-2xl border border-petal/50 bg-blush/40 px-3 py-1.5">
-        <span className="text-[11px] font-bold text-rose/70">Hours slept</span>
+        <span className="text-[11px] font-bold text-rose/70">{tr("Hours slept")}</span>
         <div className="flex items-center gap-1.5">
-          <button onClick={() => bumpHours(-0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label="Fewer hours">
+          <button onClick={() => bumpHours(-0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label={tr("Fewer hours")}>
             <Minus className="h-3 w-3" strokeWidth={2.5} />
           </button>
           <span className="min-w-[2.6rem] text-center text-[13px] font-black text-magenta tabular-nums">{(hours ?? 7.5).toFixed(1)}h</span>
-          <button onClick={() => bumpHours(0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label="More hours">
+          <button onClick={() => bumpHours(0.5)} className="grid h-6 w-6 place-items-center rounded-full bg-white text-hotpink active:scale-90" aria-label={tr("More hours")}>
             <Plus className="h-3 w-3" strokeWidth={2.5} />
           </button>
         </div>
@@ -2267,9 +2232,7 @@ function SleepPopover({
       <button
         onClick={onClose}
         className="mt-2 w-full rounded-full bg-hotpink py-1.5 text-[11px] font-bold text-white active:scale-95 transition"
-      >
-        Done ✿
-      </button>
+      >{tr("Done ✿")}</button>
     </div>,
     document.body
   );

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Download, X } from "lucide-react"
 import { triggerPWAInstall, hasPWAPrompt, isIOS, isStandalone } from "@/lib/pwa"
+import { tr } from "@/i18n";
 
 export function InstallPrompt() {
   const [visible, setVisible] = useState(false)
@@ -40,24 +41,19 @@ export function InstallPrompt() {
           <Download className="h-5 w-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#831843]">Install the app ✿</p>
+          <p className="text-sm font-bold text-[#831843]">{tr("Install the app ✿")}</p>
           {ios ? (
-            <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">
-              Tap <span className="font-semibold">Share</span> then{" "}
-              <span className="font-semibold">Add to Home Screen</span>
+            <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">{tr("Tap")}{" "}<span className="font-semibold">{tr("Share")}</span>{" "}{tr("then")}{" "}
+              <span className="font-semibold">{tr("Add to Home Screen")}</span>
             </p>
           ) : (
             <>
-              <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">
-                Get Bloomzein right from your home screen.
-              </p>
+              <p className="text-xs text-[#9D5C7E] leading-snug mt-0.5">{tr("Get Bloomzein right from your home screen.")}</p>
               {hasPrompt && (
                 <button
                   onClick={handleInstall}
                   className="mt-2 rounded-full bg-[#EC4899] px-3.5 py-1.5 text-xs font-bold text-white shadow-md shadow-[#EC4899]/30 hover:bg-[#DB2777] transition"
-                >
-                  Install
-                </button>
+                >{tr("Install")}</button>
               )}
             </>
           )}

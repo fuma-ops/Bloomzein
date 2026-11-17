@@ -13,6 +13,7 @@ import {
   NOTIFS_UPDATED, readNotifications, markRead, markAllRead, removeNotification, clearNotifications,
   unreadCount, type StoredNotif,
 } from "@/lib/notificationsStore";
+import { tr, trx, DATE_LOCALE } from "@/i18n";
 
 // Everything on-brand pink — one soft-pink family across all tones.
 const PINK_GRAD = "linear-gradient(150deg,#FF7EB6 0%,#EC4899 52%,#DB2777 100%)";
@@ -24,10 +25,10 @@ const EMOJI: Record<string, string> = { success: "✨", water: "💧", reminder:
 function timeAgo(ts: number): string {
   const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
   if (s < 60) return "just now";
-  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24); if (d < 7) return `${d}d ago`;
-  return new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const m = Math.floor(s / 60); if (m < 60) return tr("{0}m ago", { 0: m });
+  const h = Math.floor(m / 60); if (h < 24) return tr("{0}h ago", { 0: h });
+  const d = Math.floor(h / 24); if (d < 7) return tr("{0}d ago", { 0: d });
+  return new Date(ts).toLocaleDateString(DATE_LOCALE, { month: "short", day: "numeric" });
 }
 
 function Row({ n, onNavigate }: { n: StoredNotif; onNavigate: () => void }) {
@@ -43,7 +44,7 @@ function Row({ n, onNavigate }: { n: StoredNotif; onNavigate: () => void }) {
       </span>
     ) : (
       <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl text-white shadow-[0_8px_18px_-7px_rgba(219,39,119,0.65)]" style={{ background: grad }}>
-        {emoji ? <span className="text-[22px] leading-none">{emoji}</span> : <BloomFlower size={24} petal="#FFFFFF" center="#FFE4F0" />}
+        {emoji ? <span className="text-[22px] leading-none">{trx(emoji)}</span> : <BloomFlower size={24} petal="#FFFFFF" center="#FFE4F0" />}
       </span>
     )
   );
@@ -59,23 +60,23 @@ function Row({ n, onNavigate }: { n: StoredNotif; onNavigate: () => void }) {
 
   const inner = (
     <>
-      {!n.read && <span className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-gradient-to-b from-[#FF7EB6] to-[#DB2777]" aria-hidden />}
-      {Thumb}
+      {!n.read && <span className="absolute start-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-e-full bg-gradient-to-b from-[#FF7EB6] to-[#DB2777]" aria-hidden />}
+      {trx(Thumb)}
       <div className="min-w-0 flex-1">
-        <p className={`text-[13.5px] font-extrabold leading-tight ${n.read ? "text-rose/60" : "text-[#7a1247]"}`}>{n.title}</p>
-        {n.body && <p className="mt-0.5 text-[11.5px] font-semibold leading-snug text-rose/65 line-clamp-2">{n.body}</p>}
+        <p className={`text-[13.5px] font-extrabold leading-tight ${n.read ? "text-rose/60" : "text-[#7a1247]"}`}>{trx(n.title)}</p>
+        {n.body && <p className="mt-0.5 text-[11.5px] font-semibold leading-snug text-rose/65 line-clamp-2">{trx(n.body)}</p>}
         <p className="mt-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/40">
           {timeAgo(n.ts)}
-          {clickable && <span className="rounded-full bg-hotpink/12 px-1.5 py-0.5 text-hotpink/80">Tap to discover</span>}
+          {clickable && <span className="rounded-full bg-hotpink/12 px-1.5 py-0.5 text-hotpink/80">{tr("Tap to discover")}</span>}
         </p>
       </div>
       {clickable ? (
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-hotpink/12 text-hotpink"><ChevronRight className="h-4 w-4" strokeWidth={2.6} /></span>
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-hotpink/12 text-hotpink"><ChevronRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.6} /></span>
       ) : (
-        <button onClick={dismiss} aria-label="Dismiss" className="shrink-0 rounded-full p-1 text-rose/35 transition hover:text-rose/70"><X className="h-4 w-4" /></button>
+        <button onClick={dismiss} aria-label={tr("Dismiss")} className="shrink-0 rounded-full p-1 text-rose/35 transition hover:text-rose/70"><X className="h-4 w-4" /></button>
       )}
       {clickable && (
-        <button onClick={dismiss} aria-label="Dismiss" className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/85 text-rose/45 opacity-0 shadow-sm transition group-hover:opacity-100 hover:text-rose/80">
+        <button onClick={dismiss} aria-label={tr("Dismiss")} className="absolute end-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full bg-white/85 text-rose/45 opacity-0 shadow-sm transition group-hover:opacity-100 hover:text-rose/80">
           <X className="h-3.5 w-3.5" />
         </button>
       )}
@@ -85,11 +86,11 @@ function Row({ n, onNavigate }: { n: StoredNotif; onNavigate: () => void }) {
   if (clickable) {
     return (
       <li>
-        <a href={n.href} onClick={() => { markRead(n.id); onNavigate(); }} className={`${base} no-underline`}>{inner}</a>
+        <a href={n.href} onClick={() => { markRead(n.id); onNavigate(); }} className={`${base} no-underline`}>{trx(inner)}</a>
       </li>
     );
   }
-  return <li className={base}>{inner}</li>;
+  return <li className={base}>{trx(inner)}</li>;
 }
 
 export function NotificationBell() {
@@ -146,15 +147,15 @@ export function NotificationBell() {
       <button
         ref={btnRef}
         onClick={toggle}
-        aria-label="Notifications"
+        aria-label={tr("Notifications")}
         aria-expanded={open}
         className="relative grid h-10 w-10 place-items-center rounded-full text-white shadow-[0_8px_18px_-6px_rgba(219,39,119,0.85)] ring-2 ring-white/70 transition hover:brightness-105 active:scale-95"
         style={{ background: PINK_GRAD }}
       >
         <Bell className="h-5 w-5" strokeWidth={2.2} />
         {unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-hotpink px-1 text-[10px] font-black leading-none text-white ring-2 ring-white">
-            {unread > 9 ? "9+" : unread}
+          <span className="absolute -end-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-hotpink px-1 text-[10px] font-black leading-none text-white ring-2 ring-white">
+            {unread > 9 ? "9+" : trx(unread)}
           </span>
         )}
       </button>
@@ -174,17 +175,17 @@ export function NotificationBell() {
           <div className="flex items-center gap-2 border-b border-petal/25 bg-gradient-to-r from-blush/60 via-white/40 to-petal/40 px-4 py-3">
             <span className="grid h-9 w-9 place-items-center rounded-full text-white shadow-[0_6px_14px_-5px_rgba(219,39,119,0.8)]" style={{ background: PINK_GRAD }}><Bell className="h-4 w-4" strokeWidth={2.2} /></span>
             <div className="flex-1 leading-tight">
-              <p className="text-[15px] font-extrabold text-[#7a1247]">Notifications</p>
-              {unread > 0 && <p className="text-[11px] font-bold text-hotpink/80">{unread} new</p>}
+              <p className="text-[15px] font-extrabold text-[#7a1247]">{tr("Notifications")}</p>
+              {unread > 0 && <p className="text-[11px] font-bold text-hotpink/80">{trx(unread)}{" "}{tr("new")}</p>}
             </div>
-            {unread > 0 && <button onClick={markAllRead} className="rounded-full bg-hotpink/10 px-2.5 py-1 text-[11px] font-extrabold text-hotpink transition hover:bg-hotpink/15">Mark all read</button>}
-            <button onClick={() => setOpen(false)} aria-label="Close" className="grid h-7 w-7 place-items-center rounded-full text-rose/45 transition hover:bg-rose/10 hover:text-rose/75"><X className="h-4 w-4" /></button>
+            {unread > 0 && <button onClick={markAllRead} className="rounded-full bg-hotpink/10 px-2.5 py-1 text-[11px] font-extrabold text-hotpink transition hover:bg-hotpink/15">{tr("Mark all read")}</button>}
+            <button onClick={() => setOpen(false)} aria-label={tr("Close")} className="grid h-7 w-7 place-items-center rounded-full text-rose/45 transition hover:bg-rose/10 hover:text-rose/75"><X className="h-4 w-4" /></button>
           </div>
 
           {items.length === 0 ? (
             <div className="flex flex-col items-center gap-1.5 px-4 py-8 text-center">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-blush/60"><Sparkles className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span>
-              <p className="text-[12.5px] font-semibold text-rose/60">You're all caught up ✿<br />Your nudges &amp; wins will appear here 🌸</p>
+              <p className="text-[12.5px] font-semibold text-rose/60">{tr("You're all caught up ✿")}<br />{tr("Your nudges & wins will appear here 🌸")}</p>
             </div>
           ) : (
             <div className="bz-notif-scroll max-h-[min(70vh,27rem)] overflow-y-auto p-2.5">
@@ -192,10 +193,10 @@ export function NotificationBell() {
               <div className="mt-2 flex items-center justify-between px-1">
                 {items.length > 5 ? (
                   <button onClick={() => setExpanded((v) => !v)} className="text-[12px] font-extrabold text-hotpink transition hover:text-hotpink/70">
-                    {expanded ? "Show less" : `Show all (${items.length})`}
+                    {expanded ? tr("Show less") : tr("Show all ({0})", { 0: items.length })}
                   </button>
                 ) : <span />}
-                <button onClick={clearNotifications} className="text-[11.5px] font-bold text-rose/45 transition hover:text-rose/75">Clear all</button>
+                <button onClick={clearNotifications} className="text-[11.5px] font-bold text-rose/45 transition hover:text-rose/75">{tr("Clear all")}</button>
               </div>
             </div>
           )}

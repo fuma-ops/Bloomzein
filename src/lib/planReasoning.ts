@@ -13,6 +13,7 @@
  * thumbnails) from the growing Reads / Flows / Meditations libraries.
  */
 import { PHASE_LABEL, toDietPhase, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { tr } from "@/i18n";
 import { RECIPES, readDietProfile, type Recipe, type DietGoal } from "@/components/bloom/recipes/data";
 import { PHASE_PLAN } from "@/components/bloom/phasePlan";
 import { ARTICLES } from "@/lib/readsData";
@@ -272,7 +273,7 @@ export function reasonForItem(
       : "Balanced macros to fuel your day and hold your weight steady.";
     const cards: ReasonCard[] = [
       { key: "cycle", title: "Cycle", supports: `${phaseLabel} phase`, bullets: cycleBullets.length ? cycleBullets : pc.cycleBullets },
-      { key: "movement", title: "Movement", supports: movement ?? "Your day", bullets: [movement ? `Fuels your ${movement}` : "Steady energy for today", `${r.macros.protein}g protein to recover`] },
+      { key: "movement", title: "Movement", supports: movement ?? "Your day", bullets: [movement ? tr("Fuels your {0}", { 0: movement }) : "Steady energy for today", `${r.macros.protein}g protein to recover`] },
       { key: "energy", title: "Energy", supports: "Helps reduce", bullets: pc.energy },
       { key: "goal", title: "Goal", supports: GOAL_LABEL[goal], bullets: [goalBullet] },
     ];
@@ -306,7 +307,7 @@ export function reasonForItem(
     ];
     return {
       type, typeLabel,
-      tags: [durMin ? `${durMin} min` : "Session", intensity, plan.title],
+      tags: [durMin ? tr("{0} min", { 0: durMin }) : "Session", intensity, plan.title],
       narrative: `${plan.title} is matched to your ${phaseLabel.toLowerCase()}-phase energy today — ${plan.blurb.toLowerCase()}. ${pick(["It meets you where you are, not where a generic plan assumes you'll be.", "Chosen to work with your body this week, not against it.", "Your movement follows your cycle, so it feels right, not forced."], seed + "n")}`,
       cards,
       didYouKnow: pick(pc.didYouKnow, seed + "d"), bloomTip: pick(pc.tip, seed + "t"),

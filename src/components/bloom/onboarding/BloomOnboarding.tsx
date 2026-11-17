@@ -27,6 +27,7 @@ import { openCheckout } from "@/lib/paddle";
 import { setOnboarded, endGuide } from "@/lib/guidedSetup";
 import { WELCOME_TOAST_KEY } from "../NotificationHost";
 import { PENDING_PROFILE_KEY, setPendingTrial } from "@/lib/pendingOnboarding";
+import { tr, trx, DATE_LOCALE, localWeekdays } from "@/i18n";
 
 /* ══════════════════════════════════════════════════════════════════════════
    Bloomzein onboarding — the full "Let's make Bloomzein yours" post-signup flow.
@@ -71,52 +72,52 @@ const YOGA_SEED: Record<string, string | null> = {
 
 // ── option data ─────────────────────────────────────────────────────────────
 const GOALS: { key: DietGoal; title: string; desc: string; Icon: typeof Heart }[] = [
-  { key: "lose", title: "Lose weight", desc: "Feel lighter, stronger and more confident in your body.", Icon: Sparkles },
-  { key: "maintain", title: "Maintain", desc: "Keep your balance and feel good in your body.", Icon: Heart },
-  { key: "gain", title: "Gain & tone", desc: "Build a stronger, healthier and more toned you.", Icon: Dumbbell },
+  { key: "lose", title: tr("Lose weight"), desc: tr("Feel lighter, stronger and more confident in your body."), Icon: Sparkles },
+  { key: "maintain", title: tr("Maintain"), desc: tr("Keep your balance and feel good in your body."), Icon: Heart },
+  { key: "gain", title: tr("Gain & tone"), desc: tr("Build a stronger, healthier and more toned you."), Icon: Dumbbell },
 ];
 const FOODS: { key: FoodStyle; title: string; desc: string; Icon: typeof Heart }[] = [
-  { key: "balanced", title: "Balanced", desc: "A mix of everything. Simple, nutritious and sustainable.", Icon: Salad },
-  { key: "mediterranean", title: "Mediterranean", desc: "Fresh, colorful and inspired by Mediterranean cuisine.", Icon: Fish },
-  { key: "high-protein", title: "High-Protein", desc: "Focus on protein to help you feel full and build lean muscle.", Icon: Beef },
-  { key: "plant-based", title: "Plant-Based", desc: "Mostly plant-based meals with no meat or fish.", Icon: Sprout },
-  { key: "flexible", title: "Flexible", desc: "I like variety and don't follow a specific style.", Icon: Utensils },
+  { key: "balanced", title: tr("Balanced"), desc: tr("A mix of everything. Simple, nutritious and sustainable."), Icon: Salad },
+  { key: "mediterranean", title: tr("Mediterranean"), desc: tr("Fresh, colorful and inspired by Mediterranean cuisine."), Icon: Fish },
+  { key: "high-protein", title: tr("High-Protein"), desc: tr("Focus on protein to help you feel full and build lean muscle."), Icon: Beef },
+  { key: "plant-based", title: tr("Plant-Based"), desc: tr("Mostly plant-based meals with no meat or fish."), Icon: Sprout },
+  { key: "flexible", title: tr("Flexible"), desc: tr("I like variety and don't follow a specific style."), Icon: Utensils },
 ];
 const LEVELS: { key: Level | "custom"; title: string; desc: string; Icon: typeof Heart }[] = [
-  { key: "Beginner" as Level, title: "Beginner", desc: "I'm new to exercise or getting back into it.", Icon: Footprints },
-  { key: "Intermediate" as Level, title: "Intermediate", desc: "I exercise sometimes and want to be more consistent.", Icon: Dumbbell },
-  { key: "Advanced" as Level, title: "Advanced", desc: "I exercise regularly and want to level up.", Icon: BarChart3 },
-  { key: "custom", title: "Custom", desc: "I prefer to set my own plan later.", Icon: Star },
+  { key: "Beginner" as Level, title: tr("Beginner"), desc: tr("I'm new to exercise or getting back into it."), Icon: Footprints },
+  { key: "Intermediate" as Level, title: tr("Intermediate"), desc: tr("I exercise sometimes and want to be more consistent."), Icon: Dumbbell },
+  { key: "Advanced" as Level, title: tr("Advanced"), desc: tr("I exercise regularly and want to level up."), Icon: BarChart3 },
+  { key: "custom", title: tr("Custom"), desc: tr("I prefer to set my own plan later."), Icon: Star },
 ];
 const MOODS: { key: string; label: string; Icon: typeof Heart }[] = [
-  { key: "calm", label: "Calm", Icon: Cloud }, { key: "happy", label: "Happy", Icon: Smile },
-  { key: "energetic", label: "Energetic", Icon: Sparkles }, { key: "sensitive", label: "Sensitive", Icon: Heart },
-  { key: "sad", label: "Sad", Icon: CloudRain }, { key: "tired", label: "Tired", Icon: Battery },
+  { key: "calm", label: tr("Calm"), Icon: Cloud }, { key: "happy", label: tr("Happy"), Icon: Smile },
+  { key: "energetic", label: tr("Energetic"), Icon: Sparkles }, { key: "sensitive", label: tr("Sensitive"), Icon: Heart },
+  { key: "sad", label: tr("Sad"), Icon: CloudRain }, { key: "tired", label: tr("Tired"), Icon: Battery },
 ];
 
 // per-phase copy for the personalized plan reveal
 const PHASE_INFO: Record<string, { title: string; blurb: string; feels: { Icon: typeof Heart; l: string }[]; quote: string }> = {
   menstrual: {
-    title: "Menstrual Phase",
-    blurb: "Your body is resting and renewing. Honour it with gentle movement, warmth and nourishing food — rest is productive too.",
+    title: tr("Menstrual Phase"),
+    blurb: tr("Your body is resting and renewing. Honour it with gentle movement, warmth and nourishing food — rest is productive too."),
     feels: [{ Icon: Battery, l: "Low Energy" }, { Icon: Heart, l: "Reflective" }, { Icon: Moon, l: "Need Rest" }, { Icon: Droplets, l: "Cramps" }],
     quote: "This is your reset week — slow down, keep warm and be extra kind to yourself.",
   },
   follicular: {
-    title: "Follicular Phase",
-    blurb: "Your energy is rising, your mood is brighter and your body is ready to build. It's the perfect time to focus on strength, healthy habits and progress towards your goals.",
+    title: tr("Follicular Phase"),
+    blurb: tr("Your energy is rising, your mood is brighter and your body is ready to build. It's the perfect time to focus on strength, healthy habits and progress towards your goals."),
     feels: [{ Icon: Zap, l: "High Energy" }, { Icon: Smile, l: "Positive Mood" }, { Icon: Brain, l: "Better Focus" }, { Icon: Heart, l: "Rising Libido" }],
     quote: "This week, you're likely to feel more motivated, confident and productive. Use this energy to move your body, nourish yourself and go after your goals!",
   },
   ovulatory: {
-    title: "Ovulatory Phase",
-    blurb: "You're at your peak — energy, confidence and strength are high. Channel it into your boldest workouts and your brightest social days.",
+    title: tr("Ovulatory Phase"),
+    blurb: tr("You're at your peak — energy, confidence and strength are high. Channel it into your boldest workouts and your brightest social days."),
     feels: [{ Icon: Flame, l: "Peak Energy" }, { Icon: Smile, l: "Confident" }, { Icon: Sparkles, l: "Social" }, { Icon: Heart, l: "High Libido" }],
     quote: "You're glowing this week — take on challenges, connect with people and enjoy feeling your strongest.",
   },
   luteal: {
-    title: "Luteal Phase",
-    blurb: "Your energy is winding down as your body prepares to rest. Focus on steady movement, magnesium-rich food and calming self-care.",
+    title: tr("Luteal Phase"),
+    blurb: tr("Your energy is winding down as your body prepares to rest. Focus on steady movement, magnesium-rich food and calming self-care."),
     feels: [{ Icon: Battery, l: "Winding Down" }, { Icon: CloudRain, l: "Moodier" }, { Icon: Droplets, l: "Cravings" }, { Icon: Moon, l: "Slower" }],
     quote: "Be gentle with yourself this week — steady habits, cozy self-care and good food keep you balanced.",
   },
@@ -145,9 +146,9 @@ function HeroPanel({ tagline, image = "/images/page-bg-today-morning.webp" }: { 
       <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" referrerPolicy="no-referrer" />
       <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,236,246,0.15) 0%, rgba(160,20,90,0.15) 45%, rgba(140,15,80,0.5) 100%)" }} />
       <div className="relative">
-        <div className="inline-flex items-center gap-2"><span className="font-script text-[2rem] lg:text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">Bloomzein</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
-        <p className="mt-1 text-[14px] xl:text-[16px] font-bold text-white/90 drop-shadow">stay soft, bloom on.</p>
-        <p className="mt-5 font-script text-[1.5rem] lg:text-[1.9rem] xl:text-[2.5rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{tagline} ♡</p>
+        <div className="inline-flex items-center gap-2"><span className="font-script text-[2rem] lg:text-[2.4rem] xl:text-[3rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(120,8,60,0.5)]">{tr("Bloomzein")}</span><BloomFlower size={28} petal="#FFFFFF" center="#EC4899" /></div>
+        <p className="mt-1 text-[14px] xl:text-[16px] font-bold text-white/90 drop-shadow">{tr("stay soft, bloom on.")}</p>
+        <p className="mt-5 font-script text-[1.5rem] lg:text-[1.9rem] xl:text-[2.5rem] leading-tight text-white drop-shadow-[0_2px_12px_rgba(120,8,60,0.55)]">{trx(tagline)} ♡</p>
       </div>
     </div>
   );
@@ -178,12 +179,12 @@ function Shell({ step, total, onBack, footer, image, children }: {
       <div className="relative flex flex-1 flex-col px-5 pb-8 md:flex-none md:w-[26rem] md:px-8 md:py-8 lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9"
         style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
         <div className="flex items-center justify-between py-2">
-          {onBack ? <button onClick={onBack} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95 transition"><ChevronLeft className="h-5 w-5" /> Back</button> : <span className="w-14" />}
+          {onBack ? <button onClick={onBack} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95 transition"><ChevronLeft className="rtl:-scale-x-100 h-5 w-5" />{" "}{tr("Back")}</button> : <span className="w-14" />}
           <div className="text-center leading-none">
-            <div className="inline-flex items-center gap-1.5"><span className="font-script text-2xl text-hotpink leading-none">Bloomzein</span><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /></div>
-            <p className="mt-0.5 text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</p>
+            <div className="inline-flex items-center gap-1.5"><span className="font-script text-2xl text-hotpink leading-none">{tr("Bloomzein")}</span><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /></div>
+            <p className="mt-0.5 text-[11px] font-bold text-hotpink/80">{tr("stay soft, bloom on.")}</p>
           </div>
-          {step !== null ? <span className="w-14 text-right text-[13px] font-bold text-hotpink/60 tabular-nums">{step + 1}/{total}</span> : <span className="w-14" />}
+          {step !== null ? <span className="w-14 text-end text-[13px] font-bold text-hotpink/60 tabular-nums">{step + 1}/{trx(total)}</span> : <span className="w-14" />}
         </div>
         {step !== null && (
           <div className="mt-1 mb-4 flex items-center gap-1.5">
@@ -199,8 +200,8 @@ function Shell({ step, total, onBack, footer, image, children }: {
         )}
         <div className="flex-1">{children}</div>
         <div className="mt-6 flex items-end justify-between">
-          <p className="font-script text-lg text-hotpink/80 leading-tight max-w-[9rem]">{footer} ♡</p>
-          <div className="inline-flex items-center gap-1.5 md:hidden"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</span></div>
+          <p className="font-script text-lg text-hotpink/80 leading-tight max-w-[9rem]">{trx(footer)} ♡</p>
+          <div className="inline-flex items-center gap-1.5 md:hidden"><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /><span className="text-[11px] font-bold text-hotpink/80">{tr("stay soft, bloom on.")}</span></div>
         </div>
       </div>
     </Frame>
@@ -213,8 +214,8 @@ function Eyebrow({ children }: { children: ReactNode }) {
 function Title({ serif, script }: { serif: string; script: string }) {
   return (
     <h1 className="mt-1 leading-[0.95]">
-      <span className="block text-[2.15rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>{serif}</span>
-      <span className="inline-flex items-end gap-1.5 font-script text-[2.3rem] text-hotpink leading-[0.9]">{script} <Heart className="mb-1 h-6 w-6 text-hotpink" strokeWidth={2.4} /></span>
+      <span className="block text-[2.15rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>{trx(serif)}</span>
+      <span className="inline-flex items-end gap-1.5 font-script text-[2.3rem] text-hotpink leading-[0.9]">{trx(script)} <Heart className="mb-1 h-6 w-6 text-hotpink" strokeWidth={2.4} /></span>
     </h1>
   );
 }
@@ -241,7 +242,7 @@ function SectionMedia({ img, Icon, big = false }: { img: string; Icon: typeof He
       <span className="block h-full w-full overflow-hidden rounded-full ring-1 ring-white/70 shadow-[0_5px_12px_-5px_rgba(219,39,119,0.65)]">
         <img src={img} alt="" loading="lazy" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
       </span>
-      <span className="absolute -bottom-0.5 -right-0.5 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white ring-2 ring-white shadow">
+      <span className="absolute -bottom-0.5 -end-0.5 grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white ring-2 ring-white shadow">
         <Icon className="h-3 w-3" strokeWidth={2.4} />
       </span>
     </span>
@@ -250,9 +251,9 @@ function SectionMedia({ img, Icon, big = false }: { img: string; Icon: typeof He
 
 function OptionCard({ Icon, title, desc, selected, onClick }: { Icon: typeof Heart; title: string; desc: string; selected: boolean; onClick: () => void; }) {
   return (
-    <button onClick={onClick} className={["group flex w-full items-center gap-3 rounded-[1.25rem] border p-2.5 text-left transition active:scale-[0.99]", selected ? "border-hotpink bg-white ring-2 ring-hotpink/30 shadow-[0_8px_24px_rgba(236,72,153,0.16)]" : "border-white/70 bg-white/70 hover:bg-white/90"].join(" ")}>
+    <button onClick={onClick} className={["group flex w-full items-center gap-3 rounded-[1.25rem] border p-2.5 text-start transition active:scale-[0.99]", selected ? "border-hotpink bg-white ring-2 ring-hotpink/30 shadow-[0_8px_24px_rgba(236,72,153,0.16)]" : "border-white/70 bg-white/70 hover:bg-white/90"].join(" ")}>
       <span className={["grid h-11 w-11 shrink-0 place-items-center rounded-full", selected ? "bg-hotpink/15" : "bg-hotpink/10"].join(" ")}><Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span>
-      <span className="min-w-0 flex-1"><span className="block text-[16px] font-extrabold text-hotpink leading-tight">{title}</span><span className="mt-0.5 block text-[12.5px] leading-snug text-rose/75">{desc}</span></span>
+      <span className="min-w-0 flex-1"><span className="block text-[16px] font-extrabold text-hotpink leading-tight">{trx(title)}</span><span className="mt-0.5 block text-[12.5px] leading-snug text-rose/75">{trx(desc)}</span></span>
       <span className={["grid h-5 w-5 shrink-0 place-items-center rounded-full border-2", selected ? "border-hotpink" : "border-hotpink/40"].join(" ")}>{selected && <span className="h-2.5 w-2.5 rounded-full bg-hotpink" />}</span>
     </button>
   );
@@ -260,17 +261,17 @@ function OptionCard({ Icon, title, desc, selected, onClick }: { Icon: typeof Hea
 function Stepper({ Icon, label, desc, value, unit, min, max, step = 1, onChange }: { Icon: typeof Heart; label: string; desc: string; value: number; unit: string; min: number; max: number; step?: number; onChange: (v: number) => void; }) {
   return (
     <div className="rounded-[1.25rem] border border-white/70 bg-white/70 p-3">
-      <div className="flex items-start gap-2.5"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10"><Icon className="h-5 w-5 text-hotpink" strokeWidth={1.9} /></span><div className="flex-1"><p className="text-[14px] font-extrabold text-hotpink leading-tight">{label}</p><p className="mt-0.5 text-[11.5px] leading-snug text-rose/70">{desc}</p></div></div>
+      <div className="flex items-start gap-2.5"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-hotpink/10"><Icon className="h-5 w-5 text-hotpink" strokeWidth={1.9} /></span><div className="flex-1"><p className="text-[14px] font-extrabold text-hotpink leading-tight">{trx(label)}</p><p className="mt-0.5 text-[11.5px] leading-snug text-rose/70">{trx(desc)}</p></div></div>
       <div className="mt-2.5 flex items-center justify-between rounded-full bg-white/80 p-1 ring-1 ring-hotpink/15">
         <button onClick={() => onChange(Math.max(min, value - step))} className="grid h-8 w-8 place-items-center rounded-full bg-hotpink/10 text-hotpink active:scale-90 transition"><Minus className="h-4 w-4" strokeWidth={3} /></button>
-        <span className="text-[17px] font-extrabold text-rose tabular-nums">{value} {unit}</span>
+        <span className="text-[17px] font-extrabold text-rose tabular-nums">{trx(value)} {trx(unit)}</span>
         <button onClick={() => onChange(Math.min(max, value + step))} className="grid h-8 w-8 place-items-center rounded-full bg-hotpink text-white active:scale-90 transition"><Plus className="h-4 w-4" strokeWidth={3} /></button>
       </div>
     </div>
   );
 }
 function ContinueBtn({ onClick, label = "Continue" }: { onClick: () => void; label?: string }) {
-  return <button onClick={onClick} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2 py-3 text-[16px] font-bold text-white">{label} <ArrowRight className="h-5 w-5" /></button>;
+  return <button onClick={onClick} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2 py-3 text-[16px] font-bold text-white">{trx(label)} <ArrowRight className="rtl:-scale-x-100 h-5 w-5" /></button>;
 }
 function MiniCalendar({ value, onPick }: { value: Date; onPick: (d: Date) => void }) {
   const [view, setView] = useState(new Date(value.getFullYear(), value.getMonth(), 1));
@@ -278,15 +279,15 @@ function MiniCalendar({ value, onPick }: { value: Date; onPick: (d: Date) => voi
   const first = new Date(y, m, 1).getDay();
   const days = new Date(y, m + 1, 0).getDate();
   const cells: (number | null)[] = [...Array(first).fill(null), ...Array.from({ length: days }, (_, i) => i + 1)];
-  const label = view.toLocaleString("en-US", { month: "long", year: "numeric" });
+  const label = view.toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" });
   const isToday = (d: number) => { const t = new Date(); return t.getFullYear() === y && t.getMonth() === m && t.getDate() === d; };
   const sel = (d: number) => value.getFullYear() === y && value.getMonth() === m && value.getDate() === d;
   return (
     <div className="rounded-2xl bg-white/85 p-3 ring-1 ring-hotpink/15">
-      <div className="flex items-center justify-between px-1"><button onClick={() => setView(new Date(y, m - 1, 1))} className="grid h-8 w-8 place-items-center rounded-full text-hotpink active:scale-90"><ChevronLeft className="h-5 w-5" /></button><span className="text-[15px] font-extrabold text-rose">{label}</span><button onClick={() => setView(new Date(y, m + 1, 1))} className="grid h-8 w-8 place-items-center rounded-full text-hotpink active:scale-90"><ChevronRight className="h-5 w-5" /></button></div>
-      <div className="mt-2 grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold uppercase text-hotpink/50">{["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => <span key={d}>{d.slice(0, 3)}</span>)}</div>
+      <div className="flex items-center justify-between px-1"><button onClick={() => setView(new Date(y, m - 1, 1))} className="grid h-8 w-8 place-items-center rounded-full text-hotpink active:scale-90"><ChevronLeft className="rtl:-scale-x-100 h-5 w-5" /></button><span className="text-[15px] font-extrabold text-rose">{trx(label)}</span><button onClick={() => setView(new Date(y, m + 1, 1))} className="grid h-8 w-8 place-items-center rounded-full text-hotpink active:scale-90"><ChevronRight className="rtl:-scale-x-100 h-5 w-5" /></button></div>
+      <div className="mt-2 grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold uppercase text-hotpink/50">{localWeekdays(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], "short").map((d) => <span key={d}>{d}</span>)}</div>
       <div className="mt-1 grid grid-cols-7 gap-0.5">{cells.map((d, i) => d === null ? <span key={i} /> : (
-        <button key={i} onClick={() => onPick(new Date(y, m, d))} className={["mx-auto grid h-9 w-9 place-items-center rounded-full text-[14px] font-semibold transition", sel(d) ? "bg-hotpink text-white shadow-[0_3px_10px_rgba(236,72,153,0.5)]" : isToday(d) ? "text-hotpink ring-1 ring-hotpink/40" : "text-rose/80 hover:bg-hotpink/10"].join(" ")}>{d}</button>
+        <button key={i} onClick={() => onPick(new Date(y, m, d))} className={["mx-auto grid h-9 w-9 place-items-center rounded-full text-[14px] font-semibold transition", sel(d) ? "bg-hotpink text-white shadow-[0_3px_10px_rgba(236,72,153,0.5)]" : isToday(d) ? "text-hotpink ring-1 ring-hotpink/40" : "text-rose/80 hover:bg-hotpink/10"].join(" ")}>{trx(d)}</button>
       ))}</div>
     </div>
   );
@@ -343,7 +344,7 @@ function PlanReadyCelebration() {
             animation: `bz-confetti-fall ${p.dur}s cubic-bezier(.3,.55,.4,1) ${p.delay}s forwards`,
           }}
         >
-          {p.glyph}
+          {trx(p.glyph)}
         </span>
       ))}
 
@@ -360,11 +361,9 @@ function PlanReadyCelebration() {
             <Sparkles className="h-8 w-8" strokeWidth={2} />
           </span>
         </span>
-        <p className="font-script text-[2.1rem] leading-none text-hotpink">Waaw!</p>
-        <p className="mt-1.5 text-[1.05rem] font-extrabold text-[#7a1247]">Your plan is ready ✨</p>
-        <p className="mx-auto mt-1 max-w-[17rem] text-[12.5px] font-semibold leading-snug text-rose/70">
-          Everything's set up just for you — your cycle, meals, movement &amp; mind, all in bloom 🌸
-        </p>
+        <p className="font-script text-[2.1rem] leading-none text-hotpink">{tr("Waaw!")}</p>
+        <p className="mt-1.5 text-[1.05rem] font-extrabold text-[#7a1247]">{tr("Your plan is ready ✨")}</p>
+        <p className="mx-auto mt-1 max-w-[17rem] text-[12.5px] font-semibold leading-snug text-rose/70">{tr("Everything's set up just for you — your cycle, meals, movement & mind, all in bloom 🌸")}</p>
       </div>
     </div>
   );
@@ -461,17 +460,17 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
             <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(255,240,247,0.62) 0%, rgba(255,236,246,0.30) 22%, rgba(255,224,239,0.10) 40%, rgba(255,231,242,0.72) 62%, #FFE7F2 74%, #FFECF5 100%)" }} />
           </div>
           <div className="relative px-5 pb-8 md:px-8 md:py-7 lg:px-9 lg:py-8" style={{ paddingTop: "max(1.25rem, env(safe-area-inset-top))" }}>
-            <div className="inline-flex items-center gap-1.5 md:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">Bloomzein</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
-            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85 md:hidden">stay soft, bloom on.</p>
-            <h1 className="mt-6 leading-[0.9] md:mt-0"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Let's make</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>this yours. <Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
-            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f] md:max-w-none">A few little questions and Bloomzein will build <b className="font-extrabold text-[#7a1247]">your personalized world</b> — around your body, your goals and your everyday life.</p>
-            <div className="mt-8 flex justify-between gap-1 md:mt-6">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{t.l}</span></div>))}</div>
+            <div className="inline-flex items-center gap-1.5 md:hidden"><span className="font-script text-[2rem] leading-none text-hotpink">{tr("Bloomzein")}</span><BloomFlower size={22} petal="#EC4899" center="#FFFFFF" /></div>
+            <p className="mt-0.5 text-[13px] font-bold text-hotpink/85 md:hidden">{tr("stay soft, bloom on.")}</p>
+            <h1 className="mt-6 leading-[0.9] md:mt-0"><span className="block text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>{tr("Let's make")}</span><span className="inline-flex items-end gap-2 text-[3rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>{tr("this yours.")}{" "}<Heart className="mb-2 h-8 w-8 text-hotpink" strokeWidth={2.4} /></span></h1>
+            <p className="mt-3 max-w-[19rem] text-[16px] leading-snug text-[#a3316f] md:max-w-none">{tr("A few little questions and Bloomzein will build")}{" "}<b className="font-extrabold text-[#7a1247]">{tr("your personalized world")}</b>{" "}{tr("— around your body, your goals and your everyday life.")}</p>
+            <div className="mt-8 flex justify-between gap-1 md:mt-6">{tools.map((t) => (<div key={t.l} className="flex flex-col items-center gap-1.5"><span className="grid h-14 w-14 place-items-center rounded-full bg-white/85 shadow-[0_8px_20px_rgba(236,72,153,0.18)] ring-1 ring-white/70"><t.Icon className="h-6 w-6 text-hotpink" strokeWidth={1.9} /></span><span className="font-script text-[15px] text-hotpink">{trx(t.l)}</span></div>))}</div>
             <div className="mt-6 rounded-[1.6rem] bg-white/70 p-4 shadow-[0_12px_34px_rgba(236,72,153,0.14)] ring-1 ring-white/70">
-              <p className="inline-flex items-center gap-1.5 font-script text-[1.4rem] text-hotpink leading-none">A life that feels like you <Heart className="h-5 w-5 text-hotpink" strokeWidth={2.4} /></p>
-              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">{checks.map((c) => (<div key={c} className="flex items-start gap-1.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/15"><Check className="h-3 w-3 text-hotpink" strokeWidth={4} /></span><span className="text-[13px] font-semibold leading-snug text-rose/85">{c}</span></div>))}</div>
+              <p className="inline-flex items-center gap-1.5 font-script text-[1.4rem] text-hotpink leading-none">{tr("A life that feels like you")}{" "}<Heart className="h-5 w-5 text-hotpink" strokeWidth={2.4} /></p>
+              <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2.5">{checks.map((c) => (<div key={c} className="flex items-start gap-1.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/15"><Check className="h-3 w-3 text-hotpink" strokeWidth={4} /></span><span className="text-[13px] font-semibold leading-snug text-rose/85">{trx(c)}</span></div>))}</div>
             </div>
-            <button onClick={() => go("cycle")} className="bloom-luxury-btn animate-cta-bounce mt-6 flex w-full items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white"><Sparkles className="h-5 w-5" /> Let's bloom <ArrowRight className="h-5 w-5" /></button>
-            <p className="mt-2.5 text-center text-[12px] font-semibold text-hotpink/70">Takes about 2 minutes • You can change everything later</p>
+            <button onClick={() => go("cycle")} className="bloom-luxury-btn animate-cta-bounce mt-6 flex w-full items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white"><Sparkles className="h-5 w-5" />{" "}{tr("Let's bloom")}{" "}<ArrowRight className="rtl:-scale-x-100 h-5 w-5" /></button>
+            <p className="mt-2.5 text-center text-[12px] font-semibold text-hotpink/70">{tr("Takes about 2 minutes • You can change everything later")}</p>
           </div>
         </div>
       </Frame>
@@ -481,34 +480,32 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   if (stage === "cycle") return (
     <Shell step={qIndex} total={total} onBack={() => go("welcome")} footer="Small steps a brighter you" image="/images/flagship-cycle.webp">
       <StageImage src="/images/setup-cycle.webp" />
-      <Eyebrow>Your cycle</Eyebrow><Title serif="Let's get to know" script="your cycle" />
-      <Sub>A few details to understand your cycle and create a plan that fits you.</Sub>
+      <Eyebrow>{tr("Your cycle")}</Eyebrow><Title serif="Let's get to know" script="your cycle" />
+      <Sub>{tr("A few details to understand your cycle and create a plan that fits you.")}</Sub>
       <div className="mt-3 space-y-2.5">
-        <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">When did your last period start?</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">Tap the date on the calendar.</p><MiniCalendar value={a.lastPeriod} onPick={(d) => patch({ lastPeriod: d })} /></div>
-        <Stepper Icon={CalendarHeart} label="How long is your cycle?" desc="From the first day of your period to the day before the next." value={a.cycleLength} unit="days" min={21} max={40} onChange={(v) => patch({ cycleLength: v })} />
-        <Stepper Icon={Heart} label="How long does your period last?" desc="The number of days you typically have bleeding." value={a.periodLength} unit="days" min={2} max={10} onChange={(v) => patch({ periodLength: v })} />
+        <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">{tr("When did your last period start?")}</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">{tr("Tap the date on the calendar.")}</p><MiniCalendar value={a.lastPeriod} onPick={(d) => patch({ lastPeriod: d })} /></div>
+        <Stepper Icon={CalendarHeart} label={tr("How long is your cycle?")} desc="From the first day of your period to the day before the next." value={a.cycleLength} unit="days" min={21} max={40} onChange={(v) => patch({ cycleLength: v })} />
+        <Stepper Icon={Heart} label={tr("How long does your period last?")} desc="The number of days you typically have bleeding." value={a.periodLength} unit="days" min={2} max={10} onChange={(v) => patch({ periodLength: v })} />
       </div><ContinueBtn onClick={() => go("about")} />
     </Shell>
   );
 
   if (stage === "about") return (
     <Shell step={qIndex} total={total} onBack={() => go("cycle")} footer="Same girl brighter days ahead">
-      <Eyebrow>About you</Eyebrow><Title serif="Tell us a little" script="about you" />
-      <Sub>These details help us create a plan that fits your body and your goals.</Sub>
+      <Eyebrow>{tr("About you")}</Eyebrow><Title serif="Tell us a little" script="about you" />
+      <Sub>{tr("These details help us create a plan that fits your body and your goals.")}</Sub>
       <div className="mt-3 space-y-2.5">
         <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5">
           <label htmlFor="bloom-name" className="flex items-center gap-2 text-[15px] font-extrabold text-hotpink leading-tight">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink/12"><Smile className="h-4 w-4 text-hotpink" strokeWidth={2} /></span>
-            What should we call you?
-          </label>
-          <p className="mb-2.5 mt-1 text-[12px] text-rose/70">We'll use your first name to make Bloomzein feel like yours.</p>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-hotpink/12"><Smile className="h-4 w-4 text-hotpink" strokeWidth={2} /></span>{tr("What should we call you?")}</label>
+          <p className="mb-2.5 mt-1 text-[12px] text-rose/70">{tr("We'll use your first name to make Bloomzein feel like yours.")}</p>
           <input id="bloom-name" type="text" value={a.name} onChange={(e) => patch({ name: e.target.value })}
-            autoComplete="given-name" maxLength={40} placeholder="Your first name"
+            autoComplete="given-name" maxLength={40} placeholder={tr("Your first name")}
             className="w-full rounded-2xl border border-hotpink/20 bg-white/80 px-4 py-3 text-[16px] font-semibold text-[#7a1247] placeholder:text-rose/40 outline-none transition focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20" />
         </div>
-        <Stepper Icon={Scale} label="What's your weight?" desc="This helps us personalize your nutrition and workout plan." value={a.weight} unit="kg" min={35} max={200} onChange={(v) => patch({ weight: v })} />
-        <Stepper Icon={Ruler} label="What's your height?" desc="This helps us calculate your energy needs accurately." value={a.height} unit="cm" min={130} max={210} onChange={(v) => patch({ height: v })} />
-        <Stepper Icon={Cake} label="What's your age?" desc="Your age helps us personalize your experience even better." value={a.age} unit="years" min={13} max={90} onChange={(v) => patch({ age: v })} />
+        <Stepper Icon={Scale} label={tr("What's your weight?")} desc="This helps us personalize your nutrition and workout plan." value={a.weight} unit="kg" min={35} max={200} onChange={(v) => patch({ weight: v })} />
+        <Stepper Icon={Ruler} label={tr("What's your height?")} desc="This helps us calculate your energy needs accurately." value={a.height} unit="cm" min={130} max={210} onChange={(v) => patch({ height: v })} />
+        <Stepper Icon={Cake} label={tr("What's your age?")} desc="Your age helps us personalize your experience even better." value={a.age} unit="years" min={13} max={90} onChange={(v) => patch({ age: v })} />
       </div><ContinueBtn onClick={() => go("goal")} />
     </Shell>
   );
@@ -516,19 +513,18 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   if (stage === "goal") return (
     <Shell step={qIndex} total={total} onBack={() => go("about")} footer="Same girl brighter days ahead" image="/images/grid-diet.webp">
       <StageImage src="/images/setup-goal.webp" />
-      <Eyebrow>Your goal</Eyebrow><Title serif="What are you" script="blooming toward?" />
-      <Sub>Choose your main goal so we can create a personalized nutrition and workout plan for you.</Sub>
+      <Eyebrow>{tr("Your goal")}</Eyebrow><Title serif="What are you" script="blooming toward?" />
+      <Sub>{tr("Choose your main goal so we can create a personalized nutrition and workout plan for you.")}</Sub>
       <div className="mt-3 space-y-2">{GOALS.map((g) => <OptionCard key={g.key} {...g} selected={a.goal === g.key} onClick={() => patch({ goal: g.key, targetWeight: g.key === "lose" ? Math.max(35, a.weight - 5) : g.key === "gain" ? Math.min(200, a.weight + 5) : a.weight })} />)}</div>
       {a.goal !== "maintain" && (
         <div className="mt-2.5">
-          <Stepper Icon={Star} label="Your target weight"
+          <Stepper Icon={Star} label={tr("Your target weight")}
             desc={a.goal === "lose" ? "Where you'd love to be — we'll get you there at a healthy, steady pace." : "Your goal weight — we'll build you up gradually and sustainably."}
             value={a.targetWeight} unit="kg"
             min={a.goal === "lose" ? 35 : a.weight + 1} max={a.goal === "lose" ? a.weight - 1 : 200}
             onChange={(v) => patch({ targetWeight: v })} />
           <p className="mt-1.5 px-1 text-[12px] font-semibold text-hotpink/70">
-            {Math.abs(a.weight - a.targetWeight)} kg to {a.goal === "lose" ? "lose" : "gain"} · about {Math.max(1, Math.ceil(Math.abs(a.weight - a.targetWeight) / 0.5))} weeks at a healthy pace.
-          </p>
+            {Math.abs(a.weight - a.targetWeight)}{" "}{tr("kg to")}{" "}{a.goal === "lose" ? "lose" : "gain"}{" "}{tr("· about")}{" "}{Math.max(1, Math.ceil(Math.abs(a.weight - a.targetWeight) / 0.5))}{" "}{tr("weeks at a healthy pace.")}</p>
         </div>
       )}
       <ContinueBtn onClick={() => go("food")} />
@@ -538,8 +534,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   if (stage === "food") return (
     <Shell step={qIndex} total={total} onBack={() => go("goal")} footer="Small choices Big changes" image="/images/flagship-meals.webp">
       <StageImage src="/images/setup-meals.webp" />
-      <Eyebrow>Your food style</Eyebrow><Title serif="How do you" script="like to eat?" />
-      <Sub>Choose the style that fits you best. You can always change this later.</Sub>
+      <Eyebrow>{tr("Your food style")}</Eyebrow><Title serif="How do you" script="like to eat?" />
+      <Sub>{tr("Choose the style that fits you best. You can always change this later.")}</Sub>
       <div className="mt-3 space-y-2">{FOODS.map((f) => <OptionCard key={f.key} {...f} selected={a.foodStyle === f.key} onClick={() => patch({ foodStyle: f.key })} />)}</div>
       <ContinueBtn onClick={() => go("fitness")} />
     </Shell>
@@ -548,30 +544,30 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
   if (stage === "fitness") return (
     <Shell step={qIndex} total={total} onBack={() => go("food")} footer="Small steps Big results" image="/images/flagship-workout.webp">
       <StageImage src="/images/setup-movement.webp" />
-      <Eyebrow>Your fitness</Eyebrow><Title serif="What's your" script="fitness level?" />
-      <Sub>This helps us create a workout plan that fits you and your goals.</Sub>
+      <Eyebrow>{tr("Your fitness")}</Eyebrow><Title serif="What's your" script="fitness level?" />
+      <Sub>{tr("This helps us create a workout plan that fits you and your goals.")}</Sub>
       <div className="mt-3 space-y-2">{LEVELS.map((l) => <OptionCard key={String(l.key)} {...l} selected={a.level === l.key} onClick={() => patch({ level: l.key })} />)}</div>
       <ContinueBtn onClick={() => go("prefs")} />
     </Shell>
   );
 
   if (stage === "prefs") {
-    const methods: { key: ContraceptiveMethod; label: string; Icon: typeof Heart }[] = [{ key: "pill", label: "Pill", Icon: Pill }, { key: "patch", label: "Patch", Icon: Circle }, { key: "ring", label: "Ring", Icon: Circle }];
+    const methods: { key: ContraceptiveMethod; label: string; Icon: typeof Heart }[] = [{ key: "pill", label: tr("Pill"), Icon: Pill }, { key: "patch", label: tr("Patch"), Icon: Circle }, { key: "ring", label: tr("Ring"), Icon: Circle }];
     const times = ["07:00", "08:00", "12:00", "18:00", "20:00", "21:00"];
     return (
       <Shell step={qIndex} total={total} onBack={() => go("fitness")} footer="Small choices Big changes" image="/images/flagship-yoga.webp">
-        <Eyebrow>Your cycle</Eyebrow><Title serif="A few" script="preferences" />
-        <Sub>Help us personalize your experience with a few more details.</Sub>
+        <Eyebrow>{tr("Your cycle")}</Eyebrow><Title serif="A few" script="preferences" />
+        <Sub>{tr("Help us personalize your experience with a few more details.")}</Sub>
         <div className="mt-3 space-y-2.5">
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">Do you use a contraceptive method?</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">This helps us give you more accurate insights.</p>
-            <div className="grid grid-cols-3 gap-2">{methods.map((m) => (<button key={m.key} onClick={() => patch({ contraceptive: m.key })} className={["flex flex-col items-center gap-1.5 rounded-2xl border py-3 transition active:scale-95", a.contraceptive === m.key ? "border-hotpink bg-hotpink/10 ring-1 ring-hotpink/30" : "border-white/70 bg-white/60"].join(" ")}><m.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[13px] font-bold text-rose/85">{m.label}</span></button>))}</div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">{tr("Do you use a contraceptive method?")}</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">{tr("This helps us give you more accurate insights.")}</p>
+            <div className="grid grid-cols-3 gap-2">{methods.map((m) => (<button key={m.key} onClick={() => patch({ contraceptive: m.key })} className={["flex flex-col items-center gap-1.5 rounded-2xl border py-3 transition active:scale-95", a.contraceptive === m.key ? "border-hotpink bg-hotpink/10 ring-1 ring-hotpink/30" : "border-white/70 bg-white/60"].join(" ")}><m.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[13px] font-bold text-rose/85">{trx(m.label)}</span></button>))}</div>
           </div>
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-start gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-hotpink/10"><Bell className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div className="flex-1"><p className="text-[15px] font-extrabold text-hotpink leading-tight">When would you like your daily reminder?</p><p className="mt-0.5 text-[12px] text-rose/70">We'll remind you about your cycle, self-care and more.</p></div></div>
-            <div className="mt-3 flex flex-wrap gap-2">{times.map((t) => (<button key={t} onClick={() => patch({ reminderTime: t })} className={["inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[13px] font-bold transition active:scale-95", a.reminderTime === t ? "border-hotpink bg-hotpink text-white" : "border-hotpink/30 bg-white/70 text-rose/80"].join(" ")}><Clock className="h-3.5 w-3.5" /> {t}</button>))}</div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-start gap-3"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-hotpink/10"><Bell className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><div className="flex-1"><p className="text-[15px] font-extrabold text-hotpink leading-tight">{tr("When would you like your daily reminder?")}</p><p className="mt-0.5 text-[12px] text-rose/70">{tr("We'll remind you about your cycle, self-care and more.")}</p></div></div>
+            <div className="mt-3 flex flex-wrap gap-2">{times.map((t) => (<button key={t} onClick={() => patch({ reminderTime: t })} className={["inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-[13px] font-bold transition active:scale-95", a.reminderTime === t ? "border-hotpink bg-hotpink text-white" : "border-hotpink/30 bg-white/70 text-rose/80"].join(" ")}><Clock className="h-3.5 w-3.5" /> {trx(t)}</button>))}</div>
           </div>
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">Would you like Bloomzein to send notifications?</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">Get reminders and personalized tips on your devices.</p>
-            <button onClick={() => patch({ notifications: !a.notifications })} className="flex w-full items-center justify-between rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-hotpink/15"><span className="text-[13px] font-bold text-rose/85">Yes, send me notifications</span><span className={["relative h-6 w-11 rounded-full transition-colors", a.notifications ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: a.notifications ? "1.375rem" : "0.125rem" }} /></span></button>
-            <div className="mt-2.5 grid grid-cols-3 gap-2">{[{ Icon: Smartphone, l: "Phone" }, { Icon: Tablet, l: "Tablet" }, { Icon: Laptop, l: "Laptop" }].map((d) => (<div key={d.l} className={["flex flex-col items-center gap-1 rounded-2xl py-2.5 transition", a.notifications ? "bg-hotpink/10" : "bg-white/50 opacity-60"].join(" ")}><d.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[11px] font-bold text-rose/80">{d.l}</span></div>))}</div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[15px] font-extrabold text-hotpink leading-tight">{tr("Would you like Bloomzein to send notifications?")}</p><p className="mb-2.5 mt-0.5 text-[12px] text-rose/70">{tr("Get reminders and personalized tips on your devices.")}</p>
+            <button onClick={() => patch({ notifications: !a.notifications })} className="flex w-full items-center justify-between rounded-xl bg-white/80 px-3 py-2.5 ring-1 ring-hotpink/15"><span className="text-[13px] font-bold text-rose/85">{tr("Yes, send me notifications")}</span><span className={["relative h-6 w-11 rounded-full transition-colors", a.notifications ? "bg-hotpink" : "bg-rose/25"].join(" ")}><span className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: a.notifications ? "1.375rem" : "0.125rem" }} /></span></button>
+            <div className="mt-2.5 grid grid-cols-3 gap-2">{[{ Icon: Smartphone, l: "Phone" }, { Icon: Tablet, l: "Tablet" }, { Icon: Laptop, l: "Laptop" }].map((d) => (<div key={d.l} className={["flex flex-col items-center gap-1 rounded-2xl py-2.5 transition", a.notifications ? "bg-hotpink/10" : "bg-white/50 opacity-60"].join(" ")}><d.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[11px] font-bold text-rose/80">{trx(d.l)}</span></div>))}</div>
           </div>
         </div>
         <ContinueBtn onClick={() => go("checkin")} />
@@ -585,31 +581,31 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     return (
       <Shell step={qIndex} total={total} onBack={() => go("prefs")} footer="Check in, beautifully" image="/images/page-bg-today-evening.webp">
         <StageImage src="/images/setup-ai.webp" />
-        <Eyebrow>Today's check-in</Eyebrow><Title serif="How are you" script="feeling today?" />
-        <Sub>One last little check-in — your Today will open already tuned to how you feel.</Sub>
+        <Eyebrow>{tr("Today's check-in")}</Eyebrow><Title serif="How are you" script="feeling today?" />
+        <Sub>{tr("One last little check-in — your Today will open already tuned to how you feel.")}</Sub>
         <div className="mt-3 space-y-2.5">
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[14px] font-extrabold text-hotpink">Your mood</p>
-            <div className="mt-2.5 grid grid-cols-3 gap-2">{MOODS.map((m) => (<button key={m.key} onClick={() => patch({ mood: m.key })} className={["flex flex-col items-center gap-1 rounded-2xl py-2.5 transition active:scale-95", a.mood === m.key ? "bg-hotpink/12 ring-1 ring-hotpink/35" : "bg-white/60"].join(" ")}><m.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[12px] font-bold text-rose/85">{m.label}</span></button>))}</div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[14px] font-extrabold text-hotpink">{tr("Your mood")}</p>
+            <div className="mt-2.5 grid grid-cols-3 gap-2">{MOODS.map((m) => (<button key={m.key} onClick={() => patch({ mood: m.key })} className={["flex flex-col items-center gap-1 rounded-2xl py-2.5 transition active:scale-95", a.mood === m.key ? "bg-hotpink/12 ring-1 ring-hotpink/35" : "bg-white/60"].join(" ")}><m.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /><span className="text-[12px] font-bold text-rose/85">{trx(m.label)}</span></button>))}</div>
           </div>
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[14px] font-extrabold text-hotpink">Any symptoms? <span className="font-semibold text-rose/60">(optional)</span></p>
-            <div className="mt-2.5 flex flex-wrap gap-2">{SYMPTOM_OPTIONS.map((s) => (<button key={s} onClick={() => toggleSym(s)} className={["rounded-full border px-3 py-1.5 text-[13px] font-bold transition active:scale-95", a.symptoms.includes(s) ? "border-hotpink bg-hotpink text-white" : "border-hotpink/30 bg-white/70 text-rose/80"].join(" ")}>{s}</button>))}</div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><p className="text-[14px] font-extrabold text-hotpink">{tr("Any symptoms?")}{" "}<span className="font-semibold text-rose/60">{tr("(optional)")}</span></p>
+            <div className="mt-2.5 flex flex-wrap gap-2">{SYMPTOM_OPTIONS.map((s) => (<button key={s} onClick={() => toggleSym(s)} className={["rounded-full border px-3 py-1.5 text-[13px] font-bold transition active:scale-95", a.symptoms.includes(s) ? "border-hotpink bg-hotpink text-white" : "border-hotpink/30 bg-white/70 text-rose/80"].join(" ")}>{trx(s)}</button>))}</div>
           </div>
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-center gap-2"><Moon className="h-5 w-5 text-hotpink" /><p className="text-[14px] font-extrabold text-hotpink">How did you sleep?</p></div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-center gap-2"><Moon className="h-5 w-5 text-hotpink" /><p className="text-[14px] font-extrabold text-hotpink">{tr("How did you sleep?")}</p></div>
             <div className="mt-2.5 flex items-center justify-between">{[1, 2, 3, 4, 5].map((n) => (<button key={n} onClick={() => patch({ sleepQ: n })} className={["grid h-10 w-10 place-items-center rounded-full transition active:scale-90", n <= a.sleepQ ? "bg-hotpink text-white" : "bg-white/70 text-hotpink/40 ring-1 ring-hotpink/20"].join(" ")}><Star className="h-5 w-5" fill={n <= a.sleepQ ? "currentColor" : "none"} /></button>))}</div>
-            <div className="mt-3"><Stepper Icon={Clock} label="Hours slept" desc="Roughly how many hours last night." value={a.sleepH} unit="h" min={3} max={12} onChange={(v) => patch({ sleepH: v })} /></div>
+            <div className="mt-3"><Stepper Icon={Clock} label={tr("Hours slept")} desc="Roughly how many hours last night." value={a.sleepH} unit="h" min={3} max={12} onChange={(v) => patch({ sleepH: v })} /></div>
           </div>
-          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-center gap-2"><Droplets className="h-5 w-5 text-hotpink" /><p className="text-[14px] font-extrabold text-hotpink">Water so far today</p></div>
-            <div className="mt-2.5 flex items-center justify-between rounded-full bg-white/80 p-1.5 ring-1 ring-hotpink/15"><button onClick={() => patch({ water: Math.max(0, a.water - 1) })} className="grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink active:scale-90"><Minus className="h-4 w-4" strokeWidth={3} /></button><span className="text-[17px] font-extrabold text-rose">{a.water} glasses</span><button onClick={() => patch({ water: Math.min(12, a.water + 1) })} className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white active:scale-90"><Plus className="h-4 w-4" strokeWidth={3} /></button></div>
+          <div className="rounded-[1.4rem] border border-white/70 bg-white/70 p-3.5"><div className="flex items-center gap-2"><Droplets className="h-5 w-5 text-hotpink" /><p className="text-[14px] font-extrabold text-hotpink">{tr("Water so far today")}</p></div>
+            <div className="mt-2.5 flex items-center justify-between rounded-full bg-white/80 p-1.5 ring-1 ring-hotpink/15"><button onClick={() => patch({ water: Math.max(0, a.water - 1) })} className="grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink active:scale-90"><Minus className="h-4 w-4" strokeWidth={3} /></button><span className="text-[17px] font-extrabold text-rose">{trx(a.water)}{" "}{tr("glasses")}</span><button onClick={() => patch({ water: Math.min(12, a.water + 1) })} className="grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white active:scale-90"><Plus className="h-4 w-4" strokeWidth={3} /></button></div>
           </div>
         </div>
-        <ContinueBtn onClick={async () => { go("building"); await applySetup(); go("previews"); }} label="Build my world" />
+        <ContinueBtn onClick={async () => { go("building"); await applySetup(); go("previews"); }} label={tr("Build my world")} />
       </Shell>
     );
   }
 
   if (stage === "building") return (
     <Shell step={null} total={total} footer="Building your world">
-      <div className="grid min-h-[60vh] place-items-center text-center"><div><span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-white/70 animate-card-breathe"><BloomFlower size={56} petal="#EC4899" center="#FFFFFF" className="animate-[spin_9s_linear_infinite]" /></span><p className="mt-4 font-script text-3xl text-hotpink">Building your world…</p><p className="mt-1 text-[14px] text-rose/70">Syncing your cycle, meals & movement ✿</p></div></div>
+      <div className="grid min-h-[60vh] place-items-center text-center"><div><span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-white/70 animate-card-breathe"><BloomFlower size={56} petal="#EC4899" center="#FFFFFF" className="animate-[spin_9s_linear_infinite]" /></span><p className="mt-4 font-script text-3xl text-hotpink">{tr("Building your world…")}</p><p className="mt-1 text-[14px] text-rose/70">{tr("Syncing your cycle, meals & movement ✿")}</p></div></div>
     </Shell>
   );
 
@@ -624,7 +620,7 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     })();
     const phaseKey = ((readCyclePhase() as string | null) ?? compPhase.key) as keyof typeof PHASE_INFO;
     const info = PHASE_INFO[phaseKey] ?? PHASE_INFO.follicular;
-    const fmt = (dt: Date) => dt.toLocaleString("en-US", { month: "short", day: "numeric" });
+    const fmt = (dt: Date) => dt.toLocaleString(DATE_LOCALE, { month: "short", day: "numeric" });
     const range = `${fmt(new Date())} – ${fmt(new Date(Date.now() + 6 * 864e5))}`;
     // goal (based on the target weight the user actually chose)
     const goalLabel = a.goal === "lose" ? "Lose weight" : a.goal === "gain" ? "Gain & tone" : "Maintain";
@@ -639,8 +635,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     // meals
     const pickMeal = (t: string) => RECIPES.find((r) => r.mealType === t);
     const meals = [
-      { label: "Breakfast", r: pickMeal("breakfast") }, { label: "Lunch", r: pickMeal("lunch") },
-      { label: "Snack", r: pickMeal("snack") }, { label: "Dinner", r: pickMeal("dinner") },
+      { label: tr("Breakfast"), r: pickMeal("breakfast") }, { label: tr("Lunch"), r: pickMeal("lunch") },
+      { label: tr("Snack"), r: pickMeal("snack") }, { label: tr("Dinner"), r: pickMeal("dinner") },
     ].filter((m) => m.r);
     const workouts = [
       { img: "/images/workout-hero-session.webp", name: "Full Body Strength", min: "30 min" },
@@ -663,8 +659,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           {img && <img src={img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
           <span className="absolute inset-0 grid place-items-center"><span className="grid h-9 w-9 place-items-center rounded-full bg-white/85 shadow"><Play className="h-4 w-4 translate-x-[1px] fill-hotpink text-hotpink" /></span></span>
         </div>
-        <p className="mt-1.5 truncate text-[13px] font-extrabold text-rose">{name}</p>
-        <p className="text-[11.5px] font-semibold text-hotpink/70">{min}</p>
+        <p className="mt-1.5 truncate text-[13px] font-extrabold text-rose">{trx(name)}</p>
+        <p className="text-[11.5px] font-semibold text-hotpink/70">{trx(min)}</p>
       </div>
     );
 
@@ -675,15 +671,15 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
         <div className="relative mx-auto max-w-6xl px-4 pb-28 sm:px-6 lg:px-8" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
           {/* header */}
           <div className="flex items-center justify-between gap-3 py-1">
-            <button onClick={() => go("checkin")} className="inline-flex items-center gap-1 font-bold text-hotpink active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
-            <div className="text-center leading-none"><div className="inline-flex items-center gap-1.5"><span className="font-script text-2xl text-hotpink leading-none">Bloomzein</span><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /></div><p className="mt-0.5 text-[11px] font-bold text-hotpink/80">stay soft, bloom on.</p></div>
-            <p className="hidden font-script text-[1.15rem] text-hotpink md:inline-flex md:items-center md:gap-1">A healthier, happier you <Heart className="h-4 w-4 fill-hotpink" /></p>
+            <button onClick={() => go("checkin")} className="inline-flex items-center gap-1 font-bold text-hotpink active:scale-95"><ChevronLeft className="rtl:-scale-x-100 h-5 w-5" />{" "}{tr("Back")}</button>
+            <div className="text-center leading-none"><div className="inline-flex items-center gap-1.5"><span className="font-script text-2xl text-hotpink leading-none">{tr("Bloomzein")}</span><BloomFlower size={18} petal="#EC4899" center="#FFFFFF" /></div><p className="mt-0.5 text-[11px] font-bold text-hotpink/80">{tr("stay soft, bloom on.")}</p></div>
+            <p className="hidden font-script text-[1.15rem] text-hotpink md:inline-flex md:items-center md:gap-1">{tr("A healthier, happier you")}{" "}<Heart className="h-4 w-4 fill-hotpink" /></p>
           </div>
 
           {/* title */}
           <div className="mt-4 lg:mt-6">
-            <h1 className="leading-[0.95]"><span className="block text-[2.2rem] font-bold text-[#7a1247] sm:text-[2.7rem] lg:text-[3.2rem]" style={{ fontFamily: SERIF }}>Here's your</span><span className="inline-flex items-end gap-2 font-script text-[2.4rem] text-hotpink sm:text-[3rem] lg:text-[3.6rem] leading-[0.85]">Personalized Plan <Heart className="mb-1 h-8 w-8 fill-hotpink" /></span></h1>
-            <p className="mt-2 max-w-xl text-[14px] leading-snug text-rose/70 sm:text-[15px]">Tailored to your cycle, your goals and your life. Everything you need to feel your best — body, mind and soul.</p>
+            <h1 className="leading-[0.95]"><span className="block text-[2.2rem] font-bold text-[#7a1247] sm:text-[2.7rem] lg:text-[3.2rem]" style={{ fontFamily: SERIF }}>{tr("Here's your")}</span><span className="inline-flex items-end gap-2 font-script text-[2.4rem] text-hotpink sm:text-[3rem] lg:text-[3.6rem] leading-[0.85]">{tr("Personalized Plan")}{" "}<Heart className="mb-1 h-8 w-8 fill-hotpink" /></span></h1>
+            <p className="mt-2 max-w-xl text-[14px] leading-snug text-rose/70 sm:text-[15px]">{tr("Tailored to your cycle, your goals and your life. Everything you need to feel your best — body, mind and soul.")}</p>
           </div>
 
           {/* phase + how you might feel */}
@@ -692,65 +688,65 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
               <div className="flex items-start gap-3">
                 <SectionMedia img="/images/setup-cycle.webp" Icon={Sprout} big />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-rose/70">You're in your</p>
-                  <p className="font-script text-[1.9rem] leading-none text-hotpink">{info.title}</p>
-                  <p className="mt-1 text-[12.5px] font-extrabold text-hotpink/80">Day {compPhase.day} of {a.cycleLength} · {range}</p>
+                  <p className="text-[13px] font-bold text-rose/70">{tr("You're in your")}</p>
+                  <p className="font-script text-[1.9rem] leading-none text-hotpink">{trx(info.title)}</p>
+                  <p className="mt-1 text-[12.5px] font-extrabold text-hotpink/80">{tr("Day")}{" "}{trx(compPhase.day)}{" "}{tr("of")}{" "}{trx(a.cycleLength)} · {trx(range)}</p>
                 </div>
-                <p className="hidden shrink-0 font-script text-[1.1rem] text-hotpink sm:block">A fresh<br />new you ♡</p>
+                <p className="hidden shrink-0 font-script text-[1.1rem] text-hotpink sm:block">{tr("A fresh")}<br />{tr("new you ♡")}</p>
               </div>
-              <p className="mt-3 text-[13.5px] leading-snug text-rose/80">{info.blurb}</p>
-              <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>Learn more about this phase <ArrowRight className="h-3.5 w-3.5" /></button>
+              <p className="mt-3 text-[13.5px] leading-snug text-rose/80">{trx(info.blurb)}</p>
+              <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>{tr("Learn more about this phase")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-cycle.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">How you might feel</p></div>
-              <div className="mt-3 grid grid-cols-4 gap-2">{info.feels.map((f) => (<div key={f.l} className="flex flex-col items-center gap-1.5 text-center"><span className="grid h-11 w-11 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><span className="text-[11.5px] font-bold leading-tight text-rose/80">{f.l}</span></div>))}</div>
-              <div className="mt-3 rounded-2xl bg-hotpink/8 p-3"><p className="text-[12.5px] leading-snug text-rose/80"><span className="font-script text-xl text-hotpink">“</span>{info.quote}</p></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-cycle.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">{tr("How you might feel")}</p></div>
+              <div className="mt-3 grid grid-cols-4 gap-2">{info.feels.map((f) => (<div key={f.l} className="flex flex-col items-center gap-1.5 text-center"><span className="grid h-11 w-11 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-5 w-5 text-hotpink" strokeWidth={2} /></span><span className="text-[11.5px] font-bold leading-tight text-rose/80">{trx(f.l)}</span></div>))}</div>
+              <div className="mt-3 rounded-2xl bg-hotpink/8 p-3"><p className="text-[12.5px] leading-snug text-rose/80"><span className="font-script text-xl text-hotpink">“</span>{trx(info.quote)}</p></div>
             </div>
           </div>
 
           {/* goal · nutrition · today's focus */}
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className={CARD}>
-              <div className="flex items-center justify-between"><div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-goal.webp" Icon={Scale} /><div><p className="text-[12.5px] font-bold text-rose/60">Your goal</p><p className="text-[17px] font-extrabold text-hotpink leading-tight">{goalLabel}</p></div></div><button onClick={() => go("goal")} className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink/70 active:scale-95"><Pencil className="h-3.5 w-3.5" /> Edit</button></div>
+              <div className="flex items-center justify-between"><div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-goal.webp" Icon={Scale} /><div><p className="text-[12.5px] font-bold text-rose/60">{tr("Your goal")}</p><p className="text-[17px] font-extrabold text-hotpink leading-tight">{trx(goalLabel)}</p></div></div><button onClick={() => go("goal")} className="inline-flex items-center gap-1 text-[12px] font-bold text-hotpink/70 active:scale-95"><Pencil className="h-3.5 w-3.5" />{" "}{tr("Edit")}</button></div>
               {isMaintain ? (
                 <>
-                  <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">You're maintaining a healthy balance — no restriction needed. We'll keep your nutrition and movement steady so you feel your best every day.</p>
-                  <div className="mt-3 flex items-center gap-2.5 rounded-2xl bg-hotpink/8 p-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/15"><Heart className="h-5 w-5 fill-hotpink text-hotpink" /></span><div><p className="text-[15px] font-extrabold leading-tight text-hotpink">Maintain {a.weight} kg</p><p className="text-[12px] font-semibold text-rose/70">You're right where you want to be 🌸</p></div></div>
+                  <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">{tr("You're maintaining a healthy balance — no restriction needed. We'll keep your nutrition and movement steady so you feel your best every day.")}</p>
+                  <div className="mt-3 flex items-center gap-2.5 rounded-2xl bg-hotpink/8 p-3"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink/15"><Heart className="h-5 w-5 fill-hotpink text-hotpink" /></span><div><p className="text-[15px] font-extrabold leading-tight text-hotpink">{tr("Maintain")}{" "}{trx(a.weight)}{" "}{tr("kg")}</p><p className="text-[12px] font-semibold text-rose/70">{tr("You're right where you want to be 🌸")}</p></div></div>
                 </>
               ) : (
                 <>
-                  <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">You're on track! Based on your profile, a healthy pace is <b className="text-hotpink">0.5 kg per week</b>.</p>
-                  <div className="mt-3 flex items-end justify-between"><p className="text-[22px] font-extrabold leading-none text-hotpink">{diffKg} kg<span className="text-[13px] font-bold text-rose/60"> to {a.goal === "gain" ? "gain" : "lose"}</span></p><p className="text-right text-[12px] font-semibold text-rose/60">{weekLbl}<br />(estimated)</p></div>
-                  <div className="mt-2.5 flex items-center gap-2"><span className="text-[11px] font-bold text-rose/60">{a.weight}kg</span><div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-hotpink/12"><div className="absolute inset-y-0 left-0 rounded-full bg-hotpink" style={{ width: "8%" }} /></div><span className="text-[11px] font-bold text-hotpink">{goalWeight}kg</span></div>
-                  <div className="mt-1.5 flex justify-between text-[12px] font-semibold text-rose/70"><span>Current: {a.weight} kg</span><span>Goal: {goalWeight} kg</span></div>
+                  <p className="mt-2.5 text-[12.5px] leading-snug text-rose/75">{tr("You're on track! Based on your profile, a healthy pace is")}{" "}<b className="text-hotpink">{tr("0.5 kg per week")}</b>.</p>
+                  <div className="mt-3 flex items-end justify-between"><p className="text-[22px] font-extrabold leading-none text-hotpink">{trx(diffKg)}{" "}{tr("kg")}<span className="text-[13px] font-bold text-rose/60">{" "}{tr("to")}{" "}{a.goal === "gain" ? "gain" : "lose"}</span></p><p className="text-end text-[12px] font-semibold text-rose/60">{trx(weekLbl)}<br />{tr("(estimated)")}</p></div>
+                  <div className="mt-2.5 flex items-center gap-2"><span className="text-[11px] font-bold text-rose/60">{trx(a.weight)}{tr("kg")}</span><div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-hotpink/12"><div className="absolute inset-y-0 start-0 rounded-full bg-hotpink" style={{ width: "8%" }} /></div><span className="text-[11px] font-bold text-hotpink">{trx(goalWeight)}{tr("kg")}</span></div>
+                  <div className="mt-1.5 flex justify-between text-[12px] font-semibold text-rose/70"><span>{tr("Current:")}{" "}{trx(a.weight)}{" "}{tr("kg")}</span><span>{tr("Goal:")}{" "}{trx(goalWeight)}{" "}{tr("kg")}</span></div>
                 </>
               )}
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/grid-diet.webp" Icon={Utensils} /><div><p className="text-[12.5px] font-bold text-rose/60">Your daily nutrition</p><p className="leading-none"><span className="text-[22px] font-extrabold text-hotpink">{kcal.toLocaleString()}</span> <span className="text-[13px] font-bold text-rose/70">kcal</span></p></div></div>
-              <p className="mt-1 text-[12px] font-semibold text-rose/60">Your recommended intake today</p>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/grid-diet.webp" Icon={Utensils} /><div><p className="text-[12.5px] font-bold text-rose/60">{tr("Your daily nutrition")}</p><p className="leading-none"><span className="text-[22px] font-extrabold text-hotpink">{kcal.toLocaleString()}</span> <span className="text-[13px] font-bold text-rose/70">{tr("kcal")}</span></p></div></div>
+              <p className="mt-1 text-[12px] font-semibold text-rose/60">{tr("Your recommended intake today")}</p>
               <div className="mt-3 flex h-2.5 overflow-hidden rounded-full"><span className="bg-hotpink" style={{ width: "40%" }} /><span className="bg-pink-400" style={{ width: "30%" }} /><span className="bg-rose-300" style={{ width: "30%" }} /></div>
               <div className="mt-2.5 grid grid-cols-3 divide-x divide-hotpink/15 text-center">
-                {[["40%", "Carbs", `${carbs} g`], ["30%", "Protein", `${protein} g`], ["30%", "Fats", `${fats} g`]].map(([p, l, g]) => (<div key={l} className="px-1"><p className="text-[13px] font-extrabold text-hotpink">{p}</p><p className="text-[11px] font-semibold text-rose/60">{l}</p><p className="text-[14px] font-extrabold text-rose">{g}</p></div>))}
+                {[["40%", "Carbs", `${carbs} g`], ["30%", "Protein", `${protein} g`], ["30%", "Fats", `${fats} g`]].map(([p, l, g]) => (<div key={l} className="px-1"><p className="text-[13px] font-extrabold text-hotpink">{trx(p)}</p><p className="text-[11px] font-semibold text-rose/60">{trx(l)}</p><p className="text-[14px] font-extrabold text-rose">{trx(g)}</p></div>))}
               </div>
-              <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>See why this is right for you <ArrowRight className="h-3.5 w-3.5" /></button>
+              <button onClick={() => go("pricing")} className={`${LINK} mt-3 active:scale-95`}>{tr("See why this is right for you")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Star} /><p className="text-[17px] font-extrabold text-hotpink">Today's focus</p></div>
-              <div className="mt-3 space-y-2">{todaysFocus.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Star} /><p className="text-[17px] font-extrabold text-hotpink">{tr("Today's focus")}</p></div>
+              <div className="mt-3 space-y-2">{todaysFocus.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{trx(t)}</span></div>))}</div>
             </div>
           </div>
 
           {/* meals */}
           <div className={`${CARD} mt-4`}>
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-meals.webp" Icon={Salad} /><div><p className="text-[17px] font-extrabold text-hotpink leading-tight">Your meals for today</p><p className="text-[12px] font-semibold text-rose/65">Delicious, balanced meals — <b className="text-hotpink">{kcal.toLocaleString()} kcal</b> total</p></div></div>
-              <button onClick={() => go("pricing")} className={`${LINK} hidden active:scale-95 sm:inline-flex`}>View full meal plan <ArrowRight className="h-3.5 w-3.5" /></button>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-meals.webp" Icon={Salad} /><div><p className="text-[17px] font-extrabold text-hotpink leading-tight">{tr("Your meals for today")}</p><p className="text-[12px] font-semibold text-rose/65">{tr("Delicious, balanced meals —")}{" "}<b className="text-hotpink">{kcal.toLocaleString()}{" "}{tr("kcal")}</b>{" "}{tr("total")}</p></div></div>
+              <button onClick={() => go("pricing")} className={`${LINK} hidden active:scale-95 sm:inline-flex`}>{tr("View full meal plan")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-4">{meals.map((m) => (
               <div key={m.label} className="overflow-hidden rounded-2xl bg-white/70 ring-1 ring-white/70">
-                <div className="relative aspect-[4/3] overflow-hidden"><img src={recipeImageSrc(m.r!)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute right-1.5 top-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-extrabold text-hotpink">{m.r!.macros.calories} kcal</span></div>
-                <div className="p-2.5"><p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70">{m.label}</p><p className="text-[13.5px] font-extrabold leading-tight text-rose">{m.r!.name}</p><p className="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-rose/65">{m.r!.ingredients.slice(0, 4).map((i) => i.name).join(", ")}</p><button onClick={() => setRecipe(m.r!)} className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-hotpink active:scale-95">View recipe <ArrowRight className="h-3.5 w-3.5" /></button></div>
+                <div className="relative aspect-[4/3] overflow-hidden"><img src={recipeImageSrc(m.r!)} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" /><span className="absolute end-1.5 top-1.5 rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-extrabold text-hotpink">{trx(m.r!.macros.calories)}{" "}{tr("kcal")}</span></div>
+                <div className="p-2.5"><p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70">{trx(m.label)}</p><p className="text-[13.5px] font-extrabold leading-tight text-rose">{trx(m.r!.name)}</p><p className="mt-0.5 line-clamp-2 text-[11.5px] leading-snug text-rose/65">{m.r!.ingredients.slice(0, 4).map((i) => i.name).join(", ")}</p><button onClick={() => setRecipe(m.r!)} className="mt-2 inline-flex items-center gap-1 text-[12px] font-extrabold text-hotpink active:scale-95">{tr("View recipe")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button></div>
               </div>
             ))}</div>
           </div>
@@ -758,30 +754,30 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
           {/* workouts · yoga · mind */}
           <div className="mt-4 grid gap-4 lg:grid-cols-3">
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-workout.webp" Icon={Dumbbell} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your workouts</p><p className="text-[11.5px] font-semibold text-rose/65">3 sessions this week · 30–40 min</p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-workout.webp" Icon={Dumbbell} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">{tr("Your workouts")}</p><p className="text-[11.5px] font-semibold text-rose/65">{tr("3 sessions this week · 30–40 min")}</p></div></div>
               <div className="mt-3 grid grid-cols-3 gap-2">{workouts.map((w) => <VideoThumb key={w.name} {...w} />)}</div>
-              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>View your weekly plan <ArrowRight className="h-3.5 w-3.5" /></button>
+              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>{tr("View your weekly plan")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-yoga.webp" Icon={Flower2} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">Your yoga flow</p><p className="text-[11.5px] font-semibold text-rose/65">Recommended for your phase</p></div></div>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/flagship-yoga.webp" Icon={Flower2} /><div><p className="text-[16px] font-extrabold text-hotpink leading-tight">{tr("Your yoga flow")}</p><p className="text-[11.5px] font-semibold text-rose/65">{tr("Recommended for your phase")}</p></div></div>
               <div className="mt-3 grid grid-cols-3 gap-2">{yoga.map((y) => <VideoThumb key={y.name} {...y} />)}</div>
-              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>View all yoga flows <ArrowRight className="h-3.5 w-3.5" /></button>
+              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>{tr("View all yoga flows")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
             <div className={CARD}>
-              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">Mind &amp; self-care</p></div>
-              <div className="mt-3 space-y-2">{selfCare.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{t}</span></div>))}</div>
-              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>Add to my calendar <ArrowRight className="h-3.5 w-3.5" /></button>
+              <div className="flex items-center gap-2.5"><SectionMedia img="/images/setup-ai.webp" Icon={Heart} /><p className="text-[16px] font-extrabold text-hotpink">{tr("Mind & self-care")}</p></div>
+              <div className="mt-3 space-y-2">{selfCare.map((t) => (<div key={t} className="flex items-start gap-2"><Tick /><span className="text-[13px] font-semibold leading-snug text-rose/85">{trx(t)}</span></div>))}</div>
+              <button onClick={() => go("pricing")} className={`${LINK} mt-3 w-full justify-center active:scale-95`}>{tr("Add to my calendar")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
             </div>
           </div>
 
           {/* footer CTA */}
           <div className="mt-7 flex flex-col items-center gap-3">
             <div className="flex w-full items-center justify-center gap-5">
-              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">Small steps<br />Big results ♡</p>
-              <button onClick={() => go("pricing")} className="bloom-luxury-btn animate-cta-bounce flex w-full max-w-md items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white">Looks amazing! Let's go <ArrowRight className="h-5 w-5" /></button>
-              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">You're doing<br />amazing ♡</p>
+              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">{tr("Small steps")}<br />{tr("Big results ♡")}</p>
+              <button onClick={() => go("pricing")} className="bloom-luxury-btn animate-cta-bounce flex w-full max-w-md items-center justify-center gap-2.5 py-4 text-[19px] font-bold text-white">{tr("Looks amazing! Let's go")}{" "}<ArrowRight className="rtl:-scale-x-100 h-5 w-5" /></button>
+              <p className="hidden shrink-0 font-script text-2xl leading-[0.9] text-hotpink/80 sm:block">{tr("You're doing")}<br />{tr("amazing ♡")}</p>
             </div>
-            <p className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-hotpink/70"><Lock className="h-3.5 w-3.5" /> You can always adjust your plan later</p>
+            <p className="inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-hotpink/70"><Lock className="h-3.5 w-3.5" />{" "}{tr("You can always adjust your plan later")}</p>
           </div>
         </div>
 
@@ -793,26 +789,26 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
               <div className="relative shrink-0">
                 <img src={recipeImageSrc(recipe)} alt="" className="aspect-[16/10] w-full object-cover" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 50%, rgba(122,18,71,0.55) 100%)" }} />
-                <button onClick={() => setRecipe(null)} aria-label="Close" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-hotpink shadow active:scale-90"><X className="h-5 w-5" strokeWidth={2.5} /></button>
-                <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[12px] font-extrabold text-hotpink">{recipe.macros.calories} kcal</span>
-                <div className="absolute inset-x-4 bottom-2.5"><p className="text-[11px] font-bold uppercase tracking-wide text-white/85">{recipe.mealType}</p><p className="font-script text-[1.8rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(122,18,71,0.6)]">{recipe.name}</p></div>
+                <button onClick={() => setRecipe(null)} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-hotpink shadow active:scale-90"><X className="h-5 w-5" strokeWidth={2.5} /></button>
+                <span className="absolute start-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[12px] font-extrabold text-hotpink">{trx(recipe.macros.calories)}{" "}{tr("kcal")}</span>
+                <div className="absolute inset-x-4 bottom-2.5"><p className="text-[11px] font-bold uppercase tracking-wide text-white/85">{trx(recipe.mealType)}</p><p className="font-script text-[1.8rem] leading-none text-white drop-shadow-[0_2px_10px_rgba(122,18,71,0.6)]">{trx(recipe.name)}</p></div>
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto p-4">
                 <div className="flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold text-hotpink"><Timer className="h-3.5 w-3.5" /> {recipe.prepTime + recipe.cookTime} min</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold capitalize text-hotpink"><Gauge className="h-3.5 w-3.5" /> {recipe.difficulty}</span>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold text-hotpink"><Users className="h-3.5 w-3.5" /> {recipe.servings} serving{recipe.servings === 1 ? "" : "s"}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold text-hotpink"><Timer className="h-3.5 w-3.5" /> {recipe.prepTime + recipe.cookTime}{" "}{tr("min")}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold capitalize text-hotpink"><Gauge className="h-3.5 w-3.5" /> {trx(recipe.difficulty)}</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[12px] font-bold text-hotpink"><Users className="h-3.5 w-3.5" /> {trx(recipe.servings)}{" "}{tr("serving")}{recipe.servings === 1 ? "" : "s"}</span>
                 </div>
                 <div className="mt-3 grid grid-cols-4 gap-2 text-center">
-                  {([["kcal", recipe.macros.calories], ["Protein", `${recipe.macros.protein}g`], ["Carbs", `${recipe.macros.carbs}g`], ["Fats", `${recipe.macros.fat}g`]] as [string, string | number][]).map(([l, v]) => (<div key={l} className="rounded-xl bg-hotpink/8 py-1.5"><p className="text-[14px] font-extrabold text-hotpink">{v}</p><p className="text-[10.5px] font-semibold text-rose/60">{l}</p></div>))}
+                  {([["kcal", recipe.macros.calories], ["Protein", `${recipe.macros.protein}g`], ["Carbs", `${recipe.macros.carbs}g`], ["Fats", `${recipe.macros.fat}g`]] as [string, string | number][]).map(([l, v]) => (<div key={l} className="rounded-xl bg-hotpink/8 py-1.5"><p className="text-[14px] font-extrabold text-hotpink">{trx(v)}</p><p className="text-[10.5px] font-semibold text-rose/60">{trx(l)}</p></div>))}
                 </div>
-                <p className="mt-4 text-[14px] font-extrabold text-hotpink">Ingredients</p>
-                <ul className="mt-1.5 space-y-1.5">{recipe.ingredients.map((ing, i) => (<li key={i} className="flex items-start gap-2 text-[13px] text-rose/85"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-hotpink" /><span><b className="font-bold text-rose">{ing.quantity}</b> {ing.name}</span></li>))}</ul>
-                <p className="mt-4 text-[14px] font-extrabold text-hotpink">How to make it</p>
-                <ol className="mt-1.5 space-y-2">{recipe.steps.map((s, i) => (<li key={i} className="flex gap-2.5 text-[13px] leading-snug text-rose/85"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink text-[11px] font-extrabold text-white">{i + 1}</span><span>{s}</span></li>))}</ol>
+                <p className="mt-4 text-[14px] font-extrabold text-hotpink">{tr("Ingredients")}</p>
+                <ul className="mt-1.5 space-y-1.5">{recipe.ingredients.map((ing, i) => (<li key={i} className="flex items-start gap-2 text-[13px] text-rose/85"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-hotpink" /><span><b className="font-bold text-rose">{trx(ing.quantity)}</b> {trx(ing.name)}</span></li>))}</ul>
+                <p className="mt-4 text-[14px] font-extrabold text-hotpink">{tr("How to make it")}</p>
+                <ol className="mt-1.5 space-y-2">{recipe.steps.map((s, i) => (<li key={i} className="flex gap-2.5 text-[13px] leading-snug text-rose/85"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink text-[11px] font-extrabold text-white">{i + 1}</span><span>{trx(s)}</span></li>))}</ol>
               </div>
               <div className="shrink-0 border-t border-hotpink/10 p-3" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
-                <button onClick={() => go("pricing")} className="bloom-luxury-btn flex w-full items-center justify-center gap-2 py-3 text-[15px] font-bold text-white">Unlock all recipes <ArrowRight className="h-4 w-4" /></button>
+                <button onClick={() => go("pricing")} className="bloom-luxury-btn flex w-full items-center justify-center gap-2 py-3 text-[15px] font-bold text-white">{tr("Unlock all recipes")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" /></button>
               </div>
             </div>
           </div>
@@ -836,8 +832,8 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
       const nm = a.name.trim();
       try {
         sessionStorage.setItem(WELCOME_TOAST_KEY, JSON.stringify({
-          title: nm ? `Welcome, ${nm}! 🌸` : "Welcome to Bloom 🌸",
-          body: "Your profile's all set — your world is ready ✨",
+          title: nm ? tr("Welcome, {0}! 🌸", { 0: nm }) : "Welcome to Bloom 🌸",
+          body: tr("Your profile's all set — your world is ready ✨"),
           tone: "bloom", duration: 5200,
         }));
       } catch { /* ignore */ }
@@ -861,31 +857,31 @@ export function BloomOnboarding({ onDone, preview = false }: { onDone: () => voi
     };
     const Plan = ({ id, name, price, per, badge }: { id: "monthly" | "annual"; name: string; price: string; per: string; badge?: string }) => (
       <button onClick={() => setBilling(id)} className={["relative rounded-[1.3rem] p-3 text-center transition active:scale-[0.98]", billing === id ? "bg-white ring-2 ring-hotpink shadow-[0_10px_28px_rgba(236,72,153,0.2)]" : "bg-white/75 ring-1 ring-hotpink/15"].join(" ")}>
-        {badge && <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-hotpink px-2 py-0.5 text-[10px] font-black text-white">{badge}</span>}
-        <p className="text-[12px] font-extrabold text-rose/70">{name}</p>
-        <p className="mt-0.5 text-[1.7rem] font-extrabold leading-none text-hotpink">{price}</p>
-        <p className="text-[11px] font-semibold text-rose/60">{per}</p>
+        {badge && <span className="absolute -top-2 left-1/2 -translate-x-1/2 rounded-full bg-hotpink px-2 py-0.5 text-[10px] font-black text-white">{trx(badge)}</span>}
+        <p className="text-[12px] font-extrabold text-rose/70">{trx(name)}</p>
+        <p className="mt-0.5 text-[1.7rem] font-extrabold leading-none text-hotpink">{trx(price)}</p>
+        <p className="text-[11px] font-semibold text-rose/60">{trx(per)}</p>
       </button>
     );
     return (
       <Frame>
         <HeroPanel tagline="Your whole world, unlocked" />
         <div className="relative flex flex-1 flex-col px-5 pb-6 md:flex-none md:w-[26rem] md:px-8 md:py-8 lg:w-[38rem] xl:w-[42rem] lg:px-10 lg:py-9" style={{ paddingTop: "max(1rem, env(safe-area-inset-top))" }}>
-          <button onClick={() => go("previews")} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95"><ChevronLeft className="h-5 w-5" /> Back</button>
+          <button onClick={() => go("previews")} className="inline-flex items-center gap-1 text-hotpink font-bold active:scale-95"><ChevronLeft className="rtl:-scale-x-100 h-5 w-5" />{" "}{tr("Back")}</button>
           <div className="mt-2 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl text-white shadow-md" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Sparkles className="h-6 w-6" /></span>
-            <p className="mt-2 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: "#B76E79" }}>Bloom+ Premium</p>
-            <h1 className="mt-0.5 leading-[0.95]"><span className="block text-[1.9rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>Your whole world,</span><span className="font-script text-[2.1rem] text-hotpink">unlocked ♡</span></h1>
-            <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-snug text-rose/75">All your tools stay free. Bloom+ adds your daily coach, reports &amp; insights — ad-free. Start with a <b className="text-hotpink">3-day free trial</b>, cancel anytime.</p>
+            <p className="mt-2 text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: "#B76E79" }}>{tr("Bloom+ Premium")}</p>
+            <h1 className="mt-0.5 leading-[0.95]"><span className="block text-[1.9rem] font-bold text-[#7a1247]" style={{ fontFamily: SERIF }}>{tr("Your whole world,")}</span><span className="font-script text-[2.1rem] text-hotpink">{tr("unlocked ♡")}</span></h1>
+            <p className="mx-auto mt-1.5 max-w-[20rem] text-[13px] leading-snug text-rose/75">{tr("All your tools stay free. Bloom+ adds your daily coach, reports & insights — ad-free. Start with a")}{" "}<b className="text-hotpink">{tr("3-day free trial")}</b>{tr(", cancel anytime.")}</p>
           </div>
           <div className="mt-3 grid grid-cols-2 gap-2.5">
             <Plan id="monthly" name="Monthly" price="$3" per="per month" />
             <Plan id="annual" name="Yearly" price="$29" per="per year" badge="SAVE 19%" />
           </div>
-          <div className="mt-3 rounded-[1.4rem] bg-white/70 p-3.5 ring-1 ring-white/70"><div className="space-y-2">{features.map((f) => (<div key={f.t} className="flex items-start gap-2.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-3 w-3 text-hotpink" strokeWidth={2.2} /></span><span className="text-[12.5px] font-semibold leading-snug text-rose/85">{f.t}</span></div>))}</div></div>
-          <button onClick={startTrial} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2.5 py-3.5 text-[17px] font-bold text-white"><Sparkles className="h-5 w-5" /> Start 3-day free trial</button>
-          <button onClick={finish} className="mt-2 w-full rounded-2xl border border-hotpink/30 bg-white/60 py-2.5 text-[14px] font-bold text-hotpink active:scale-[0.99] transition">Continue with the free version</button>
-          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} /> 10-minute Bloom+ preview · cancel anytime · no hidden fees</p>
+          <div className="mt-3 rounded-[1.4rem] bg-white/70 p-3.5 ring-1 ring-white/70"><div className="space-y-2">{features.map((f) => (<div key={f.t} className="flex items-start gap-2.5"><span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink/12"><f.Icon className="h-3 w-3 text-hotpink" strokeWidth={2.2} /></span><span className="text-[12.5px] font-semibold leading-snug text-rose/85">{trx(f.t)}</span></div>))}</div></div>
+          <button onClick={startTrial} className="bloom-luxury-btn animate-cta-bounce mt-4 flex w-full items-center justify-center gap-2.5 py-3.5 text-[17px] font-bold text-white"><Sparkles className="h-5 w-5" />{" "}{tr("Start 3-day free trial")}</button>
+          <button onClick={finish} className="mt-2 w-full rounded-2xl border border-hotpink/30 bg-white/60 py-2.5 text-[14px] font-bold text-hotpink active:scale-[0.99] transition">{tr("Continue with the free version")}</button>
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] font-semibold text-rose/60"><Check className="h-3.5 w-3.5 text-emerald-500" strokeWidth={3} />{" "}{tr("10-minute Bloom+ preview · cancel anytime · no hidden fees")}</p>
         </div>
       </Frame>
     );

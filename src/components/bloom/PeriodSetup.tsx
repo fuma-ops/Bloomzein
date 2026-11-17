@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { X, Flower2, Bell, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { CuteTimePicker } from "./CutePicker";
 import { DatePicker } from "./onboarding/DatePicker";
+import { tr, trx } from "@/i18n";
 
 export type TrackerMode = "protection" | "conception";
 export type ContraceptiveMethod = "pill" | "patch" | "ring";
@@ -75,18 +76,16 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
         className="relative flex w-full max-w-[22rem] flex-col overflow-hidden rounded-[1.75rem] bg-white/95 shadow-2xl shadow-hotpink/20 backdrop-blur-xl animate-scale-in sm:max-w-md"
         style={{ maxHeight: "min(90dvh, 760px)" }}
       >
-        <button onClick={onClose} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
+        <button onClick={onClose} className="absolute end-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/80 text-rose hover:bg-petal">
           <X className="h-3.5 w-3.5" />
         </button>
 
         <div className="relative min-h-0 flex-1">
         <div ref={scrollRef} onScroll={handleScroll} className="no-scrollbar scroll-smooth h-full overflow-y-auto overscroll-contain p-3.5 sm:p-5">
-          <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">Period Setup ✿</h3>
+          <h3 className="animate-fade-in text-center font-script text-xl text-hotpink">{tr("Period Setup ✿")}</h3>
 
           <div className={`animate-scale-in mt-3 rounded-xl bg-blush/50 p-2 text-center text-[11px] text-rose ${!isSet("lastPeriodStart") ? "animate-soft-glow" : ""}`} style={{ animationDelay: "40ms" }}>
-            <Flower2 className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />
-            Tap your <span className="font-semibold text-hotpink">last period start</span> date:
-          </div>
+            <Flower2 className="me-1 inline h-3.5 w-3.5 animate-bloom-sparkle text-hotpink" />{tr("Tap your")}{" "}<span className="font-semibold text-hotpink">{tr("last period start")}</span>{" "}{tr("date:")}</div>
 
           {/* Calendar left, cycle/period length sliders stacked right — saves vertical space for the rest */}
           <div className="animate-scale-in mt-3 grid grid-cols-5 gap-2" style={{ animationDelay: "120ms" }}>
@@ -98,17 +97,17 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
               />
             </div>
             <div className="col-span-2 flex flex-col gap-2">
-              <Section label="Cycle Length" glow={!isSet("cycleLength")}>
+              <Section label={tr("Cycle Length")} glow={!isSet("cycleLength")}>
                 <Stepper min={21} max={35} value={draft.cycleLength} onChange={(v) => update("cycleLength", v)} suffix="d" />
               </Section>
-              <Section label="Period Length" glow={!isSet("periodLength")}>
+              <Section label={tr("Period Length")} glow={!isSet("periodLength")}>
                 <Stepper min={2} max={10} value={draft.periodLength} onChange={(v) => update("periodLength", v)} suffix="d" />
               </Section>
             </div>
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "200ms" }}>
-            <Section label="Contraceptive Method" glow={!isSet("contraceptiveMethod")}>
+            <Section label={tr("Contraceptive Method")} glow={!isSet("contraceptiveMethod")}>
               <div className="grid grid-cols-3 gap-1.5">
                 {(["pill","patch","ring"] as ContraceptiveMethod[]).map((m) => (
                   <button
@@ -119,7 +118,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
                       draft.contraceptiveMethod === m ? "bg-hotpink text-white shadow" : "bg-blush/70 text-rose",
                     ].join(" ")}
                   >
-                    {m}
+                    {trx(m)}
                   </button>
                 ))}
               </div>
@@ -127,21 +126,21 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "240ms" }}>
-            <Section label="Reminder Hour" glow={!isSet("reminderHour")}>
+            <Section label={tr("Reminder Hour")} glow={!isSet("reminderHour")}>
               <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" /> Daily notify hour</span>
+                <span className="inline-flex items-center gap-1.5 text-[11px] text-rose"><Bell className="h-3.5 w-3.5" />{" "}{tr("Daily notify hour")}</span>
                 <CuteTimePicker value={draft.reminderHour} onChange={(v) => update("reminderHour", v)} />
               </div>
               <p className="mt-1 px-1 text-center text-[9px] text-rose/60">
-                {draft.contraceptiveReminder ? "Reminder is on — we'll nudge you at this time." : "Set a time to turn on the contraception reminder."}
+                {draft.contraceptiveReminder ? tr("Reminder is on — we'll nudge you at this time.") : tr("Set a time to turn on the contraception reminder.")}
               </p>
             </Section>
           </div>
 
           <div className="animate-scale-in" style={{ animationDelay: "320ms" }}>
-            <Section label="Device Notifications" glow={!isSet("deviceNotifications")}>
+            <Section label={tr("Device Notifications")} glow={!isSet("deviceNotifications")}>
               <ToggleRow
-                label="Alert on phone, tablet, laptop"
+                label={tr("Alert on phone, tablet, laptop")}
                 checked={draft.deviceNotifications}
                 onChange={(v) => update("deviceNotifications", v)}
               />
@@ -164,9 +163,7 @@ export function PeriodSetup({ open, onClose, initial, onSave }: Props) {
             onClick={() => { onSave(draft); onClose(); }}
             className="bloom-luxury-btn hover-scale animate-cta-bounce w-full py-2.5 text-sm font-semibold text-white"
           >
-            <Sparkles className="mr-1 inline h-3.5 w-3.5 animate-bloom-sparkle" />
-            Save Period
-          </button>
+            <Sparkles className="me-1 inline h-3.5 w-3.5 animate-bloom-sparkle" />{tr("Save Period")}</button>
         </div>
       </div>
     </div>,
@@ -190,13 +187,13 @@ function Section({ label, children, glow }: { label: string; children: React.Rea
 function Stepper({ min, max, value, onChange, suffix }: { min: number; max: number; value: number; onChange: (v: number) => void; suffix?: string }) {
   return (
     <div className="flex items-center justify-between rounded-xl bg-blush/70 px-2.5 py-1">
-      <span className="text-sm font-bold text-hotpink">{value}{suffix}</span>
+      <span className="text-sm font-bold text-hotpink">{trx(value)}{trx(suffix)}</span>
       <div className="flex flex-col">
         <button
           type="button"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          aria-label="Increase"
+          aria-label={tr("Increase")}
           className="grid h-4 w-6 place-items-center text-hotpink transition active:scale-90 disabled:opacity-30"
         >
           <ChevronUp className="h-3 w-3" />
@@ -205,7 +202,7 @@ function Stepper({ min, max, value, onChange, suffix }: { min: number; max: numb
           type="button"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          aria-label="Decrease"
+          aria-label={tr("Decrease")}
           className="grid h-4 w-6 place-items-center text-hotpink transition active:scale-90 disabled:opacity-30"
         >
           <ChevronDown className="h-3 w-3" />
@@ -218,7 +215,7 @@ function Stepper({ min, max, value, onChange, suffix }: { min: number; max: numb
 function ToggleRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between rounded-xl bg-blush/70 px-3 py-2">
-      <span className="text-[11px] font-semibold text-rose">{label}</span>
+      <span className="text-[11px] font-semibold text-rose">{trx(label)}</span>
       <button
         onClick={() => onChange(!checked)}
         className={[
@@ -229,7 +226,7 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
         <span
           className={[
             "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all",
-            checked ? "left-[18px]" : "left-0.5",
+            checked ? "start-[18px]" : "start-0.5",
           ].join(" ")}
         />
       </button>

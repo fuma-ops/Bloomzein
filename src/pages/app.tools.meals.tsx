@@ -74,6 +74,7 @@ import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
 import { todayISO } from "@/lib/localDate";
 import { computeTargets, movementFoodLine, sumMacros, calorieVerdict, slotBudget, portionForRecipe, type TargetBreakdown } from "@/lib/nutritionTargets";
 import { SparkleOnboarding, type SparkleStep, type SparkleContent } from "@/components/bloom/SparkleOnboarding";
+import { tr, trx } from "@/i18n";
 
 /* ---------- Meal photo fallbacks (by slot type) ---------- */
 const MEAL_PHOTO_FALLBACK: Record<string, string> = {
@@ -479,9 +480,9 @@ function EmptyState({
       <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-blush text-hotpink mb-2">
         <Icon className="h-6 w-6" strokeWidth={1.6} />
       </div>
-      <h3 className="font-script text-2xl text-hotpink">{title}</h3>
-      <p className="mt-1 text-sm text-rose/80">{blurb}</p>
-      <div className="mt-4"><PinkBtn onClick={onCta}>{cta} <ChevronRight className="h-4 w-4" /></PinkBtn></div>
+      <h3 className="font-script text-2xl text-hotpink">{trx(title)}</h3>
+      <p className="mt-1 text-sm text-rose/80">{trx(blurb)}</p>
+      <div className="mt-4"><PinkBtn onClick={onCta}>{trx(cta)} <ChevronRight className="rtl:-scale-x-100 h-4 w-4" /></PinkBtn></div>
     </Glass>
   );
 }
@@ -490,24 +491,24 @@ function EmptyState({
 
 type TabKey = "week" | "pantry" | "shop" | "favs";
 const TABS: { key: TabKey; label: string; icon: any }[] = [
-  { key: "week", label: "This Week", icon: Calendar },
-  { key: "pantry", label: "My Pantry", icon: Apple },
-  { key: "shop", label: "Shopping List", icon: ShoppingBag },
-  { key: "favs", label: "Favorites", icon: Heart },
+  { key: "week", label: tr("This Week"), icon: Calendar },
+  { key: "pantry", label: tr("My Pantry"), icon: Apple },
+  { key: "shop", label: tr("Shopping List"), icon: ShoppingBag },
+  { key: "favs", label: tr("Favorites"), icon: Heart },
 ];
 
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
-  week:     { title: "Meal Planner",    subtitle: "cook with love, glow all week ✿" },
-  pantry:   { title: "My Pantry",       subtitle: "know what you have, waste less 🌿" },
-  shop:     { title: "Shopping List",   subtitle: "grab only what you need ✓" },
-  favs:     { title: "My Favourites",   subtitle: "your most-loved recipes ♥" },
+  week:     { title: tr("Meal Planner"),    subtitle: tr("cook with love, glow all week ✿") },
+  pantry:   { title: tr("My Pantry"),       subtitle: tr("know what you have, waste less 🌿") },
+  shop:     { title: tr("Shopping List"),   subtitle: tr("grab only what you need ✓") },
+  favs:     { title: tr("My Favourites"),   subtitle: tr("your most-loved recipes ♥") },
 };
 
 /* ---------- Onboarding — shared bright "Barbie-luxe" sparkle tour (same as Cycle Tracker) ---------- */
 const MEALS_GUIDE_CONTENT: SparkleContent = {
   eyebrow: "✦ your meals ✦",
   titleLines: ["Let's plan", "your week"],
-  subtitle: "A soft little tour of your pantry, your vibe & your whole week of meals.",
+  subtitle: tr("A soft little tour of your pantry, your vibe & your whole week of meals."),
   ctaLabel: "Show me my week",
   finaleLines: ["You're all set,", "gorgeous"],
   finaleSubtitle: "Your softest week is ready. ✿",
@@ -830,7 +831,7 @@ export default function MealsPage() {
       {/* Guided-setup focus: narrow hero + one Finish-on-Today action, no tabs. */}
       {guided && (
         <>
-          <GuidedFocusHero label="Meals" phaseLabel={guidedPhaseLabel} image="/images/meals-hero-new.webp" />
+          <GuidedFocusHero label={tr("Meals")} phaseLabel={guidedPhaseLabel} image="/images/meals-hero-new.webp" />
           {/* Only claim it's set — and offer "Finish on Today" — once a week plan
               actually has meals in it. Before that she still needs to Plan my week
               below (in-memory `plan`, so it flips the instant she plans). */}
@@ -859,8 +860,8 @@ export default function MealsPage() {
           {/* Title block — left-anchored */}
           <div className="flex items-start justify-between gap-2">
             <div className="max-w-[62%]">
-              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]" style={{ animationDelay: '0ms' }}>{TAB_HERO[tab].title}</h1>
-              <p className="animate-fade-in mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: '200ms' }}>{TAB_HERO[tab].subtitle}</p>
+              <h1 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]" style={{ animationDelay: '0ms' }}>{trx(TAB_HERO[tab].title)}</h1>
+              <p className="animate-fade-in mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: '200ms' }}>{trx(TAB_HERO[tab].subtitle)}</p>
               <CyclePhasePill className="mt-1.5" />
             </div>
             {/* Reset + Guide chips — light glass */}
@@ -873,19 +874,16 @@ export default function MealsPage() {
                     window.location.reload();
                   }
                 }}
-                aria-label="Reset tool"
-                title="Reset — preview the first-time experience"
+                aria-label={tr("Reset tool")}
+                title={tr("Reset — preview the first-time experience")}
                 className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
               >
-                <RotateCcw className="h-3 w-3" /> Reset
-              </button>
+                <RotateCcw className="h-3 w-3" />{" "}{tr("Reset")}</button>
               <button
                 onClick={() => setShowGuide(true)}
                 className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
               >
-                <Sparkles className="h-3 w-3" />
-                Guide
-              </button>
+                <Sparkles className="h-3 w-3" />{tr("Guide")}</button>
             </div>
           </div>
           {/* Pill tabs at bottom of hero — auto-scroll hint on load */}
@@ -906,7 +904,7 @@ export default function MealsPage() {
                     ].join(" ")}
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
-                    {t.label}
+                    {trx(t.label)}
                     {!shoppingUnlocked && PREMIUM_MEALS_TABS.has(t.key) && <LockChip />}
                   </button>
                 );
@@ -924,10 +922,8 @@ export default function MealsPage() {
             <Heart className="h-4 w-4" strokeWidth={1.8} />
           </span>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-hotpink leading-tight">Soothing meals for today ✿</p>
-            <p className="text-[11px] text-rose/70 leading-snug">
-              Based on your symptoms, look for anti-inflammatory recipes — ginger, turmeric, leafy greens and magnesium-rich foods can ease cramps and bloating.
-            </p>
+            <p className="text-xs font-bold text-hotpink leading-tight">{tr("Soothing meals for today ✿")}</p>
+            <p className="text-[11px] text-rose/70 leading-snug">{tr("Based on your symptoms, look for anti-inflammatory recipes — ginger, turmeric, leafy greens and magnesium-rich foods can ease cramps and bloating.")}</p>
           </div>
         </div>
       )}
@@ -1015,29 +1011,29 @@ function MealsGuide({ onDone, setTab }: { onDone: () => void; setTab: (t: TabKey
       key: "pantry",
       selector: "[data-tour='meals-tab-pantry']",
       onEnter: () => setTab("pantry"),
-      title: "Build your pantry",
-      desc: "Tap everything you already have — your whole week is planned from what's in your kitchen.",
+      title: tr("Build your pantry"),
+      desc: tr("Tap everything you already have — your whole week is planned from what's in your kitchen."),
     },
     {
       key: "vibe",
       selector: "[data-tour='meals-vibe']",
       onEnter: () => setTab("week"),
-      title: "Pick this week's vibe",
-      desc: "Light, protein-rich, comfort, or synced to your cycle — choose how you want to feel.",
+      title: tr("Pick this week's vibe"),
+      desc: tr("Light, protein-rich, comfort, or synced to your cycle — choose how you want to feel."),
     },
     {
       key: "plan",
       selector: "[data-tour='meals-plan']",
       onEnter: () => setTab("week"),
-      title: "Plan my week",
-      desc: "One tap builds all 7 days — breakfast, lunch and dinner — from what you own first.",
+      title: tr("Plan my week"),
+      desc: tr("One tap builds all 7 days — breakfast, lunch and dinner — from what you own first."),
     },
     {
       key: "shop",
       selector: "[data-tour='meals-tab-shop']",
       onEnter: () => setTab("shop"),
-      title: "Auto shopping list",
-      desc: "Everything you're missing, grouped by store aisle and ready to share on WhatsApp.",
+      title: tr("Auto shopping list"),
+      desc: tr("Everything you're missing, grouped by store aisle and ready to share on WhatsApp."),
     },
   ];
   return <SparkleOnboarding steps={steps} content={MEALS_GUIDE_CONTENT} onDone={onDone} />;
@@ -1062,24 +1058,24 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
       {/* Close the whole card */}
       <button
         onClick={() => { try { localStorage.setItem("bloom:meals-target-card-closed", "1"); } catch {} setClosed(true); }}
-        aria-label="Close" title="Hide daily target"
-        className="absolute right-2.5 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/70 text-rose/60 transition hover:bg-petal hover:text-hotpink active:scale-90"
+        aria-label={tr("Close")} title={tr("Hide daily target")}
+        className="absolute end-2.5 top-2.5 z-10 grid h-7 w-7 place-items-center rounded-full bg-blush/70 text-rose/60 transition hover:bg-petal hover:text-hotpink active:scale-90"
       >
         <X className="h-4 w-4" />
       </button>
 
       {/* Summary — compact single row: target kcal + macros inline. Tap to expand. */}
       <div onClick={() => setExpanded((v) => !v)} className="cursor-pointer">
-        <div className="flex items-center gap-3 pr-8">
+        <div className="flex items-center gap-3 pe-8">
           <div className="shrink-0">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50 leading-none mb-0.5">Daily target · {goalLabel}</p>
-            <p className="text-2xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}<span className="text-[11px] font-bold text-rose/50"> kcal</span></p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50 leading-none mb-0.5">{tr("Daily target ·")}{" "}{trx(goalLabel)}</p>
+            <p className="text-2xl font-black leading-none text-hotpink tabular-nums">{t.calories.toLocaleString()}<span className="text-[11px] font-bold text-rose/50">{" "}{tr("kcal")}</span></p>
           </div>
           <div className="flex-1 grid grid-cols-3 gap-1.5">
             {macros.map((m) => (
               <div key={m.k} className={`rounded-lg ${m.bg} border ${m.br} py-1 text-center`}>
-                <p className={`text-[13px] font-black leading-none ${m.cls} tabular-nums`}>{m.v}<span className="text-[9px] font-bold">g</span></p>
-                <p className="text-[7.5px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{m.k}</p>
+                <p className={`text-[13px] font-black leading-none ${m.cls} tabular-nums`}>{trx(m.v)}<span className="text-[9px] font-bold">g</span></p>
+                <p className="text-[7.5px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{trx(m.k)}</p>
               </div>
             ))}
           </div>
@@ -1099,13 +1095,12 @@ function DailyTargetCard({ t }: { t: TargetBreakdown }) {
           {/* Eat-back: calories actually burned today are added to the target */}
           {t.eatBack > 0 && (
             <p className="flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200/70 px-2.5 py-1 text-[10.5px] font-black text-amber-700 w-fit">
-              <Flame className="h-3 w-3 shrink-0" /> +{t.eatBack} kcal burned today — added to your target
-            </p>
+              <Flame className="h-3 w-3 shrink-0" /> +{trx(t.eatBack)}{" "}{tr("kcal burned today — added to your target")}</p>
           )}
           {/* Guided instruction — helps her understand the number */}
           <div className="flex items-start gap-1.5 rounded-xl bg-hotpink/5 border border-hotpink/15 px-2.5 py-1.5 text-[10.5px] leading-snug text-rose/70">
-            <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">How to use</span>
-            <span>This is your goal for the day. Each day below shows a little bar of how close its meals land — aim for <b className="text-emerald-600">on target</b>. Add your height &amp; age in <b className="text-hotpink">Diet</b> to make it exact.</span>
+            <span className="font-bold text-hotpink uppercase tracking-wide text-[9px] mt-0.5 shrink-0">{tr("How to use")}</span>
+            <span>{tr("This is your goal for the day. Each day below shows a little bar of how close its meals land — aim for")}{" "}<b className="text-emerald-600">{tr("on target")}</b>{tr(". Add your height & age in")}{" "}<b className="text-hotpink">{tr("Diet")}</b>{" "}{tr("to make it exact.")}</span>
           </div>
         </div>
       )}
@@ -1118,11 +1113,11 @@ function StepRow({ n, done, title, desc, children }: { n: number; done: boolean;
   return (
     <div className="flex gap-3 animate-fade-in" style={{ animationDelay: `${n * 70}ms` }}>
       <span className={["mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-[13px] font-bold", done ? "bg-emerald-100 text-emerald-600" : "bg-hotpink text-white"].join(" ")}>
-        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : n}
+        {done ? <Check className="h-4 w-4" strokeWidth={3} /> : trx(n)}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-hotpink leading-tight">{title}</p>
-        <p className="text-[11.5px] text-rose/60 leading-snug">{desc}</p>
+        <p className="text-sm font-bold text-hotpink leading-tight">{trx(title)}</p>
+        <p className="text-[11.5px] text-rose/60 leading-snug">{trx(desc)}</p>
         <div className="mt-2">{children}</div>
       </div>
     </div>
@@ -1164,24 +1159,24 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
 
   return (
     <Glass className="p-3.5 sm:p-4 animate-scale-in">
-      <p className="font-script text-2xl text-hotpink leading-none">Let's set up your week ✿</p>
-      <p className="mt-0.5 text-[12px] text-rose/60 leading-snug">A few quick picks — then I cook your whole week for you.</p>
+      <p className="font-script text-2xl text-hotpink leading-none">{tr("Let's set up your week ✿")}</p>
+      <p className="mt-0.5 text-[12px] text-rose/60 leading-snug">{tr("A few quick picks — then I cook your whole week for you.")}</p>
 
       {/* Cycle phase — when synced we say nothing (keeps setup compact); only
           nudge to set up the Cycle Tracker if her phase isn't known yet. */}
       {!phaseKnown && (
         <div className="mt-2.5 mb-3 flex items-start gap-2 rounded-2xl bg-blush/60 px-3 py-2">
           <Moon className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
-          <p className="text-[12px] text-rose/80 leading-snug">Meals adapt to your cycle. <a href="/app/tools/cycle" className="font-bold text-hotpink underline">Set up your Cycle Tracker</a> to sync your phase automatically.</p>
+          <p className="text-[12px] text-rose/80 leading-snug">{tr("Meals adapt to your cycle.")}{" "}<a href="/app/tools/cycle" className="font-bold text-hotpink underline">{tr("Set up your Cycle Tracker")}</a>{" "}{tr("to sync your phase automatically.")}</p>
         </div>
       )}
 
       <div className={["space-y-3", phaseKnown ? "mt-3.5" : ""].join(" ")}>
         {/* 1 — Vibe */}
-        <StepRow n={1} done={touched.vibe} title="Choose this week's vibe" desc="The mood for this week — light, protein-rich, comfort or fully cycle-synced.">
+        <StepRow n={1} done={touched.vibe} title={tr("Choose this week's vibe")} desc="The mood for this week — light, protein-rich, comfort or fully cycle-synced.">
           <div data-tour="meals-vibe">
             <PickerField
-              value={intention} title="This week's vibe"
+              value={intention} title={tr("This week's vibe")}
               options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
               onChange={(v: any) => { setIntention(v as Intention); setTouched((t) => ({ ...t, vibe: true })); }}
               className="min-w-[9rem] !text-[13px] !py-1.5 !rounded-full"
@@ -1190,38 +1185,36 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
         </StepRow>
 
         {/* 2 — Cooking time (shared Diet profile) */}
-        <StepRow n={2} done={touched.cooking} title="Cooking time" desc="How long do you want to spend in the kitchen?">
+        <StepRow n={2} done={touched.cooking} title={tr("Cooking time")} desc="How long do you want to spend in the kitchen?">
           <div className="flex flex-wrap gap-1.5">
             {COOKING_OPTIONS.map((o) => (
-              <ChoicePill key={o.key} active={touched.cooking && cooking === o.key} onClick={() => chooseCooking(o.key)}>{o.label}</ChoicePill>
+              <ChoicePill key={o.key} active={touched.cooking && cooking === o.key} onClick={() => chooseCooking(o.key)}>{trx(o.label)}</ChoicePill>
             ))}
           </div>
         </StepRow>
 
         {/* 3 — Allergies (shared Diet profile) */}
-        <StepRow n={3} done={touched.allergy} title="Allergies" desc="Anything I should keep out of your plan?">
+        <StepRow n={3} done={touched.allergy} title={tr("Allergies")} desc="Anything I should keep out of your plan?">
           <div className="flex flex-wrap gap-1.5">
-            <ChoicePill active={touched.allergy && allergies.length === 0} onClick={chooseNoAllergy}>None</ChoicePill>
+            <ChoicePill active={touched.allergy && allergies.length === 0} onClick={chooseNoAllergy}>{tr("None")}</ChoicePill>
             {ALLERGY_OPTIONS.map((o) => (
-              <ChoicePill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{o.label}</ChoicePill>
+              <ChoicePill key={o.key} active={allergies.includes(o.key)} onClick={() => toggleAllergy(o.key)}>{trx(o.label)}</ChoicePill>
             ))}
           </div>
         </StepRow>
 
         {/* 4 — Pantry (optional, skippable) */}
-        <StepRow n={4} done={pantryDone} title="Pantry — optional" desc={pantrySkip ? "Skipped — I'll plan from my whole recipe library." : "Plan from what you own, or skip and I'll use everything."}>
+        <StepRow n={4} done={pantryDone} title={tr("Pantry — optional")} desc={pantrySkip ? "Skipped — I'll plan from my whole recipe library." : "Plan from what you own, or skip and I'll use everything."}>
           {/* Two CTAs share one row — stays on a single line on a phone */}
           <div className="flex items-stretch gap-2">
             <button
               onClick={goPantry}
               className={["flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-bold transition active:scale-95", owned.size > 0 ? "border border-petal/60 bg-white/80 text-hotpink hover:bg-blush" : "bg-hotpink text-white shadow-lg shadow-hotpink/30"].join(" ")}
             >
-              <Apple className="h-4 w-4 shrink-0" /> {owned.size > 0 ? "Edit pantry" : "Set up pantry"}
+              <Apple className="h-4 w-4 shrink-0" /> {owned.size > 0 ? tr("Edit pantry") : tr("Set up pantry")}
             </button>
             {!pantryDone && (
-              <button onClick={onSkipPantry} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3 py-2 text-[12px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">
-                Skip for now
-              </button>
+              <button onClick={onSkipPantry} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border border-petal/60 bg-white/70 px-3 py-2 text-[12px] font-semibold text-rose/70 hover:bg-blush transition active:scale-95">{tr("Skip for now")}</button>
             )}
           </div>
         </StepRow>
@@ -1233,11 +1226,11 @@ function SetupSteps({ phase, intention, setIntention, owned, goPantry, onPlan, g
         data-tour="meals-plan"
         className="mt-3.5 w-full inline-flex items-center justify-center gap-1.5 rounded-2xl bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-4 py-3 text-[14px] font-bold shadow-lg shadow-hotpink/30 animate-cta-bounce disabled:opacity-50 transition active:scale-95"
       >
-        <Sparkles className="h-4 w-4" /> {generating ? "Building your week…" : "Plan my week"} <ChevronRight className="h-4 w-4" />
+        <Sparkles className="h-4 w-4" /> {generating ? tr("Building your week…") : tr("Plan my week")} <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
       </button>
       {/* Persistent reminder of what the plan follows */}
       <p className="mt-1.5 text-center text-[11px] text-rose/55 leading-snug">
-        {dietSetup ? "Your week follows your Diet goal & this week's vibe ✿" : "Your week follows this week's vibe ✿"}
+        {dietSetup ? tr("Your week follows your Diet goal & this week's vibe ✿") : tr("Your week follows this week's vibe ✿")}
       </p>
     </Glass>
   );
@@ -1364,10 +1357,10 @@ function WeekTab({
       ) : (!isGuided() && !planEmpty && !targetDismissed) ? (
         <NotifCard
           icon={<Sparkles className="h-5 w-5" />}
-          title="Want a daily calorie target?"
+          title={tr("Want a daily calorie target?")}
           body="Set a goal in Diet and I'll tune every week to it — for now, meals just follow your chosen vibe ✿"
           action={
-            <button onClick={() => { window.location.href = "/app/tools/diet"; }} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink transition hover:bg-hotpink/15 active:scale-95">Set goal <ChevronRight className="h-3.5 w-3.5" /></button>
+            <button onClick={() => { window.location.href = "/app/tools/diet"; }} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-3 py-1 text-xs font-bold text-hotpink transition hover:bg-hotpink/15 active:scale-95">{tr("Set goal")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
           }
           onDismiss={dismissTargetNotif}
         />
@@ -1385,46 +1378,42 @@ function WeekTab({
           />
         </div>
       ) : (
-        <PlusLock feature="meals" title="Your meal week plan" blurb="I cook your whole week for you — 7 days of meals synced to your goal & phase.">
+        <PlusLock feature="meals" title={tr("Your meal week plan")} blurb="I cook your whole week for you — 7 days of meals synced to your goal & phase.">
         <section className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-3.5 sm:p-4 space-y-3">
           {/* Compact header — title + the awareness labels (goal · diet · phase)
               so she always knows what's set up, and the Edit + Regenerate controls
               tucked to the right so they barely take any space. */}
           <div className="flex items-start justify-between gap-2 px-0.5">
             <div className="min-w-0">
-              <p className="font-script text-2xl text-hotpink leading-none">Your meal week plan ✿</p>
+              <p className="font-script text-2xl text-hotpink leading-none">{tr("Your meal week plan ✿")}</p>
               <div className="mt-1.5 flex flex-wrap items-center gap-1">
                 {/* Goal label */}
                 {dietSetup && mealsTuned && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-hotpink">
-                    <Target className="h-2.5 w-2.5" strokeWidth={2.5} /> {goalWord(mealsTuned)} goal
-                  </span>
+                    <Target className="h-2.5 w-2.5" strokeWidth={2.5} /> {tr("{0} goal", { 0: goalWord(mealsTuned) })}</span>
                 )}
                 {/* Which meal plan / diet regime */}
                 {dietSetup && dietRegime && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-rose/70">
-                    <Leaf className="h-2.5 w-2.5" strokeWidth={2.5} /> {dietRegime} diet
-                  </span>
+                    <Leaf className="h-2.5 w-2.5" strokeWidth={2.5} /> {tr("{0} diet", { 0: dietRegime })}</span>
                 )}
                 {/* Vibe (when not diet-tuned) */}
                 {!(dietSetup && mealsTuned) && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-hotpink">
-                    <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} /> {intentionLabel} vibe
-                  </span>
+                    <Sparkles className="h-2.5 w-2.5" strokeWidth={2.5} /> {trx(intentionLabel)}{" "}{tr("vibe")}</span>
                 )}
                 {/* Phase-synced label */}
                 {phase !== "any" && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200/70 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-emerald-600">
-                    <Check className="h-2.5 w-2.5" strokeWidth={3} /> Synced · {phase} phase
-                  </span>
+                    <Check className="h-2.5 w-2.5" strokeWidth={3} />{" "}{tr("Synced ·")}{" "}{tr("{0} phase", { 0: phase })}</span>
                 )}
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
-              <button onClick={() => setEditingVibe((v) => !v)} title="Edit plan" aria-label="Edit plan" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink hover:bg-blush transition active:scale-95">
+              <button onClick={() => setEditingVibe((v) => !v)} title={tr("Edit plan")} aria-label={tr("Edit plan")} className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink hover:bg-blush transition active:scale-95">
                 <Pencil className="h-3.5 w-3.5" />
               </button>
-              <button onClick={handleRegenWeek} disabled={generating} title={`Regenerate ${WEEK_LABELS[selOffset].toLowerCase()}`} aria-label="Regenerate this week" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
+              <button onClick={handleRegenWeek} disabled={generating} title={tr("Regenerate {0}", { 0: WEEK_LABELS[selOffset].toLowerCase() })} aria-label={tr("Regenerate this week")} className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 disabled:opacity-50 transition active:scale-95">
                 <RefreshCw className={["h-4 w-4", generating ? "animate-spin" : ""].join(" ")} />
               </button>
             </div>
@@ -1444,14 +1433,14 @@ function WeekTab({
               const info = dp ? PHASE_INFO[dp] : null;
               if (!comment && !info) return null;
               return (
-                <div className="relative rounded-2xl border border-petal/50 bg-blush/30 p-3 pr-8 space-y-2 animate-fade-in">
-                  <button onClick={() => setWhyOpen(false)} aria-label="Dismiss" className="absolute right-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
-                  {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{comment}</p>}
+                <div className="relative rounded-2xl border border-petal/50 bg-blush/30 p-3 pe-8 space-y-2 animate-fade-in">
+                  <button onClick={() => setWhyOpen(false)} aria-label={tr("Dismiss")} className="absolute end-1.5 top-1.5 grid h-6 w-6 place-items-center rounded-full text-rose/40 transition hover:bg-blush hover:text-hotpink active:scale-90"><X className="h-4 w-4" /></button>
+                  {comment && <p className="text-[11.5px] text-rose/80 leading-snug">{trx(comment)}</p>}
                   {info && (
                     <>
-                      <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">Lean into</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">go easy on</b> {info.avoid.slice(0, 3).join(", ")}.</p>
+                      <p className="text-[11.5px] text-rose/75 leading-snug"><b className="text-rose/85">{tr("Lean into")}</b> {info.eat.slice(0, 5).join(", ")}; <b className="text-rose/85">{tr("go easy on")}</b> {info.avoid.slice(0, 3).join(", ")}.</p>
                       <div className="flex flex-wrap gap-1.5">
-                        {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{n}</span>)}
+                        {info.keyNutrients.map((n) => <span key={n} className="rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold px-2 py-0.5 border border-emerald-200/70">{trx(n)}</span>)}
                       </div>
                     </>
                   )}
@@ -1464,21 +1453,21 @@ function WeekTab({
               <div className="rounded-2xl border border-petal/50 bg-blush/30 p-3 space-y-2.5 animate-fade-in">
                 <div data-tour="meals-vibe" className="flex flex-wrap items-center gap-2">
                   <PickerField
-                    value={intention} title="This week's vibe"
+                    value={intention} title={tr("This week's vibe")}
                     options={INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
                     onChange={(v) => setIntention(v as Intention)} className="min-w-[8.5rem] !text-[13px] !py-1.5 !rounded-full"
                   />
                   <PickerField
-                    value={phase} title="Cycle phase"
+                    value={phase} title={tr("Cycle phase")}
                     options={[{ value: "any", label: "Any phase" }, { value: "period", label: "Period" }, { value: "follicular", label: "Follicular" }, { value: "fertile", label: "Fertile" }, { value: "ovulation", label: "Ovulation" }, { value: "luteal", label: "Luteal" }]}
                     onChange={(v) => setPhase(v as CyclePhase)} className="min-w-[7.5rem] !text-[13px] !py-1.5 !rounded-full"
                   />
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
-                  <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" /> Pantry</button>
-                  <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" /> Cooking time &amp; allergies</a>
+                  <button onClick={goPantry} className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><Apple className="h-3 w-3" />{" "}{tr("Pantry")}</button>
+                  <a href="/app/tools/diet" className="inline-flex items-center gap-1 text-[11px] font-semibold text-hotpink hover:underline"><SlidersHorizontal className="h-3 w-3" />{" "}{tr("Cooking time & allergies")}</a>
                   <div className="flex-1" />
-                  <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" /> Apply</button>
+                  <button onClick={() => { handleGenerate(); setEditingVibe(false); }} className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-3 py-1.5 text-[11px] font-bold active:scale-95"><RefreshCw className="h-3 w-3" />{" "}{tr("Apply")}</button>
                 </div>
               </div>
             )}
@@ -1489,8 +1478,8 @@ function WeekTab({
             <div ref={dietNoteRef}>
               <NotifCard
                 icon={<Sparkles className="h-5 w-5" strokeWidth={2.2} />}
-                title={<>Your synced plan · <span className="capitalize">{fromDiet}</span> diet</>}
-                body={<>We set up this week's meals to match your <b className="text-hotpink">{fromDiet}</b> diet ✿</>}
+                title={<>{tr("Your synced plan ·")}{" "}<span className="capitalize">{tr("{0} diet", { 0: fromDiet })}</span></>}
+                body={<>{tr("We set up this week's meals to match your")}{" "}<b className="text-hotpink">{trx(fromDiet)}</b>{" "}{tr("diet ✿")}</>}
                 onDismiss={onDismissFromDiet}
               />
             </div>
@@ -1499,16 +1488,16 @@ function WeekTab({
           {/* Week switcher — this week, next week, and up to 3 weeks ahead (a
               4-week month that then repeats). Prev/next arrows + a label. */}
           <div className="flex items-center justify-between gap-2">
-            <button onClick={() => setSelOffset((o: number) => Math.max(0, o - 1))} disabled={selOffset === 0} aria-label="Previous week" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="h-4 w-4 rotate-180" /></button>
+            <button onClick={() => setSelOffset((o: number) => Math.max(0, o - 1))} disabled={selOffset === 0} aria-label={tr("Previous week")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="rtl:-scale-x-100 h-4 w-4 rotate-180" /></button>
             <div className="flex-1 text-center">
-              <p className="font-script text-lg text-hotpink leading-none">{WEEK_LABELS[selOffset]}</p>
+              <p className="font-script text-lg text-hotpink leading-none">{trx(WEEK_LABELS[selOffset])}</p>
               <div className="mt-1 flex items-center justify-center gap-1">
                 {WEEK_LABELS.map((_: string, i: number) => (
                   <span key={i} className={["h-1.5 rounded-full transition-all", i === selOffset ? "w-4 bg-hotpink" : "w-1.5 bg-petal/60"].join(" ")} />
                 ))}
               </div>
             </div>
-            <button onClick={() => setSelOffset((o: number) => Math.min(MEAL_WEEKS - 1, o + 1))} disabled={selOffset >= MEAL_WEEKS - 1} aria-label="Next week" className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="h-4 w-4" /></button>
+            <button onClick={() => setSelOffset((o: number) => Math.min(MEAL_WEEKS - 1, o + 1))} disabled={selOffset >= MEAL_WEEKS - 1} aria-label={tr("Next week")} className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-petal/60 bg-white/80 text-hotpink disabled:opacity-30 active:scale-90 transition"><ChevronRight className="rtl:-scale-x-100 h-4 w-4" /></button>
           </div>
 
           {/* Day selector — the viewed week as tappable date chips (photo 2) */}
@@ -1526,8 +1515,8 @@ function WeekTab({
                       : "bg-white/70 text-rose/70 border-petal/50 hover:bg-blush",
                   ].join(" ")}
                 >
-                  <span className={["block text-[10px] font-bold uppercase tracking-wide", isSel ? "text-white/90" : "text-rose/50"].join(" ")}>{d}</span>
-                  <span className="block text-lg font-black leading-none tabular-nums">{weekDates[di]}</span>
+                  <span className={["block text-[10px] font-bold uppercase tracking-wide", isSel ? "text-white/90" : "text-rose/50"].join(" ")}>{trx(d)}</span>
+                  <span className="block text-lg font-black leading-none tabular-nums">{trx(weekDates[di])}</span>
                   <span className={["mx-auto mt-1 block h-1 w-1 rounded-full", isToday ? (isSel ? "bg-white" : "bg-hotpink") : "bg-transparent"].join(" ")} />
                 </button>
               );
@@ -1551,7 +1540,7 @@ function WeekTab({
         <SpotlightCoach
           targetId="meals-week-plan"
           step={2} total={5}
-          title="This is your week ✿"
+          title={tr("This is your week ✿")}
           message="Your whole week of meals, planned. Tap any day to swap a meal."
           primaryLabel="Continue on Today →"
           onPrimary={() => { window.location.href = "/app/today"; }}
@@ -1567,10 +1556,10 @@ function WeekTab({
 
 const SLOT_ORDER: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
 const SLOT_META: Record<string, { label: string; time: string; Icon: typeof Sunrise; tint: string }> = {
-  breakfast: { label: "Morning", time: "08:00", Icon: Sunrise,  tint: "text-amber-500" },
-  lunch:     { label: "Lunch",   time: "13:00", Icon: Sun,      tint: "text-orange-500" },
-  snack:     { label: "Snack",   time: "16:30", Icon: Sparkles, tint: "text-hotpink" },
-  dinner:    { label: "Dinner",  time: "19:00", Icon: Moon,     tint: "text-violet-500" },
+  breakfast: { label: tr("Morning"), time: "08:00", Icon: Sunrise,  tint: "text-amber-500" },
+  lunch:     { label: tr("Lunch"),   time: "13:00", Icon: Sun,      tint: "text-orange-500" },
+  snack:     { label: tr("Snack"),   time: "16:30", Icon: Sparkles, tint: "text-hotpink" },
+  dinner:    { label: tr("Dinner"),  time: "19:00", Icon: Moon,     tint: "text-violet-500" },
 };
 const SLOT_TIP: Record<string, string> = {
   breakfast: "Start your day with water and a nourishing breakfast.",
@@ -1589,7 +1578,7 @@ function MealTag({ label, tone }: { label: string; tone: "protein" | "energy" | 
     diet:     "bg-blush/70 text-rose/70 border-petal/60",
     recovery: "bg-emerald-50 text-emerald-600 border-emerald-200/70",
   }[tone];
-  return <span className={["rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none", cls].join(" ")}>{label}</span>;
+  return <span className={["rounded-full border px-2 py-0.5 text-[10px] font-bold leading-none", cls].join(" ")}>{trx(label)}</span>;
 }
 
 function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, yogaDaySet, favorites, toggleFav, onOpen, onSwap, onRegen, isToday }: {
@@ -1629,13 +1618,12 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
       {/* Day header row — label + recovery/today markers + redo day */}
       <div className="flex items-center justify-between px-0.5">
         <p className="font-script text-xl text-hotpink flex items-center gap-1.5">
-          {day}
-          {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Today</span>}
-          {isRecoveryDay && <span className="rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-600 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">Recovery</span>}
+          {trx(day)}
+          {isToday && <span className="rounded-full bg-hotpink text-white text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">{tr("Today")}</span>}
+          {isRecoveryDay && <span className="rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-600 text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5">{tr("Recovery")}</span>}
         </p>
         <button onClick={() => onRegen(day)} className="text-[11px] inline-flex items-center gap-1 text-rose/60 hover:text-hotpink transition-colors">
-          <RefreshCw className="h-3 w-3" /> redo day
-        </button>
+          <RefreshCw className="h-3 w-3" />{" "}{tr("redo day")}</button>
       </div>
 
       {SLOT_ORDER.map((slot) => {
@@ -1649,14 +1637,14 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
         // Empty slot — a soft tappable to fill it.
         if (!r) {
           return (
-            <button key={slot} onClick={() => onSwap(day, slot)} className="w-full flex items-center gap-2 rounded-2xl border border-dashed border-petal/60 bg-white/60 p-2 text-left active:scale-[0.99] transition hover:bg-blush/40">
+            <button key={slot} onClick={() => onSwap(day, slot)} className="w-full flex items-center gap-2 rounded-2xl border border-dashed border-petal/60 bg-white/60 p-2 text-start active:scale-[0.99] transition hover:bg-blush/40">
               <span className="w-7 shrink-0 flex flex-col items-center">
                 <meta.Icon className={["h-3.5 w-3.5", meta.tint].join(" ")} strokeWidth={2} />
-                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/50 leading-none text-center">{meta.label}</span>
+                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/50 leading-none text-center">{trx(meta.label)}</span>
               </span>
               <span className="grid h-24 w-28 shrink-0 place-items-center rounded-xl bg-blush/50 text-hotpink"><Plus className="h-5 w-5" /></span>
-              <span className="flex-1 text-[12px] font-bold text-hotpink">Add a {meta.label.toLowerCase()} meal</span>
-              <ChevronRight className="h-4 w-4 text-hotpink/60" />
+              <span className="flex-1 text-[12px] font-bold text-hotpink">{tr("Add a")}{" "}{meta.label.toLowerCase()}{" "}{tr("meal")}</span>
+              <ChevronRight className="rtl:-scale-x-100 h-4 w-4 text-hotpink/60" />
             </button>
           );
         }
@@ -1666,16 +1654,16 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
         const isFav = favorites.includes(r.id);
         // Up to two tags: a quality descriptor + the recipe's phase.
         const tags: { label: string; tone: "protein" | "energy" | "phase" | "diet" | "recovery" }[] = [];
-        if (proteinBoosted || pr >= 30) tags.push({ label: "Rich in protein", tone: "protein" });
-        else if (kc >= 480) tags.push({ label: "High energy", tone: "energy" });
+        if (proteinBoosted || pr >= 30) tags.push({ label: tr("Rich in protein"), tone: "protein" });
+        else if (kc >= 480) tags.push({ label: tr("High energy"), tone: "energy" });
         else if (r.dietTags?.[0]) tags.push({ label: cap(r.dietTags[0]), tone: "diet" });
-        if (isRecoveryDay && slot === "dinner") tags.push({ label: "Recovery", tone: "recovery" });
+        if (isRecoveryDay && slot === "dinner") tags.push({ label: tr("Recovery"), tone: "recovery" });
         else {
           const phases: string[] = r.phases || [];
           // Prefer the synced phase when this recipe supports it, so the tag never
           // contradicts the "synced · <phase>" label up top.
           const ph = (curPhase && phases.includes(curPhase)) ? curPhase : phases.find((p) => p && p !== "any");
-          if (ph) tags.push({ label: `${cap(ph)} phase`, tone: "phase" });
+          if (ph) tags.push({ label: tr("{0} phase", { 0: cap(ph) }), tone: "phase" });
         }
 
         return (
@@ -1684,22 +1672,22 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
               {/* icon / label / time rail — kept narrow so the photo gets the room */}
               <div className="w-7 shrink-0 flex flex-col items-center pt-0.5">
                 <meta.Icon className={["h-3.5 w-3.5", meta.tint].join(" ")} strokeWidth={2} />
-                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/60 text-center leading-none">{meta.label}</span>
-                <span className="mt-0.5 text-[8px] font-semibold text-rose/40 tabular-nums leading-none">{meta.time}</span>
+                <span className="mt-0.5 text-[8px] font-bold uppercase tracking-tight text-rose/60 text-center leading-none">{trx(meta.label)}</span>
+                <span className="mt-0.5 text-[8px] font-semibold text-rose/40 tabular-nums leading-none">{trx(meta.time)}</span>
               </div>
 
               {/* photo (with swap) — larger, given more of the card width */}
               <button onClick={() => onOpen(r.id, portion)} className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl active:scale-95 transition">
                 <img src={recipeImageSrc(r)} alt={r.name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }} />
-                <span onClick={(e) => { e.stopPropagation(); onSwap(day, slot); }} title="Swap meal" role="button" className="absolute top-1 right-1 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 transition"><Shuffle className="h-2.5 w-2.5" /></span>
+                <span onClick={(e) => { e.stopPropagation(); onSwap(day, slot); }} title={tr("Swap meal")} role="button" className="absolute top-1 end-1 grid h-5 w-5 place-items-center rounded-full bg-black/35 text-white backdrop-blur-sm hover:bg-black/55 transition"><Shuffle className="h-2.5 w-2.5" /></span>
               </button>
 
               {/* details */}
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-[#831843] leading-tight line-clamp-2">{r.name}</p>
+                <p className="text-[13px] font-bold text-[#831843] leading-tight line-clamp-2">{trx(r.name)}</p>
                 <div className="mt-1 flex items-center gap-2.5 text-[10.5px] font-semibold">
-                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-hotpink"><Flame className="h-3 w-3 shrink-0" /> {kc} kcal</span>
-                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-emerald-600"><Leaf className="h-3 w-3 shrink-0" /> {pr}g protein</span>
+                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-hotpink"><Flame className="h-3 w-3 shrink-0" /> {trx(kc)}{" "}{tr("kcal")}</span>
+                  <span className="inline-flex items-center gap-0.5 whitespace-nowrap text-emerald-600"><Leaf className="h-3 w-3 shrink-0" /> {trx(pr)}{tr("g protein")}</span>
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {tags.map((t) => <MealTag key={t.label} label={t.label} tone={t.tone} />)}
@@ -1708,11 +1696,11 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
 
               {/* favourite + open */}
               <div className="flex flex-col items-center justify-between py-0.5">
-                <button onClick={() => toggleFav(r.id)} aria-label={isFav ? "Unfavourite" : "Favourite"} className="grid h-8 w-8 place-items-center rounded-full bg-blush/50 text-hotpink active:scale-90 transition hover:bg-blush">
+                <button onClick={() => toggleFav(r.id)} aria-label={isFav ? tr("Unfavourite") : tr("Favourite")} className="grid h-8 w-8 place-items-center rounded-full bg-blush/50 text-hotpink active:scale-90 transition hover:bg-blush">
                   <Heart className={["h-4 w-4", isFav ? "fill-hotpink" : ""].join(" ")} strokeWidth={2} />
                 </button>
-                <button onClick={() => onOpen(r.id, portion)} aria-label="Open recipe" className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 active:scale-90 transition">
-                  <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+                <button onClick={() => onOpen(r.id, portion)} aria-label={tr("Open recipe")} className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#DB2777] text-white shadow shadow-hotpink/30 active:scale-90 transition">
+                  <ChevronRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
                 </button>
               </div>
             </div>
@@ -1720,7 +1708,7 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
             {/* tip strip */}
             <div className="flex items-center gap-1.5 border-t border-petal/40 bg-blush/25 px-3 py-1.5">
               <span className={["shrink-0", meta.tint].join(" ")}><meta.Icon className="h-3 w-3" strokeWidth={2} /></span>
-              <p className="text-[10.5px] leading-snug text-rose/70"><b className="text-rose/85">{meta.label} tip:</b> {SLOT_TIP[slot]}</p>
+              <p className="text-[10.5px] leading-snug text-rose/70"><b className="text-rose/85">{trx(meta.label)}{" "}{tr("tip:")}</b> {trx(SLOT_TIP[slot])}</p>
             </div>
           </div>
         );
@@ -1729,23 +1717,23 @@ function DayPlanDetail({ day, plan, portions, targets, phase, proteinBoostDays, 
       {/* Compact day nutrition summary */}
       <div className="rounded-2xl bg-gradient-to-br from-blush/50 to-petal/25 border border-petal/50 p-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="flex items-center gap-1.5 font-script text-lg text-hotpink leading-none"><Target className="h-4 w-4" /> {day}'s nutrition</p>
+          <p className="flex items-center gap-1.5 font-script text-lg text-hotpink leading-none"><Target className="h-4 w-4" /> {trx(day)}{tr("'s nutrition")}</p>
           <span className={["inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-1 text-[10.5px] font-black", verdictCls].join(" ")}>
-            <Heart className={["h-3 w-3", verdict === "on" ? "fill-emerald-500 text-emerald-500" : ""].join(" ")} /> {verdictLabel}
+            <Heart className={["h-3 w-3", verdict === "on" ? "fill-emerald-500 text-emerald-500" : ""].join(" ")} /> {trx(verdictLabel)}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <div className="flex items-baseline justify-between text-[11px] font-bold mb-1">
-              <span className="inline-flex items-center gap-1 text-hotpink"><Flame className="h-3 w-3" /> Calories</span>
+              <span className="inline-flex items-center gap-1 text-hotpink"><Flame className="h-3 w-3" />{" "}{tr("Calories")}</span>
               <span className="tabular-nums text-rose/70">{kcal.toLocaleString()}<span className="text-rose/40">/{targets.calories.toLocaleString()}</span></span>
             </div>
             <div className="h-2 rounded-full bg-white/70 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${kcalPct}%` }} /></div>
           </div>
           <div>
             <div className="flex items-baseline justify-between text-[11px] font-bold mb-1">
-              <span className="inline-flex items-center gap-1 text-emerald-600"><Leaf className="h-3 w-3" /> Protein</span>
-              <span className="tabular-nums text-rose/70">{protein}<span className="text-rose/40">/{proteinTarget}g</span></span>
+              <span className="inline-flex items-center gap-1 text-emerald-600"><Leaf className="h-3 w-3" />{" "}{tr("Protein")}</span>
+              <span className="tabular-nums text-rose/70">{trx(protein)}<span className="text-rose/40">/{trx(proteinTarget)}g</span></span>
             </div>
             <div className="h-2 rounded-full bg-white/70 overflow-hidden"><div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${protPct}%` }} /></div>
           </div>
@@ -1762,7 +1750,7 @@ function PhasePill({ phase, setPhase }: any) {
       value={phase} onChange={(e) => setPhase(e.target.value as CyclePhase)}
       className="text-xs rounded-full bg-white/90 border border-petal/60 px-2 py-1 text-rose"
     >
-      {phases.map((p) => <option key={p} value={p}>{p}</option>)}
+      {phases.map((p) => <option key={p} value={p}>{trx(p)}</option>)}
     </select>
   );
 }
@@ -1775,8 +1763,8 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
     <>
       {stepHint && (
         <Glass className="p-4">
-          <p className="font-script text-2xl text-hotpink">Step 1 — Build your pantry</p>
-          <p className="text-sm text-rose/80 mt-1">Tap everything you have at home. We remember it, so you'll only do quick updates next week.</p>
+          <p className="font-script text-2xl text-hotpink">{tr("Step 1 — Build your pantry")}</p>
+          <p className="text-sm text-rose/80 mt-1">{tr("Tap everything you have at home. We remember it, so you'll only do quick updates next week.")}</p>
         </Glass>
       )}
       <div className="grid gap-2 sm:grid-cols-2">
@@ -1790,11 +1778,11 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
                   <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink">
                     <cat.icon className="h-4 w-4" strokeWidth={1.8} />
                   </span>
-                  <span className="text-sm font-semibold text-rose">{cat.label}</span>
-                  {cat.isHome && <span className="text-[10px] uppercase font-bold text-hotpink/70">home</span>}
+                  <span className="text-sm font-semibold text-rose">{trx(cat.label)}</span>
+                  {cat.isHome && <span className="text-[10px] uppercase font-bold text-hotpink/70">{tr("home")}</span>}
                 </span>
                 <span className="text-xs text-rose/70 flex items-center gap-1">
-                  {checked.length}/{cat.items.length}
+                  {trx(checked.length)}/{trx(cat.items.length)}
                   {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 </span>
               </button>
@@ -1811,7 +1799,7 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
                             on ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:bg-blush",
                           ].join(" ")}
                         >
-                          {on && <Check className="h-3 w-3" />} {item}
+                          {on && <Check className="h-3 w-3" />} {trx(item)}
                         </button>
                       );
                     })}
@@ -1825,7 +1813,7 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
                           key={`custom-${item}`} onClick={() => togglePantry(cat.key, item)}
                           className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs border bg-hotpink text-white border-hotpink transition"
                         >
-                          <Check className="h-3 w-3" /> {item} <X className="h-3 w-3 opacity-70" />
+                          <Check className="h-3 w-3" /> {trx(item)} <X className="h-3 w-3 opacity-70" />
                         </button>
                       ))}
                   </div>
@@ -1842,7 +1830,7 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
                       if (!dup) togglePantry(cat.key, val);
                       setExtra({ ...extra, [cat.key]: "" });
                     }}
-                    placeholder="I also have… (type & press Enter)"
+                    placeholder={tr("I also have… (type & press Enter)")}
                     className="mt-2 w-full rounded-full bg-white/90 px-3 py-1.5 text-xs text-rose border border-petal/60 placeholder:text-rose/40 outline-none focus:ring-2 focus:ring-hotpink/30"
                   />
                 </div>
@@ -1852,7 +1840,7 @@ function PantryTab({ pantry, togglePantry, extra, setExtra, onDone, stepHint }: 
         })}
       </div>
       {stepHint && (
-        <div className="flex justify-end"><PinkBtn onClick={onDone}>Done — next step <ChevronRight className="h-4 w-4" /></PinkBtn></div>
+        <div className="flex justify-end"><PinkBtn onClick={onDone}>{tr("Done — next step")}{" "}<ChevronRight className="rtl:-scale-x-100 h-4 w-4" /></PinkBtn></div>
       )}
     </>
   );
@@ -2025,7 +2013,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
 
   if (planEmpty) {
     return (
-      <EmptyState icon={ShoppingBag} title="Nothing to shop yet"
+      <EmptyState icon={ShoppingBag} title={tr("Nothing to shop yet")}
         blurb="Plan your week first — I'll auto-build a clean grocery list grouped by store section."
         cta="Go to This Week" onCta={goWeek} />
     );
@@ -2034,10 +2022,10 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
   return (
     <Glass className="p-4 sm:p-5">
       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
-        <p className="font-script text-2xl text-hotpink">Shopping list</p>
+        <p className="font-script text-2xl text-hotpink">{tr("Shopping list")}</p>
         <div className="flex gap-2">
-          <PinkBtn variant="outline" onClick={onCopy}><Copy className="h-4 w-4" /> Copy</PinkBtn>
-          <PinkBtn onClick={onShare}><Share2 className="h-4 w-4" /> Share</PinkBtn>
+          <PinkBtn variant="outline" onClick={onCopy}><Copy className="h-4 w-4" />{" "}{tr("Copy")}</PinkBtn>
+          <PinkBtn onClick={onShare}><Share2 className="h-4 w-4" />{" "}{tr("Share")}</PinkBtn>
         </div>
       </div>
 
@@ -2047,42 +2035,41 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
           onClick={selectAllMeals}
           className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition active:scale-95 ${allMealSelected ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "bg-white/80 border border-petal/60 text-hotpink hover:bg-white"}`}
         >
-          <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> {allMealSelected ? "Meal items selected" : "Select all my meal items"}
+          <Check className="h-3.5 w-3.5" strokeWidth={2.6} /> {allMealSelected ? tr("Meal items selected") : tr("Select all my meal items")}
         </button>
         <button
           onClick={toggleSelectAll}
           className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold bg-white/70 border border-petal/60 text-rose hover:bg-white transition active:scale-95"
         >
-          {allSelected ? "Clear all" : "Select all"}
+          {allSelected ? tr("Clear all") : tr("Select all")}
         </button>
         {/* Close the loop: bought items go into the pantry, so they drop off the
             list and bias next week's plan toward what she now has. */}
         {checked.length > 0 && (
           <button
             onClick={stockChecked}
-            title="Move the ticked items into My Pantry"
+            title={tr("Move the ticked items into My Pantry")}
             className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold bg-emerald-500 text-white shadow-sm shadow-emerald-500/30 hover:brightness-105 transition active:scale-95"
           >
-            <Apple className="h-3.5 w-3.5" strokeWidth={2.4} /> Add {checked.length} to pantry
-          </button>
+            <Apple className="h-3.5 w-3.5" strokeWidth={2.4} />{" "}{tr("Add")}{" "}{trx(checked.length)}{" "}{tr("to pantry")}</button>
         )}
       </div>
 
       {/* ADD A PRODUCT — type your own; existing matches show as suggestions so
           the same product is never added twice (tap one to select it instead). */}
       <div className="relative mb-3">
-        <div className="flex items-center gap-1.5 rounded-full bg-white/80 border border-petal/60 pl-3 pr-1.5 py-1 focus-within:ring-2 focus-within:ring-hotpink/25 transition">
+        <div className="flex items-center gap-1.5 rounded-full bg-white/80 border border-petal/60 ps-3 pe-1.5 py-1 focus-within:ring-2 focus-within:ring-hotpink/25 transition">
           <Plus className="h-4 w-4 text-hotpink shrink-0" strokeWidth={2.4} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
-            placeholder="Add a product…"
+            placeholder={tr("Add a product…")}
             className="flex-1 min-w-0 bg-transparent text-sm text-rose placeholder:text-rose/45 outline-none py-1"
           />
           {query.trim() && (
             <button onClick={addCustom} className="shrink-0 rounded-full bg-hotpink text-white text-xs font-bold px-3 py-1.5 shadow-sm shadow-hotpink/30 active:scale-95 transition">
-              {exactExists ? "Select" : "Add"}
+              {exactExists ? tr("Select") : tr("Add")}
             </button>
           )}
         </div>
@@ -2090,24 +2077,23 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
           <div className="absolute z-20 mt-1 w-full rounded-2xl bg-white border border-petal/60 shadow-lg shadow-hotpink/15 overflow-hidden">
             {suggestions.length > 0 && (
               <div className="max-h-52 overflow-y-auto">
-                <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-rose/45">Already on your list — tap to select</p>
+                <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-rose/45">{tr("Already on your list — tap to select")}</p>
                 {suggestions.map((s) => {
                   const on = checked.includes(s.item);
                   return (
                     <button key={s.item + s.section} onClick={() => pickSuggestion(s.item)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose text-left hover:bg-blush/50 transition">
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose text-start hover:bg-blush/50 transition">
                       <span className={`grid h-4 w-4 place-items-center rounded-[5px] border ${on ? "bg-hotpink border-hotpink text-white" : "border-petal"}`}>{on && <Check className="h-3 w-3" strokeWidth={3} />}</span>
-                      <span className="flex-1 min-w-0 truncate">{s.item}</span>
-                      <span className="text-[9px] uppercase font-bold text-rose/40">{s.section}</span>
+                      <span className="flex-1 min-w-0 truncate">{trx(s.item)}</span>
+                      <span className="text-[9px] uppercase font-bold text-rose/40">{trx(s.section)}</span>
                     </button>
                   );
                 })}
               </div>
             )}
             {!exactExists && (
-              <button onClick={addCustom} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-hotpink text-left hover:bg-blush/50 border-t border-petal/40 transition">
-                <Plus className="h-4 w-4" strokeWidth={2.6} /> Add “{query.trim()}” to my list
-              </button>
+              <button onClick={addCustom} className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-hotpink text-start hover:bg-blush/50 border-t border-petal/40 transition">
+                <Plus className="h-4 w-4" strokeWidth={2.6} />{" "}{tr("Add “")}{query.trim()}{tr("” to my list")}</button>
             )}
           </div>
         )}
@@ -2116,7 +2102,7 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
       <div className="space-y-3">
         {Object.entries(grouped).map(([section, list]) => (
           <div key={section}>
-            <p className="text-xs uppercase font-bold text-hotpink mb-1">{section}</p>
+            <p className="text-xs uppercase font-bold text-hotpink mb-1">{trx(section)}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
               {list.map((i) => {
                 const on = checked.includes(i.item);
@@ -2124,10 +2110,10 @@ function ShopTab({ plan, owned, checked, setChecked, planEmpty, goWeek, onStock 
                 return (
                   <label key={i.item + i.section} className={`group flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm cursor-pointer ${on ? "bg-blush line-through text-rose/50" : "hover:bg-blush/50 text-rose"}`}>
                     <input type="checkbox" checked={on} onChange={() => toggle(i.item)} className="accent-hotpink h-4 w-4" />
-                    <span className="flex-1">{i.item} {i.qty && <span className="text-xs text-rose/60">({i.qty})</span>}</span>
+                    <span className="flex-1">{trx(i.item)} {i.qty && <span className="text-xs text-rose/60">({trx(i.qty)})</span>}</span>
                     {i.missing && <span className="text-[10px] uppercase font-bold text-hotpink">{i.removable ? "add-on" : "recipe"}</span>}
                     {(isCustom || i.removable) && (
-                      <button onClick={(e) => { e.preventDefault(); (i.removable ? removeExtra : removeCustom)(i.item); }} aria-label={`Remove ${i.item}`}
+                      <button onClick={(e) => { e.preventDefault(); (i.removable ? removeExtra : removeCustom)(i.item); }} aria-label={tr("Remove {0}", { 0: i.item })}
                         className="shrink-0 text-rose/35 hover:text-hotpink opacity-0 group-hover:opacity-100 transition no-underline">
                         <X className="h-3.5 w-3.5" strokeWidth={2.4} />
                       </button>
@@ -2163,7 +2149,7 @@ function recipeImg(r: Recipe): string | null {
 function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
   const list = RECIPES.filter((r) => favorites.includes(r.id));
   if (!list.length) {
-    return <EmptyState icon={Heart} title="No favorites yet"
+    return <EmptyState icon={Heart} title={tr("No favorites yet")}
       blurb="Open any recipe and tap the heart. Loved meals get boosted in future weeks."
       cta="Browse this week" onCta={() => {}} />;
   }
@@ -2189,13 +2175,13 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
               {/* Heart — remove from favs */}
               <button
                 onClick={(e) => { e.stopPropagation(); toggleFav(r.id); }}
-                className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-black/35 flex items-center justify-center"
+                className="absolute top-1.5 end-1.5 w-5 h-5 rounded-full bg-black/35 flex items-center justify-center"
               >
                 <Heart className="h-2.5 w-2.5 text-white fill-white" />
               </button>
               {/* Name over a slim bottom fade — food stays visible */}
               <div className="absolute inset-x-0 bottom-0 px-1.5 pb-1.5 pt-6 text-center bg-gradient-to-t from-black/85 via-black/40 to-transparent">
-                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{r.name}</p>
+                <p className="text-[9px] font-bold text-white leading-tight line-clamp-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>{trx(r.name)}</p>
               </div>
             </div>
             {/* Rating pills */}
@@ -2203,7 +2189,7 @@ function FavsTab({ favorites, ratings, setRatings, onOpen, toggleFav }: any) {
               {(["love","ok","never"] as const).map((v) => (
                 <button key={v} onClick={() => setRatings({ ...ratings, [r.id]: v })}
                   className={`text-[8px] rounded-full px-1.5 py-0.5 border leading-none ${ratings[r.id] === v ? "bg-hotpink text-white border-hotpink" : "border-petal/60 text-rose/70"}`}>
-                  {v}
+                  {trx(v)}
                 </button>
               ))}
             </div>
@@ -2271,17 +2257,17 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
           {/* ✕ close — top right */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors"
-            aria-label="Close"
+            className="absolute top-3 end-3 w-9 h-9 flex items-center justify-center rounded-full bg-black/40 backdrop-blur-md text-white hover:bg-black/60 transition-colors"
+            aria-label={tr("Close")}
           >
             <X className="h-4 w-4" />
           </button>
 
           {/* Recipe name overlaid on photo */}
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h3 className="font-script text-3xl text-white leading-tight drop-shadow">{r.name}</h3>
+          <div className="absolute bottom-0 start-0 end-0 p-4">
+            <h3 className="font-script text-3xl text-white leading-tight drop-shadow">{trx(r.name)}</h3>
             <p className="mt-0.5 text-xs text-white/80">
-              {r.vibe} · {r.prepMin + r.cookMin} min · serves {r.servings} · {r.difficulty} · {r.cost}
+              {trx(r.vibe)} · {r.prepMin + r.cookMin}{" "}{tr("min · serves")}{" "}{trx(r.servings)} · {trx(r.difficulty)} · {trx(r.cost)}
             </p>
           </div>
         </div>
@@ -2292,14 +2278,14 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
           {/* Macros row — scaled to the planned portion */}
           <div className="grid grid-cols-4 gap-2 text-center">
             {[
-              { label: 'Cal', value: mac.calories },
-              { label: 'Protein', value: `${mac.protein}g` },
-              { label: 'Carbs', value: `${mac.carbs}g` },
-              { label: 'Fat', value: `${mac.fat}g` },
+              { label: tr("Cal"), value: mac.calories },
+              { label: tr("Protein"), value: `${mac.protein}g` },
+              { label: tr("Carbs"), value: `${mac.carbs}g` },
+              { label: tr("Fat"), value: `${mac.fat}g` },
             ].map(({ label, value }) => (
               <div key={label} className="rounded-xl bg-blush/60 py-2 px-1">
-                <p className="text-[10px] text-rose/60 uppercase font-semibold">{label}</p>
-                <p className="text-sm font-bold text-hotpink">{value}</p>
+                <p className="text-[10px] text-rose/60 uppercase font-semibold">{trx(label)}</p>
+                <p className="text-sm font-bold text-hotpink">{trx(value)}</p>
               </div>
             ))}
           </div>
@@ -2307,10 +2293,10 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
           {/* Equipment */}
           {r.equipment && r.equipment.length > 0 && (
             <div>
-              <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">You'll need</p>
+              <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">{tr("You'll need")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {r.equipment.map((e: string) => (
-                  <span key={e} className="rounded-full bg-blush/70 border border-petal/50 px-2.5 py-0.5 text-[11px] font-semibold text-magenta">{e}</span>
+                  <span key={e} className="rounded-full bg-blush/70 border border-petal/50 px-2.5 py-0.5 text-[11px] font-semibold text-magenta">{trx(e)}</span>
                 ))}
               </div>
             </div>
@@ -2318,15 +2304,14 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
 
           {/* Ingredients — amounts scaled to the planned portion */}
           <div>
-            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">
-              Ingredients{scaled ? " · portioned for your goal ✿" : ` · makes ${r.servings} serving${r.servings === 1 ? "" : "s"}`}
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">{tr("Ingredients")}{scaled ? tr(" · portioned for your goal ✿") : tr(" · makes {0} serving{1}", { 0: r.servings, 1: r.servings === 1 ? "" : "s" })}
             </p>
-            <p className="text-[11px] text-rose/50 mb-1.5 normal-case">1 tablespoon ≈ 15 ml · 1 teaspoon ≈ 5 ml · 1 cup ≈ 240 ml</p>
+            <p className="text-[11px] text-rose/50 mb-1.5 normal-case">{tr("1 tablespoon ≈ 15 ml · 1 teaspoon ≈ 5 ml · 1 cup ≈ 240 ml")}</p>
             <ul className="space-y-1">
               {r.ingredients.map((i) => (
                 <li key={i.item} className="flex gap-2 text-sm text-rose">
                   <span className="text-hotpink mt-0.5">•</span>
-                  <span><b className="font-medium">{scaleQuantity(i.qty, ingF)}</b> {i.item}</span>
+                  <span><b className="font-medium">{scaleQuantity(i.qty, ingF)}</b> {trx(i.item)}</span>
                 </li>
               ))}
             </ul>
@@ -2334,7 +2319,7 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
 
           {/* Steps */}
           <div>
-            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">Steps</p>
+            <p className="text-xs uppercase font-bold text-hotpink tracking-wider mb-1.5">{tr("Steps")}</p>
             <ol className="space-y-2">
               {r.steps.map((s, i) => (
                 <li key={i} className="flex gap-2.5 text-sm text-rose">
@@ -2348,23 +2333,23 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
           {/* Storage */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="rounded-xl bg-blush/60 p-2.5">
-              <p className="font-bold text-hotpink mb-0.5">Keeps</p>
-              <p className="text-rose">{r.conservation.fridgeDays}d fridge{r.conservation.freezerWeeks ? ` · ${r.conservation.freezerWeeks}w freezer` : ''}</p>
+              <p className="font-bold text-hotpink mb-0.5">{tr("Keeps")}</p>
+              <p className="text-rose">{trx(r.conservation.fridgeDays)}{tr("d fridge")}{r.conservation.freezerWeeks ? tr(" · {0}w freezer", { 0: r.conservation.freezerWeeks }) : ''}</p>
             </div>
             <div className="rounded-xl bg-blush/60 p-2.5">
-              <p className="font-bold text-hotpink mb-0.5">Container</p>
-              <p className="text-rose">{r.conservation.container || 'Airtight'}</p>
+              <p className="font-bold text-hotpink mb-0.5">{tr("Container")}</p>
+              <p className="text-rose">{trx(r.conservation.container) || tr("Airtight")}</p>
             </div>
             {r.batchTip && (
               <div className="rounded-xl bg-blush/60 p-2.5 col-span-2">
-                <p className="font-bold text-hotpink mb-0.5">Batch tip</p>
-                <p className="text-rose">{r.batchTip}</p>
+                <p className="font-bold text-hotpink mb-0.5">{tr("Batch tip")}</p>
+                <p className="text-rose">{trx(r.batchTip)}</p>
               </div>
             )}
             {r.substitutionTip && (
               <div className="rounded-xl bg-blush/60 p-2.5 col-span-2">
-                <p className="font-bold text-hotpink mb-0.5">Easy swap</p>
-                <p className="text-rose">{r.substitutionTip}</p>
+                <p className="font-bold text-hotpink mb-0.5">{tr("Easy swap")}</p>
+                <p className="text-rose">{trx(r.substitutionTip)}</p>
               </div>
             )}
           </div>
@@ -2372,16 +2357,16 @@ function RecipeSheet({ id, portion = 1, onClose, favorites, toggleFav, ratings, 
           {/* Actions */}
           <div className="flex items-center gap-2 pt-1 pb-2">
             <PinkBtn onClick={() => toggleFav(r.id)} variant={fav ? "solid" : "outline"}>
-              <Heart className={`h-4 w-4 ${fav ? 'fill-white' : ''}`} /> {fav ? 'Loved ✨' : 'Save'}
+              <Heart className={`h-4 w-4 ${fav ? 'fill-white' : ''}`} /> {fav ? tr("Loved ✨") : tr("Save")}
             </PinkBtn>
-            <div className="flex items-center gap-1 ml-auto">
+            <div className="flex items-center gap-1 ms-auto">
               {(['love', 'ok', 'never'] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setRatings({ ...ratings, [r.id]: v })}
                   className={`text-[11px] rounded-full px-2.5 py-1 border transition-colors ${ratings[r.id] === v ? 'bg-hotpink text-white border-hotpink' : 'border-petal/60 text-rose hover:border-hotpink/40'}`}
                 >
-                  {v}
+                  {trx(v)}
                 </button>
               ))}
             </div>

@@ -11,6 +11,7 @@ import {
   readCycleSettings, phaseForDay, effectiveCurrentPhase, hasCycleSettings,
   type CyclePhase,
 } from "@/components/bloom/cyclePhase";
+import { DATE_LOCALE, tr } from "@/i18n";
 import { readPeriodStarts, recentCycleLengths, cycleRegularity } from "@/lib/periodLog";
 import { moodValence } from "@/lib/meDashboard";
 import type { CycleSettings } from "@/components/bloom/PeriodSetup";
@@ -20,7 +21,7 @@ type Phase = Exclude<CyclePhase, "any">;
 
 const startOfToday = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
 const addDays = (d: Date, n: number) => new Date(d.getTime() + n * MS);
-const weekday = (d: Date) => d.toLocaleDateString("en-US", { weekday: "long" });
+const weekday = (d: Date) => d.toLocaleDateString(DATE_LOCALE, { weekday: "long" });
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
 export type FertilityLevel = "low" | "medium" | "high" | "peak";
@@ -143,7 +144,7 @@ export function computePredictions(): SmartPredictions {
     confidence: conf,
     explain: learning
       ? "Right now this comes from your setup. Confirm a few real period starts and I'll learn your true rhythm — this number climbs as I do ✿"
-      : `I read this from your ${loggedCycles} confirmed cycle${loggedCycles === 1 ? "" : "s"} and how steady they've been. Your recent cycles vary by about ±${spread} day${spread === 1 ? "" : "s"}, which is baked into the window.`,
+      : tr("I read this from your {0} confirmed cycle{1} and how steady they've been. Your recent cycles vary by about ±{2} day{3}, which is baked into the window.", { 0: loggedCycles, 1: loggedCycles === 1 ? "" : "s", 2: spread, 3: spread === 1 ? "" : "s" }),
   };
 
   // ── PMS (≈3 days before period) ──
@@ -184,7 +185,7 @@ export function computePredictions(): SmartPredictions {
     const d = addDays(today, i);
     const ph = phaseForDay(d, s) as Phase;
     if (ph === "luteal" || ph === "period") {
-      cravWhen = i === 0 ? "today" : i === 1 ? "tomorrow" : `around ${weekday(d)}`;
+      cravWhen = i === 0 ? "today" : i === 1 ? "tomorrow" : tr("around {0}", { 0: weekday(d) });
       craving = ph === "period" ? "Comfort-food & iron cravings" : "Chocolate & carb cravings";
       break;
     }
@@ -257,7 +258,7 @@ export function computeForecast(days = 7): ForecastDay[] {
     const toPeriod = Math.ceil((np.date.getTime() - d.getTime()) / MS);
     out.push({
       date: d,
-      label: i === 0 ? "Today" : d.toLocaleDateString("en-US", { weekday: "short" }),
+      label: i === 0 ? "Today" : d.toLocaleDateString(DATE_LOCALE, { weekday: "short" }),
       phase: ph,
       energy: lvl,
       energyScore: ENERGY_SCORE[lvl],

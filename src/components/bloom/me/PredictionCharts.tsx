@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { computeWheel, moodScatter, type ForecastDay, type FertilityLevel } from "@/lib/predictions";
 import type { CyclePhase } from "@/components/bloom/cyclePhase";
+import { tr, trx } from "@/i18n";
 
 /* Real dashboard instruments for Smart Predictions — a glowing cycle wheel, a
    weather-style forecast strip, a hormone×mood curve and gauges. Single-hue
@@ -37,7 +38,7 @@ export function CycleWheel({ dayLabel, phaseLabel, note }: { dayLabel: string; p
 
   return (
     <div className="grid place-items-center">
-      <svg viewBox={`0 0 ${S} ${S}`} className="w-full max-w-[260px]" role="img" aria-label="Your cycle wheel">
+      <svg viewBox={`0 0 ${S} ${S}`} className="w-full max-w-[260px]" role="img" aria-label={tr("Your cycle wheel")}>
         <defs>
           <radialGradient id="wheelglow" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
@@ -70,14 +71,14 @@ export function CycleWheel({ dayLabel, phaseLabel, note }: { dayLabel: string; p
         <circle cx={tx} cy={ty} r={9} fill="#fff" stroke="#DB2777" strokeWidth={3.5} />
         <circle cx={tx} cy={ty} r={3.5} fill="#DB2777" />
         {/* center */}
-        <text x={cx} y={cy - 4} textAnchor="middle" className="font-script" fontSize="34" fill="#DB2777">{dayLabel}</text>
+        <text x={cx} y={cy - 4} textAnchor="middle" className="font-script" fontSize="34" fill="#DB2777">{trx(dayLabel)}</text>
         <text x={cx} y={cy + 16} textAnchor="middle" fontSize="11" fontWeight="800" fill="#9D5C7E" style={{ letterSpacing: "0.1em" }}>{phaseLabel.toUpperCase()}</text>
-        {note && <text x={cx} y={cy + 30} textAnchor="middle" fontSize="9" fill="#B76E79">{note}</text>}
+        {note && <text x={cx} y={cy + 30} textAnchor="middle" fontSize="9" fill="#B76E79">{trx(note)}</text>}
       </svg>
       <div className="mt-1.5 flex flex-wrap justify-center gap-x-3 gap-y-1">
         {(["period", "follicular", "fertile", "ovulation", "luteal"] as Phase[]).map((p) => (
           <span key={p} className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wide text-rose/60">
-            <span className="h-2 w-2 rounded-full" style={{ background: PHASE_ARC[p] }} />{PHASE_SHORT[p]}
+            <span className="h-2 w-2 rounded-full" style={{ background: PHASE_ARC[p] }} />{trx(PHASE_SHORT[p])}
           </span>
         ))}
       </div>
@@ -99,12 +100,12 @@ export function ForecastStrip({ days }: { days: ForecastDay[] }) {
               border: "1px solid rgba(236,72,153,0.10)",
               boxShadow: d.isToday ? "0 4px 12px rgba(219,39,119,0.18)" : "none",
             }}>
-            <p className="text-[9.5px] font-extrabold uppercase tracking-wide" style={{ color: d.isToday ? "#DB2777" : "#B08099" }}>{d.label}</p>
+            <p className="text-[9.5px] font-extrabold uppercase tracking-wide" style={{ color: d.isToday ? "#DB2777" : "#B08099" }}>{trx(d.label)}</p>
             <span className="mx-auto my-1.5 block h-1.5 w-1.5 rounded-full" style={{ background: PHASE_ARC[d.phase] }} />
             <div className="mx-auto flex h-11 w-2.5 items-end overflow-hidden rounded-full" style={{ background: "rgba(236,72,153,0.09)" }}>
               <div className="w-full rounded-full transition-all duration-700" style={{ height: `${h * 100}%`, background: "linear-gradient(180deg,#F472B6,#BE185D)" }} />
             </div>
-            <p className="mt-1.5 h-4 text-[11px] leading-none">{glyph}</p>
+            <p className="mt-1.5 h-4 text-[11px] leading-none">{trx(glyph)}</p>
           </div>
         );
       })}
@@ -149,9 +150,9 @@ export function HormoneMoodCurve({ cycleLength, todayDay }: { cycleLength: numbe
         <line x1={PX} y1={PT + CH} x2={VW - PX} y2={PT + CH} stroke="rgba(236,72,153,0.15)" strokeWidth="1" />
       </svg>
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[8.5px] font-extrabold">
-        <span style={{ color: "#EC4899" }}>▬ Estrogen</span>
-        <span style={{ color: "#9D174D" }}>▬ Progesterone</span>
-        <span className="text-rose/60">○ Your mood</span>
+        <span style={{ color: "#EC4899" }}>{tr("▬ Estrogen")}</span>
+        <span style={{ color: "#9D174D" }}>{tr("▬ Progesterone")}</span>
+        <span className="text-rose/60">{tr("○ Your mood")}</span>
       </div>
     </div>
   );
@@ -179,10 +180,10 @@ export function FertilityGauge({ level }: { level: FertilityLevel }) {
         <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="#9D174D" strokeWidth="3.5" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="5" fill="#9D174D" />
         {/* label sits BELOW the needle pivot so it never overlaps the arc */}
-        <text x={cx} y={cy + 24} textAnchor="middle" className="font-script" fontSize="22" fill="#DB2777" style={{ textTransform: "capitalize" }}>{level}</text>
+        <text x={cx} y={cy + 24} textAnchor="middle" className="font-script" fontSize="22" fill="#DB2777" style={{ textTransform: "capitalize" }}>{trx(level)}</text>
       </svg>
       <div className="-mt-1 flex w-full max-w-[200px] justify-between px-2 text-[8px] font-extrabold uppercase tracking-wide text-rose/50">
-        <span>Low</span><span>Med</span><span>High</span><span>Peak</span>
+        <span>{tr("Low")}</span><span>{tr("Med")}</span><span>{tr("High")}</span><span>{tr("Peak")}</span>
       </div>
     </div>
   );
@@ -198,8 +199,8 @@ export function ConfidenceRing({ pct, size = 72 }: { pct: number; size?: number 
       <circle cx="36" cy="36" r={r} fill="none" stroke="url(#confgrad)" strokeWidth="8" strokeLinecap="round"
         strokeDasharray={c} strokeDashoffset={off} transform="rotate(-90 36 36)"
         style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }} />
-      <text x="36" y="35" textAnchor="middle" className="font-script" fontSize="19" fill="#DB2777">{pct}%</text>
-      <text x="36" y="47" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#B76E79" style={{ letterSpacing: "0.08em" }}>SURE</text>
+      <text x="36" y="35" textAnchor="middle" className="font-script" fontSize="19" fill="#DB2777">{trx(pct)}%</text>
+      <text x="36" y="47" textAnchor="middle" fontSize="7.5" fontWeight="800" fill="#B76E79" style={{ letterSpacing: "0.08em" }}>{tr("SURE")}</text>
     </svg>
   );
 }

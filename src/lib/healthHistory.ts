@@ -16,6 +16,7 @@
  * which is real. Dates are LOCAL calendar days throughout (localDate.ts).
  */
 import { localDateISO, todayISO } from "@/lib/localDate";
+import { tr, localMonths } from "@/i18n";
 import {
   readPeriodStarts,
   avgCycleLength,
@@ -214,7 +215,7 @@ function mondayISO(d: Date): string {
   return localDateISO(copy);
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = localMonths(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "short");
 function shortLabel(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
@@ -550,17 +551,17 @@ function buildPatterns(h: {
     const dir = h.weight.changeKg < 0 ? "down" : h.weight.changeKg > 0 ? "up" : "steady";
     weight =
       dir === "steady"
-        ? `Holding steady around ${h.weight.currentKg} kg across ${h.weight.series.length} weigh-ins.`
-        : `${dir === "down" ? "Down" : "Up"} ${Math.abs(h.weight.changeKg)} kg since your first weigh-in — a ${dir === "down" ? "gentle downward" : "rising"} trend over ${h.weight.series.length} readings.`;
+        ? tr("Holding steady around {0} kg across {1} weigh-ins.", { 0: h.weight.currentKg, 1: h.weight.series.length })
+        : tr("{0} {1} kg since your first weigh-in — a {2} trend over {3} readings.", { 0: dir === "down" ? "Down" : "Up", 1: Math.abs(h.weight.changeKg), 2: dir === "down" ? "gentle downward" : "rising", 3: h.weight.series.length });
   }
 
   const burnLine = (days: DayBurn[], kind: string) => {
-    if (!days.length) return `No ${kind} logged yet — finish a session and it charts here.`;
+    if (!days.length) return tr("No {0} logged yet — finish a session and it charts here.", { 0: kind });
     const total = days.reduce((s, d) => s + d.kcal, 0);
     const sessions = days.reduce((s, d) => s + d.sessions, 0);
     const avg = Math.round(total / Math.max(1, sessions));
     const best = [...days].sort((a, b) => b.kcal - a.kcal)[0];
-    return `${sessions} ${kind} on ${days.length} day${days.length === 1 ? "" : "s"} · ${total.toLocaleString()} kcal total · ~${avg} kcal each. Biggest burn: ${dayLabel(best.date)} (${best.kcal} kcal).`;
+    return tr("{0} {1} on {2} day{3} · {4} kcal total · ~{5} kcal each. Biggest burn: {6} ({7} kcal).", { 0: sessions, 1: kind, 2: days.length, 3: days.length === 1 ? "" : "s", 4: total.toLocaleString(), 5: avg, 6: dayLabel(best.date), 7: best.kcal });
   };
   const workout = burnLine(h.workoutDaily, "workouts");
   const yoga = burnLine(h.yogaDaily, "yoga flows");
@@ -585,7 +586,7 @@ function buildPatterns(h: {
   // Symptoms
   let symptoms = "Tag how you feel and your symptom pattern builds here.";
   if (h.symptomsDaily.length) {
-    symptoms = `Logged on ${h.symptomsDaily.length} day${h.symptomsDaily.length === 1 ? "" : "s"}${h.symptomsTop ? ` · most common: ${h.symptomsTop.label} (${h.symptomsTop.count}×)` : ""}.`;
+    symptoms = `Logged on ${h.symptomsDaily.length} day${h.symptomsDaily.length === 1 ? "" : "s"}${h.symptomsTop ? tr(" · most common: {0} ({1}×)", { 0: h.symptomsTop.label, 1: h.symptomsTop.count }) : ""}.`;
   }
 
   // Sleep
@@ -594,7 +595,11 @@ function buildPatterns(h: {
     const worst = [...h.byPhase]
       .filter((p) => p.sleepAvg != null)
       .sort((a, b) => (a.sleepAvg ?? 5) - (b.sleepAvg ?? 5))[0];
-    sleep = `Averaging ${h.sleep.avgQuality}/5${h.sleep.avgHours ? ` (~${h.sleep.avgHours}h)` : ""} across ${h.sleep.days} night${h.sleep.days === 1 ? "" : "s"}${worst ? ` · lightest in your ${worst.label.toLowerCase()} phase` : ""}.`;
+    const one = h.sleep.days === 1;
+    const avg = h.sleep.avgHours
+      ? tr(one ? "Averaging {0}/5 (~{1}h) across 1 night" : "Averaging {0}/5 (~{1}h) across {2} nights", { 0: h.sleep.avgQuality, 1: h.sleep.avgHours, 2: h.sleep.days })
+      : tr(one ? "Averaging {0}/5 across 1 night" : "Averaging {0}/5 across {1} nights", { 0: h.sleep.avgQuality, 1: h.sleep.days });
+    sleep = `${avg}${worst ? tr(" · lightest in your {0} phase", { 0: worst.label.toLowerCase() }) : ""}.`;
   }
 
   // Nutrition (planned vs logged)
@@ -620,7 +625,7 @@ function buildPatterns(h: {
         : h.regularity === "irregular"
           ? "an irregular rhythm (varies > 3 days)"
           : "still settling";
-    cycle = `${done.length} completed cycle${done.length === 1 ? "" : "s"}${h.avgCycle ? ` · average ${h.avgCycle} days` : ""} · ${reg}.`;
+    cycle = `${done.length} completed cycle${done.length === 1 ? "" : "s"}${h.avgCycle ? tr(" · average {0} days", { 0: h.avgCycle }) : ""} · ${reg}.`;
   }
 
   // Combined (by phase × time) — name the phase where mood is brightest and where

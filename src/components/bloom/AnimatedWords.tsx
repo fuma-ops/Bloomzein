@@ -1,3 +1,4 @@
+import { trx } from "@/i18n";
 import { useMemo } from "react";
 
 /**
@@ -35,16 +36,18 @@ export function AnimatedWords({
 }: AnimatedWordsProps) {
   const resolvedStagger = stagger ?? step ?? 200;
   const resolvedDelay = initialDelay ?? delay ?? 0;
-  const words = useMemo(() => text.split(" "), [text]);
+  // Translate the whole sentence first (word order differs in French/Arabic).
+  const shown = trx(text);
+  const words = useMemo(() => shown.split(" "), [shown]);
 
   return (
-    <span className={className} aria-label={text}>
+    <span className={className} aria-label={shown}>
       {words.map((word, i) => (
         <span
           key={`${word}-${i}`}
           aria-hidden="true"
           className="animate-word-fade inline-block"
-          style={{ animationDelay: `${resolvedDelay + i * resolvedStagger}ms`, marginRight: "0.25em" }}
+          style={{ animationDelay: `${resolvedDelay + i * resolvedStagger}ms`, marginInlineEnd: "0.25em" }}
         >
           {word}
         </span>

@@ -19,6 +19,7 @@
  */
 
 import { readDietProfile, RECIPES, type DietGoal, type DietPace } from "@/components/bloom/recipes/data";
+import { tr } from "@/i18n";
 import {
   readWorkoutPlanDays,
   readYogaPlanDays,
@@ -204,9 +205,9 @@ export function targetRationale(t: TargetBreakdown): string {
 export function movementFoodLine(t: TargetBreakdown): string | null {
   if (t.workoutDays === 0 && t.yogaDays === 0) return null;
   const bits: string[] = [];
-  if (t.workoutDays) bits.push(`${t.workoutDays} workout${t.workoutDays > 1 ? "s" : ""}`);
-  if (t.yogaDays) bits.push(`${t.yogaDays} yoga`);
-  return `${bits.join(" + ")} planned this week — you'll eat back what you burn on each training day`;
+  if (t.workoutDays) bits.push(t.workoutDays > 1 ? tr("{0} workouts", { 0: t.workoutDays }) : tr("1 workout"));
+  if (t.yogaDays) bits.push(t.yogaDays > 1 ? tr("{0} yoga sessions", { 0: t.yogaDays }) : tr("1 yoga session"));
+  return tr("{0} planned this week — you'll eat back what you burn on each training day", { 0: bits.join(" + ") });
 }
 
 /* ---------- Day totals (sum a day's chosen recipes) ---------- */
@@ -477,7 +478,7 @@ export function coachRecommendation(): CoachPlan {
 
   const headline =
     proj?.etaWeeks != null
-      ? `Reach ${proj.target}kg in ~${proj.etaWeeks} week${proj.etaWeeks > 1 ? "s" : ""} with this plan`
+      ? tr("Reach {0}kg in ~{1} week{2} with this plan", { 0: proj.target, 1: proj.etaWeeks, 2: proj.etaWeeks > 1 ? "s" : "" })
       : goal === "maintain"
       ? "Your plan to stay strong, lean & steady"
       : "Set a goal weight to see your timeline";

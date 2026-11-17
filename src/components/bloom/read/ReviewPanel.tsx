@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ClipboardCheck, Copy, Check, PenLine } from "lucide-react";
 import { ARTICLES, type Article } from "@/lib/readsData";
+import { tr } from "@/i18n";
 
 /**
  * Editorial review panel — shown on articles with status "review". The reviewer
@@ -60,20 +61,19 @@ export function ReviewPanel({ article }: { article: Article }) {
           <PenLine className="h-4 w-4" strokeWidth={2} />
         </span>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-hotpink/80">Review mode</p>
-          <p className="text-xs text-rose/70">Validate to publish, or leave a note and I'll revise it.</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-hotpink/80">{tr("Review mode")}</p>
+          <p className="text-xs text-rose/70">{tr("Validate to publish, or leave a note and I'll revise it.")}</p>
         </div>
         {validated && (
-          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[11px] font-bold text-hotpink">
-            <Check className="h-3.5 w-3.5" strokeWidth={2.4} /> Validated
-          </span>
+          <span className="ms-auto inline-flex items-center gap-1 rounded-full bg-hotpink/10 px-2.5 py-1 text-[11px] font-bold text-hotpink">
+            <Check className="h-3.5 w-3.5" strokeWidth={2.4} />{" "}{tr("Validated")}</span>
         )}
       </div>
 
       <textarea
         value={comment}
         onChange={(e) => persist(e.target.value, validated)}
-        placeholder="What would make this better? (leave blank if it's perfect)"
+        placeholder={tr("What would make this better? (leave blank if it's perfect)")}
         rows={2}
         className="mt-3 w-full resize-y rounded-2xl border border-petal/60 bg-white/90 px-3.5 py-2.5 text-sm text-rose placeholder:text-rose/45 outline-none transition focus:ring-4 focus:ring-hotpink/15 focus:border-hotpink"
       />
@@ -89,7 +89,7 @@ export function ReviewPanel({ article }: { article: Article }) {
           ].join(" ")}
         >
           <ClipboardCheck className="h-4 w-4" strokeWidth={2} />
-          {validated ? "Undo validate" : "Validate ✓"}
+          {validated ? tr("Undo validate") : tr("Validate ✓")}
         </button>
 
         <button
@@ -97,7 +97,7 @@ export function ReviewPanel({ article }: { article: Article }) {
           className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-3.5 py-1.5 text-xs font-bold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
         >
           {copied ? <Check className="h-4 w-4" strokeWidth={2.4} /> : <Copy className="h-4 w-4" strokeWidth={2} />}
-          {copied ? "Copied — paste to Claude" : "Copy feedback for Claude"}
+          {copied ? tr("Copied — paste to Claude") : tr("Copy feedback for Claude")}
         </button>
       </div>
     </div>

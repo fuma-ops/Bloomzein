@@ -8,6 +8,7 @@
  * personal wellness summary, NOT a medical record or diagnosis.
  */
 import { prettyDate, titleCase, type HealthHistory } from "@/lib/healthHistory";
+import { localMonths } from "@/i18n";
 
 /* ---------- small utils ---------- */
 
@@ -36,7 +37,7 @@ const REGULARITY_TEXT: Record<HealthHistory["cycle"]["regularity"], string> = {
   learning: "Still learning — log at least two period starts to assess regularity.",
 };
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS = localMonths(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"], "short");
 const shortDay = (iso: string) => {
   const d = new Date(iso + "T00:00:00");
   return `${d.getDate()} ${MONTHS[d.getMonth()]}`;

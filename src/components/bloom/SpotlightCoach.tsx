@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { X, Sparkles } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 /**
  * A calm guided-setup step card. The page behind gently recedes under a soft
@@ -112,11 +113,10 @@ export function SpotlightCoach({
     return createPortal(
       <button
         onClick={() => setCollapsed(false)}
-        className="fixed bottom-24 right-4 z-[130] inline-flex items-center gap-1.5 rounded-full bg-hotpink pl-3 pr-4 py-2.5 text-[12px] font-bold text-white shadow-xl shadow-hotpink/40 ring-2 ring-white/70 backdrop-blur animate-cta-bounce active:scale-95 md:bottom-6"
-        aria-label="Continue setup"
+        className="fixed bottom-24 end-4 z-[130] inline-flex items-center gap-1.5 rounded-full bg-hotpink ps-3 pe-4 py-2.5 text-[12px] font-bold text-white shadow-xl shadow-hotpink/40 ring-2 ring-white/70 backdrop-blur animate-cta-bounce active:scale-95 md:bottom-6"
+        aria-label={tr("Continue setup")}
       >
-        <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />
-        Continue setup{showProgress ? ` · ${step}/${total}` : ""}
+        <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />{tr("Continue setup")}{showProgress ? ` · ${step}/${total}` : ""}
       </button>,
       document.body,
     );
@@ -149,15 +149,15 @@ export function SpotlightCoach({
         >
           <button
             onClick={dismiss}
-            aria-label="Dismiss"
-            className="absolute right-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full bg-blush/70 text-rose transition hover:bg-petal active:scale-90"
+            aria-label={tr("Dismiss")}
+            className="absolute end-2.5 top-2.5 grid h-6 w-6 place-items-center rounded-full bg-blush/70 text-rose transition hover:bg-petal active:scale-90"
           >
             <X className="h-3 w-3" />
           </button>
 
           {/* Progress — dots + "Step n of N" so she always knows where she is */}
           {showProgress && (
-            <div className="mb-2.5 flex items-center gap-2 pr-6">
+            <div className="mb-2.5 flex items-center gap-2 pe-6">
               <div className="flex items-center gap-1">
                 {Array.from({ length: total! }).map((_, i) => (
                   <span
@@ -166,26 +166,26 @@ export function SpotlightCoach({
                   />
                 ))}
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-hotpink/70">Step {step} of {total}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-hotpink/70">{tr("Step")}{" "}{trx(step)}{" "}{tr("of")}{" "}{trx(total)}</span>
             </div>
           )}
 
-          <h2 className="font-script text-xl leading-tight text-hotpink pr-6">{title}</h2>
-          <p className="mt-1 text-[12px] leading-snug text-rose/75">{message}</p>
-          {extra}
+          <h2 className="font-script text-xl leading-tight text-hotpink pe-6">{trx(title)}</h2>
+          <p className="mt-1 text-[12px] leading-snug text-rose/75">{trx(message)}</p>
+          {trx(extra)}
           {primaryLabel && onPrimary && (
             <>
               <button
                 onClick={onPrimary}
                 className="bloom-luxury-btn hover-scale animate-cta-bounce mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold text-white"
               >
-                {primaryLabel}
+                {trx(primaryLabel)}
               </button>
               <button
                 onClick={dismiss}
                 className="mt-1.5 w-full text-center text-[11px] font-semibold text-rose/55 transition hover:text-hotpink"
               >
-                {secondaryLabel}
+                {trx(secondaryLabel)}
               </button>
             </>
           )}

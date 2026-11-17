@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Bold, Underline, Highlighter, Palette, Type, Mic, Square } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 export const DIARY_FONTS = [
-  { key: "quicksand", label: "Quicksand", family: "'Quicksand', sans-serif" },
-  { key: "caveat", label: "Caveat", family: "'Caveat', cursive" },
-  { key: "dancing", label: "Dancing Script", family: "'Dancing Script', cursive" },
-  { key: "pacifico", label: "Pacifico", family: "'Pacifico', cursive" },
-  { key: "satisfy", label: "Satisfy", family: "'Satisfy', cursive" },
-  { key: "comfortaa", label: "Comfortaa", family: "'Comfortaa', sans-serif" },
+  { key: "quicksand", label: tr("Quicksand"), family: "'Quicksand', sans-serif" },
+  { key: "caveat", label: tr("Caveat"), family: "'Caveat', cursive" },
+  { key: "dancing", label: tr("Dancing Script"), family: "'Dancing Script', cursive" },
+  { key: "pacifico", label: tr("Pacifico"), family: "'Pacifico', cursive" },
+  { key: "satisfy", label: tr("Satisfy"), family: "'Satisfy', cursive" },
+  { key: "comfortaa", label: tr("Comfortaa"), family: "'Comfortaa', sans-serif" },
 ] as const;
 
 export const TEXT_COLORS = ["#831843", "#DB2777", "#9D5C7E", "#7C3AED", "#0EA5E9", "#059669", "#D97706"];
@@ -94,11 +95,11 @@ export function DiaryRichEditor({
     <div className="rounded-2xl border border-[#EC4899]/20 bg-[#FFF0F6]/60 overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 border-b border-[#EC4899]/15 bg-white/60 px-2 py-1.5">
-        <ToolbarBtn label="Bold" onClick={() => exec("bold")}><Bold className="h-3.5 w-3.5" /></ToolbarBtn>
-        <ToolbarBtn label="Underline" onClick={() => exec("underline")}><Underline className="h-3.5 w-3.5" /></ToolbarBtn>
+        <ToolbarBtn label={tr("Bold")} onClick={() => exec("bold")}><Bold className="h-3.5 w-3.5" /></ToolbarBtn>
+        <ToolbarBtn label={tr("Underline")} onClick={() => exec("underline")}><Underline className="h-3.5 w-3.5" /></ToolbarBtn>
 
         <div className="relative">
-          <ToolbarBtn label="Highlight" onClick={() => { setHighlightOpen((v) => !v); setColorOpen(false); }}>
+          <ToolbarBtn label={tr("Highlight")} onClick={() => { setHighlightOpen((v) => !v); setColorOpen(false); }}>
             <Highlighter className="h-3.5 w-3.5" />
           </ToolbarBtn>
           {highlightOpen && (
@@ -110,7 +111,7 @@ export function DiaryRichEditor({
         </div>
 
         <div className="relative">
-          <ToolbarBtn label="Text color" onClick={() => { setColorOpen((v) => !v); setHighlightOpen(false); }}>
+          <ToolbarBtn label={tr("Text color")} onClick={() => { setColorOpen((v) => !v); setHighlightOpen(false); }}>
             <Palette className="h-3.5 w-3.5" />
           </ToolbarBtn>
           {colorOpen && (
@@ -128,9 +129,9 @@ export function DiaryRichEditor({
             onChange={(e) => { if (e.target.value) { exec("fontName", e.target.value); e.target.value = ""; } }}
             className="rounded-full border border-[#EC4899]/20 bg-white/80 px-2 py-1 text-[11px] text-[#831843] outline-none cursor-pointer"
           >
-            <option value="" disabled>Font for selection…</option>
+            <option value="" disabled>{tr("Font for selection…")}</option>
             {DIARY_FONTS.map((f) => (
-              <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{f.label}</option>
+              <option key={f.key} value={f.family} style={{ fontFamily: f.family }}>{trx(f.label)}</option>
             ))}
           </select>
         </div>
@@ -139,14 +140,14 @@ export function DiaryRichEditor({
           <button
             type="button"
             onClick={toggleMic}
-            title={listening ? "Stop dictation" : "Speak your entry"}
+            title={listening ? tr("Stop dictation") : tr("Speak your entry")}
             className={[
-              "ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition",
+              "ms-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition",
               listening ? "bg-magenta text-white animate-pulse" : "bg-hotpink/10 text-hotpink hover:bg-hotpink/20",
             ].join(" ")}
           >
             {listening ? <Square className="h-3 w-3" strokeWidth={2.2} /> : <Mic className="h-3.5 w-3.5" strokeWidth={1.8} />}
-            {listening ? "Listening…" : "Speak"}
+            {listening ? tr("Listening…") : tr("Speak")}
           </button>
         )}
       </div>
@@ -188,7 +189,7 @@ function ToolbarBtn({ children, onClick, label }: { children: React.ReactNode; o
 
 function SwatchPopover({ colors, onPick }: { colors: string[]; onPick: (c: string) => void }) {
   return (
-    <div className="absolute left-0 top-9 z-20 flex flex-wrap gap-1.5 rounded-2xl border border-petal/50 bg-white p-2 shadow-xl shadow-hotpink/20 w-32">
+    <div className="absolute start-0 top-9 z-20 flex flex-wrap gap-1.5 rounded-2xl border border-petal/50 bg-white p-2 shadow-xl shadow-hotpink/20 w-32">
       {colors.map((c) => (
         <button
           type="button"

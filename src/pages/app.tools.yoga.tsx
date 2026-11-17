@@ -29,6 +29,7 @@ import { PickerField } from "@/components/bloom/PickerField";
 import { YogaOnboarding, type YogaTourTab } from "@/components/bloom/YogaOnboarding";
 import { DIARY_STORAGE_KEY, type DiaryEntry } from "./app.tools.diary";
 import { openPaywall, hasAccess, useAccess } from "@/lib/entitlements";
+import { tr, trx } from "@/i18n";
 
 // ===================== DATA =====================
 
@@ -551,16 +552,16 @@ type Intention = "morning" | "stress" | "sleep" | "release" | "cycle" | "strengt
 type Phase = "menstrual" | "follicular" | "ovulation" | "luteal";
 
 const INTENTIONS: { id: Intention; label: string; icon: typeof Sun; tagline: string }[] = [
-  { id: "morning", label: "Morning energy", icon: Sun, tagline: "wake up the body, light up the day" },
-  { id: "stress", label: "Stress relief", icon: Heart, tagline: "soft, slow, exhale the day away" },
-  { id: "sleep", label: "Sleep prep", icon: Moon, tagline: "gentle floor flow into deep rest" },
-  { id: "release", label: "Emotional release", icon: Sparkle, tagline: "open hips & heart, let it move" },
-  { id: "cycle", label: "Cycle sync", icon: Flower, tagline: "match today's phase" },
-  { id: "strength", label: "Strength", icon: Activity, tagline: "build steady, mindful power" },
-  { id: "fullbody", label: "Full-body flow", icon: Sun, tagline: "one flowing practice, head to toe" },
-  { id: "core", label: "Core & abs", icon: CircleDot, tagline: "steady, mindful core strength" },
-  { id: "balance", label: "Balance & focus", icon: Sparkle, tagline: "steady the body, quiet the mind" },
-  { id: "backcare", label: "Back & neck relief", icon: Heart, tagline: "unwind desk-day tension" },
+  { id: "morning", label: tr("Morning energy"), icon: Sun, tagline: tr("wake up the body, light up the day") },
+  { id: "stress", label: tr("Stress relief"), icon: Heart, tagline: tr("soft, slow, exhale the day away") },
+  { id: "sleep", label: tr("Sleep prep"), icon: Moon, tagline: tr("gentle floor flow into deep rest") },
+  { id: "release", label: tr("Emotional release"), icon: Sparkle, tagline: tr("open hips & heart, let it move") },
+  { id: "cycle", label: tr("Cycle sync"), icon: Flower, tagline: tr("match today's phase") },
+  { id: "strength", label: tr("Strength"), icon: Activity, tagline: tr("build steady, mindful power") },
+  { id: "fullbody", label: tr("Full-body flow"), icon: Sun, tagline: tr("one flowing practice, head to toe") },
+  { id: "core", label: tr("Core & abs"), icon: CircleDot, tagline: tr("steady, mindful core strength") },
+  { id: "balance", label: tr("Balance & focus"), icon: Sparkle, tagline: tr("steady the body, quiet the mind") },
+  { id: "backcare", label: tr("Back & neck relief"), icon: Heart, tagline: tr("unwind desk-day tension") },
 ];
 
 // Main-pose POOLS (ordered as a sensible flow). buildFlow picks a varied subset
@@ -594,20 +595,20 @@ const INTENTION_MAIN: Record<Exclude<Intention, "cycle">, string[]> = {
 interface SessionPreset { label: string; image: string; duration: number; intention: Intention }
 
 const MOMENT_SESSIONS: SessionPreset[] = [
-  { label: "Morning wake-up", image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
-  { label: "Pre-workout", image: "/images/pose-warrior-2.webp", duration: 15, intention: "strength" },
-  { label: "Post-workout", image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
-  { label: "Lunch break", image: "/images/pose-cat-cow.webp", duration: 10, intention: "stress" },
-  { label: "Evening wind-down", image: "/images/pose-legs-up-wall.webp", duration: 20, intention: "sleep" },
+  { label: tr("Morning wake-up"), image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
+  { label: tr("Pre-workout"), image: "/images/pose-warrior-2.webp", duration: 15, intention: "strength" },
+  { label: tr("Post-workout"), image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
+  { label: tr("Lunch break"), image: "/images/pose-cat-cow.webp", duration: 10, intention: "stress" },
+  { label: tr("Evening wind-down"), image: "/images/pose-legs-up-wall.webp", duration: 20, intention: "sleep" },
 ];
 
 const INTENTION_SESSIONS: SessionPreset[] = [
-  { label: "Energise", image: "/images/pose-warrior-1.webp", duration: 20, intention: "morning" },
-  { label: "Restore", image: "/images/pose-reclined-bound-angle.webp", duration: 20, intention: "sleep" },
-  { label: "Strengthen", image: "/images/pose-plank.webp", duration: 30, intention: "strength" },
-  { label: "Release", image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
-  { label: "Ground", image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
-  { label: "Flow", image: "/images/pose-downward-dog.webp", duration: 30, intention: "stress" },
+  { label: tr("Energise"), image: "/images/pose-warrior-1.webp", duration: 20, intention: "morning" },
+  { label: tr("Restore"), image: "/images/pose-reclined-bound-angle.webp", duration: 20, intention: "sleep" },
+  { label: tr("Strengthen"), image: "/images/pose-plank.webp", duration: 30, intention: "strength" },
+  { label: tr("Release"), image: "/images/pose-pigeon.webp", duration: 15, intention: "release" },
+  { label: tr("Ground"), image: "/images/pose-mountain.webp", duration: 10, intention: "morning" },
+  { label: tr("Flow"), image: "/images/pose-downward-dog.webp", duration: 30, intention: "stress" },
 ];
 
 // Default weekly plan suggested per cycle phase — Mon..Sun, null = rest day.
@@ -637,16 +638,16 @@ const FOCUS_PREVIEW: Record<string, { image: string; duration: string }> = {
 // Images come from the canonical YOGA_FOCUS map (crossToolData) so Today, the
 // Calendar and this tool always show the SAME picture per focus.
 const FOCUS_META: Record<string, { intention: Intention; duration: number; image: string; blurb: string }> = {
-  "Morning energy":     { intention: "morning",  duration: 15, image: yogaFocusImage("Morning energy"),     blurb: "Wake the body, light up the day" },
-  "Stress relief":      { intention: "stress",   duration: 15, image: yogaFocusImage("Stress relief"),      blurb: "Soft, slow — exhale the day away" },
-  "Sleep prep":         { intention: "sleep",    duration: 20, image: yogaFocusImage("Sleep prep"),         blurb: "Gentle floor flow into deep rest" },
-  "Cycle sync":         { intention: "cycle",    duration: 20, image: yogaFocusImage("Cycle sync"),         blurb: "Matched to today's phase" },
-  "Strength":           { intention: "strength", duration: 25, image: yogaFocusImage("Strength"),           blurb: "Build steady, mindful power" },
-  "Emotional release":  { intention: "release",  duration: 20, image: yogaFocusImage("Emotional release"),  blurb: "Open hips & heart, let it move" },
-  "Core & abs":         { intention: "core",     duration: 20, image: yogaFocusImage("Core & abs"),         blurb: "Steady, mindful core strength" },
-  "Balance & focus":    { intention: "balance",  duration: 20, image: yogaFocusImage("Balance & focus"),    blurb: "Steady the body, quiet the mind" },
-  "Back & neck relief": { intention: "backcare", duration: 15, image: yogaFocusImage("Back & neck relief"), blurb: "Unwind desk-day tension" },
-  "Full-body flow":     { intention: "fullbody", duration: 30, image: yogaFocusImage("Full-body flow"),     blurb: "One flowing practice, head to toe" },
+  "Morning energy":     { intention: "morning",  duration: 15, image: yogaFocusImage("Morning energy"),     blurb: tr("Wake the body, light up the day") },
+  "Stress relief":      { intention: "stress",   duration: 15, image: yogaFocusImage("Stress relief"),      blurb: tr("Soft, slow — exhale the day away") },
+  "Sleep prep":         { intention: "sleep",    duration: 20, image: yogaFocusImage("Sleep prep"),         blurb: tr("Gentle floor flow into deep rest") },
+  "Cycle sync":         { intention: "cycle",    duration: 20, image: yogaFocusImage("Cycle sync"),         blurb: tr("Matched to today's phase") },
+  "Strength":           { intention: "strength", duration: 25, image: yogaFocusImage("Strength"),           blurb: tr("Build steady, mindful power") },
+  "Emotional release":  { intention: "release",  duration: 20, image: yogaFocusImage("Emotional release"),  blurb: tr("Open hips & heart, let it move") },
+  "Core & abs":         { intention: "core",     duration: 20, image: yogaFocusImage("Core & abs"),         blurb: tr("Steady, mindful core strength") },
+  "Balance & focus":    { intention: "balance",  duration: 20, image: yogaFocusImage("Balance & focus"),    blurb: tr("Steady the body, quiet the mind") },
+  "Back & neck relief": { intention: "backcare", duration: 15, image: yogaFocusImage("Back & neck relief"), blurb: tr("Unwind desk-day tension") },
+  "Full-body flow":     { intention: "fullbody", duration: 30, image: yogaFocusImage("Full-body flow"),     blurb: tr("One flowing practice, head to toe") },
 };
 
 // ── Curated weekly plans (yoga "programs") ──────────────────────────────────
@@ -665,8 +666,8 @@ interface YogaProgram {
 const YOGA_PROGRAMS: YogaProgram[] = [
   {
     id: "calm-reset",
-    title: "7-Day Calm Reset",
-    tagline: "Unwind the nervous system, sleep deeper.",
+    title: tr("7-Day Calm Reset"),
+    tagline: tr("Unwind the nervous system, sleep deeper."),
     image: "/images/pose-legs-up-wall.webp",
     promise: ["Daily soft flows to lower stress", "A gentle wind-down before sleep", "A calm, sustainable rhythm"],
     whoFor: "Frazzled, over-stretched, or struggling to switch off at night.",
@@ -674,8 +675,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "morning-glow",
-    title: "Morning Glow Week",
-    tagline: "Wake up bright, move with energy.",
+    title: tr("Morning Glow Week"),
+    tagline: tr("Wake up bright, move with energy."),
     image: "/images/pose-warrior-1.webp",
     promise: ["Energizing morning flows", "Build steady, mindful strength", "Start every day lighter"],
     whoFor: "You want to begin your days with movement and momentum.",
@@ -683,8 +684,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "cycle-synced",
-    title: "Cycle-Synced Week",
-    tagline: "Move with your hormones, not against them.",
+    title: tr("Cycle-Synced Week"),
+    tagline: tr("Move with your hormones, not against them."),
     image: "/images/pose-reclined-bound-angle.webp",
     promise: ["Flows matched to each phase", "Honour your low-energy days", "Feel more in tune with your body"],
     whoFor: "You want your practice to follow your cycle's natural rhythm.",
@@ -692,8 +693,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "flex-release",
-    title: "Flexibility & Release",
-    tagline: "Open tight hips, release held tension.",
+    title: tr("Flexibility & Release"),
+    tagline: tr("Open tight hips, release held tension."),
     image: "/images/pose-pigeon.webp",
     promise: ["Deep hip & heart openers", "Release stored tension", "Greater ease of movement"],
     whoFor: "Tight hips, a stiff back, or a lot of sitting.",
@@ -701,8 +702,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "strong-sculpted",
-    title: "Strong & Sculpted",
-    tagline: "Build lean strength, mindfully.",
+    title: tr("Strong & Sculpted"),
+    tagline: tr("Build lean strength, mindfully."),
     image: "/images/pose-plank.webp",
     promise: ["Sculpt core, glutes & arms", "Steady, functional strength", "Feel powerful in your body"],
     whoFor: "You want to tone and build strength without the gym.",
@@ -710,8 +711,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "core-foundations",
-    title: "Core Foundations",
-    tagline: "A strong, stable centre in one week.",
+    title: tr("Core Foundations"),
+    tagline: tr("A strong, stable centre in one week."),
     image: "/images/pose-boat.webp",
     promise: ["A strong, controlled core", "Better posture & stability", "Protect your lower back"],
     whoFor: "You want deep-core strength and a supported back.",
@@ -719,8 +720,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "desk-reset",
-    title: "Desk Reset",
-    tagline: "Undo the day's sitting, one flow at a time.",
+    title: tr("Desk Reset"),
+    tagline: tr("Undo the day's sitting, one flow at a time."),
     image: "/images/pose-cat-cow.webp",
     promise: ["Unwind neck & shoulder knots", "Free a stiff lower back", "Move easily again"],
     whoFor: "Long hours at a desk, a tight neck, or an achy back.",
@@ -728,8 +729,8 @@ const YOGA_PROGRAMS: YogaProgram[] = [
   },
   {
     id: "total-body-balance",
-    title: "Total-Body Balance",
-    tagline: "One well-rounded practice, head to toe.",
+    title: tr("Total-Body Balance"),
+    tagline: tr("One well-rounded practice, head to toe."),
     image: "/images/pose-warrior-3.webp",
     promise: ["A complete full-body flow", "Steady balance & focus", "Well-rounded every week"],
     whoFor: "You want one balanced routine that trains the whole body.",
@@ -1010,78 +1011,78 @@ export type NamedFlow = {
 };
 export const YOGA_FLOWS: NamedFlow[] = [
   // — Cycle (the niche) —
-  { slug: "period-cramps", title: "Yoga for Period Cramps", intention: "cycle", phase: "menstrual", durationMin: 15, level: "Beginner",
-    blurb: "Gentle holds to soften cramps and ease the low belly.", tags: ["period", "cramps", "menstrual", "gentle", "PMS"],
+  { slug: "period-cramps", title: tr("Yoga for Period Cramps"), intention: "cycle", phase: "menstrual", durationMin: 15, level: "Beginner",
+    blurb: tr("Gentle holds to soften cramps and ease the low belly."), tags: ["period", "cramps", "menstrual", "gentle", "PMS"],
     poses: ["easy-seat", "cat-cow", "childs-pose", "reclined-bound-angle", "knees-to-chest", "supine-twist", "happy-baby", "banana-pose", "legs-up-wall", "savasana"],
     advice: "Keep everything gentle and skip anything that strains the belly. Breathe slowly into the low belly to warm and relax the cramping muscles — warmth and calm, never force." },
-  { slug: "pms-relief", title: "PMS Relief Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
-    blurb: "Calm the mood swings and release tension before your period.", tags: ["PMS", "luteal", "calm", "mood", "hormones"],
+  { slug: "pms-relief", title: tr("PMS Relief Yoga"), intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
+    blurb: tr("Calm the mood swings and release tension before your period."), tags: ["PMS", "luteal", "calm", "mood", "hormones"],
     poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "seated-forward-fold", "supine-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
     advice: "Practise in the evening when symptoms peak. Move slowly and let long, slow exhales settle the mood — the aim is to down-shift, not to push." },
-  { slug: "bloating-digestion", title: "Yoga for Bloating & Digestion", intention: "release", durationMin: 10, level: "Beginner",
-    blurb: "Twists and folds to ease a bloated, heavy belly.", tags: ["bloating", "digestion", "gut", "twist", "period"],
+  { slug: "bloating-digestion", title: tr("Yoga for Bloating & Digestion"), intention: "release", durationMin: 10, level: "Beginner",
+    blurb: tr("Twists and folds to ease a bloated, heavy belly."), tags: ["bloating", "digestion", "gut", "twist", "period"],
     poses: ["easy-seat", "cat-cow", "knees-to-chest", "seated-twist", "supine-twist", "seated-forward-fold", "childs-pose", "legs-up-wall", "savasana"],
     advice: "Best on an empty-ish stomach — 2–3 h after eating, never right after a big meal. Make each exhale longer than the inhale to switch on 'rest & digest', and let the twists gently wring the belly." },
-  { slug: "follicular-energy", title: "Follicular Phase Energy Yoga", intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
-    blurb: "Build gentle heat as your energy rises after your period.", tags: ["follicular", "energy", "flow", "strength"],
+  { slug: "follicular-energy", title: tr("Follicular Phase Energy Yoga"), intention: "cycle", phase: "follicular", durationMin: 20, level: "Intermediate",
+    blurb: tr("Build gentle heat as your energy rises after your period."), tags: ["follicular", "energy", "flow", "strength"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "low-lunge", "warrior-1", "warrior-2", "triangle", "tree", "bridge", "seated-forward-fold", "savasana"],
     advice: "Your energy is climbing after your period — this is the phase to build a little heat. Take the standing poses with strong, steady legs and enjoy feeling capable again." },
-  { slug: "ovulation-glow", title: "Ovulation Glow Flow", intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
-    blurb: "Your strongest phase — open, energize and glow.", tags: ["ovulation", "energy", "glow", "strength"],
+  { slug: "ovulation-glow", title: tr("Ovulation Glow Flow"), intention: "cycle", phase: "ovulation", durationMin: 20, level: "Intermediate",
+    blurb: tr("Your strongest phase — open, energize and glow."), tags: ["ovulation", "energy", "glow", "strength"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "high-lunge", "warrior-2", "extended-side-angle", "triangle", "goddess", "tree", "bridge", "savasana"],
     advice: "Your peak-energy phase — go for the fuller expression of each pose. Keep the breath smooth and even as the shapes get bigger and juicier." },
-  { slug: "luteal-calm", title: "Luteal Phase Calm Yoga", intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
-    blurb: "Wind down as your energy dips before your period.", tags: ["luteal", "calm", "restorative", "hormones"],
+  { slug: "luteal-calm", title: tr("Luteal Phase Calm Yoga"), intention: "cycle", phase: "luteal", durationMin: 15, level: "Beginner",
+    blurb: tr("Wind down as your energy dips before your period."), tags: ["luteal", "calm", "restorative", "hormones"],
     poses: ["easy-seat", "cat-cow", "childs-pose", "low-lunge", "pigeon", "butterfly", "seated-twist", "reclined-bound-angle", "legs-up-wall", "savasana"],
     advice: "Energy naturally dips before your period — honour it. Hold longer, breathe slower, and don't chase depth. This is a practice of letting go." },
   // — Time & mood —
-  { slug: "morning-wake-up", title: "Morning Wake-Up Yoga", intention: "morning", durationMin: 10, level: "Beginner",
-    blurb: "A bright 10 minutes to wake the body and mind.", tags: ["morning", "wake up", "energy", "beginner"],
+  { slug: "morning-wake-up", title: tr("Morning Wake-Up Yoga"), intention: "morning", durationMin: 10, level: "Beginner",
+    blurb: tr("A bright 10 minutes to wake the body and mind."), tags: ["morning", "wake up", "energy", "beginner"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "low-lunge", "cobra", "mountain", "standing-side-stretch", "seated-twist", "childs-pose", "savasana"],
     advice: "Do it right after waking, before screens. Breathe big and full and let the poses build a little heat — think of it as opening the curtains on your body." },
-  { slug: "bedtime-sleep", title: "Bedtime Yoga for Better Sleep", intention: "sleep", durationMin: 15, level: "Beginner",
-    blurb: "Slow, floor-based holds to melt into deep rest.", tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
+  { slug: "bedtime-sleep", title: tr("Bedtime Yoga for Better Sleep"), intention: "sleep", durationMin: 15, level: "Beginner",
+    blurb: tr("Slow, floor-based holds to melt into deep rest."), tags: ["sleep", "bedtime", "night", "wind down", "insomnia"],
     poses: ["easy-seat", "childs-pose", "cat-cow", "seated-forward-fold", "reclined-bound-angle", "supine-twist", "knees-to-chest", "happy-baby", "legs-up-wall", "banana-pose", "savasana"],
     advice: "Dim the lights and do this in bed or beside it. Everything stays slow and floor-based — nothing should raise your heart rate. Let savasana melt straight into sleep." },
-  { slug: "stress-relief", title: "Stress Relief Yoga", intention: "stress", durationMin: 10, level: "Beginner",
-    blurb: "Let the shoulders drop and the breath slow down.", tags: ["stress", "relax", "tension", "calm"],
+  { slug: "stress-relief", title: tr("Stress Relief Yoga"), intention: "stress", durationMin: 10, level: "Beginner",
+    blurb: tr("Let the shoulders drop and the breath slow down."), tags: ["stress", "relax", "tension", "calm"],
     poses: ["easy-seat", "neck-shoulder-rolls", "cat-cow", "childs-pose", "thread-the-needle", "low-lunge", "seated-forward-fold", "supine-twist", "savasana"],
     advice: "Make every exhale longer than the inhale — that's the switch that calms the nervous system. Consciously soften the jaw and the space between your brows." },
-  { slug: "anxiety-breathe", title: "Yoga for Anxiety · Calm & Breathe", intention: "stress", durationMin: 10, level: "Beginner",
-    blurb: "Breathwork and grounding holds to settle a racing mind.", tags: ["anxiety", "breathe", "calm", "grounding"],
+  { slug: "anxiety-breathe", title: tr("Yoga for Anxiety · Calm & Breathe"), intention: "stress", durationMin: 10, level: "Beginner",
+    blurb: tr("Breathwork and grounding holds to settle a racing mind."), tags: ["anxiety", "breathe", "calm", "grounding"],
     poses: ["easy-seat", "box-breathing", "alternate-nostril", "childs-pose", "cat-cow", "reclined-bound-angle", "legs-up-wall", "savasana"],
     advice: "Start with the breathwork and don't rush it — the poses are just here to keep you grounded. Whenever the mind races, come back to counting the breath." },
   // — Body targets —
-  { slug: "lower-back", title: "Yoga for Lower Back Pain", intention: "backcare", durationMin: 12, level: "Beginner",
-    blurb: "Soothe and mobilize a tight, achy lower back.", tags: ["back pain", "lower back", "spine", "relief"],
+  { slug: "lower-back", title: tr("Yoga for Lower Back Pain"), intention: "backcare", durationMin: 12, level: "Beginner",
+    blurb: tr("Soothe and mobilize a tight, achy lower back."), tags: ["back pain", "lower back", "spine", "relief"],
     poses: ["easy-seat", "cat-cow", "childs-pose", "sphinx", "cobra", "knees-to-chest", "supine-twist", "bridge", "thread-the-needle", "savasana"],
     advice: "Move only within a pain-free range — a gentle stretch, never a sharp pinch. Keep the belly lightly drawn in to support the spine, and back off any pose that hurts." },
-  { slug: "neck-shoulders-desk", title: "Desk Break · Neck & Shoulder Yoga", intention: "backcare", durationMin: 5, level: "Beginner",
-    blurb: "A 5-minute reset for a stiff neck and shoulders at your desk.", tags: ["neck", "shoulders", "desk", "office", "quick"],
+  { slug: "neck-shoulders-desk", title: tr("Desk Break · Neck & Shoulder Yoga"), intention: "backcare", durationMin: 5, level: "Beginner",
+    blurb: tr("A 5-minute reset for a stiff neck and shoulders at your desk."), tags: ["neck", "shoulders", "desk", "office", "quick"],
     poses: ["neck-shoulder-rolls", "seated-twist", "standing-side-stretch", "thread-the-needle", "cat-cow", "childs-pose"],
     advice: "Do it right at your desk, no need to change clothes. Drop the shoulders away from the ears and move slowly — quality of movement over range." },
-  { slug: "hip-openers", title: "Hip-Opening Yoga", intention: "release", durationMin: 15, level: "Intermediate",
-    blurb: "Deep, patient holds to open tight hips.", tags: ["hips", "hip openers", "flexibility", "release"],
+  { slug: "hip-openers", title: tr("Hip-Opening Yoga"), intention: "release", durationMin: 15, level: "Intermediate",
+    blurb: tr("Deep, patient holds to open tight hips."), tags: ["hips", "hip openers", "flexibility", "release"],
     poses: ["easy-seat", "cat-cow", "low-lunge", "lizard", "pigeon", "garland", "butterfly", "cow-face", "happy-baby", "reclined-figure-four", "savasana"],
     advice: "Hips hold tension and emotion — go slow, hold each shape for several breaths, and let it melt open. Never force a hip; breathe into the resistance instead." },
-  { slug: "flexibility-hamstrings", title: "Yoga for Flexibility & Hamstrings", intention: "fullbody", durationMin: 15, level: "Beginner",
-    blurb: "Lengthen the backs of the legs and the whole spine.", tags: ["flexibility", "hamstrings", "stretch", "splits"],
+  { slug: "flexibility-hamstrings", title: tr("Yoga for Flexibility & Hamstrings"), intention: "fullbody", durationMin: 15, level: "Beginner",
+    blurb: tr("Lengthen the backs of the legs and the whole spine."), tags: ["flexibility", "hamstrings", "stretch", "splits"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "ragdoll", "low-lunge", "pyramid", "seated-forward-fold", "head-to-knee", "wide-legged-forward-fold", "savasana"],
     advice: "Warm up first — never stretch cold hamstrings hard. Micro-bend the knees and hinge from the hips, not the low back. Flexibility comes from consistency, not force." },
-  { slug: "core-power", title: "Core Power Yoga", intention: "core", durationMin: 15, level: "Intermediate",
-    blurb: "Build a strong, steady centre.", tags: ["core", "abs", "strength", "power"],
+  { slug: "core-power", title: tr("Core Power Yoga"), intention: "core", durationMin: 15, level: "Intermediate",
+    blurb: tr("Build a strong, steady centre."), tags: ["core", "abs", "strength", "power"],
     poses: ["easy-seat", "cat-cow", "bird-dog", "plank", "forearm-plank", "dead-bug", "hollow-hold", "boat", "modified-side-plank", "bridge", "savasana"],
     advice: "Keep the low back gently pressing down and breathe steadily — never hold your breath. Stop a hold when your form breaks, not when you're wrecked. Bridge at the end un-rounds the spine." },
-  { slug: "balance-focus", title: "Balance & Focus Yoga", intention: "balance", durationMin: 12, level: "Intermediate",
-    blurb: "Steady standing shapes to sharpen focus.", tags: ["balance", "focus", "standing", "stability"],
+  { slug: "balance-focus", title: tr("Balance & Focus Yoga"), intention: "balance", durationMin: 12, level: "Intermediate",
+    blurb: tr("Steady standing shapes to sharpen focus."), tags: ["balance", "focus", "standing", "stability"],
     poses: ["easy-seat", "mountain", "tree", "eagle", "standing-figure-four", "high-lunge", "chair", "goddess", "savasana"],
     advice: "Fix your gaze on one still point (a drishti) to steady each balance — wobbling is part of it, just breathe and reset. Practise when you're alert, not exhausted." },
-  { slug: "full-body-beginner", title: "Full-Body Beginner Yoga · 10 Min", intention: "fullbody", durationMin: 10, level: "Beginner",
-    blurb: "A friendly all-round flow for total beginners.", tags: ["beginner", "full body", "10 minute", "gentle"],
+  { slug: "full-body-beginner", title: tr("Full-Body Beginner Yoga · 10 Min"), intention: "fullbody", durationMin: 10, level: "Beginner",
+    blurb: tr("A friendly all-round flow for total beginners."), tags: ["beginner", "full body", "10 minute", "gentle"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "low-lunge", "warrior-2", "triangle", "tree", "bridge", "seated-twist", "savasana"],
     advice: "There's no 'perfect' shape — just move with your breath and go where it feels good. Rest in child's pose any time you need a pause." },
-  { slug: "morning-stretch-5", title: "5-Minute Morning Stretch", intention: "morning", durationMin: 5, level: "Beginner",
-    blurb: "The quickest way to un-stiffen and start your day.", tags: ["morning", "quick", "5 minute", "stretch"],
+  { slug: "morning-stretch-5", title: tr("5-Minute Morning Stretch"), intention: "morning", durationMin: 5, level: "Beginner",
+    blurb: tr("The quickest way to un-stiffen and start your day."), tags: ["morning", "quick", "5 minute", "stretch"],
     poses: ["easy-seat", "cat-cow", "downward-dog", "forward-fold", "standing-side-stretch", "seated-twist", "childs-pose"],
     advice: "Five minutes is enough to un-stiffen — do it before coffee. Yawn, stretch big, and don't worry about doing it 'right'." },
 ];
@@ -1116,8 +1117,8 @@ function holdSecondsFor(durationMin: number, level: Level) {
 // ===================== I18N STRINGS =====================
 
 const LANGS: { id: Lang; label: string; bcp: string }[] = [
-  { id: "en", label: "English", bcp: "en-US" },
-  { id: "fr", label: "Français", bcp: "fr-FR" },
+  { id: "en", label: tr("English"), bcp: "en-US" },
+  { id: "fr", label: tr("Français"), bcp: "fr-FR" },
   { id: "ar", label: "العربية", bcp: "ar-SA" },
 ];
 
@@ -1171,10 +1172,10 @@ interface Streak { count: number; lastISO: string | null; }
 // a preference (level also becomes the default for every session she starts).
 type YogaGoal = "calm" | "strength" | "flexibility" | "energy";
 const YOGA_GOALS: { key: YogaGoal; label: string; focuses: string[] }[] = [
-  { key: "calm",        label: "Calm & restore",  focuses: ["Stress relief", "Sleep prep"] },
-  { key: "strength",    label: "Strength & tone", focuses: ["Strength", "Morning energy"] },
-  { key: "flexibility", label: "Flexibility",     focuses: ["Stress relief", "Cycle sync"] },
-  { key: "energy",      label: "Energy & focus",  focuses: ["Morning energy", "Strength"] },
+  { key: "calm",        label: tr("Calm & restore"),  focuses: ["Stress relief", "Sleep prep"] },
+  { key: "strength",    label: tr("Strength & tone"), focuses: ["Strength", "Morning energy"] },
+  { key: "flexibility", label: tr("Flexibility"),     focuses: ["Stress relief", "Cycle sync"] },
+  { key: "energy",      label: tr("Energy & focus"),  focuses: ["Morning energy", "Strength"] },
 ];
 const YOGA_DAY_PATTERNS: Record<number, string[]> = {
   2: ["Mon", "Thu"],
@@ -1374,7 +1375,7 @@ function BreathPacer({ phase, phaseProgress, lang, dim }: {
       >
         <span className={["text-[9px] font-bold uppercase tracking-widest text-center leading-tight px-1",
           dim ? "text-white/90" : "text-hotpink"].join(" ")}>
-          {BREATH_LABEL[lang][phase]}
+          {trx(BREATH_LABEL[lang][phase])}
         </span>
       </div>
     </div>
@@ -1489,11 +1490,10 @@ export default function YogaPage() {
         <SpotlightCoach
           targetId="yoga-week-plan"
           step={4} total={5}
-          title="Your yoga week ✿"
+          title={tr("Your yoga week ✿")}
           message="Your soft week, day by day. Tap any day to change its flow."
           extra={
-            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
-              Ready to head back and finish setting up the rest of your day on <b className="text-hotpink">Today</b>?
+            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">{tr("Ready to head back and finish setting up the rest of your day on")}{" "}<b className="text-hotpink">{tr("Today")}</b>?
             </p>
           }
           primaryLabel="Finish on Today →"
@@ -1508,12 +1508,11 @@ export default function YogaPage() {
       {/* Redundant on phones (the bottom nav has "Tools"), and it left an empty
           band above the hero — show it only from tablet up. */}
       <a href="/app/tools" className="mb-3 hidden md:inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("All tools")}</a>
 
       {guided && (view.kind === "home" || view.kind === "library" || view.kind === "plan") && (
         <>
-          <GuidedFocusHero label="Yoga" phaseLabel={guidedPhaseLabel} image="/images/yoga-hero.webp" />
+          <GuidedFocusHero label={tr("Yoga")} phaseLabel={guidedPhaseLabel} image="/images/yoga-hero.webp" />
           <GuidedFinishBar toolLabel="Yoga" phaseLabel={guidedPhaseLabel} hint="Your soft week is set — tap any day to tweak its flow." className="mb-3" />
         </>
       )}
@@ -1639,17 +1638,17 @@ export default function YogaPage() {
 // ===================== HERO (shared, stays visible across tabs) =====================
 
 const HERO_CONTENT: Record<"home" | "library" | "flows" | "plan", { title: string; subtitle: string }> = {
-  home: { title: "Yoga Flows", subtitle: "guided breath, gentle movement — your softest practice." },
-  library: { title: "Learn the poses", subtitle: "Tap any pose to read how to enter it and find your breath." },
-  flows: { title: "Flow Library", subtitle: "ready-made flows for every need — pick a title and press play." },
-  plan: { title: "Your soft week", subtitle: "your personalized plan, gently synced to your cycle." },
+  home: { title: tr("Yoga Flows"), subtitle: tr("guided breath, gentle movement — your softest practice.") },
+  library: { title: tr("Learn the poses"), subtitle: tr("Tap any pose to read how to enter it and find your breath.") },
+  flows: { title: tr("Flow Library"), subtitle: tr("ready-made flows for every need — pick a title and press play.") },
+  plan: { title: tr("Your soft week"), subtitle: tr("your personalized plan, gently synced to your cycle.") },
 };
 
 const YOGA_PHASE_META: Record<Phase, { emoji: string; label: string }> = {
-  menstrual: { emoji: "🌙", label: "Menstrual" },
-  follicular: { emoji: "🌱", label: "Follicular" },
-  ovulation: { emoji: "🌸", label: "Ovulatory" },
-  luteal: { emoji: "🍂", label: "Luteal" },
+  menstrual: { emoji: "🌙", label: tr("Menstrual") },
+  follicular: { emoji: "🌱", label: tr("Follicular") },
+  ovulation: { emoji: "🌸", label: tr("Ovulatory") },
+  luteal: { emoji: "🍂", label: tr("Luteal") },
 };
 
 /** Hero pill: names the cycle phase and shows whether the yoga week matches the
@@ -1684,7 +1683,7 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
     } catch {}
     force((t) => t + 1);
   };
-  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? tr("In sync with your {0} phase ✿", { 0: meta.label }) : tr("Tap to sync your week to your {0} phase", { 0: meta.label });
   if (variant === "tile") {
     return (
       <button onClick={onSync} disabled={synced} title={tTitle}
@@ -1692,8 +1691,8 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
         <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
           {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
         </span>
-        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
-        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Sync")}</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? tr("In sync") : tr("Sync now")}</span>
       </button>
     );
   }
@@ -1702,11 +1701,11 @@ function YogaPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" }) 
       onClick={onSync}
       disabled={synced}
       title={tTitle}
-      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
+      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 ps-1.5 pe-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
       {synced ? <CircleCheck className="h-3.5 w-3.5" strokeWidth={2.4} /> : <Circle className="h-3.5 w-3.5" strokeWidth={2} />}
-      {synced ? "In sync" : "Sync"}
+      {synced ? tr("In sync") : tr("Sync")}
     </button>
   );
 }
@@ -1725,40 +1724,39 @@ function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number;
     >
       <div className="flex items-stretch">
         {/* Tall image strip (left) — whole pose fits; cover crops the sides. */}
-        <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
+        <button onClick={() => onStart(f)} aria-label={tr("Start {0}", { 0: f.title })} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
           {thumb && <img src={thumb} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />}
           <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
-          {plusLocked && <span className="absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink shadow-sm"><Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Plus</span>}
+          {plusLocked && <span className="absolute start-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink shadow-sm"><Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Plus")}</span>}
         </button>
         {/* Content (right). */}
         <div className="flex-1 min-w-0 p-3 flex flex-col">
           <div className="flex flex-wrap items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-wide text-rose/55">
-            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{f.durationMin} min</span>
-            <span>·</span><span>{f.level}</span>
-            {f.phase && <span className="text-hotpink">{YOGA_PHASE_META[f.phase].emoji} {YOGA_PHASE_META[f.phase].label}</span>}
+            <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" />{trx(f.durationMin)}{" "}{tr("min")}</span>
+            <span>·</span><span>{trx(f.level)}</span>
+            {f.phase && <span className="text-hotpink">{trx(YOGA_PHASE_META[f.phase].emoji)} {trx(YOGA_PHASE_META[f.phase].label)}</span>}
           </div>
-          <button onClick={() => onStart(f)} className="text-left">
-            <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{f.title}</h3>
+          <button onClick={() => onStart(f)} className="text-start">
+            <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{trx(f.title)}</h3>
           </button>
-          <p className="mt-0.5 text-[11px] text-rose/65 leading-snug line-clamp-1">{f.blurb}</p>
+          <p className="mt-0.5 text-[11px] text-rose/65 leading-snug line-clamp-1">{trx(f.blurb)}</p>
           <div className="mt-auto pt-2 flex items-center justify-between gap-2">
             {f.advice ? (
               <button onClick={() => setOpen((o) => !o)} aria-expanded={open}
                 className="inline-flex items-center gap-1 rounded-full bg-blush/60 border border-petal/50 px-2 py-1 text-[10px] font-bold text-hotpink active:scale-95 transition">
-                <Sparkle className="h-3 w-3" /> Coach's note <ChevronDown className={["h-3 w-3 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
+                <Sparkle className="h-3 w-3" />{" "}{tr("Coach's note")}{" "}<ChevronDown className={["h-3 w-3 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
               </button>
             ) : <span />}
             <div className="flex shrink-0 items-center gap-1.5">
               {isOwner && (
                 <button onClick={() => onStart(f, true)}
-                  title="Record: start this flow straight into presentation mode, playing"
+                  title={tr("Record: start this flow straight into presentation mode, playing")}
                   className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-2.5 h-9 text-[10px] font-black tracking-wide shadow-md shadow-red-600/40 active:scale-90 transition">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> REC
-                </button>
+                  <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />{" "}{tr("REC")}</button>
               )}
-              <button onClick={() => onStart(f)} aria-label={`Start ${f.title}`}
+              <button onClick={() => onStart(f)} aria-label={tr("Start {0}", { 0: f.title })}
                 className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30 active:scale-90 transition">
-                <Play className="h-4 w-4 ml-0.5" fill="currentColor" strokeWidth={0} />
+                <Play className="h-4 w-4 ms-0.5" fill="currentColor" strokeWidth={0} />
               </button>
             </div>
           </div>
@@ -1769,7 +1767,7 @@ function FlowCard({ f, index, onStart, isOwner }: { f: NamedFlow; index: number;
         <div className="px-3 pb-3 animate-fade-in">
           <div className="flex items-start gap-1.5 rounded-2xl bg-blush/40 border border-petal/50 px-2.5 py-2">
             <Sparkle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" />
-            <p className="text-[11px] leading-snug text-rose/75">{f.advice}</p>
+            <p className="text-[11px] leading-snug text-rose/75">{trx(f.advice)}</p>
           </div>
         </div>
       )}
@@ -1792,23 +1790,23 @@ function FlowLibrary({ onStart }: { onStart: (f: NamedFlow, record?: boolean) =>
   return (
     <div className="yoga-fade mt-3">
       <div className="mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow library</p>
-        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">press play, we'll guide you</h2>
-        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">Ready-made flows for every need — search a title and start.</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Flow library")}</p>
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("press play, we'll guide you")}</h2>
+        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">{tr("Ready-made flows for every need — search a title and start.")}</p>
       </div>
       <div className="relative mb-4 max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/40" />
+        <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-rose/40" />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search flows — period, sleep, back, energy…"
-          className="w-full rounded-full border border-petal/60 bg-white/90 pl-9 pr-4 py-2.5 text-sm text-rose placeholder:text-rose/40 outline-none focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20"
+          placeholder={tr("Search flows — period, sleep, back, energy…")}
+          className="w-full rounded-full border border-petal/60 bg-white/90 ps-9 pe-4 py-2.5 text-sm text-rose placeholder:text-rose/40 outline-none focus:border-hotpink/50 focus:ring-2 focus:ring-hotpink/20"
         />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
         {list.map((f, i) => <FlowCard key={f.slug} f={f} index={i} onStart={onStart} isOwner={isOwner} />)}
       </div>
-      {!list.length && <p className="text-center text-sm text-rose/50 py-8">No flow matches “{q}” — try “period”, “sleep”, “back”…</p>}
+      {!list.length && <p className="text-center text-sm text-rose/50 py-8">{tr("No flow matches “")}{trx(q)}{tr("” — try “period”, “sleep”, “back”…")}</p>}
     </div>
   );
 }
@@ -1847,43 +1845,40 @@ function YogaHero({
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
       </div>
 
-      <div className="absolute top-1 right-0 z-[2] flex items-center gap-1.5">
+      <div className="absolute top-1 end-0 z-[2] flex items-center gap-1.5">
         {onReset && (
           <button
             onClick={onReset}
-            aria-label="Reset tool"
-            title="Reset — preview the first-time experience"
+            aria-label={tr("Reset tool")}
+            title={tr("Reset — preview the first-time experience")}
             className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
-            <RotateCcw className="h-3 w-3" /> Reset
-          </button>
+            <RotateCcw className="h-3 w-3" />{" "}{tr("Reset")}</button>
         )}
         {onGuide && (
           <button
             onClick={onGuide}
             className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
-            <Sparkles className="h-3 w-3" /> Guide
-          </button>
+            <Sparkles className="h-3 w-3" />{" "}{tr("Guide")}</button>
         )}
       </div>
       <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
         <div key={active} className="animate-scale-in">
           <div className="max-w-[66%]">
             <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/75 backdrop-blur border border-petal/60 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-hotpink">
-              <Flower className="h-2.5 w-2.5" strokeWidth={2.5} /> Yoga
-            </p>
-            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{title}</h1>
-            <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{subtitle}</p>
+              <Flower className="h-2.5 w-2.5" strokeWidth={2.5} />{" "}{tr("Yoga")}</p>
+            <h1 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{trx(title)}</h1>
+            <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{trx(subtitle)}</p>
           </div>
           <CyclePhasePill className="mt-1.5" />
         </div>
         <div className="flex">
           <div className="inline-flex rounded-full bg-white/70 backdrop-blur border border-petal/60 p-0.5 sm:p-1 shadow-sm shadow-hotpink/10">
-            <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>My Plan</button>
-            <button data-tour="yg-tab-flows" onClick={onFlows} className={tabClass(active === "flows")}>Flows</button>
-            <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>Discover</button>
-            <button data-tour="yg-tab-library" onClick={() => { if (!hasAccess("yoga")) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>Library{!hasAccess("yoga") && <Lock className="inline h-3 w-3 ml-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
+            <button data-tour="yg-tab-plan" onClick={onMyPlan} className={tabClass(active === "plan")}>{tr("My Plan")}</button>
+            <button data-tour="yg-tab-flows" onClick={onFlows} className={tabClass(active === "flows")}>{tr("Flows")}</button>
+            <button data-tour="yg-tab-discover" onClick={onDiscover} className={tabClass(active === "home")}>{tr("Discover")}</button>
+            <button data-tour="yg-tab-library" onClick={() => { if (!hasAccess("yoga")) { openPaywall("yoga"); return; } onLibrary(); }} className={tabClass(active === "library")}>{tr("Library")}{!hasAccess("yoga") && <Lock className="inline h-3 w-3 ms-1 -mt-0.5 text-[#B76E79]" strokeWidth={2.4} />}</button>
           </div>
         </div>
       </div>
@@ -1933,32 +1928,31 @@ function YogaHome({
       <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3">
         {!onboarded ? (
           <div className="animate-scale-in rounded-2xl bg-blush/60 p-4 border border-petal/50">
-            <p className="text-sm font-semibold text-rose">New here? Welcome.</p>
-            <p className="mt-1 text-xs text-rose/80">We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.</p>
+            <p className="text-sm font-semibold text-rose">{tr("New here? Welcome.")}</p>
+            <p className="mt-1 text-xs text-rose/80">{tr("We'll guide you in 3 calm steps: learn the poses → flow with visuals → close your eyes for an audio practice.")}</p>
             <button
               onClick={onBegin}
               className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white"
             >
-              <Sparkles className="h-4 w-4 animate-bloom-sparkle" /> Start Here
-            </button>
+              <Sparkles className="h-4 w-4 animate-bloom-sparkle" />{" "}{tr("Start Here")}</button>
           </div>
         ) : null}
 
         <div className="mt-4 flex items-center justify-between gap-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your path</p>
-            <h2 className="font-script text-xl sm:text-2xl leading-none text-hotpink">three soft steps</h2>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Your path")}</p>
+            <h2 className="font-script text-xl sm:text-2xl leading-none text-hotpink">{tr("three soft steps")}</h2>
           </div>
-          <span className="text-xs text-rose/70">Step {step} of 3</span>
+          <span className="text-xs text-rose/70">{tr("Step")}{" "}{trx(step)}{" "}{tr("of 3")}</span>
         </div>
 
         <div className="mt-2 grid grid-cols-3 gap-1.5">
           <StepCard index={0} active={step === 1} done={step > 1} icon={BookOpen}
-            title="Learn the poses" cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
+            title={tr("Learn the poses")} cta="Open library" onClick={() => { onLibrary(); onStepGoTo(2); }} />
           <StepCard index={1} active={step === 2} done={step > 2} icon={GraduationCap}
-            title="Try a guided flow" cta="Start short flow" onClick={() => { onSetup(); }} />
+            title={tr("Try a guided flow")} cta="Start short flow" onClick={() => { onSetup(); }} />
           <StepCard index={2} active={step === 3} done={false} icon={Headphones}
-            title="Eyes-closed audio" cta="Audio session" onClick={() => { onSetup(); }} />
+            title={tr("Eyes-closed audio")} cta="Audio session" onClick={() => { onSetup(); }} />
         </div>
       </section>
 
@@ -1985,9 +1979,7 @@ function PlanPage({ onSetup, onQuickStart }: {
 
       {/* SAFETY */}
       <p className="animate-scale-in text-[11px] sm:text-xs text-rose/70 italic px-1 inline-flex items-start gap-1.5" style={{ animationDelay: "640ms" }}>
-        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-        Listen to your body, ease off if anything hurts, and check with your doctor if pregnant or injured.
-      </p>
+        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />{tr("Listen to your body, ease off if anything hurts, and check with your doctor if pregnant or injured.")}</p>
     </div>
   );
 }
@@ -2026,7 +2018,7 @@ function StepCard({
         >
           {done ? <span className="text-sm font-bold">✓</span> : <Icon className="h-3.5 w-3.5" strokeWidth={1.8} />}
         </span>
-        <p className="text-[9px] font-bold text-rose leading-tight line-clamp-2 w-full">{title}</p>
+        <p className="text-[9px] font-bold text-rose leading-tight line-clamp-2 w-full">{trx(title)}</p>
       </button>
 
       {showTip && (
@@ -2035,9 +2027,9 @@ function StepCard({
           aria-hidden
         >
           <div className="min-w-[110px] max-w-[160px] rounded-xl border border-pink-100 bg-white/98 px-3 py-2 text-center shadow-xl backdrop-blur-md">
-            <p className="text-[11px] font-bold leading-tight text-rose">{title}</p>
+            <p className="text-[11px] font-bold leading-tight text-rose">{trx(title)}</p>
             <p className="mt-1 inline-flex items-center gap-0.5 text-[10px] font-semibold text-hotpink">
-              {cta} <ChevronRight className="h-3 w-3" />
+              {trx(cta)} <ChevronRight className="rtl:-scale-x-100 h-3 w-3" />
             </p>
           </div>
           <div className="absolute left-1/2 top-full h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent border-t-white" />
@@ -2056,17 +2048,16 @@ function SessionCard({ preset, index, onClick }: { preset: SessionPreset; index:
     <button
       onClick={onClick}
       style={{ animationDelay: `${index * 60}ms` }}
-      className="group flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm text-left transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
+      className="group flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/95 shadow-sm text-start transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-hotpink/15 active:scale-[0.99] animate-scale-in"
     >
       <div className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden bg-blush">
         <img src={preset.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/5 to-black/25" />
       </div>
       <div className="flex-1 min-w-0 p-3 flex flex-col">
-        <p className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-rose/55"><Clock className="h-3 w-3" />{preset.duration} min</p>
-        <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{preset.label}</h3>
-        <span className="mt-auto pt-2 inline-flex items-center gap-1 self-start rounded-full bg-blush/60 border border-petal/50 px-2.5 py-1 text-[10px] font-bold text-hotpink">
-          Start <Play className="h-3 w-3" fill="currentColor" strokeWidth={0} />
+        <p className="inline-flex items-center gap-1 text-[9.5px] font-bold uppercase tracking-wide text-rose/55"><Clock className="h-3 w-3" />{trx(preset.duration)}{" "}{tr("min")}</p>
+        <h3 className="mt-0.5 font-script text-xl text-hotpink leading-tight line-clamp-2 group-hover:text-rose transition-colors">{trx(preset.label)}</h3>
+        <span className="mt-auto pt-2 inline-flex items-center gap-1 self-start rounded-full bg-blush/60 border border-petal/50 px-2.5 py-1 text-[10px] font-bold text-hotpink">{tr("Start")}{" "}<Play className="h-3 w-3" fill="currentColor" strokeWidth={0} />
         </span>
       </div>
     </button>
@@ -2081,8 +2072,8 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
     <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "160ms" }}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Flow sessions</p>
-          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">find your moment</h2>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Flow sessions")}</p>
+          <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("find your moment")}</h2>
         </div>
         <div className="inline-flex rounded-full bg-blush/60 border border-petal/60 p-1">
           {(["moment", "intention"] as const).map((t) => (
@@ -2094,7 +2085,7 @@ function FlowSessionsSection({ onStart }: { onStart: (intention: Intention, dura
                 tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose",
               ].join(" ")}
             >
-              {t === "moment" ? "By moment" : "By intention"}
+              {t === "moment" ? tr("By moment") : tr("By intention")}
             </button>
           ))}
         </div>
@@ -2117,9 +2108,9 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
   return (
     <section className="animate-scale-in rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6" style={{ animationDelay: "220ms" }}>
       <div className="mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Curated plans</p>
-        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">a week, set for you</h2>
-        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">Pick a themed week — we'll lay it across your days, ready to start.</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Curated plans")}</p>
+        <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("a week, set for you")}</h2>
+        <p className="mt-1 text-[11px] sm:text-xs text-rose/65">{tr("Pick a themed week — we'll lay it across your days, ready to start.")}</p>
       </div>
       <div className="space-y-3">
         {YOGA_PROGRAMS.map((p, i) => {
@@ -2128,19 +2119,19 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
             <button
               key={p.id}
               onClick={() => { if (guided) return guidedNudge(); if (!hasAccess("yoga")) { openPaywall("yoga"); return; } setConfirm(p); }}
-              className="group w-full text-left flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
+              className="group w-full text-start flex items-stretch overflow-hidden rounded-3xl border border-petal/60 bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in"
               style={{ animationDelay: `${i * 70}ms` }}
             >
               <div className="relative w-28 sm:w-36 shrink-0 overflow-hidden">
                 <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center bg-[oklch(0.96_0.04_350)] transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
-                <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+</span>
+                <span className="absolute top-2 start-2 z-10 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Bloom+")}</span>
               </div>
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
-                <span className="self-start rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{dayCount} days / week</span>
-                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{p.title}</h3>
-                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{p.tagline}</p>
-                <span className="mt-auto pt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">Set as my week <ChevronRight className="h-3.5 w-3.5" /></span>
+                <span className="self-start rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{trx(dayCount)}{" "}{tr("days / week")}</span>
+                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{trx(p.title)}</h3>
+                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{trx(p.tagline)}</p>
+                <span className="mt-auto pt-2 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink">{tr("Set as my week")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></span>
               </div>
             </button>
           );
@@ -2152,17 +2143,17 @@ function CuratedPlans({ onApply }: { onApply: (p: YogaProgram) => void }) {
           <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <img src={confirm.image} alt="" className="h-28 w-full object-cover object-top" />
             <div className="p-5 text-center">
-              <p className="font-script text-2xl text-hotpink leading-none mb-1">{confirm.title}</p>
-              <p className="text-xs text-rose/75 mb-2">{confirm.tagline}</p>
-              <ul className="text-left space-y-1 mb-3">
+              <p className="font-script text-2xl text-hotpink leading-none mb-1">{trx(confirm.title)}</p>
+              <p className="text-xs text-rose/75 mb-2">{trx(confirm.tagline)}</p>
+              <ul className="text-start space-y-1 mb-3">
                 {confirm.promise.map((b) => (
-                  <li key={b} className="flex items-start gap-1.5 text-[11px] text-rose/80"><Sparkles className="h-3 w-3 text-hotpink shrink-0 mt-0.5" /> {b}</li>
+                  <li key={b} className="flex items-start gap-1.5 text-[11px] text-rose/80"><Sparkles className="h-3 w-3 text-hotpink shrink-0 mt-0.5" /> {trx(b)}</li>
                 ))}
               </ul>
-              <p className="text-[11px] text-rose/60 mb-4">This replaces your current weekly plan.</p>
+              <p className="text-[11px] text-rose/60 mb-4">{tr("This replaces your current weekly plan.")}</p>
               <div className="flex gap-2">
-                <button onClick={() => setConfirm(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
-                <button onClick={() => { onApply(confirm); setConfirm(null); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Set as my week</button>
+                <button onClick={() => setConfirm(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">{tr("Cancel")}</button>
+                <button onClick={() => { onApply(confirm); setConfirm(null); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">{tr("Set as my week")}</button>
               </div>
             </div>
           </div>
@@ -2183,11 +2174,11 @@ function StreakCard({ streak }: { streak: Streak }) {
           <Flame className="h-6 w-6" strokeWidth={1.8} />
         </span>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-rose/60">Streak</p>
-          <p className="font-script text-2xl text-hotpink leading-none">{streak.count} days blooming</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-rose/60">{tr("Streak")}</p>
+          <p className="font-script text-2xl text-hotpink leading-none">{trx(streak.count)}{" "}{tr("days blooming")}</p>
         </div>
       </div>
-      <p className="relative z-10 mt-2 text-xs text-rose/75">{streak.count === 0 ? "Your first session begins your streak." : "Keep the soft momentum going."}</p>
+      <p className="relative z-10 mt-2 text-xs text-rose/75">{streak.count === 0 ? tr("Your first session begins your streak.") : tr("Keep the soft momentum going.")}</p>
     </div>
   );
 }
@@ -2208,15 +2199,14 @@ function CycleSyncCard({ phase, label, onClick }: { phase: Phase; label: string;
         <div className="flex items-center gap-3">
           <span className="animate-bloom-pulse grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-hotpink text-white"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-hotpink">Cycle sync — {phase}</p>
-            <p className="text-sm font-bold text-rose leading-snug">{label}</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-hotpink">{tr("Cycle sync —")}{" "}{trx(phase)}</p>
+            <p className="text-sm font-bold text-rose leading-snug">{trx(label)}</p>
           </div>
         </div>
         <button
           onClick={onClick}
           className="bloom-luxury-btn hover-scale animate-cta-bounce mt-auto inline-flex w-fit items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white"
-        >
-          Practice for today <ArrowRight className="h-3 w-3" />
+        >{tr("Practice for today")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" />
         </button>
       </div>
     </div>
@@ -2348,8 +2338,8 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         items.push({
           dedupeKey: `session:${dateStr}`,
           fireAt: fireAt.toISOString(),
-          title: "Yoga time ✿",
-          body: `Your ${focus.toLowerCase()} flow is waiting — ${fmtReminder(reminder)} 🧘`,
+          title: tr("Yoga time ✿"),
+          body: tr("Your {0} flow is waiting — {1} 🧘", { 0: focus.toLowerCase(), 1: fmtReminder(reminder) }),
           data: { url: "/app/tools/yoga", kind: "yoga" },
         });
       }
@@ -2377,22 +2367,22 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         {/* Header — title + setting CTAs (reminder · Edit · Reset), moved up */}
         <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Your soft week</p>
-            <h2 className="font-script text-2xl text-hotpink leading-none">Plan & start</h2>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Your soft week")}</p>
+            <h2 className="font-script text-2xl text-hotpink leading-none">{tr("Plan & start")}</h2>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <PickerField
               variant="pill"
               icon={BellRing}
-              title="Reminder time"
+              title={tr("Reminder time")}
               value={reminder}
               options={REMINDER_TIME_OPTIONS}
               onChange={updateReminder}
             />
             <button onClick={() => { if (!editing && !hasAccess("yoga")) { openPaywall("yoga"); return; } setEditing((v) => !v); }} className={["rounded-full px-3 py-1.5 text-[11px] font-bold border transition active:scale-95", editing ? "bg-hotpink text-white border-hotpink" : "bg-white/90 text-hotpink border-petal/60 hover:border-hotpink/40"].join(" ")}>
-              {editing ? "Done" : "Edit"}
+              {editing ? tr("Done") : tr("Edit")}
             </button>
-            <button onClick={resetYogaTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
+            <button onClick={resetYogaTool} title={tr("Reset — preview the first-time experience")} className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
           </div>
         </div>
 
@@ -2401,18 +2391,18 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
           <div className="mb-3 grid grid-cols-4 gap-2">
             <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
-              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
-              <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Goal")}</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : tr("Free")}</span>
             </div>
             <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
-              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
-              <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Level")}</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{tr("Lvl")}{" "}{trx(readMovementLevel().level)}</span>
             </div>
             <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
               <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readYogaStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
-              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
-              <span className="text-[12.5px] font-black text-hotpink leading-tight">{readYogaStreak().count}{readYogaStreak().count === 1 ? " day" : " days"}</span>
+              <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Streak")}</span>
+              <span className="text-[12.5px] font-black text-hotpink leading-tight">{trx(readYogaStreak().count)}{readYogaStreak().count === 1 ? tr(" day") : tr(" days")}</span>
             </div>
             <YogaPhaseSyncPill variant="tile" />
           </div>
@@ -2422,9 +2412,7 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         {editing && (
           <div className="mb-3 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
             <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-            <p className="text-[11px] text-rose/80 leading-snug">
-              Tap any day to choose its <b className="font-bold text-hotpink">focus</b> and <b className="font-bold text-hotpink">length</b>. Pick <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when your week feels right.
-            </p>
+            <p className="text-[11px] text-rose/80 leading-snug">{tr("Tap any day to choose its")}{" "}<b className="font-bold text-hotpink">{tr("focus")}</b>{" "}{tr("and")}{" "}<b className="font-bold text-hotpink">{tr("length")}</b>{tr(". Pick")}{" "}<b className="font-bold text-hotpink">{tr("Rest day")}</b>{" "}{tr("to clear one. Tap")}{" "}<b className="font-bold text-hotpink">{tr("Done")}</b>{" "}{tr("when your week feels right.")}</p>
           </div>
         )}
 
@@ -2432,14 +2420,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         {!editing && !weekEmpty && (
           <button
             onClick={toggleFuel}
-            className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 mb-3 text-left active:scale-[0.99] transition"
+            className="w-full flex items-center gap-3 rounded-2xl border border-petal/60 bg-white/85 px-3.5 py-2.5 mb-3 text-start active:scale-[0.99] transition"
           >
             <span className={["grid h-8 w-8 shrink-0 place-items-center rounded-full", fuelInPlan ? "bg-hotpink text-white" : "bg-blush text-hotpink"].join(" ")}>
               <Utensils className="h-4 w-4" strokeWidth={1.9} />
             </span>
             <span className="flex-1 min-w-0">
-              <span className="block text-[12px] font-bold text-rose leading-tight">Recovery meals in plan</span>
-              <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? "Each flow shows what to eat after ✿" : "Plan shows flows only"}</span>
+              <span className="block text-[12px] font-bold text-rose leading-tight">{tr("Recovery meals in plan")}</span>
+              <span className="block text-[10.5px] text-rose/60 leading-snug">{fuelInPlan ? tr("Each flow shows what to eat after ✿") : tr("Plan shows flows only")}</span>
             </span>
             <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", fuelInPlan ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
               <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: fuelInPlan ? "1.125rem" : "0.125rem" }} />
@@ -2454,36 +2442,36 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
         !editing && weekEmpty ? (
           <div className={["space-y-2.5", isGuided() ? "animate-section-attention" : ""].join(" ")}>
             <div>
-              <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Set up your soft week ✿</h3>
-              <p className="text-[12px] text-rose/70">Choose how to start — you can always change it.</p>
+              <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">{tr("Set up your soft week ✿")}</h3>
+              <p className="text-[12px] text-rose/70">{tr("Choose how to start — you can always change it.")}</p>
             </div>
             {/* FREE Bloom plan — a gentle 2-day Calm & Restore week so free users
                 can finish setup without hitting the wall. */}
             {!hasAccess("yoga") && (
-              <button onClick={() => createOwnWeek("Beginner", "calm", 2)} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
+              <button onClick={() => createOwnWeek("Beginner", "calm", 2)} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
                 <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-rose flex items-center gap-1.5">Free starter week <span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">Free</span></p>
-                  <p className="text-[11px] text-rose/70 leading-snug">A gentle 2-day Calm &amp; Restore week — yours on Bloom.</p>
+                  <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Free starter week")}{" "}<span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">{tr("Free")}</span></p>
+                  <p className="text-[11px] text-rose/70 leading-snug">{tr("A gentle 2-day Calm & Restore week — yours on Bloom.")}</p>
                 </div>
-                <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+                <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
               </button>
             )}
-            <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <button onClick={syncToCycle} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99]">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Flower className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Sync to my cycle {!hasAccess("yoga") && <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2 w-2" strokeWidth={3} /> Bloom+</span>}</p>
-                <p className="text-[11px] text-rose/70 leading-snug">Auto-fill the week with flows matched to your {phase} phase.</p>
+                <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Sync to my cycle")}{" "}{!hasAccess("yoga") && <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}><Lock className="h-2 w-2" strokeWidth={3} />{" "}{tr("Bloom+")}</span>}</p>
+                <p className="text-[11px] text-rose/70 leading-snug">{tr("Auto-fill the week with flows matched to your")}{" "}{trx(phase)}{" "}{tr("phase.")}</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+              <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
             </button>
-            <button onClick={() => setBuildStep(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+            <button onClick={() => setBuildStep(true)} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99]">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose">Build my own week</p>
-                <p className="text-[11px] text-rose/70 leading-snug">Pick your level &amp; goal, then fine-tune each day's focus &amp; length.</p>
+                <p className="text-sm font-bold text-rose">{tr("Build my own week")}</p>
+                <p className="text-[11px] text-rose/70 leading-snug">{tr("Pick your level & goal, then fine-tune each day's focus & length.")}</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+              <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
             </button>
           </div>
         ) : (
@@ -2500,11 +2488,11 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                 <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
                   <div className="flex items-center gap-2">
                     <div className="w-9 shrink-0 text-center">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{trx(d)}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">{tr("Today")}</p>}
                     </div>
                     <PickerField
-                      title="Choose a focus"
+                      title={tr("Choose a focus")}
                       className="flex-1 min-w-0"
                       value={focus ?? "rest"}
                       options={options.map((o) => ({ value: o ?? "rest", label: o ?? "Rest day" }))}
@@ -2512,9 +2500,9 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     />
                   </div>
                   {focus && meta && (
-                    <div className="mt-1.5 pl-11">
+                    <div className="mt-1.5 ps-11">
                       <PickerField
-                        title="How long?"
+                        title={tr("How long?")}
                         className="w-[6.5rem]"
                         value={String(durations[d] ?? meta.duration)}
                         options={[10, 15, 20, 25, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
@@ -2531,10 +2519,10 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
               return (
                 <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/60 p-2.5">
                   <div className="w-11 shrink-0 text-center">
-                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                    <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{trx(d)}</p>
+                    {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">{tr("Today")}</p>}
                   </div>
-                  <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                  <div className="flex-1 text-[12px] font-semibold text-rose/45">{tr("Rest day ✿")}</div>
                 </div>
               );
             }
@@ -2545,14 +2533,14 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                 isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
                 {!showFuel ? (
                   // Small left thumbnail showing the WHOLE image (not cropped) + title beside it
-                  <button onClick={() => startFocus(focus, d)} className="flex items-center gap-3 p-2.5 w-full text-left bg-white/70 active:scale-[0.99] transition hover:bg-blush/25">
+                  <button onClick={() => startFocus(focus, d)} className="flex items-center gap-3 p-2.5 w-full text-start bg-white/70 active:scale-[0.99] transition hover:bg-blush/25">
                     <div className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden grid place-items-center bg-gradient-to-br from-blush/60 to-petal/40">
                       <img src={meta.image} alt="" className="h-full w-full object-contain" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}{isToday ? " · Today" : ""}</p>
-                      <p className="text-sm sm:text-base font-bold leading-tight text-hotpink truncate">{focus}</p>
-                      <p className="text-[11px] text-rose/60 leading-snug truncate">{meta.blurb} · {durations[d] ?? meta.duration} min · <span className="font-semibold text-hotpink/80">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)} kcal</span></p>
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{trx(d)}{isToday ? tr(" · Today") : ""}</p>
+                      <p className="text-sm sm:text-base font-bold leading-tight text-hotpink truncate">{trx(focus)}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{trx(meta.blurb)} · {trx(durations[d]) ?? trx(meta.duration)}{" "}{tr("min ·")}{" "}<span className="font-semibold text-hotpink/80">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)}{" "}{tr("kcal")}</span></p>
                     </div>
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-hotpink text-white shadow-md shadow-hotpink/30"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                   </button>
@@ -2562,15 +2550,15 @@ function Organizer({ phase, onStart }: { phase: Phase; onStart: (intention: Inte
                     <img src={meta.image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent from-[26%] via-white/45 to-white/70" />
                     <div className="relative z-10 flex items-stretch">
-                      <button onClick={() => startFocus(focus, d)} aria-label={`Start ${focus}`}
-                        className="relative w-[30%] sm:w-[25%] shrink-0 flex flex-col justify-between p-2.5 text-left active:scale-[0.98] transition">
-                        <span className="w-fit rounded-full bg-black/40 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{d}{isToday ? " · Today" : ""}</span>
+                      <button onClick={() => startFocus(focus, d)} aria-label={tr("Start {0}", { 0: focus })}
+                        className="relative w-[30%] sm:w-[25%] shrink-0 flex flex-col justify-between p-2.5 text-start active:scale-[0.98] transition">
+                        <span className="w-fit rounded-full bg-black/40 backdrop-blur-sm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{trx(d)}{isToday ? tr(" · Today") : ""}</span>
                         <span className="grid h-9 w-9 place-items-center rounded-full bg-white text-hotpink shadow-lg shadow-hotpink/30"><Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} /></span>
                       </button>
                       <div className="flex-1 min-w-0 bg-white/60 backdrop-blur-md p-2.5 sm:p-3">
                         <div className="mb-1.5">
-                          <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{focus}</p>
-                          <p className="text-[11px] text-rose/70 leading-snug">{meta.blurb} · {durations[d] ?? meta.duration} min · <span className="font-semibold text-hotpink">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)} kcal</span></p>
+                          <p className="text-sm sm:text-base font-bold leading-tight text-hotpink">{trx(focus)}</p>
+                          <p className="text-[11px] text-rose/70 leading-snug">{trx(meta.blurb)} · {trx(durations[d]) ?? trx(meta.duration)}{" "}{tr("min ·")}{" "}<span className="font-semibold text-hotpink">~{yogaSessionKcal(durations[d] ?? meta.duration, weight)}{" "}{tr("kcal")}</span></p>
                         </div>
                         <FuelCard
                           ctx={{ goal, phase: fuelPhase, kind: "yoga", intensity: yogaIntensity(focus), activityLabel: focus }}
@@ -2603,12 +2591,10 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
-            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Pose Library ✿</h2>
-            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
-              Tap any pose to learn how to enter it and find your breath.
-            </p>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("Pose Library ✿")}</h2>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">{tr("Tap any pose to learn how to enter it and find your breath.")}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{filtered.length} poses</span>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{trx(filtered.length)}{" "}{tr("poses")}</span>
         </div>
 
         <div className="mt-1 flex gap-2 overflow-x-auto pb-1.5 scrollbar-none">
@@ -2618,7 +2604,7 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
                 "shrink-0 rounded-full px-4 py-1.5 text-xs font-bold border transition active:scale-95",
                 active === lv ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
               ].join(" ")}>
-              {lv}
+              {trx(lv)}
             </button>
           ))}
         </div>
@@ -2631,10 +2617,9 @@ function Library({ onTryFlow }: { onTryFlow: () => void }) {
       {/* Floating "Try a flow" FAB — bottom-right, soft pink glow */}
       <button
         onClick={onTryFlow}
-        className="hover-scale animate-selected-glow fixed bottom-20 right-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/40 transition active:scale-95"
+        className="hover-scale animate-selected-glow fixed bottom-20 end-4 z-40 inline-flex items-center gap-1.5 rounded-full bg-hotpink px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-hotpink/40 transition active:scale-95"
       >
-        <Sparkle className="h-3.5 w-3.5" /> Try a flow
-      </button>
+        <Sparkle className="h-3.5 w-3.5" />{" "}{tr("Try a flow")}</button>
     </div>
   );
 }
@@ -2646,19 +2631,19 @@ function PoseCard({ pose, index }: { pose: Pose; index: number }) {
       className="hover-scale animate-scale-in rounded-2xl sm:rounded-3xl bg-white/90 backdrop-blur border border-petal/60 overflow-hidden shadow-md shadow-rose/10 hover:-translate-y-0.5 hover:shadow-lg transition"
       style={{ animationDelay: `${(index % 8) * 60}ms` }}
     >
-      <button onClick={() => setOpen((v) => !v)} className="block w-full text-left">
+      <button onClick={() => setOpen((v) => !v)} className="block w-full text-start">
         <div className="aspect-square bg-blush/40">
           <img src={pose.image} alt={pose.name} loading="lazy" width={1024} height={1024} onError={(e) => { e.currentTarget.style.visibility = "hidden"; }} className="h-full w-full object-contain bg-[oklch(0.96_0.04_350)]" />
         </div>
         <div className="p-3">
-          <p className="text-sm font-bold text-rose leading-tight">{pose.name}</p>
-          {pose.sanskrit && <p className="text-[10px] italic text-rose/60 leading-tight">{pose.sanskrit}</p>}
-          <p className="mt-1 text-[10px] uppercase tracking-wider font-bold text-hotpink/70">{pose.group}</p>
+          <p className="text-sm font-bold text-rose leading-tight">{trx(pose.name)}</p>
+          {pose.sanskrit && <p className="text-[10px] italic text-rose/60 leading-tight">{trx(pose.sanskrit)}</p>}
+          <p className="mt-1 text-[10px] uppercase tracking-wider font-bold text-hotpink/70">{trx(pose.group)}</p>
         </div>
       </button>
       {open && (
         <div className="px-3 pb-3 text-xs text-rose/85 leading-snug border-t border-petal/40 pt-2">
-          {pose.cues.en}
+          {trx(pose.cues.en)}
         </div>
       )}
     </div>
@@ -2688,34 +2673,33 @@ function YogaPlanSetup({ onBack, onCreate }: {
   return (
     <div className="space-y-3.5 animate-fade-in">
       <div>
-        <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">Build your own week ✿</h3>
-        <p className="text-[12px] text-rose/70">Set your level &amp; focus — we&apos;ll lay out a week you can fine-tune.</p>
+        <h3 className="font-script text-xl text-hotpink leading-none mb-0.5">{tr("Build your own week ✿")}</h3>
+        <p className="text-[12px] text-rose/70">{tr("Set your level & focus — we'll lay out a week you can fine-tune.")}</p>
       </div>
-      <PickGroup label="Your level" icon={GraduationCap}>
+      <PickGroup label={tr("Your level")} icon={GraduationCap}>
         {LEVELS.map((lv) => { const lk = lockLevel(lv); return (
           <Chip key={lv} active={level === lv} onClick={() => { if (lk) { openPaywall("yoga"); return; } setLevel(lv); }}>
-            {lv}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+            {trx(lv)}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
           </Chip>
         ); })}
       </PickGroup>
-      <PickGroup label="What do you want?" icon={Heart}>
+      <PickGroup label={tr("What do you want?")} icon={Heart}>
         {YOGA_GOALS.map((g) => { const lk = lockGoal(g.key); return (
           <Chip key={g.key} active={goal === g.key} onClick={() => { if (lk) { openPaywall("yoga"); return; } setGoal(g.key); }}>
-            {g.label}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+            {trx(g.label)}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
           </Chip>
         ); })}
       </PickGroup>
-      <PickGroup label="Days per week" icon={Calendar}>
+      <PickGroup label={tr("Days per week")} icon={Calendar}>
         {[2, 3, 4, 5].map((d) => { const lk = lockDays(d); return (
           <Chip key={d} active={days === d} onClick={() => { if (lk) { openPaywall("yoga"); return; } setDays(d); }}>
-            {d} days{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+            {trx(d)}{" "}{tr("days")}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
           </Chip>
         ); })}
       </PickGroup>
       <div className="flex items-center gap-2 pt-1">
-        <button onClick={onBack} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">Back</button>
-        <button onClick={() => { if (!premium && !freeCombo) { openPaywall("yoga"); return; } onCreate(level, goal, days); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white inline-flex items-center justify-center gap-2">
-          Create my week <ArrowRight className="h-4 w-4" />
+        <button onClick={onBack} className="rounded-full bg-white/85 px-4 py-2 text-xs font-semibold text-rose border border-petal/60">{tr("Back")}</button>
+        <button onClick={() => { if (!premium && !freeCombo) { openPaywall("yoga"); return; } onCreate(level, goal, days); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white inline-flex items-center justify-center gap-2">{tr("Create my week")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
         </button>
       </div>
     </div>
@@ -2754,76 +2738,73 @@ function Setup({
     <div className="space-y-4 yoga-fade">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Set the mood</p>
-          <h2 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">Your session</h2>
-          <p className="text-xs sm:text-sm text-rose/80 mt-1">Pick what feels right — we'll shape the flow for you.</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Set the mood")}</p>
+          <h2 className="font-script text-3xl sm:text-5xl text-hotpink leading-none">{tr("Your session")}</h2>
+          <p className="text-xs sm:text-sm text-rose/80 mt-1">{tr("Pick what feels right — we'll shape the flow for you.")}</p>
         </div>
-        <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">Back</button>
+        <button onClick={onBack} className="rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose border border-petal/60">{tr("Back")}</button>
       </div>
 
-      <PickGroup label="Duration" icon={Clock}>
+      <PickGroup label={tr("Duration")} icon={Clock}>
         {DURATIONS.map((d) => { const lk = !premium && d !== 10; return (
-          <Chip key={d} active={durationMin === d} onClick={() => { if (lk) { openPaywall("yoga"); return; } setDuration(d); }}>{d} min{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
+          <Chip key={d} active={durationMin === d} onClick={() => { if (lk) { openPaywall("yoga"); return; } setDuration(d); }}>{trx(d)}{" "}{tr("min")}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
         ); })}
       </PickGroup>
 
-      <PickGroup label="Intention" icon={Heart}>
+      <PickGroup label={tr("Intention")} icon={Heart}>
         {INTENTIONS.map((i) => {
           const Ico = i.icon;
           const lk = !premium && i.id !== "morning";
           return (
             <Chip key={i.id} active={intention === i.id} onClick={() => { if (lk) { openPaywall("yoga"); return; } setIntention(i.id); }}>
-              <Ico className="h-3.5 w-3.5 mr-1" /> {i.label}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+              <Ico className="h-3.5 w-3.5 me-1" /> {trx(i.label)}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
             </Chip>
           );
         })}
       </PickGroup>
 
       {intention === "cycle" && (
-        <PickGroup label="Today's phase" icon={Flower}>
+        <PickGroup label={tr("Today's phase")} icon={Flower}>
           {(["menstrual","follicular","ovulation","luteal"] as Phase[]).map((p) => (
-            <Chip key={p} active={phase === p} onClick={() => setPhase(p)}>{p}</Chip>
+            <Chip key={p} active={phase === p} onClick={() => setPhase(p)}>{trx(p)}</Chip>
           ))}
         </PickGroup>
       )}
 
-      <PickGroup label="Level" icon={GraduationCap}>
+      <PickGroup label={tr("Level")} icon={GraduationCap}>
         {LEVELS.map((lv) => { const lk = !premium && lv !== "Beginner"; return (
-          <Chip key={lv} active={level === lv} onClick={() => { if (lk) { openPaywall("yoga"); return; } setLevel(lv); }}>{lv}{lk && <Lock className="ml-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
+          <Chip key={lv} active={level === lv} onClick={() => { if (lk) { openPaywall("yoga"); return; } setLevel(lv); }}>{trx(lv)}{lk && <Lock className="ms-1 h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}</Chip>
         ); })}
       </PickGroup>
 
-      <PickGroup label="Language" icon={Languages}>
+      <PickGroup label={tr("Language")} icon={Languages}>
         {LANGS.map((l) => {
           const soon = l.id !== "en"; // narration is English for now
           return (
             <Chip key={l.id} active={lang === l.id} disabled={soon} onClick={() => setLang(l.id)}>
-              {l.label}{soon ? " · soon" : ""}
+              {trx(l.label)}{soon ? tr(" · soon") : ""}
             </Chip>
           );
         })}
       </PickGroup>
 
-      <PickGroup label="Background sound" icon={Music}>
+      <PickGroup label={tr("Background sound")} icon={Music}>
         {SOUNDS.map((s) => (
-          <Chip key={s} active={sound === s} onClick={() => setSound(s)}>{s}</Chip>
+          <Chip key={s} active={sound === s} onClick={() => setSound(s)}>{trx(s)}</Chip>
         ))}
       </PickGroup>
 
-      <PickGroup label="Mode" icon={Eye}>
-        <Chip active={mode === "visual"} onClick={() => setMode("visual")}><Eye className="h-3.5 w-3.5 mr-1" /> Guided + visuals</Chip>
-        <Chip active={mode === "audio"} onClick={() => setMode("audio")}><Headphones className="h-3.5 w-3.5 mr-1" /> Audio only (eyes closed)</Chip>
+      <PickGroup label={tr("Mode")} icon={Eye}>
+        <Chip active={mode === "visual"} onClick={() => setMode("visual")}><Eye className="h-3.5 w-3.5 me-1" />{" "}{tr("Guided + visuals")}</Chip>
+        <Chip active={mode === "audio"} onClick={() => setMode("audio")}><Headphones className="h-3.5 w-3.5 me-1" />{" "}{tr("Audio only (eyes closed)")}</Chip>
       </PickGroup>
 
       {level === "Beginner" && mode === "visual" && (
         <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3 text-xs text-rose/85">
-          <span className="font-bold">New to yoga?</span> Start with visuals — close your eyes once the poses feel familiar.
-        </div>
+          <span className="font-bold">{tr("New to yoga?")}</span>{" "}{tr("Start with visuals — close your eyes once the poses feel familiar.")}</div>
       )}
       {level === "Beginner" && mode === "audio" && (
-        <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3 text-xs text-rose/85">
-          Audio session will stay on simple floor poses — child's pose, cat-cow, gentle twists and breathing. Safe & soft.
-        </div>
+        <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3 text-xs text-rose/85">{tr("Audio session will stay on simple floor poses — child's pose, cat-cow, gentle twists and breathing. Safe & soft.")}</div>
       )}
 
       <div className="pt-2 flex justify-end">
@@ -2831,8 +2812,7 @@ function Setup({
           onClick={() => { if (!premium && (durationMin !== 10 || intention !== "morning" || level !== "Beginner")) { openPaywall("yoga"); return; } onStart({ durationMin, intention, level, lang, sound, mode, phase }); }}
           className="bloom-luxury-btn inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white"
         >
-          <Play className="h-4 w-4" /> Begin practice
-        </button>
+          <Play className="h-4 w-4" />{" "}{tr("Begin practice")}</button>
       </div>
     </div>
   );
@@ -2842,7 +2822,7 @@ function PickGroup({ label, icon: Icon, children }: { label: string; icon: typeo
   return (
     <div className="rounded-2xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
       <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 flex items-center gap-1.5 mb-2">
-        <Icon className="h-3.5 w-3.5" /> {label}
+        <Icon className="h-3.5 w-3.5" /> {trx(label)}
       </p>
       <div className="flex flex-wrap gap-2">{children}</div>
     </div>
@@ -2921,16 +2901,16 @@ const SESSION_SKINS: Record<DayPart, SessionSkin> = {
 
 // ── Session copy — the floating glass panels read from these (one source each) ──
 const FLOW_META: Record<Intention, { title: string; tagline: string; focus: string[]; feel: { icon: LucideIcon; label: string }[] }> = {
-  morning:  { title: "Morning Energy Flow", tagline: "Awaken. Stretch. Bloom.", focus: ["Full Body", "Flexibility", "Energy"], feel: [{ icon: Flame, label: "More energized" }, { icon: Sparkles, label: "Better focus" }, { icon: Flower, label: "Less stiffness" }, { icon: Heart, label: "Calmer mind" }] },
-  stress:   { title: "Stress Relief Flow", tagline: "Soften. Slow. Let go.", focus: ["Breath", "Release", "Calm"], feel: [{ icon: Wind, label: "Slower breath" }, { icon: Flower, label: "Less tension" }, { icon: Heart, label: "Calmer mind" }, { icon: Sparkles, label: "More at ease" }] },
-  sleep:    { title: "Wind-Down Flow", tagline: "Unwind. Settle. Rest.", focus: ["Gentle", "Restore", "Sleep"], feel: [{ icon: Moon, label: "Sleepy & soft" }, { icon: Wind, label: "Slower mind" }, { icon: Flower, label: "Less tension" }, { icon: Heart, label: "Ready to rest" }] },
-  release:  { title: "Deep Release Flow", tagline: "Open. Breathe. Release.", focus: ["Hips", "Tension", "Space"], feel: [{ icon: Waves, label: "Looser body" }, { icon: Flower, label: "Less tension" }, { icon: Wind, label: "More space" }, { icon: Sparkles, label: "Lighter" }] },
-  cycle:    { title: "Cycle-Sync Flow", tagline: "Honour your phase today.", focus: ["Gentle", "Hormone-kind", "Balance"], feel: [{ icon: Heart, label: "More balanced" }, { icon: Flower, label: "Less cramping" }, { icon: Wind, label: "Softer mood" }, { icon: Sparkles, label: "Cared for" }] },
-  strength: { title: "Strength Flow", tagline: "Build heat. Grow steady.", focus: ["Full Body", "Strength", "Stamina"], feel: [{ icon: Flame, label: "Stronger" }, { icon: Activity, label: "More toned" }, { icon: Sparkles, label: "Energized" }, { icon: Heart, label: "Empowered" }] },
-  core:     { title: "Core Flow", tagline: "Centre. Steady. Strong.", focus: ["Core", "Stability", "Control"], feel: [{ icon: Flame, label: "Stronger core" }, { icon: Activity, label: "Steadier" }, { icon: Sparkles, label: "Energized" }, { icon: Heart, label: "Grounded" }] },
-  balance:  { title: "Balance Flow", tagline: "Focus. Ground. Rise.", focus: ["Balance", "Focus", "Grace"], feel: [{ icon: Sparkles, label: "Sharper focus" }, { icon: Activity, label: "Steadier" }, { icon: Flower, label: "More graceful" }, { icon: Heart, label: "Calmer mind" }] },
-  backcare: { title: "Back-Care Flow", tagline: "Ease. Lengthen. Relieve.", focus: ["Spine", "Relief", "Mobility"], feel: [{ icon: Waves, label: "Looser back" }, { icon: Flower, label: "Less ache" }, { icon: Wind, label: "More mobile" }, { icon: Heart, label: "Relieved" }] },
-  fullbody: { title: "Full-Body Flow", tagline: "Move. Stretch. Glow.", focus: ["Full Body", "Flexibility", "Flow"], feel: [{ icon: Activity, label: "More mobile" }, { icon: Sparkles, label: "Energized" }, { icon: Flower, label: "Less stiffness" }, { icon: Heart, label: "Calmer mind" }] },
+  morning:  { title: tr("Morning Energy Flow"), tagline: tr("Awaken. Stretch. Bloom."), focus: ["Full Body", "Flexibility", "Energy"], feel: [{ icon: Flame, label: tr("More energized") }, { icon: Sparkles, label: tr("Better focus") }, { icon: Flower, label: tr("Less stiffness") }, { icon: Heart, label: tr("Calmer mind") }] },
+  stress:   { title: tr("Stress Relief Flow"), tagline: tr("Soften. Slow. Let go."), focus: ["Breath", "Release", "Calm"], feel: [{ icon: Wind, label: tr("Slower breath") }, { icon: Flower, label: tr("Less tension") }, { icon: Heart, label: tr("Calmer mind") }, { icon: Sparkles, label: tr("More at ease") }] },
+  sleep:    { title: tr("Wind-Down Flow"), tagline: tr("Unwind. Settle. Rest."), focus: ["Gentle", "Restore", "Sleep"], feel: [{ icon: Moon, label: tr("Sleepy & soft") }, { icon: Wind, label: tr("Slower mind") }, { icon: Flower, label: tr("Less tension") }, { icon: Heart, label: tr("Ready to rest") }] },
+  release:  { title: tr("Deep Release Flow"), tagline: tr("Open. Breathe. Release."), focus: ["Hips", "Tension", "Space"], feel: [{ icon: Waves, label: tr("Looser body") }, { icon: Flower, label: tr("Less tension") }, { icon: Wind, label: tr("More space") }, { icon: Sparkles, label: tr("Lighter") }] },
+  cycle:    { title: tr("Cycle-Sync Flow"), tagline: tr("Honour your phase today."), focus: ["Gentle", "Hormone-kind", "Balance"], feel: [{ icon: Heart, label: tr("More balanced") }, { icon: Flower, label: tr("Less cramping") }, { icon: Wind, label: tr("Softer mood") }, { icon: Sparkles, label: tr("Cared for") }] },
+  strength: { title: tr("Strength Flow"), tagline: tr("Build heat. Grow steady."), focus: ["Full Body", "Strength", "Stamina"], feel: [{ icon: Flame, label: tr("Stronger") }, { icon: Activity, label: tr("More toned") }, { icon: Sparkles, label: tr("Energized") }, { icon: Heart, label: tr("Empowered") }] },
+  core:     { title: tr("Core Flow"), tagline: tr("Centre. Steady. Strong."), focus: ["Core", "Stability", "Control"], feel: [{ icon: Flame, label: tr("Stronger core") }, { icon: Activity, label: tr("Steadier") }, { icon: Sparkles, label: tr("Energized") }, { icon: Heart, label: tr("Grounded") }] },
+  balance:  { title: tr("Balance Flow"), tagline: tr("Focus. Ground. Rise."), focus: ["Balance", "Focus", "Grace"], feel: [{ icon: Sparkles, label: tr("Sharper focus") }, { icon: Activity, label: tr("Steadier") }, { icon: Flower, label: tr("More graceful") }, { icon: Heart, label: tr("Calmer mind") }] },
+  backcare: { title: tr("Back-Care Flow"), tagline: tr("Ease. Lengthen. Relieve."), focus: ["Spine", "Relief", "Mobility"], feel: [{ icon: Waves, label: tr("Looser back") }, { icon: Flower, label: tr("Less ache") }, { icon: Wind, label: tr("More mobile") }, { icon: Heart, label: tr("Relieved") }] },
+  fullbody: { title: tr("Full-Body Flow"), tagline: tr("Move. Stretch. Glow."), focus: ["Full Body", "Flexibility", "Flow"], feel: [{ icon: Activity, label: tr("More mobile") }, { icon: Sparkles, label: tr("Energized") }, { icon: Flower, label: tr("Less stiffness") }, { icon: Heart, label: tr("Calmer mind") }] },
 };
 
 /** A short, warm benefit line per pose family — for the right-side POSE panel. */
@@ -2984,9 +2964,9 @@ function HoldRing({ remaining, total, ink, inkSoft }: { remaining: number; total
         </defs>
       </svg>
       <div className="text-center leading-none" style={{ color: ink }}>
-        <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: inkSoft }}>Hold</p>
-        <p className="text-2xl sm:text-3xl font-bold tabular-nums">{remaining}s</p>
-        <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider" style={{ color: inkSoft }}>of {total}s</p>
+        <p className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: inkSoft }}>{tr("Hold")}</p>
+        <p className="text-2xl sm:text-3xl font-bold tabular-nums">{trx(remaining)}s</p>
+        <p className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider" style={{ color: inkSoft }}>{tr("of")}{" "}{trx(total)}s</p>
       </div>
     </div>
   );
@@ -3415,8 +3395,8 @@ function SessionPlayer({
                 : chronoPhase === "fly" ? "bzChronoFly 640ms cubic-bezier(.5,0,.2,1) forwards"
                 : "bzChronoPulse 1s ease-in-out infinite",
             }}>
-            <span className="font-script text-[6.5rem] leading-[0.75] text-hotpink drop-shadow-[0_2px_14px_rgba(255,255,255,0.75)]">{chrono ?? "✿"}</span>
-            <span className="mt-2 text-xs font-bold uppercase tracking-[0.3em] text-hotpink/80">get ready</span>
+            <span className="font-script text-[6.5rem] leading-[0.75] text-hotpink drop-shadow-[0_2px_14px_rgba(255,255,255,0.75)]">{trx(chrono) ?? "✿"}</span>
+            <span className="mt-2 text-xs font-bold uppercase tracking-[0.3em] text-hotpink/80">{tr("get ready")}</span>
           </div>
         </div>
       )}
@@ -3508,8 +3488,8 @@ function SessionPlayer({
           <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center animate-fade-in">
             <div className="text-center px-5 py-3 rounded-[1.5rem] bg-white/70 backdrop-blur-md border border-white/70 shadow-lg animate-scale-in">
               <div className="text-3xl sm:text-4xl text-hotpink animate-spin" style={{ animationDuration: "1.8s" }}>↺</div>
-              <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">Other side</p>
-              <p className="text-[11px] font-semibold text-rose/70">ease gently over ✿</p>
+              <p className="mt-1 font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("Other side")}</p>
+              <p className="text-[11px] font-semibold text-rose/70">{tr("ease gently over ✿")}</p>
             </div>
           </div>
         )}
@@ -3548,8 +3528,8 @@ function SessionPlayer({
           style={{ background: "linear-gradient(160deg, oklch(0.9 0.07 350 / 0.5), oklch(0.82 0.11 345 / 0.46))", backdropFilter: "blur(1.5px)" }}
         >
           <div className="text-center animate-scale-in px-6">
-            <p className="animate-wk-end-breathe font-script text-white leading-none drop-shadow-[0_6px_30px_oklch(0.5_0.28_350/0.8)]" style={{ fontSize: "clamp(3rem, 14vw, 8rem)" }}>The&nbsp;End&nbsp;✿</p>
-            <p className="mt-3 font-semibold uppercase tracking-[0.34em] text-white/85 text-xs sm:text-sm">Namaste</p>
+            <p className="animate-wk-end-breathe font-script text-white leading-none drop-shadow-[0_6px_30px_oklch(0.5_0.28_350/0.8)]" style={{ fontSize: "clamp(3rem, 14vw, 8rem)" }}>{tr("The End ✿")}</p>
+            <p className="mt-3 font-semibold uppercase tracking-[0.34em] text-white/85 text-xs sm:text-sm">{tr("Namaste")}</p>
           </div>
         </div>
       )}
@@ -3612,7 +3592,7 @@ function SessionPlayer({
                 >
                   <div className="flex items-center gap-2 px-2.5 pt-2.5 pb-1.5">
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-hotpink to-[#BE185D] text-white shadow-sm"><Icon className="h-3.5 w-3.5" strokeWidth={2.4} /></span>
-                    <b className="text-[12px] leading-tight text-rose">{c.t}</b>
+                    <b className="text-[12px] leading-tight text-rose">{trx(c.t)}</b>
                   </div>
                   <div className="mx-2.5 mb-2.5 h-16 lg:h-20 rounded-xl overflow-hidden bg-blush">
                     <img src={c.img} alt="" loading="lazy" className="h-full w-full object-cover" />
@@ -3627,8 +3607,7 @@ function SessionPlayer({
               {/* "Session complete" — a calm, unmistakable close marker */}
               <span className="inline-flex items-center gap-2 rounded-full bg-white/80 backdrop-blur-md border border-white/80 px-4 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-rose/15 bz-outro-up"
                 style={{ animationDelay: "0.2s" }}>
-                <CircleCheck className="h-4 w-4" strokeWidth={2.6} /> Session complete
-              </span>
+                <CircleCheck className="h-4 w-4" strokeWidth={2.6} />{" "}{tr("Session complete")}</span>
 
               {/* brand bloom — all-pink flower, breathing + rotating */}
               <span className="mt-[1.6vh] grid place-items-center bz-outro-up" style={{ animationDelay: "0.6s", animation: "bzBreathe 4.6s ease-in-out infinite", filter: "drop-shadow(0 8px 26px rgba(190,24,93,0.35))" }}>
@@ -3636,29 +3615,22 @@ function SessionPlayer({
               </span>
 
               {/* BIG script wordmark — matches the welcome-screen logo font */}
-              <p className="mt-[1.4vh] font-script leading-none text-hotpink bz-outro-up" style={{ animationDelay: "1s", fontSize: "clamp(3.6rem,12vw,8rem)", textShadow: "0 2px 22px rgba(255,255,255,0.8)" }}>
-                Bloomzein
-              </p>
-              <p className="mt-[1vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "1.6s", fontSize: "clamp(0.9rem,2.5vw,1.25rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>
-                stay soft, bloom on. ✿
-              </p>
+              <p className="mt-[1.4vh] font-script leading-none text-hotpink bz-outro-up" style={{ animationDelay: "1s", fontSize: "clamp(3.6rem,12vw,8rem)", textShadow: "0 2px 22px rgba(255,255,255,0.8)" }}>{tr("Bloomzein")}</p>
+              <p className="mt-[1vh] font-semibold tracking-wide text-rose/85 bz-outro-up" style={{ animationDelay: "1.6s", fontSize: "clamp(0.9rem,2.5vw,1.25rem)", textShadow: "0 1px 8px rgba(255,255,255,0.7)" }}>{tr("stay soft, bloom on. ✿")}</p>
 
               {/* session stats — a soft sense of accomplishment, meditation close */}
               <p className="mt-[1.2vh] font-bold uppercase tracking-[0.16em] text-hotpink/80 bz-outro-up" style={{ animationDelay: "1.9s", fontSize: "clamp(0.62rem,1.6vw,0.8rem)", textShadow: "0 1px 6px rgba(255,255,255,0.7)" }}>
-                {Math.max(1, Math.round(flowTotalSec / 60))} min · {realTotal} poses · Namaste ✿
-              </p>
+                {Math.max(1, Math.round(flowTotalSec / 60))}{" "}{tr("min ·")}{" "}{trx(realTotal)}{" "}{tr("poses · Namaste ✿")}</p>
 
               {/* reworded closing line — sits under the brand (moved down) */}
-              <p className="mt-[1.8vh] font-script text-rose leading-none bz-outro-up" style={{ animationDelay: "2.2s", fontSize: "clamp(1.5rem,4.4vw,2.9rem)", textShadow: "0 2px 16px rgba(255,255,255,0.6)" }}>
-                You showed up for yourself today ✿
-              </p>
+              <p className="mt-[1.8vh] font-script text-rose leading-none bz-outro-up" style={{ animationDelay: "2.2s", fontSize: "clamp(1.5rem,4.4vw,2.9rem)", textShadow: "0 2px 16px rgba(255,255,255,0.6)" }}>{tr("You showed up for yourself today ✿")}</p>
 
               {/* call to action — get the app (catchy: gradient pill, sparkle icon,
                   script font). The cursor taps this to "activate" the cards. */}
               <span className="relative mt-[2.6vh] inline-flex items-center gap-2.5 rounded-full text-white bz-outro-up shadow-xl shadow-hotpink/40 px-6 py-3"
                 style={{ animationDelay: "3s", background: "linear-gradient(90deg, #FB7EA8, #EC4899)" }}>
                 <Sparkles className="h-5 w-5 shrink-0" strokeWidth={2.2} />
-                <span className="font-script leading-none" style={{ fontSize: "clamp(1.4rem,4.2vw,2.1rem)", textShadow: "0 2px 10px rgba(120,8,60,0.3)" }}>Get the Bloomzein app ✿</span>
+                <span className="font-script leading-none" style={{ fontSize: "clamp(1.4rem,4.2vw,2.1rem)", textShadow: "0 2px 10px rgba(120,8,60,0.3)" }}>{tr("Get the Bloomzein app ✿")}</span>
               </span>
 
               {/* Subscribe → Subscribed, a Like button, gentle hearts, and the cute
@@ -3669,22 +3641,21 @@ function SessionPlayer({
                   <span className="inline-flex items-center gap-3 rounded-full px-8 py-3.5 text-white shadow-xl shadow-hotpink/45"
                     style={{ background: "linear-gradient(90deg, #EC4899, #BE185D)" }}>
                     <Heart className="h-6 w-6 shrink-0" fill="currentColor" strokeWidth={0} />
-                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribe</span>
-                    <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>for a new<br />flow every week ♡</span>
+                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>{tr("Subscribe")}</span>
+                    <span className="font-semibold tracking-wide leading-tight" style={{ fontSize: "clamp(0.78rem,1.9vw,1rem)" }}>{tr("for a new")}<br />{tr("flow every week ♡")}</span>
                   </span>
                   {/* the button turns into "Subscribed" once clicked (~9s) */}
                   <span aria-hidden className="absolute inset-0 flex items-center justify-center gap-2.5 rounded-full text-white"
                     style={{ background: "linear-gradient(90deg, #DB2777, #9D174D)", opacity: 0, animation: "bzFadeIn 500ms ease-out 9s both" }}>
                     <CircleCheck className="h-7 w-7 shrink-0" strokeWidth={2.6} />
-                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>Subscribed</span>
+                    <span className="font-script leading-none" style={{ fontSize: "clamp(1.7rem,5vw,2.8rem)", textShadow: "0 2px 12px rgba(120,8,60,0.35)" }}>{tr("Subscribed")}</span>
                   </span>
                 </div>
 
                 {/* Like button below — the cursor taps it (~11.1s) */}
                 <span className="absolute left-1/2 -translate-x-1/2 top-full mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur-md border border-white/80 px-4 py-1.5 text-hotpink font-bold text-[13px] shadow-lg shadow-rose/15 bz-outro-up"
                   style={{ animationDelay: "7.4s" }}>
-                  <Heart className="h-4 w-4" fill="currentColor" strokeWidth={0} /> Like
-                </span>
+                  <Heart className="h-4 w-4" fill="currentColor" strokeWidth={0} />{" "}{tr("Like")}</span>
 
                 {/* a FEW cute hearts float up gently after the Like tap (~11.1s) */}
                 {[-26, -8, 12, 28].map((dx, i) => (
@@ -3710,11 +3681,8 @@ function SessionPlayer({
           <div onClick={() => setTvHint(false)}
             className="pointer-events-auto max-w-sm rounded-2xl bg-white/95 backdrop-blur-md px-4 py-3 shadow-lg border border-petal/60 text-center cursor-pointer">
             <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-rose">
-              <Tv className="h-4 w-4" /> Sur la TV
-            </p>
-            <p className="mt-1 text-xs leading-snug text-rose/70">
-              Recopie l'onglet / l'écran (Chromecast · AirPlay) — tout le flow <em>et le son</em> passent sur ta TV.
-            </p>
+              <Tv className="h-4 w-4" />{" "}{tr("Sur la TV")}</p>
+            <p className="mt-1 text-xs leading-snug text-rose/70">{tr("Recopie l'onglet / l'écran (Chromecast · AirPlay) — tout le flow")}{" "}<em>{tr("et le son")}</em>{" "}{tr("passent sur ta TV.")}</p>
           </div>
         </div>
       )}
@@ -3725,45 +3693,43 @@ function SessionPlayer({
         style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
         <button onClick={() => { stopAllAudio(); onExit(); }}
           className={["inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold", glassBtn].join(" ")}>
-          <X className="h-3.5 w-3.5" /> End
-        </button>
+          <X className="h-3.5 w-3.5" />{" "}{tr("End")}</button>
         {/* Desktop keeps the progress in the bar; mobile moves it below (see mobile block). */}
         <div className="hidden lg:block flex-1 max-w-md mx-auto mt-1">
-          <p className="text-center text-[9px] font-bold uppercase tracking-[0.28em] mb-1" style={{ color: skin.inkSoft }}>Flow progress</p>
+          <p className="text-center text-[9px] font-bold uppercase tracking-[0.28em] mb-1" style={{ color: skin.inkSoft }}>{tr("Flow progress")}</p>
           <div className="relative h-1.5 rounded-full overflow-hidden" style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)" }}>
-            <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="hidden sm:block text-[11px] font-bold tabular-nums self-center mr-1" style={{ color: skin.ink }}>{stepNum} / {realTotal}</span>
-          <button onClick={shareToTV} title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)"
+          <span className="hidden sm:block text-[11px] font-bold tabular-nums self-center me-1" style={{ color: skin.ink }}>{trx(stepNum)} / {trx(realTotal)}</span>
+          <button onClick={shareToTV} title={tr("Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)")}
             className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
             <Tv className="h-4 w-4" />
           </button>
-          <button onClick={cycleSkin} title={`Theme: ${skinPref === "auto" ? `auto (${dayPart})` : skinPref}`}
+          <button onClick={cycleSkin} title={tr("Theme: {0}", { 0: skinPref === "auto" ? `auto (${dayPart})` : skinPref })}
             className={["inline-flex items-center gap-1 rounded-full px-2.5 h-9 text-[10px] font-bold uppercase tracking-wide", glassBtn].join(" ")}>
             {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            {skinPref === "auto" && <span className="opacity-70">auto</span>}
+            {skinPref === "auto" && <span className="opacity-70">{tr("auto")}</span>}
           </button>
-          <button onClick={() => { setShowSpeed((s) => !s); setShowVolume(false); }} title="Playback speed"
+          <button onClick={() => { setShowSpeed((s) => !s); setShowVolume(false); }} title={tr("Playback speed")}
             className={["inline-flex items-center gap-1 rounded-full px-2.5 h-9 text-[11px] font-bold tabular-nums", showSpeed ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
-            <Gauge className="h-4 w-4" />{speed}×
+            <Gauge className="h-4 w-4" />{trx(speed)}×
           </button>
-          <button onClick={() => { setShowVolume((s) => !s); setShowSpeed(false); }} title="Sound levels"
+          <button onClick={() => { setShowVolume((s) => !s); setShowSpeed(false); }} title={tr("Sound levels")}
             className={["grid h-9 w-9 place-items-center rounded-full", showVolume ? "ring-2 ring-hotpink/50 " : "", glassBtn].join(" ")}>
             {muted || (voiceVol === 0 && musicVol === 0) ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </button>
           <button onClick={() => { setShowSpeed(false); setShowVolume(false); if (!running) togglePlay(); setChromeShow(true); setPresent(true); }}
-            title="Presentation mode — hide controls & show the logo (for recording)"
+            title={tr("Presentation mode — hide controls & show the logo (for recording)")}
             className={["grid h-9 w-9 place-items-center rounded-full", glassBtn].join(" ")}>
             <Video className="h-4 w-4" />
           </button>
           {isOwner && (
             <button onClick={() => { setShowSpeed(false); setShowVolume(false); if (!running) togglePlay(); setChromeShow(true); setPresent(true); try { toggleFullscreen(); } catch {} }}
-              title="Record for YouTube — presentation mode, play & fullscreen in one tap"
+              title={tr("Record for YouTube — presentation mode, play & fullscreen in one tap")}
               className="inline-flex items-center gap-1 rounded-full bg-red-600 text-white px-3 h-9 text-[11px] font-black tracking-wide shadow-md shadow-red-600/30 active:scale-95 transition">
-              <Video className="h-4 w-4" /> REC
-            </button>
+              <Video className="h-4 w-4" />{" "}{tr("REC")}</button>
           )}
         </div>
       </div>
@@ -3776,42 +3742,40 @@ function SessionPlayer({
 
       {/* ===================== SPEED SELECTOR (popover) ===================== */}
       {showSpeed && (
-        <div className={["absolute right-4 sm:right-5 top-16 sm:top-20 z-40 w-44 rounded-2xl p-3 animate-scale-in", glass].join(" ")}>
+        <div className={["absolute end-4 sm:end-5 top-16 sm:top-20 z-40 w-44 rounded-2xl p-3 animate-scale-in", glass].join(" ")}>
           <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: skin.inkSoft }}>
-            <Gauge className="h-3.5 w-3.5" /> Pace
-          </p>
+            <Gauge className="h-3.5 w-3.5" />{" "}{tr("Pace")}</p>
           <div className="grid grid-cols-3 gap-1.5">
             {[0.5, 0.7, 1].map((s) => (
               <button key={s} onClick={() => { setSpeed(s); }}
                 className={["rounded-xl py-2 text-sm font-bold tabular-nums transition active:scale-95",
                   speed === s ? "bg-gradient-to-br from-petal to-hotpink text-white shadow-md shadow-hotpink/25" : glassBtn].join(" ")}>
-                {s}×
+                {trx(s)}×
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[10px] leading-snug text-center" style={{ color: skin.inkSoft }}>Slower = calmer, breath-paced</p>
+          <p className="mt-2 text-[10px] leading-snug text-center" style={{ color: skin.inkSoft }}>{tr("Slower = calmer, breath-paced")}</p>
         </div>
       )}
 
       {/* ===================== SOUND LEVELS (popover) ===================== */}
       {showVolume && (
-        <div className={["absolute right-4 sm:right-5 top-16 sm:top-20 z-40 w-64 rounded-2xl p-4 animate-scale-in", glass].join(" ")}>
+        <div className={["absolute end-4 sm:end-5 top-16 sm:top-20 z-40 w-64 rounded-2xl p-4 animate-scale-in", glass].join(" ")}>
           <div className="flex items-center justify-between mb-3">
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
-              <Music className="h-3.5 w-3.5" /> Sound
-            </p>
+              <Music className="h-3.5 w-3.5" />{" "}{tr("Sound")}</p>
             <button onClick={() => setMuteState(!muted)}
               className={["inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide", glassBtn].join(" ")}>
-              {muted ? <><VolumeX className="h-3 w-3" /> Muted</> : <><Volume2 className="h-3 w-3" /> On</>}
+              {muted ? <><VolumeX className="h-3 w-3" />{" "}{tr("Muted")}</> : <><Volume2 className="h-3 w-3" />{" "}{tr("On")}</>}
             </button>
           </div>
           {([
-            { label: "Voice", Icon: Headphones, val: voiceVol, set: setVoiceVol },
-            { label: "Music", Icon: Music, val: musicVol, set: setMusicVol },
+            { label: tr("Voice"), Icon: Headphones, val: voiceVol, set: setVoiceVol },
+            { label: tr("Music"), Icon: Music, val: musicVol, set: setMusicVol },
           ] as const).map(({ label, Icon, val, set }) => (
             <div key={label} className="mb-3 last:mb-0">
               <div className="flex items-center justify-between text-[11px] font-semibold mb-1" style={{ color: skin.ink }}>
-                <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" style={{ color: "#EC4899" }} /> {label}</span>
+                <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5" style={{ color: "#EC4899" }} /> {trx(label)}</span>
                 <span className="tabular-nums" style={{ color: skin.inkSoft }}>{Math.round(val * 100)}%</span>
               </div>
               <input type="range" min={0} max={1} step={0.01} value={val}
@@ -3830,23 +3794,22 @@ function SessionPlayer({
         <div className="hidden lg:flex flex-col gap-3 absolute top-20 w-64 z-20" style={{ left: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
-              <Flower className="h-3.5 w-3.5" /> Today's Flow
-            </p>
+              <Flower className="h-3.5 w-3.5" />{" "}{tr("Today's Flow")}</p>
             <div style={{ color: skin.ink }}>
               <AnimatedWords text={meta.title} stagger={90} className="font-script text-3xl leading-tight mt-1 block" />
             </div>
-            <p className="text-sm mt-1" style={{ color: skin.inkSoft }}>{meta.tagline}</p>
+            <p className="text-sm mt-1" style={{ color: skin.inkSoft }}>{trx(meta.tagline)}</p>
             <div className="my-3 h-px" style={{ background: isDark ? "rgba(255,255,255,0.14)" : "rgba(190,24,93,0.14)" }} />
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Focus</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>{tr("Focus")}</p>
             <p className="text-sm font-semibold" style={{ color: skin.ink }}>{meta.focus.join(" · ")}</p>
           </div>
           <div className={["rounded-3xl p-4 animate-fade-in", glass].join(" ")} style={{ animationDelay: "80ms" }}>
-            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>How you may feel</p>
-            <p className="text-sm font-semibold mb-2" style={{ color: skin.ink }}>After this flow</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>{tr("How you may feel")}</p>
+            <p className="text-sm font-semibold mb-2" style={{ color: skin.ink }}>{tr("After this flow")}</p>
             <ul className="space-y-1.5">
               {meta.feel.map(({ icon: Icon, label }, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm animate-fade-in" style={{ color: skin.ink, animationDelay: `${150 + i * 70}ms` }}>
-                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {label}
+                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {trx(label)}
                 </li>
               ))}
             </ul>
@@ -3859,12 +3822,11 @@ function SessionPlayer({
         <div className="hidden lg:flex absolute top-24 sm:top-28 z-20 flex-col items-end gap-3" style={{ right: "max(1.25rem, calc((100vw - 96rem) / 2))" }}>
           <div className={["hidden lg:block w-64 rounded-3xl p-4 animate-fade-in", glass].join(" ")}>
             <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>
-              <Activity className="h-3.5 w-3.5" /> Pose
-            </p>
-            <h3 key={idx} className="font-script text-2xl leading-tight mt-0.5" style={{ color: skin.ink, animation: "bzPoseIn 620ms cubic-bezier(.18,.9,.34,1.2) both" }}>{pose.name}{pose.switchStep ? " ↺" : ""}</h3>
-            {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{pose.sanskrit}</p>}
+              <Activity className="h-3.5 w-3.5" />{" "}{tr("Pose")}</p>
+            <h3 key={idx} className="font-script text-2xl leading-tight mt-0.5" style={{ color: skin.ink, animation: "bzPoseIn 620ms cubic-bezier(.18,.9,.34,1.2) both" }}>{trx(pose.name)}{pose.switchStep ? " ↺" : ""}</h3>
+            {pose.sanskrit && <p className="text-xs italic" style={{ color: skin.inkSoft }}>{trx(pose.sanskrit)}</p>}
             <div className="my-2.5 h-px" style={{ background: isDark ? "rgba(255,255,255,0.14)" : "rgba(190,24,93,0.14)" }} />
-            <p className="text-sm leading-snug" style={{ color: skin.inkSoft }}>{benefit}</p>
+            <p className="text-sm leading-snug" style={{ color: skin.inkSoft }}>{trx(benefit)}</p>
           </div>
           <div className={["rounded-full p-1.5 animate-scale-in", glass].join(" ")}>
             <HoldRing remaining={remaining} total={poseHold} ink={skin.ink} inkSoft={skin.inkSoft} />
@@ -3872,11 +3834,11 @@ function SessionPlayer({
           {nextPose && (
             <div key={`${idx}:${chronoPhase}`} className={["hidden lg:block w-64 rounded-3xl p-3", glass].join(" ")}
               style={{ animation: "bzNextIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: skin.inkSoft }}>Up next</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: skin.inkSoft }}>{tr("Up next")}</p>
               <div className="flex items-center gap-3">
                 <img src={nextPose.poster ?? nextPose.image} alt="" className="h-14 w-20 rounded-xl object-cover shrink-0 border border-white/50" />
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
+                  <p className="font-semibold text-sm truncate" style={{ color: skin.ink }}>{trx(nextPose.name)}</p>
                   <p className="text-xs" style={{ color: skin.inkSoft }}>{holdFor(nextPose)}s</p>
                 </div>
               </div>
@@ -3893,16 +3855,15 @@ function SessionPlayer({
           style={{ top: "calc(max(0.75rem, env(safe-area-inset-top)) + 2.9rem)" }}>
           {/* Pose title — framed like the workout player (never bare on the image) */}
           <div key={idx} className={["self-start max-w-[78%] rounded-2xl px-3.5 py-2 animate-fade-in", glass].join(" ")}>
-            <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: skin.inkSoft }}>
-              Pose {stepNum} of {realTotal}{pose.switchStep ? " · other side" : ""}
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em]" style={{ color: skin.inkSoft }}>{tr("Pose")}{" "}{trx(stepNum)}{" "}{tr("of")}{" "}{trx(realTotal)}{pose.switchStep ? tr(" · other side") : ""}
             </p>
             <h3 className="font-script text-3xl leading-none mt-0.5" style={{ color: skin.ink, animation: "bzPoseIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
-              {pose.name}{pose.switchStep ? " ↺" : ""}
+              {trx(pose.name)}{pose.switchStep ? " ↺" : ""}
             </h3>
             <div className="mt-1 flex items-center gap-1.5">
               <Flower className="h-3 w-3 shrink-0" style={{ color: "#EC4899" }} />
               <span className="h-px w-10 rounded-full" style={{ background: "linear-gradient(90deg, rgba(236,72,153,0.65), transparent)" }} />
-              {pose.sanskrit && <span className="text-[10px] italic truncate" style={{ color: skin.inkSoft }}>{pose.sanskrit}</span>}
+              {pose.sanskrit && <span className="text-[10px] italic truncate" style={{ color: skin.inkSoft }}>{trx(pose.sanskrit)}</span>}
             </div>
           </div>
         </div>
@@ -3917,8 +3878,8 @@ function SessionPlayer({
                 style={{ animation: "bzNextIn 640ms cubic-bezier(.18,.9,.34,1.2) both" }}>
                 <img src={nextPose.poster ?? nextPose.image} alt="" className="h-12 w-14 rounded-xl object-cover shrink-0 border border-white/50" />
                 <div className="min-w-0">
-                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>Up next</p>
-                  <p className="font-semibold text-sm leading-tight truncate" style={{ color: skin.ink }}>{nextPose.name}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: skin.inkSoft }}>{tr("Up next")}</p>
+                  <p className="font-semibold text-sm leading-tight truncate" style={{ color: skin.ink }}>{trx(nextPose.name)}</p>
                   <p className="text-[11px]" style={{ color: skin.inkSoft }}>{holdFor(nextPose)}s</p>
                 </div>
               </div>
@@ -3928,11 +3889,11 @@ function SessionPlayer({
             </div>
           </div>
           <div className={["flex items-center gap-2 rounded-full px-3 py-1.5 animate-fade-in", glass].join(" ")}>
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] shrink-0" style={{ color: skin.inkSoft }}>Flow</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] shrink-0" style={{ color: skin.inkSoft }}>{tr("Flow")}</span>
             <div className="relative h-1 flex-1 rounded-full overflow-hidden" style={{ background: isDark ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.55)" }}>
-              <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+              <div className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
-            <span className="text-[10px] font-bold tabular-nums shrink-0" style={{ color: skin.ink }}>{stepNum}/{realTotal}</span>
+            <span className="text-[10px] font-bold tabular-nums shrink-0" style={{ color: skin.ink }}>{trx(stepNum)}/{trx(realTotal)}</span>
           </div>
         </div>
       )}
@@ -3941,46 +3902,46 @@ function SessionPlayer({
       {!dim && !finished && (
         <div className="hidden lg:block absolute bottom-3 z-10 w-60 lg:w-64 pointer-events-none" style={{ right: "max(1rem, calc((100vw - 96rem) / 2))" }}>
           <div key={idx} className={["rounded-2xl px-4 py-3 text-center animate-fade-in", glass].join(" ")}>
-            <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{quote}”</p>
+            <p className="font-script text-lg leading-snug" style={{ color: skin.ink }}>“{trx(quote)}”</p>
           </div>
         </div>
       )}
 
       {/* ===================== CONTROLS + MANTRA (bottom-left on desktop) === */}
-      <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:left-[max(1.25rem,calc((100vw_-_96rem)/2))] z-20 flex flex-col items-center lg:items-start gap-2 px-3"
+      <div className="absolute bottom-0 inset-x-0 lg:inset-x-auto lg:start-[max(1.25rem,calc((100vw_-_96rem)/2))] z-20 flex flex-col items-center lg:items-start gap-2 px-3"
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
         {!present && !finished && (
         <div className={["flex items-center gap-1.5 sm:gap-2 rounded-full p-1.5 animate-fade-in", glass].join(" ")}>
           <button onClick={() => setIdx((i) => Math.max(0, i - 1))}
             className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
-            <ChevronLeft className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Previous</span>
+            <ChevronLeft className="rtl:-scale-x-100 h-3.5 w-3.5" /> <span className="hidden sm:inline">{tr("Previous")}</span>
           </button>
           <button onClick={togglePlay}
             className="relative grid h-14 w-14 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-lg shadow-hotpink/30 animate-selected-glow active:scale-95 transition">
-            {running ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ml-0.5" />}
-            <span className="absolute -bottom-4 text-[9px] font-bold uppercase tracking-wide" style={{ color: skin.inkSoft }}>{running ? "Pause" : (idx === 0 && remaining === poseHold ? "Start" : "Resume")}</span>
+            {running ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6 ms-0.5" />}
+            <span className="absolute -bottom-4 text-[9px] font-bold uppercase tracking-wide" style={{ color: skin.inkSoft }}>{running ? tr("Pause") : (idx === 0 && remaining === poseHold ? tr("Start") : tr("Resume"))}</span>
           </button>
           <button onClick={() => { if (idx + 1 >= flow.length) finishSession(); else setIdx((i) => i + 1); }}
             className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
-            <span className="hidden sm:inline">Next</span> <SkipForward className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{tr("Next")}</span> <SkipForward className="h-3.5 w-3.5" />
           </button>
           {mode === "audio" ? (
             <button onClick={() => setPeek((p) => !p)}
               className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
-              {peek ? <><EyeOff className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Hide</span></> : <><Eye className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Peek</span></>}
+              {peek ? <><EyeOff className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{tr("Hide")}</span></> : <><Eye className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{tr("Peek")}</span></>}
             </button>
           ) : (
             <button onClick={() => setBreathOpen((b) => !b)}
               className={["inline-flex items-center gap-1 rounded-full px-3 py-2 text-xs font-semibold", glassBtn].join(" ")}>
-              <Waves className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Breath</span>
+              <Waves className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{tr("Breath")}</span>
             </button>
           )}
         </div>
         )}
         {!present && !finished && (
-        <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-left animate-fade-in", glass].join(" ")}>
+        <div className={["w-full max-w-lg lg:w-[26rem] rounded-full px-4 py-2 text-center lg:text-start animate-fade-in", glass].join(" ")}>
           <p className="flex items-center justify-center lg:justify-start gap-2 text-sm font-medium" style={{ color: skin.ink }}>
-            <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {mantra}
+            <Flower className="h-3.5 w-3.5 shrink-0" style={{ color: "#EC4899" }} /> {trx(mantra)}
           </p>
         </div>
         )}
@@ -3992,30 +3953,29 @@ function SessionPlayer({
           {/* Flow progress — kept, slim, across the top. */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-30 px-6 pt-4 sm:pt-5">
             <div className="relative mx-auto h-1.5 max-w-3xl rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.30)" }}>
-              <div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
+              <div className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
           {/* Brand logo — bottom-left, stacked (flower · Bloomzein · tagline). The
               flower breathes (zoom in/out); colours use the player's soft pink. */}
-          <div className="pointer-events-none absolute bottom-5 left-6 z-30 flex items-center gap-2.5 animate-fade-in">
+          <div className="pointer-events-none absolute bottom-5 start-6 z-30 flex items-center gap-2.5 animate-fade-in">
             <span className="grid place-items-center" style={{ filter: "drop-shadow(0 2px 10px rgba(255,255,255,0.5))" }}>
               <BloomFlower size={64} petal="#EC4899" center="#BE185D" style={{ animation: "bzSpin 14s linear infinite" }} />
             </span>
             <div className="leading-none">
-              <p className="font-script text-3xl leading-none text-hotpink" style={{ textShadow: "0 1px 10px rgba(255,255,255,0.85), 0 2px 4px rgba(255,255,255,0.55)" }}>Bloomzein</p>
-              <p className="mt-1 text-[11px] font-semibold tracking-wide text-rose/85" style={{ textShadow: "0 1px 6px rgba(255,255,255,0.75)" }}>stay soft, bloom on. ✿</p>
+              <p className="font-script text-3xl leading-none text-hotpink" style={{ textShadow: "0 1px 10px rgba(255,255,255,0.85), 0 2px 4px rgba(255,255,255,0.55)" }}>{tr("Bloomzein")}</p>
+              <p className="mt-1 text-[11px] font-semibold tracking-wide text-rose/85" style={{ textShadow: "0 1px 6px rgba(255,255,255,0.75)" }}>{tr("stay soft, bloom on. ✿")}</p>
             </div>
           </div>
 
           {/* Exit — auto-hides after a moment; move the mouse or press Esc to bring it back. */}
           <button
             onClick={() => setPresent(false)}
-            title="Exit presentation mode (Esc)"
-            className={["absolute top-6 right-4 z-40 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity duration-500", glassBtn, chromeShow ? "opacity-100" : "opacity-0 pointer-events-none"].join(" ")}
+            title={tr("Exit presentation mode (Esc)")}
+            className={["absolute top-6 end-4 z-40 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition-opacity duration-500", glassBtn, chromeShow ? "opacity-100" : "opacity-0 pointer-events-none"].join(" ")}
           >
-            <X className="h-3.5 w-3.5" /> Exit
-          </button>
+            <X className="h-3.5 w-3.5" />{" "}{tr("Exit")}</button>
         </>
       )}
     </div>,
@@ -4054,7 +4014,7 @@ function Summary({
         id: String(Date.now()),
         date: fmtLocalDate(now),
         mood: moodMap[after ?? ""] ?? "calm",
-        title: `Yoga · ${INTENTIONS.find(i => i.id === intention)?.label ?? "Practice"}`,
+        title: tr("Yoga · {0}", { 0: INTENTIONS.find(i => i.id === intention)?.label ?? "Practice" }),
         html: `<p>🧘🏻‍♀️ ${note.trim()} (${realMin}m)</p>`,
         theme: "sakura",
         font: "quicksand",
@@ -4100,75 +4060,75 @@ function Summary({
         <span className="clay-blob animate-selected-glow mx-auto grid place-items-center rounded-full text-white" style={{ width: "4.5rem", height: "4.5rem" }}>
           <Flower className="h-9 w-9 animate-icon-breathe" strokeWidth={1.5} />
         </span>
-        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-3 animate-text-pop">You bloomed.</h2>
-        <p className="text-xs text-rose/60 italic mt-1">Your breath, your body, your quiet hour.</p>
+        <h2 className="font-script text-4xl sm:text-5xl text-hotpink mt-3 animate-text-pop">{tr("You bloomed.")}</h2>
+        <p className="text-xs text-rose/60 italic mt-1">{tr("Your breath, your body, your quiet hour.")}</p>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{realMin}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">min</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(realMin)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("min")}</p>
           </div>
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{realPoses}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">poses</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(realPoses)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("poses")}</p>
           </div>
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-2.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{kcal}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">kcal</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(kcal)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("kcal")}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-2.5 animate-selected-glow">
-            <p className="font-script text-2xl text-hotpink leading-none">{streakCount}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">day streak</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(streakCount)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("day streak")}</p>
           </div>
         </div>
-        <p className="mt-3 text-[11px] font-semibold text-rose/60">{intentionLabel}</p>
+        <p className="mt-3 text-[11px] font-semibold text-rose/60">{trx(intentionLabel)}</p>
       </div>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Mood</p>
-        <h3 className="font-script text-2xl text-hotpink leading-none">before → after</h3>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Mood")}</p>
+        <h3 className="font-script text-2xl text-hotpink leading-none">{tr("before → after")}</h3>
         <div className="mt-2 grid sm:grid-cols-2 gap-3">
-          <MoodPicker label="Before" value={before} onChange={setBefore} />
-          <MoodPicker label="After" value={after} onChange={setAfter} />
+          <MoodPicker label={tr("Before")} value={before} onChange={setBefore} />
+          <MoodPicker label={tr("After")} value={after} onChange={setAfter} />
         </div>
       </section>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">How did that feel?</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("How did that feel?")}</p>
         <div className="mt-2 flex gap-2">
           {[1,2,3,4,5].map((n) => (
             <button key={n} onClick={() => setRating(n)}
               className={["h-9 w-9 rounded-full border text-sm font-bold transition",
                 rating >= n ? "bg-hotpink text-white border-transparent" : "bg-white text-rose border-petal/60"].join(" ")}>
-              {n}
+              {trx(n)}
             </button>
           ))}
         </div>
       </section>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Save a note?</p>
-        <p className="text-xs text-rose/70 mb-2">It'll land softly in your Dreamy Diary.</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Save a note?")}</p>
+        <p className="text-xs text-rose/70 mb-2">{tr("It'll land softly in your Dreamy Diary.")}</p>
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
           rows={3}
-          placeholder="one sweet line about your practice…"
+          placeholder={tr("one sweet line about your practice…")}
           className="w-full rounded-2xl bg-white/95 border border-petal/60 p-3 text-sm text-rose placeholder:text-rose/40 outline-none focus:ring-4 focus:ring-hotpink/20"
         />
         <div className="mt-2 flex items-center gap-2">
           <button onClick={saveDiaryNote} disabled={!note.trim() || saved}
             className="bloom-luxury-btn inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold text-white disabled:opacity-60">
-            <Heart className="h-3.5 w-3.5" /> {saved ? "Saved" : "Save to diary"}
+            <Heart className="h-3.5 w-3.5" /> {saved ? tr("Saved") : tr("Save to diary")}
           </button>
-          {saved && <span className="text-xs text-rose/70">a soft little memory ✿</span>}
+          {saved && <span className="text-xs text-rose/70">{tr("a soft little memory ✿")}</span>}
         </div>
       </section>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">Poses done</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Poses done")}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {flow.map((p) => (
-            <span key={p.slug} className="rounded-full bg-blush/70 text-rose text-[11px] font-semibold px-2.5 py-1 border border-petal/50">{p.name}</span>
+            <span key={p.slug} className="rounded-full bg-blush/70 text-rose text-[11px] font-semibold px-2.5 py-1 border border-petal/50">{trx(p.name)}</span>
           ))}
         </div>
       </section>
@@ -4177,8 +4137,8 @@ function Summary({
       <div className="flex items-center justify-center gap-3 pt-1">
         <button onClick={onHome}
           style={{ background: isDark ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.92)", color: isDark ? "#fff" : "#db2777", border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(244,194,214,0.7)"}` }}
-          className="rounded-full px-6 py-2.5 text-sm font-bold active:scale-95 transition shadow-sm">Home</button>
-        <button onClick={onAgain} className="bloom-luxury-btn px-6 py-2.5 text-sm font-bold text-white">Practice again</button>
+          className="rounded-full px-6 py-2.5 text-sm font-bold active:scale-95 transition shadow-sm">{tr("Home")}</button>
+        <button onClick={onAgain} className="bloom-luxury-btn px-6 py-2.5 text-sm font-bold text-white">{tr("Practice again")}</button>
       </div>
       </div>
     </div>
@@ -4188,13 +4148,13 @@ function Summary({
 function MoodPicker({ label, value, onChange }: { label: string; value: string | null; onChange: (v: string) => void }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-rose mb-1">{label}</p>
+      <p className="text-xs font-semibold text-rose mb-1">{trx(label)}</p>
       <div className="flex flex-wrap gap-1.5">
         {MOODS.map((m) => (
           <button key={m.id} onClick={() => onChange(m.id)}
             className={["rounded-full px-3 py-1.5 text-xs font-semibold border transition",
               value === m.id ? "bg-hotpink text-white border-transparent" : "bg-white text-rose border-petal/60"].join(" ")}>
-            {m.label}
+            {trx(m.label)}
           </button>
         ))}
       </div>

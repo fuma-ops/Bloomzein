@@ -28,6 +28,7 @@ import { seedEmma, clearEmma } from "@/lib/seedEmma";
 import { resetEverything } from "@/lib/crossToolData";
 import { isOwnerEmail } from "@/lib/entitlements";
 import { readAvatar, setAvatar, fileToAvatarDataUrl, AVATAR_EVENT } from "@/lib/profileAvatar";
+import { tr, trx, DATE_LOCALE } from "@/i18n";
 
 // Time-of-day hero photo — the same blended scene as the Today page, so Me
 // opens on the same immersive surface.
@@ -50,14 +51,14 @@ function wellnessScore(h: HealthHistory): { score: number; label: string; cls: s
   // below; no off-palette colours.
   const t =
     score >= 85
-      ? { label: "Excellent", cls: "bg-hotpink text-white shadow-sm shadow-hotpink/30" }
+      ? { label: tr("Excellent"), cls: "bg-hotpink text-white shadow-sm shadow-hotpink/30" }
       : score >= 70
-        ? { label: "Great", cls: "bg-blush text-hotpink border border-hotpink/25" }
+        ? { label: tr("Great"), cls: "bg-blush text-hotpink border border-hotpink/25" }
         : score >= 55
-          ? { label: "Good", cls: "bg-blush text-hotpink border border-petal/60" }
+          ? { label: tr("Good"), cls: "bg-blush text-hotpink border border-petal/60" }
           : score >= 40
-            ? { label: "Fair", cls: "bg-blush text-hotpink border border-petal/60" }
-            : { label: "Building", cls: "bg-blush text-hotpink border border-petal/60" };
+            ? { label: tr("Fair"), cls: "bg-blush text-hotpink border border-petal/60" }
+            : { label: tr("Building"), cls: "bg-blush text-hotpink border border-petal/60" };
   return { score, ...t };
 }
 
@@ -70,7 +71,7 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
       <h2 className="font-script text-3xl sm:text-4xl text-hotpink">{children}</h2>
-      {hint && <span className="text-xs text-rose/70 shrink-0">{hint}</span>}
+      {hint && <span className="text-xs text-rose/70 shrink-0">{trx(hint)}</span>}
     </div>
   );
 }
@@ -78,9 +79,9 @@ function SectionTitle({ children, hint }: { children: React.ReactNode; hint?: st
 /* ---------- Favorites — real saved recipes, else curated reads ---------- */
 type FavItem = { title: string; tag: string; img: string; href: string };
 const CURATED_READS: FavItem[] = [
-  { title: "Cycle syncing 101", tag: "Wellness", img: "/images/read-cycle.webp", href: "/app/read" },
-  { title: "Soft girl morning ritual", tag: "Lifestyle", img: "/images/read-selfcare.webp", href: "/app/read" },
-  { title: "Pink budgeting that works", tag: "Money", img: "/images/read-money.webp", href: "/budget" },
+  { title: tr("Cycle syncing 101"), tag: "Wellness", img: "/images/read-cycle.webp", href: "/app/read" },
+  { title: tr("Soft girl morning ritual"), tag: "Lifestyle", img: "/images/read-selfcare.webp", href: "/app/read" },
+  { title: tr("Pink budgeting that works"), tag: "Money", img: "/images/read-money.webp", href: "/budget" },
 ];
 const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 /** Everything she's saved or loved — meals, reads, workouts & shop — each with
@@ -124,20 +125,20 @@ type SettingItem = { Icon: typeof User; label: string; href?: string; action?: S
 const settingsGroups: { items: SettingItem[]; danger?: boolean }[] = [
   {
     items: [
-      { Icon: User, label: "Account & profile", action: "edit" },
-      { Icon: Bell, label: "Notifications & reminders", href: "/app/tools/notes" },
-      { Icon: Wallet, label: "Budget & money", href: "/budget" },
-      { Icon: Crown, label: "Bloom Premium", soon: true },
-      { Icon: Shield, label: "Privacy & data", href: "/privacy" },
-      { Icon: LifeBuoy, label: "Help & support", href: "/help" },
-      { Icon: RotateCcw, label: "Replay onboarding", action: "replay" },
+      { Icon: User, label: tr("Account & profile"), action: "edit" },
+      { Icon: Bell, label: tr("Notifications & reminders"), href: "/app/tools/notes" },
+      { Icon: Wallet, label: tr("Budget & money"), href: "/budget" },
+      { Icon: Crown, label: tr("Bloom Premium"), soon: true },
+      { Icon: Shield, label: tr("Privacy & data"), href: "/privacy" },
+      { Icon: LifeBuoy, label: tr("Help & support"), href: "/help" },
+      { Icon: RotateCcw, label: tr("Replay onboarding"), action: "replay" },
     ],
   },
   {
     items: [
-      { Icon: RotateCcw, label: "Start fresh — reset my whole world", action: "reset" },
-      { Icon: Trash2, label: "Delete my account", action: "delete" },
-      { Icon: LogOut, label: "Log out", action: "logout" },
+      { Icon: RotateCcw, label: tr("Start fresh — reset my whole world"), action: "reset" },
+      { Icon: Trash2, label: tr("Delete my account"), action: "delete" },
+      { Icon: LogOut, label: tr("Log out"), action: "logout" },
     ],
     danger: true,
   },
@@ -153,8 +154,8 @@ export default function MePage() {
   // user meets — the re-triggered onboarding flow.
   const isOwner = isOwnerEmail(user?.email);
   const ownerItems: SettingItem[] = [
-    ...(isAdmin ? [{ Icon: Inbox, label: "Messages", href: "/admin" } as SettingItem] : []),
-    ...(isOwner ? [{ Icon: Eye, label: "Preview first-time (new user)", action: "preview-first-time" } as SettingItem] : []),
+    ...(isAdmin ? [{ Icon: Inbox, label: tr("Messages"), href: "/admin" } as SettingItem] : []),
+    ...(isOwner ? [{ Icon: Eye, label: tr("Preview first-time (new user)"), action: "preview-first-time" } as SettingItem] : []),
   ];
   const groups: { items: SettingItem[]; danger?: boolean }[] = ownerItems.length
     ? [
@@ -228,7 +229,7 @@ export default function MePage() {
       }
       if (Object.keys(dp).length) updateDietProfile(dp);
     } catch { /* diet sync is best-effort — the account save already succeeded */ }
-    if (!res.error) notify({ title: "Profile updated ✨", body: "Your details are saved.", tone: "success" });
+    if (!res.error) notify({ title: tr("Profile updated ✨"), body: tr("Your details are saved."), tone: "success" });
     return res;
   };
 
@@ -270,7 +271,7 @@ export default function MePage() {
     const iso = profile?.created_at;
     if (!iso) return null;
     try {
-      return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      return new Date(iso).toLocaleDateString(DATE_LOCALE, { month: "long", year: "numeric" });
     } catch {
       return null;
     }
@@ -282,20 +283,19 @@ export default function MePage() {
     <>
       {cycleReady && <CyclePhasePill />}
       {memberSince && (
-        <p className="mt-1.5 inline-block rounded-full bg-white/75 px-2 py-0.5 text-[10px] sm:text-xs text-rose/80">
-          Blooming since {memberSince} ✿
+        <p className="mt-1.5 inline-block rounded-full bg-white/75 px-2 py-0.5 text-[10px] sm:text-xs text-rose/80">{tr("Blooming since")}{" "}{trx(memberSince)} ✿
         </p>
       )}
       {/* Overall wellness — compact: label · score · tier on one row, a slim
           pink bar under. Frosted-glass so the photo glows through. */}
       <div className="mt-2 sm:mt-3 max-w-xs rounded-2xl bg-white/45 backdrop-blur-md border border-white/60 px-3 py-1.5 shadow-sm shadow-hotpink/10">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/60">Overall wellness</span>
+          <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-rose/60">{tr("Overall wellness")}</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[13px] sm:text-base font-black text-magenta tabular-nums leading-none">
-              {wellness.score}<span className="text-[8px] font-bold text-rose/45">/100</span>
+              {trx(wellness.score)}<span className="text-[8px] font-bold text-rose/45">/100</span>
             </span>
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${wellness.cls}`}>{wellness.label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${wellness.cls}`}>{trx(wellness.label)}</span>
           </div>
         </div>
         <div className="mt-1 h-1.5 w-full rounded-full bg-white/60 overflow-hidden">
@@ -313,16 +313,16 @@ export default function MePage() {
     <div className="relative isolate animate-fade-in">
       {demoMode && (
         <div className="mb-4 flex flex-wrap items-center gap-2 rounded-2xl border border-petal/60 bg-white/90 p-3 shadow-sm">
-          <span className="text-xs font-bold uppercase tracking-wider text-hotpink">Demo</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-hotpink">{tr("Demo")}</span>
           <button
             onClick={() => { seedEmma(); window.location.href = "/app/today"; }}
             className="rounded-full bg-gradient-to-r from-hotpink to-magenta px-3 py-1.5 text-xs font-bold text-white active:scale-95"
-          >🌸 Seed Emma</button>
+          >{tr("🌸 Seed Emma")}</button>
           <button
             onClick={() => { clearEmma(); window.location.reload(); }}
             className="rounded-full border border-petal/60 bg-blush px-3 py-1.5 text-xs font-bold text-hotpink active:scale-95"
-          >Clear demo</button>
-          <span className="text-[10px] text-rose/60">Tip: set your profile name to “Emma” for the film.</span>
+          >{tr("Clear demo")}</button>
+          <span className="text-[10px] text-rose/60">{tr("Tip: set your profile name to “Emma” for the film.")}</span>
         </div>
       )}
 
@@ -340,12 +340,12 @@ export default function MePage() {
               otherwise the brand flower. Tap to add / change it. */}
           <label
             className="group relative shrink-0 cursor-pointer"
-            title="Add a profile photo — saved on this device only"
+            title={tr("Add a profile photo — saved on this device only")}
           >
             <div className="absolute -inset-1 rounded-full bg-white/70 blur-md" />
             <div className="relative grid h-16 w-16 sm:h-28 sm:w-28 place-items-center overflow-hidden rounded-full border-2 sm:border-4 border-white bg-gradient-to-br from-hotpink to-magenta shadow-xl shadow-hotpink/30 animate-icon-breathe">
               {avatar ? (
-                <img src={avatar} alt="Your profile" className="h-full w-full object-cover" />
+                <img src={avatar} alt={tr("Your profile")} className="h-full w-full object-cover" />
               ) : (
                 <>
                   <BloomFlower size={40} petal="#FFFFFF" center="#FFD9EC" className="sm:hidden" />
@@ -354,7 +354,7 @@ export default function MePage() {
               )}
             </div>
             {/* camera badge — hints the medallion is tappable */}
-            <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow-md transition group-hover:scale-110 group-active:scale-95">
+            <span className="absolute -bottom-0.5 -end-0.5 grid h-6 w-6 sm:h-8 sm:w-8 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow-md transition group-hover:scale-110 group-active:scale-95">
               <Camera className="h-3 w-3 sm:h-4 sm:w-4" strokeWidth={2} />
             </span>
             <input type="file" accept="image/*" className="sr-only" onChange={onPickAvatar} />
@@ -364,29 +364,28 @@ export default function MePage() {
             <h1
               className="font-script text-[2.1rem] sm:text-6xl text-hotpink leading-none flex items-center gap-1.5"
               style={{ textShadow: "0 1px 2px rgba(255,255,255,0.98), 0 2px 10px rgba(255,255,255,0.9), 0 0 22px rgba(255,255,255,0.75)" }}
-            >
-              Hey, {displayName}! <Sparkles className="h-5 w-5 sm:h-8 sm:w-8" strokeWidth={1.8} />
+            >{tr("Hey,")}{" "}{trx(displayName)}! <Sparkles className="h-5 w-5 sm:h-8 sm:w-8" strokeWidth={1.8} />
             </h1>
             {/* Desktop: read-outs sit beside the flower */}
-            <div className="mt-2 hidden sm:block">{heroDetail}</div>
+            <div className="mt-2 hidden sm:block">{trx(heroDetail)}</div>
           </div>
         </div>
 
         {/* Phone: read-outs stacked full-width UNDER the flower + greeting row,
             so the space beside the flower is filled and nothing is stranded. */}
-        <div className="mt-3 sm:hidden">{heroDetail}</div>
+        <div className="mt-3 sm:hidden">{trx(heroDetail)}</div>
       </section>
 
       {/* YOUR HISTORY — Bloom+ (every real logged event + doctor-shareable report) */}
       <div className="mt-5 sm:mt-8">
-        <PlusLock feature="me" title="Your history & report" blurb="Every real thing you've logged — cycle regularity, calories burned, symptoms, mood & weight — from day one, downloadable as a report for your doctor." minH="min-h-[300px]">
+        <PlusLock feature="me" title={tr("Your history & report")} blurb="Every real thing you've logged — cycle regularity, calories burned, symptoms, mood & weight — from day one, downloadable as a report for your doctor." minH="min-h-[300px]">
           <HealthHistoryPanel userName={displayName} />
         </PlusLock>
       </div>
 
       {/* BLOOM+ — premium status (+ a dev-only plan switch, hidden in production) */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "40ms" }}>
-        <SectionTitle hint="your plan">Bloom+</SectionTitle>
+        <SectionTitle hint="your plan">{tr("Bloom+")}</SectionTitle>
         <div className="space-y-3">
           <DiscoverBloomPlus />
           <PlanToggle />
@@ -395,16 +394,14 @@ export default function MePage() {
 
       {/* FAVORITES — only her REAL saved items; never generic placeholders. */}
       <section className="mt-5 sm:mt-8 animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-        <SectionTitle hint={favs.isReal ? "everything you've saved" : ""}>Favorites & saved</SectionTitle>
+        <SectionTitle hint={favs.isReal ? "everything you've saved" : ""}>{tr("Favorites & saved")}</SectionTitle>
         {!favs.isReal ? (
           <div className="bloom-pearl-card pearl-sheen rounded-2xl sm:rounded-3xl px-5 py-7 text-center">
             <span className="mx-auto mb-2.5 grid h-12 w-12 place-items-center rounded-full bg-blush/70">
               <Heart className="h-6 w-6 text-hotpink" strokeWidth={1.9} />
             </span>
-            <p className="text-sm font-bold text-[#7a1247]">Nothing saved yet</p>
-            <p className="mx-auto mt-1 max-w-xs text-[12.5px] font-semibold leading-snug text-rose/65">
-              Tap the ♡ on any read, meal, workout, flow or product and it lands right here 🌸
-            </p>
+            <p className="text-sm font-bold text-[#7a1247]">{tr("Nothing saved yet")}</p>
+            <p className="mx-auto mt-1 max-w-xs text-[12.5px] font-semibold leading-snug text-rose/65">{tr("Tap the ♡ on any read, meal, workout, flow or product and it lands right here 🌸")}</p>
           </div>
         ) : (
         <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-1">
@@ -419,9 +416,9 @@ export default function MePage() {
                 <img src={f.img} alt="" className="h-full w-full object-cover" loading="lazy" referrerPolicy="no-referrer" />
               </div>
               <div className="p-2.5 sm:p-3.5">
-                <p className="text-xs sm:text-sm font-semibold text-rose leading-snug line-clamp-2">{f.title}</p>
+                <p className="text-xs sm:text-sm font-semibold text-rose leading-snug line-clamp-2">{trx(f.title)}</p>
                 <span className="mt-1.5 inline-flex items-center rounded-full bg-blush text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-petal/60">
-                  {f.tag}
+                  {trx(f.tag)}
                 </span>
               </div>
             </a>
@@ -432,7 +429,7 @@ export default function MePage() {
 
       {/* SETTINGS */}
       <section className="mt-5 sm:mt-8 mb-4 animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-        <SectionTitle>Settings</SectionTitle>
+        <SectionTitle>{tr("Settings")}</SectionTitle>
         <div className="space-y-3">
           <ManageSubscription />
           {groups.map((group, gi) => (
@@ -443,7 +440,7 @@ export default function MePage() {
               {group.items.map((item, i) => {
                 const cls = [
                   "flex w-full items-center gap-3 px-4 py-3.5 text-left transition hover:bg-blush/60",
-                  i > 0 ? "border-t border-petal/40" : "",
+                  i > 0 ? tr("border-t border-petal/40") : "",
                   group.danger ? "text-magenta" : "text-rose",
                   item.soon ? "opacity-70" : "",
                 ].join(" ");
@@ -452,13 +449,13 @@ export default function MePage() {
                     <span className={["grid h-9 w-9 place-items-center rounded-full", group.danger ? "bg-magenta/10 text-magenta" : "bg-blush text-hotpink"].join(" ")}>
                       <item.Icon className="h-4 w-4" strokeWidth={1.6} />
                     </span>
-                    <span className="flex-1 text-sm font-semibold">{item.label}</span>
+                    <span className="flex-1 text-sm font-semibold">{trx(item.label)}</span>
                     {item.soon
-                      ? <span className="rounded-full bg-blush text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Soon</span>
-                      : !group.danger && <ChevronRight className="h-4 w-4 text-rose/50" strokeWidth={1.6} />}
+                      ? <span className="rounded-full bg-blush text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{tr("Soon")}</span>
+                      : !group.danger && <ChevronRight className="rtl:-scale-x-100 h-4 w-4 text-rose/50" strokeWidth={1.6} />}
                   </>
                 );
-                if (item.href) return <a key={item.label} href={item.href} className={cls}>{inner}</a>;
+                if (item.href) return <a key={item.label} href={item.href} className={cls}>{trx(inner)}</a>;
                 const onClick = item.action === "logout" ? () => signOut()
                   : item.action === "replay" ? () => replayOnboarding()
                   : item.action === "reset" ? () => resetWorld()
@@ -466,12 +463,12 @@ export default function MePage() {
                   : item.action === "edit" ? () => setEditOpen(true)
                   : item.action === "delete" ? () => setDeleteOpen(true)
                   : undefined;
-                return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{inner}</button>;
+                return <button key={item.label} onClick={onClick} disabled={item.soon} className={cls}>{trx(inner)}</button>;
               })}
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center font-script text-lg text-rose/70">stay soft, bloom on ✿</p>
+        <p className="mt-6 text-center font-script text-lg text-rose/70">{tr("stay soft, bloom on ✿")}</p>
       </section>
 
       {editOpen && (() => {
@@ -565,17 +562,17 @@ function EditProfileModal({
     <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm grid place-items-center p-4 overflow-y-auto animate-fade-in" onClick={onClose}>
       <div className="w-full max-w-sm my-auto max-h-[90dvh] overflow-y-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 sm:p-6 animate-scale-in" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-script text-3xl text-hotpink leading-none">Edit profile ✿</h2>
-          <button onClick={onClose} aria-label="Close" className="grid h-8 w-8 place-items-center rounded-full bg-blush text-rose/70 active:scale-90"><ChevronRight className="h-4 w-4 rotate-90" /></button>
+          <h2 className="font-script text-3xl text-hotpink leading-none">{tr("Edit profile ✿")}</h2>
+          <button onClick={onClose} aria-label={tr("Close")} className="grid h-8 w-8 place-items-center rounded-full bg-blush text-rose/70 active:scale-90"><ChevronRight className="rtl:-scale-x-100 h-4 w-4 rotate-90" /></button>
         </div>
 
         {/* Profile photo — stored on this device only */}
         <div className="mb-4 flex items-center gap-3">
-          <label className="group relative shrink-0 cursor-pointer" title="Change photo">
+          <label className="group relative shrink-0 cursor-pointer" title={tr("Change photo")}>
             <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full border-2 border-white bg-gradient-to-br from-hotpink to-magenta shadow-md shadow-hotpink/25">
-              {avatar ? <img src={avatar} alt="Your profile" className="h-full w-full object-cover" /> : <BloomFlower size={34} petal="#FFFFFF" center="#FFD9EC" />}
+              {avatar ? <img src={avatar} alt={tr("Your profile")} className="h-full w-full object-cover" /> : <BloomFlower size={34} petal="#FFFFFF" center="#FFD9EC" />}
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 grid h-6 w-6 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow group-hover:scale-110 transition">
+            <span className="absolute -bottom-0.5 -end-0.5 grid h-6 w-6 place-items-center rounded-full border border-petal/60 bg-white text-hotpink shadow group-hover:scale-110 transition">
               <Camera className="h-3 w-3" strokeWidth={2} />
             </span>
             <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
@@ -583,44 +580,43 @@ function EditProfileModal({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <label className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-blush px-3 py-1.5 text-[11px] font-bold text-hotpink active:scale-95">
-                <Camera className="h-3.5 w-3.5" strokeWidth={2} /> {avatar ? "Change" : "Add photo"}
+                <Camera className="h-3.5 w-3.5" strokeWidth={2} /> {avatar ? tr("Change") : tr("Add photo")}
                 <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} />
               </label>
               {avatar && (
                 <button onClick={removePhoto} className="inline-flex items-center gap-1 rounded-full border border-petal/60 px-3 py-1.5 text-[11px] font-bold text-rose/70 active:scale-95">
-                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} /> Remove
-                </button>
+                  <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Remove")}</button>
               )}
             </div>
-            <p className="mt-1 text-[10px] text-rose/55 leading-tight">Saved on this device only — never uploaded ✿</p>
+            <p className="mt-1 text-[10px] text-rose/55 leading-tight">{tr("Saved on this device only — never uploaded ✿")}</p>
           </div>
         </div>
 
         <label className="block mb-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Name</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name"
+          <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">{tr("Name")}</span>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder={tr("Your name")}
             className="mt-1 w-full rounded-2xl bg-white border border-petal/60 px-3 py-2.5 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
         </label>
         <div className="grid grid-cols-2 gap-3 mb-3">
           <label className="block">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Age</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">{tr("Age")}</span>
             <input value={age} onChange={(e) => setAge(e.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="—"
               className="mt-1 w-full rounded-2xl bg-white border border-petal/60 px-3 py-2.5 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
           </label>
           <label className="block">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">Weight</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose/60">{tr("Weight")}</span>
             <div className="mt-1 flex items-stretch rounded-2xl border border-petal/60 overflow-hidden bg-white">
               <input value={weight} onChange={(e) => setWeight(e.target.value.replace(/[^\d.]/g, ""))} inputMode="decimal" placeholder="—"
                 className="flex-1 min-w-0 px-3 py-2.5 text-sm text-rose outline-none" />
-              <button onClick={() => setUnit(unit === "kg" ? "lbs" : "kg")} className="px-2.5 text-xs font-bold text-hotpink bg-blush/60 border-l border-petal/60">{unit}</button>
+              <button onClick={() => setUnit(unit === "kg" ? "lbs" : "kg")} className="px-2.5 text-xs font-bold text-hotpink bg-blush/60 border-s border-petal/60">{trx(unit)}</button>
             </div>
           </label>
         </div>
-        {err && <p className="text-[11px] text-magenta mb-2">{err}</p>}
+        {err && <p className="text-[11px] text-magenta mb-2">{trx(err)}</p>}
         <button onClick={save} disabled={saving} className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white disabled:opacity-60">
-          {saving ? "Saving…" : <><Check className="h-4 w-4" strokeWidth={3} /> Save changes</>}
+          {saving ? tr("Saving…") : <><Check className="h-4 w-4" strokeWidth={3} />{" "}{tr("Save changes")}</>}
         </button>
-        <p className="mt-2 text-center text-[10px] text-rose/50">Syncs to your Diet plan & profile ✿</p>
+        <p className="mt-2 text-center text-[10px] text-rose/50">{tr("Syncs to your Diet plan & profile ✿")}</p>
       </div>
     </div>,
     document.body,
@@ -652,14 +648,13 @@ function DeleteAccountModal({ email, onClose, onConfirm }: {
       <div className="absolute inset-0 bg-rose/30 backdrop-blur-sm animate-fade-in" />
       <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md rounded-t-[1.75rem] bg-white p-6 shadow-2xl animate-scale-in sm:rounded-[1.75rem]" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
         {!busy && (
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-magenta active:scale-90"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-rose/8 text-rose/60 transition hover:text-magenta active:scale-90"><X className="h-4 w-4" /></button>
         )}
         <span className="grid h-14 w-14 place-items-center rounded-2xl bg-magenta/10 text-magenta"><AlertTriangle className="h-7 w-7" strokeWidth={1.8} /></span>
-        <h2 className="mt-3 text-[1.5rem] font-extrabold leading-tight text-[#7a1247]">Delete your account?</h2>
-        <p className="mt-1.5 text-[13.5px] leading-snug text-rose/80">
-          This permanently deletes your Bloomzein account{email ? <> (<b className="text-rose">{email}</b>)</> : null} and <b className="text-rose">all your data</b> — cycle, meals, movement, mood, water, budget, reminders and profile. This <b>cannot be undone</b>.
+        <h2 className="mt-3 text-[1.5rem] font-extrabold leading-tight text-[#7a1247]">{tr("Delete your account?")}</h2>
+        <p className="mt-1.5 text-[13.5px] leading-snug text-rose/80">{tr("This permanently deletes your Bloomzein account")}{email ? <> (<b className="text-rose">{trx(email)}</b>)</> : null}{" "}{tr("and")}{" "}<b className="text-rose">{tr("all your data")}</b>{" "}{tr("— cycle, meals, movement, mood, water, budget, reminders and profile. This")}{" "}<b>{tr("cannot be undone")}</b>.
         </p>
-        <p className="mt-3 text-[12.5px] font-bold text-rose/70">Type <span className="font-extrabold text-magenta">DELETE</span> to confirm</p>
+        <p className="mt-3 text-[12.5px] font-bold text-rose/70">{tr("Type")}{" "}<span className="font-extrabold text-magenta">{tr("DELETE")}</span>{" "}{tr("to confirm")}</p>
         <input
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
@@ -667,16 +662,16 @@ function DeleteAccountModal({ email, onClose, onConfirm }: {
           autoCapitalize="characters"
           className="mt-1.5 w-full rounded-2xl border border-magenta/30 bg-white px-4 py-2.5 text-sm font-bold tracking-widest text-magenta outline-none transition focus:border-magenta focus:ring-4 focus:ring-magenta/15"
         />
-        {err && <p className="mt-2 text-[12.5px] font-semibold text-magenta">{err}</p>}
+        {err && <p className="mt-2 text-[12.5px] font-semibold text-magenta">{trx(err)}</p>}
         <button
           onClick={run}
           disabled={!ready || busy}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-magenta py-3 text-[15px] font-bold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-45"
         >
-          {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</> : <><Trash2 className="h-4 w-4" /> Delete my account permanently</>}
+          {busy ? <><Loader2 className="h-4 w-4 animate-spin" />{" "}{tr("Deleting…")}</> : <><Trash2 className="h-4 w-4" />{" "}{tr("Delete my account permanently")}</>}
         </button>
         {!busy && (
-          <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-petal/60 bg-white py-2.5 text-[14px] font-bold text-rose transition active:scale-[0.99]">Keep my account</button>
+          <button onClick={onClose} className="mt-2 w-full rounded-2xl border border-petal/60 bg-white py-2.5 text-[14px] font-bold text-rose transition active:scale-[0.99]">{tr("Keep my account")}</button>
         )}
       </div>
     </div>,

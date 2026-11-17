@@ -12,6 +12,7 @@ import {
 } from "@/components/bloom/recipes/data";
 import { addRecipeToMealPlan, addIngredientsToShopping, ownsIngredient, readPlannedDay } from "@/lib/crossToolData";
 import { toContentPhase } from "@/components/bloom/cyclePhase";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================
    Training ↔ Fuel — the shared thread that lets the Workout,
@@ -156,7 +157,7 @@ export function pickFuelRecipes(ctx: FuelCtx, owned?: Set<string>, count = 2, da
 
 /* ---------- The comment — the part that makes her feel *seen* ---------- */
 
-const GOAL_LABEL: Record<DietGoal, string> = { lose: "lean goal", maintain: "maintain goal", gain: "build goal" };
+const GOAL_LABEL: Record<DietGoal, string> = { lose: tr("lean goal"), maintain: tr("maintain goal"), gain: tr("build goal") };
 const PHASE_LABEL: Record<CyclePhase, string> = {
   period: "period", follicular: "follicular", ovulation: "ovulation", luteal: "luteal", any: "",
 };
@@ -165,40 +166,41 @@ function leadLine(ctx: FuelCtx): string {
   if (ctx.kind === "yoga") {
     // Yoga recovery is light, hydrating & anti-inflammatory — never protein-loaded.
     if (ctx.intensity === "gentle")
-      return "After your flow, keep it light and hydrating — anti-inflammatory fuel for a calm, unwound body.";
-    return "After your yoga, a light, hydrating plate — fresh produce and anti-inflammatory foods to help you settle.";
+      return tr("After your flow, keep it light and hydrating — anti-inflammatory fuel for a calm, unwound body.");
+    return tr("After your yoga, a light, hydrating plate — fresh produce and anti-inflammatory foods to help you settle.");
   }
   // workout
   if (ctx.intensity === "strong") {
-    if (ctx.goal === "gain") return "Big session today — refuel to build: protein + complex carbs so you grow stronger.";
-    if (ctx.goal === "lose") return "You trained hard — a protein-first plate rebuilds muscle while keeping you lean.";
-    return "Strength work done — balanced protein + carbs so your body recovers beautifully.";
+    if (ctx.goal === "gain") return tr("Big session today — refuel to build: protein + complex carbs so you grow stronger.");
+    if (ctx.goal === "lose") return tr("You trained hard — a protein-first plate rebuilds muscle while keeping you lean.");
+    return tr("Strength work done — balanced protein + carbs so your body recovers beautifully.");
   }
   if (ctx.intensity === "moderate")
-    return "Nice session — a protein-forward meal now helps you bounce back for tomorrow.";
-  return "Light movement today — a gentle, balanced plate keeps your energy even.";
+    return tr("Nice session — a protein-forward meal now helps you bounce back for tomorrow.");
+  return tr("Light movement today — a gentle, balanced plate keeps your energy even.");
 }
 
 function phaseLine(phase: CyclePhase): string {
   switch (phase) {
-    case "period":     return " You're on your period — lean into iron & magnesium; your body is asking for it.";
-    case "follicular": return " Your follicular energy is rising — lean protein powers the climb.";
-    case "ovulation":  return " Around ovulation you're at your peak — keep it fresh, bright and light.";
-    case "luteal":     return " You're in your luteal phase — complex carbs & magnesium soften the cravings.";
+    case "period":     return tr("You're on your period — lean into iron & magnesium; your body is asking for it.");
+    case "follicular": return tr("Your follicular energy is rising — lean protein powers the climb.");
+    case "ovulation":  return tr("Around ovulation you're at your peak — keep it fresh, bright and light.");
+    case "luteal":     return tr("You're in your luteal phase — complex carbs & magnesium soften the cravings.");
     default:           return "";
   }
 }
 
 /** The warm cross-tool sentence shown above the meals. */
 export function fuelComment(ctx: FuelCtx): string {
-  return leadLine(ctx) + phaseLine(ctx.phase);
+  const p = phaseLine(ctx.phase);
+  return p ? `${leadLine(ctx)} ${p}` : leadLine(ctx);
 }
 
 /** Short chips describing *why* these meals were chosen. */
 export function fuelChips(ctx: FuelCtx): string[] {
   const chips: string[] = [];
-  chips.push(ctx.kind === "yoga" ? "after your yoga" : "after your session");
-  if (ctx.phase !== "any") chips.push(`${PHASE_LABEL[ctx.phase]} phase`);
+  chips.push(ctx.kind === "yoga" ? tr("after your yoga") : tr("after your session"));
+  if (ctx.phase !== "any") chips.push(tr("{0} phase", { 0: PHASE_LABEL[ctx.phase] }));
   chips.push(GOAL_LABEL[ctx.goal]);
   return chips;
 }
@@ -214,14 +216,14 @@ export function trainingAwarenessComment(opts: {
   const { workoutDays: w, yogaDays: y, phase, goal } = opts;
   if (!w && !y) return null;
   const parts: string[] = [];
-  if (w) parts.push(`${w} workout${w > 1 ? "s" : ""}`);
-  if (y) parts.push(`${y} yoga session${y > 1 ? "s" : ""}`);
-  const list = parts.join(" and ");
+  if (w) parts.push(w > 1 ? tr("{0} workouts", { 0: w }) : tr("1 workout"));
+  if (y) parts.push(y > 1 ? tr("{0} yoga sessions", { 0: y }) : tr("1 yoga session"));
+  const list = parts.join(` ${tr("and")} `);
   const goalBit =
-    goal === "gain"   ? "leaning protein- and carb-rich to help you build"
-    : goal === "lose" ? "kept protein-forward and light to keep you lean"
-    :                   "balanced to keep you recovered and steady";
-  let s = `You've got ${list} planned this week — your meals are ${goalBit} on training days.`;
+    goal === "gain"   ? tr("leaning protein- and carb-rich to help you build")
+    : goal === "lose" ? tr("kept protein-forward and light to keep you lean")
+    :                   tr("balanced to keep you recovered and steady");
+  let s = tr("You've got {0} planned this week — your meals are {1} on training days.", { 0: list, 1: goalBit });
   const p = phaseLine(phase).trim();
   if (p) s += " " + p;
   return s;
@@ -277,7 +279,7 @@ function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (i
       <button
         type="button"
         onClick={() => onOpen?.(r.id)}
-        className="group block w-full text-left"
+        className="group block w-full text-start"
       >
         <div className="relative h-20 sm:h-24 overflow-hidden">
           <img
@@ -287,16 +289,16 @@ function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (i
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallback; }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
-          <p className="absolute bottom-1.5 left-2 right-2 text-[10px] font-bold text-white leading-tight line-clamp-2 drop-shadow">
-            {r.name}
+          <p className="absolute bottom-1.5 start-2 end-2 text-[10px] font-bold text-white leading-tight line-clamp-2 drop-shadow">
+            {trx(r.name)}
           </p>
         </div>
       </button>
       <div className="grid grid-cols-4 gap-0.5 p-1.5">
         {macros.map((m) => (
           <div key={m.k} className="rounded-lg bg-blush/50 py-1 text-center">
-            <p className={`text-[10px] font-black leading-none ${m.cls}`}>{m.v}</p>
-            <p className="text-[7px] font-bold uppercase tracking-wide text-rose/50 mt-0.5">{m.k}</p>
+            <p className={`text-[10px] font-black leading-none ${m.cls}`}>{trx(m.v)}</p>
+            <p className="text-[7px] font-bold uppercase tracking-wide text-rose/50 mt-0.5">{trx(m.k)}</p>
           </div>
         ))}
       </div>
@@ -310,7 +312,7 @@ function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (i
             planned ? "bg-hotpink/15 text-hotpink" : "bg-hotpink text-white hover:brightness-105"
           }`}
         >
-          {planned ? <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Planned</> : <><Plus className="h-2.5 w-2.5" strokeWidth={3} /> My plan</>}
+          {planned ? <><Check className="h-2.5 w-2.5" strokeWidth={3} />{" "}{tr("Planned")}</> : <><Plus className="h-2.5 w-2.5" strokeWidth={3} />{" "}{tr("My plan")}</>}
         </button>
         <button
           type="button"
@@ -320,7 +322,7 @@ function MiniMealCard({ r, day, onOpen }: { r: Recipe; day?: string; onOpen?: (i
             listed ? "border-hotpink/30 bg-hotpink/10 text-hotpink" : "border-hotpink/50 text-hotpink hover:bg-hotpink/10"
           }`}
         >
-          {listed ? <><Check className="h-2.5 w-2.5" strokeWidth={3} /> Added</> : <><ShoppingBag className="h-2.5 w-2.5" strokeWidth={2.4} /> To list</>}
+          {listed ? <><Check className="h-2.5 w-2.5" strokeWidth={3} />{" "}{tr("Added")}</> : <><ShoppingBag className="h-2.5 w-2.5" strokeWidth={2.4} />{" "}{tr("To list")}</>}
         </button>
       </div>
     </div>
@@ -363,13 +365,12 @@ export function FuelCard({
       {/* header — explicitly tied to THIS session & day */}
       <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
         <span className="animate-soft-zoom inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wide shrink-0">
-          <Utensils className="h-2.5 w-2.5" /> Eat after
-        </span>
-        {heading && <span className="text-[10.5px] font-bold text-hotpink leading-tight">{heading}</span>}
+          <Utensils className="h-2.5 w-2.5" />{" "}{tr("Eat after")}</span>
+        {heading && <span className="text-[10.5px] font-bold text-hotpink leading-tight">{trx(heading)}</span>}
         {ctx.phase !== "any" && (
-          <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{PHASE_LABEL[ctx.phase]} phase</span>
+          <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{tr("{0} phase", { 0: PHASE_LABEL[ctx.phase] })}</span>
         )}
-        <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{GOAL_LABEL[ctx.goal]}</span>
+        <span className="rounded-full bg-white/80 border border-petal/60 px-2 py-0.5 text-[9px] font-bold text-rose/70">{trx(GOAL_LABEL[ctx.goal])}</span>
       </div>
 
       {/* the human comment */}

@@ -9,6 +9,7 @@
 // into the specific flow / session (not just the tool's home): the source
 // writes the launch key to localStorage, the target tool reads it on mount.
 // =============================================================================
+import { tr } from "@/i18n";
 
 import type { CyclePhase } from "./cyclePhase";
 
@@ -31,34 +32,34 @@ export interface PhasePlan {
 
 export const PHASE_PLAN: Record<Exclude<CyclePhase, "any">, PhasePlan> = {
   period: {
-    yoga:    { title: "Restorative Flow", blurb: "Ease cramps with gentle supported poses", image: "/images/pose-childs-pose.webp", time: "18:00", launch: { intention: "stress", durationMin: 20 } },
-    workout: { title: "Gentle mobility",  blurb: "Light, easy movement — no pressure",      image: "/images/workout-morning-mobility-routine.webp", time: "16:00", launch: { zone: "core", intention: "recover" } },
-    meal:    { title: "Iron-rich bowl",   blurb: "Replenish iron and comfort your body",    image: "/images/meal-stew.webp",         time: "12:30" },
-    journal: { time: "21:00", prompt: "What is my body asking me for today?" },
+    yoga:    { title: tr("Restorative Flow"), blurb: tr("Ease cramps with gentle supported poses"), image: "/images/pose-childs-pose.webp", time: "18:00", launch: { intention: "stress", durationMin: 20 } },
+    workout: { title: tr("Gentle mobility"),  blurb: tr("Light, easy movement — no pressure"),      image: "/images/workout-morning-mobility-routine.webp", time: "16:00", launch: { zone: "core", intention: "recover" } },
+    meal:    { title: tr("Iron-rich bowl"),   blurb: tr("Replenish iron and comfort your body"),    image: "/images/meal-stew.webp",         time: "12:30" },
+    journal: { time: "21:00", prompt: tr("What is my body asking me for today?") },
   },
   follicular: {
-    yoga:    { title: "Energizing Flow",   blurb: "Build heat as your energy rises",        image: "/images/pose-warrior-2.webp",      time: "08:00", launch: { intention: "morning", durationMin: 20 } },
-    workout: { title: "Strength training", blurb: "Channel rising strength into progress",  image: "/images/workout-hero-session.webp", time: "17:30", launch: { zone: "full-body", intention: "strengthen" } },
-    meal:    { title: "Fresh, light lunch",blurb: "Fuel your comeback energy naturally",    image: "/images/meal-buddha.webp",          time: "13:00" },
-    journal: { time: "21:00", prompt: "What new thing do I want to begin this cycle?" },
+    yoga:    { title: tr("Energizing Flow"),   blurb: tr("Build heat as your energy rises"),        image: "/images/pose-warrior-2.webp",      time: "08:00", launch: { intention: "morning", durationMin: 20 } },
+    workout: { title: tr("Strength training"), blurb: tr("Channel rising strength into progress"),  image: "/images/workout-hero-session.webp", time: "17:30", launch: { zone: "full-body", intention: "strengthen" } },
+    meal:    { title: tr("Fresh, light lunch"),blurb: tr("Fuel your comeback energy naturally"),    image: "/images/meal-buddha.webp",          time: "13:00" },
+    journal: { time: "21:00", prompt: tr("What new thing do I want to begin this cycle?") },
   },
   fertile: {
-    yoga:    { title: "Balance & Strength Flow", blurb: "Channel magnetic energy into balance", image: "/images/pose-tree.webp",              time: "08:00", launch: { intention: "strength", durationMin: 20 } },
-    workout: { title: "Cardio burst",            blurb: "You're at peak power — push it",       image: "/images/workout-hero-bestshape.webp", time: "17:30", launch: { zone: "full-body", intention: "tonify" } },
-    meal:    { title: "Antioxidant bowl",        blurb: "Support your body at peak phase",      image: "/images/meal-lunchbox.webp",           time: "13:00" },
-    journal: { time: "21:00", prompt: "Where do I feel most magnetic and alive right now?" },
+    yoga:    { title: tr("Balance & Strength Flow"), blurb: tr("Channel magnetic energy into balance"), image: "/images/pose-tree.webp",              time: "08:00", launch: { intention: "strength", durationMin: 20 } },
+    workout: { title: tr("Cardio burst"),            blurb: tr("You're at peak power — push it"),       image: "/images/workout-hero-bestshape.webp", time: "17:30", launch: { zone: "full-body", intention: "tonify" } },
+    meal:    { title: tr("Antioxidant bowl"),        blurb: tr("Support your body at peak phase"),      image: "/images/meal-lunchbox.webp",           time: "13:00" },
+    journal: { time: "21:00", prompt: tr("Where do I feel most magnetic and alive right now?") },
   },
   ovulation: {
-    yoga:    { title: "Power Flow",             blurb: "Open and strong — your best flow",   image: "/images/pose-triangle.webp",       time: "08:00", launch: { intention: "strength", durationMin: 20 } },
-    workout: { title: "High-intensity session", blurb: "Make the most of your peak energy",  image: "/images/workout-hero-program.webp", time: "17:30", launch: { zone: "full-body", intention: "strengthen" } },
-    meal:    { title: "Protein-rich lunch",     blurb: "Fuel and replenish at your peak",    image: "/images/meal-buddha.webp",          time: "13:00" },
-    journal: { time: "21:00", prompt: "What am I genuinely proud of about myself today?" },
+    yoga:    { title: tr("Power Flow"),             blurb: tr("Open and strong — your best flow"),   image: "/images/pose-triangle.webp",       time: "08:00", launch: { intention: "strength", durationMin: 20 } },
+    workout: { title: tr("High-intensity session"), blurb: tr("Make the most of your peak energy"),  image: "/images/workout-hero-program.webp", time: "17:30", launch: { zone: "full-body", intention: "strengthen" } },
+    meal:    { title: tr("Protein-rich lunch"),     blurb: tr("Fuel and replenish at your peak"),    image: "/images/meal-buddha.webp",          time: "13:00" },
+    journal: { time: "21:00", prompt: tr("What am I genuinely proud of about myself today?") },
   },
   luteal: {
-    yoga:    { title: "Calming Flow", blurb: "Grounding poses for mind and body",        image: "/images/pose-legs-up-wall.webp", time: "18:00", launch: { intention: "sleep", durationMin: 20 } },
-    workout: { title: "Light toning", blurb: "Soft, steady toning — honour the fatigue",  image: "/images/workout-hero-discover.webp", time: "16:30", launch: { zone: "back", intention: "tonify" } },
-    meal:    { title: "Magnesium-rich meal", blurb: "Ease mood dips and cravings gently", image: "/images/meal-oats.webp",          time: "12:30" },
-    journal: { time: "21:00", prompt: "What boundary do I need to honour today?" },
+    yoga:    { title: tr("Calming Flow"), blurb: tr("Grounding poses for mind and body"),        image: "/images/pose-legs-up-wall.webp", time: "18:00", launch: { intention: "sleep", durationMin: 20 } },
+    workout: { title: tr("Light toning"), blurb: tr("Soft, steady toning — honour the fatigue"),  image: "/images/workout-hero-discover.webp", time: "16:30", launch: { zone: "back", intention: "tonify" } },
+    meal:    { title: tr("Magnesium-rich meal"), blurb: tr("Ease mood dips and cravings gently"), image: "/images/meal-oats.webp",          time: "12:30" },
+    journal: { time: "21:00", prompt: tr("What boundary do I need to honour today?") },
   },
 };
 

@@ -1,3 +1,4 @@
+import { tr } from "@/i18n";
 import { AppIcon } from "./AppIcon"
 
 export function BloomLogo({ to = "/", className = "" }: { to?: string; className?: string }) {
@@ -6,9 +7,7 @@ export function BloomLogo({ to = "/", className = "" }: { to?: string; className
       <div className="transition-transform group-hover:scale-105 shrink-0">
         <AppIcon size={38} />
       </div>
-      <span className="font-script text-xl leading-none bg-gradient-to-r from-hotpink to-rose bg-clip-text text-transparent pr-1">
-        Bloomzein
-      </span>
+      <span className="font-script text-xl leading-none bg-gradient-to-r from-hotpink to-rose bg-clip-text text-transparent pe-1">{tr("Bloomzein")}</span>
     </a>
   )
 }

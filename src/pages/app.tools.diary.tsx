@@ -3,6 +3,7 @@ import { Cloud, Smile, Zap, Heart, Moon, Battery, type LucideIcon } from "lucide
 import { readTodayMood } from "@/lib/crossToolData";
 import { readCyclePhase, type CyclePhase } from "@/components/bloom/cyclePhase";
 import { openPaywall, hasAccess } from "@/lib/entitlements";
+import { tr, trx, DATE_LOCALE, localWeekdays } from "@/i18n";
 
 /** Free plan keeps a generous 20 diary entries; the 21st opens Bloom+. */
 const FREE_DIARY_LIMIT = 20;
@@ -68,7 +69,7 @@ function sampleEntry(): DiaryEntry {
     id: "bloom-sample-001",
     date: today,
     mood: "Calm",
-    title: "Thursday's glow",
+    title: tr("Thursday's glow"),
     html: "<p>Today started with the softest light coming through my window. I feel grateful for small things.</p>",
     theme: "sakura",
     font: "caveat",
@@ -101,7 +102,7 @@ function todayISO() {
 }
 
 function fmtDate(iso: string) {
-  return new Date(iso + "T00:00:00").toLocaleDateString(undefined, {
+  return new Date(iso + "T00:00:00").toLocaleDateString(DATE_LOCALE, {
     weekday: "long", day: "numeric", month: "long",
   });
 }
@@ -137,12 +138,12 @@ const MOOD_DATA = [
 ];
 
 const PROMPT_DATA = [
-  { text: "What made you smile today?",       icon: "sun",    tint: "#FFF4D9", ic: "#E0A53B" },
-  { text: "A feeling you want to release",    icon: "leaf",   tint: "#E4F6EC", ic: "#3FAE7E" },
-  { text: "Something you are grateful for",   icon: "heart",  tint: "#FCE4EE", ic: "#DB2777" },
-  { text: "A dream from last night",          icon: "moon",   tint: "#EEE7FF", ic: "#7C5AA6" },
-  { text: "A small win to celebrate",         icon: "star",   tint: "#FDE8F2", ic: "#EC4899" },
-  { text: "How does your body feel today?",   icon: "cloud",  tint: "#E9F1FF", ic: "#5B7FC2" },
+  { text: tr("What made you smile today?"),       icon: "sun",    tint: "#FFF4D9", ic: "#E0A53B" },
+  { text: tr("A feeling you want to release"),    icon: "leaf",   tint: "#E4F6EC", ic: "#3FAE7E" },
+  { text: tr("Something you are grateful for"),   icon: "heart",  tint: "#FCE4EE", ic: "#DB2777" },
+  { text: tr("A dream from last night"),          icon: "moon",   tint: "#EEE7FF", ic: "#7C5AA6" },
+  { text: tr("A small win to celebrate"),         icon: "star",   tint: "#FDE8F2", ic: "#EC4899" },
+  { text: tr("How does your body feel today?"),   icon: "cloud",  tint: "#E9F1FF", ic: "#5B7FC2" },
 ];
 
 const PROMPT_ICONS: Record<string, React.ReactNode> = {
@@ -258,7 +259,7 @@ function MemFallback({ mood, tint }: { mood: string; tint: string }) {
   };
   return (
     <div style={{ width:"100%", height:"100%", display:"grid", placeItems:"center", background:`linear-gradient(135deg,rgba(255,255,255,.5),${tint}55)`, borderRadius:8 }}>
-      <div style={{ opacity:.5, color:"#9D5C7E" }}>{icons[mood] ?? icons["Calm"]}</div>
+      <div style={{ opacity:.5, color:"#9D5C7E" }}>{trx(icons[mood]) ?? trx(icons["Calm"])}</div>
     </div>
   );
 }
@@ -271,7 +272,7 @@ function Flower({ size, pc, cc }: { size: number; pc: string; cc: string }) {
   ));
   return (
     <svg width={size} height={size} viewBox="0 0 64 64">
-      {petals}
+      {trx(petals)}
       <circle cx={32} cy={32} r={8} fill={cc} />
     </svg>
   );
@@ -283,7 +284,7 @@ function MemFlower({ pc, fc }: { pc: string; fc: string }) {
   ));
   return (
     <svg width={24} height={24} viewBox="0 0 24 24">
-      {petals}
+      {trx(petals)}
       <circle cx={12} cy={12} r={3} fill={fc} />
     </svg>
   );
@@ -322,11 +323,11 @@ function pickPhasePrompt(): string {
 }
 
 const JOURNALING_IDEAS = [
-  { id: 0, icon: "🌸", label: "Morning pages", desc: "stream of consciousness, no filter" },
-  { id: 1, icon: "✨", label: "Gratitude list", desc: "3 things that made you smile" },
-  { id: 2, icon: "💭", label: "Brain dump", desc: "let every thought spill out freely" },
-  { id: 3, icon: "💌", label: "Dear future me", desc: "a letter to yourself in 1 year" },
-  { id: 4, icon: "🎀", label: "This moment", desc: "describe exactly where you are now" },
+  { id: 0, icon: "🌸", label: tr("Morning pages"), desc: tr("stream of consciousness, no filter") },
+  { id: 1, icon: "✨", label: tr("Gratitude list"), desc: tr("3 things that made you smile") },
+  { id: 2, icon: "💭", label: tr("Brain dump"), desc: tr("let every thought spill out freely") },
+  { id: 3, icon: "💌", label: tr("Dear future me"), desc: tr("a letter to yourself in 1 year") },
+  { id: 4, icon: "🎀", label: tr("This moment"), desc: tr("describe exactly where you are now") },
 ];
 
 /* ─── DiaryBookPage — the 6 inner page contents ──────────────────── */
@@ -512,12 +513,12 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
               <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 17, color: "#DB2777", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                {new Date(viewEntry.date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "long" })}
+                {new Date(viewEntry.date + "T00:00:00").toLocaleDateString(DATE_LOCALE, { weekday: "short", day: "numeric", month: "long" })}
               </div>
-              {moodIcon && <span style={{ fontSize: 15, flexShrink: 0 }}>{moodIcon}</span>}
+              {moodIcon && <span style={{ fontSize: 15, flexShrink: 0 }}>{trx(moodIcon)}</span>}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
-              {toolRow}
+              {trx(toolRow)}
               <button onClick={onClearView} style={{ width: 26, height: 26, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.14)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 13, fontWeight: 700 }}>✕</button>
             </div>
           </div>
@@ -541,7 +542,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
         {stickers.map((it) => (
           <div key={it.id} className="dd-item" onPointerDown={(e) => onPointerDown(it.id, e)} style={{ position: "absolute", left: it.x, top: it.y, zIndex: 4, touchAction: "none", userSelect: "none", cursor: "grab" }}>
             <div style={{ width: 90, height: 90, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", filter: "drop-shadow(0 3px 12px rgba(131,24,67,.3))" }}>
-              <div style={{ transform: "scale(4)", transformOrigin: "center" }}>{STICKER_ICONS[it.icon!]}</div>
+              <div style={{ transform: "scale(4)", transformOrigin: "center" }}>{trx(STICKER_ICONS[it.icon!])}</div>
             </div>
             <button className="dd-del" onClick={(e) => { e.stopPropagation(); deleteItem(it.id); }} style={{ position: "absolute", top: -8, right: -8, zIndex: 6, width: 20, height: 20, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.92)", color: "#fff", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, lineHeight: 1, pointerEvents: "auto" }}>✕</button>
           </div>
@@ -551,11 +552,11 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
             <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 17, color: "#DB2777", lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              {new Date().toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "long" })}
+              {new Date().toLocaleDateString(DATE_LOCALE, { weekday: "short", day: "numeric", month: "long" })}
             </div>
-            {moodIcon && <span style={{ fontSize: 15, flexShrink: 0 }}>{moodIcon}</span>}
+            {moodIcon && <span style={{ fontSize: 15, flexShrink: 0 }}>{trx(moodIcon)}</span>}
           </div>
-          {toolRow}
+          {trx(toolRow)}
         </div>
 
         {/* Sticker picker */}
@@ -563,7 +564,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           <div style={{ marginTop: 8, flexShrink: 0, display: "flex", flexWrap: "wrap", gap: 7, padding: "9px 10px", borderRadius: 12, background: "rgba(255,253,249,.96)", border: "1px solid rgba(236,72,153,.18)", boxShadow: "0 8px 20px rgba(131,24,67,.14)" }}>
             {Object.keys(STICKER_ICONS).map((k) => (
               <button key={k} className="dd-tool" onClick={() => addSticker(k)} style={{ width: 32, height: 32, border: "none", cursor: "pointer", borderRadius: 9, background: "transparent", display: "grid", placeItems: "center" }}>
-                {STICKER_ICONS[k]}
+                {trx(STICKER_ICONS[k])}
               </button>
             ))}
           </div>
@@ -574,7 +575,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           {!promptDismissed ? (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
               <div style={{ flex: 1, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 22, color: "#EC4899", lineHeight: 1.2, animation: "dd-hintfade .5s ease" }}>
-                {activePrompt}
+                {trx(activePrompt)}
               </div>
               <button onClick={() => setPromptDismissed(true)} style={{ flexShrink: 0, marginTop: 2, width: 20, height: 20, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(236,72,153,.15)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>✕</button>
             </div>
@@ -586,7 +587,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
                 onChange={(e) => setTitleDraft(e.target.value)}
                 onFocus={() => setTitleFocused(true)}
                 onBlur={() => setTitleFocused(false)}
-                placeholder="give this entry a name…"
+                placeholder={tr("give this entry a name…")}
                 style={{ width: "100%", border: "none", outline: "none", background: "transparent", fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 21, color: "#DB2777", lineHeight: 1.2, paddingBottom: 4, borderBottom: titleFocused ? "1.5px solid rgba(236,72,153,.4)" : "1.5px solid rgba(236,72,153,.18)" }}
               />
             </div>
@@ -605,19 +606,15 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
             style={{ position: "absolute", inset: 0, zIndex: 2, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "#831843", overflowY: "auto" }}
           />
           {showHint && (
-            <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)", animation: "dd-hintfade .4s ease" }}>
-              tap here and let your thoughts bloom…
-            </div>
+            <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)", animation: "dd-hintfade .4s ease" }}>{tr("tap here and let your thoughts bloom…")}</div>
           )}
           {pageFull && (
-            <div style={{ position: "absolute", bottom: 4, left: "50%", zIndex: 3, pointerEvents: "none", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 999, background: "rgba(219,39,119,.85)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, animation: "dd-pagehint 2.8s ease-in-out infinite" }}>
-              turn the page ✿
-            </div>
+            <div style={{ position: "absolute", bottom: 4, left: "50%", zIndex: 3, pointerEvents: "none", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 999, background: "rgba(219,39,119,.85)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, animation: "dd-pagehint 2.8s ease-in-out infinite" }}>{tr("turn the page ✿")}</div>
           )}
           {listening && (
             <div style={{ position: "absolute", bottom: 6, left: "50%", transform: "translateX(-50%)", zIndex: 4, display: "flex", alignItems: "center", gap: 8, padding: "7px 15px", borderRadius: 999, background: "rgba(219,39,119,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12, boxShadow: "0 8px 18px rgba(219,39,119,.4)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#fff", display: "inline-block", animation: "dd-mic 1.2s ease-in-out infinite" }} />
-              {micLabel}
+              {trx(micLabel)}
             </div>
           )}
         </div>
@@ -643,7 +640,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
           setActivePrompt(pickPhasePrompt());
           setPageFull(false);
           setPickerOpen(false);
-        }} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12.5, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>Save entry ✿</button>
+        }} data-nodrag="1" style={{ alignSelf: "flex-start", marginTop: 8, flexShrink: 0, border: "none", cursor: "pointer", padding: "8px 18px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 12.5, boxShadow: "0 6px 14px rgba(219,39,119,.3)" }}>{tr("Save entry ✿")}</button>
 
         <input id="dd-photo-input" type="file" accept="image/*" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; const src = await compressImage(f); addPhoto(src); e.target.value = ""; }} />
       </div>
@@ -658,14 +655,14 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
       <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "18px 16px 16px" }}>
         {!allDismissed ? (
           <>
-            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 9.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8", marginBottom: 12 }}>tap an idea to start writing ✿</div>
+            <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 9.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8", marginBottom: 12 }}>{tr("tap an idea to start writing ✿")}</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 9, overflowY: "auto" }}>
               {visibleIdeas.map((idea) => (
                 <div key={idea.id} onClick={() => onIdeaSelect?.(idea.label)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, background: "linear-gradient(135deg,rgba(255,240,250,.85),rgba(252,231,243,.65))", border: "1px solid rgba(236,72,153,.12)", boxShadow: "0 4px 14px rgba(131,24,67,.07)", cursor: "pointer" }}>
-                  <span style={{ fontSize: 22, flexShrink: 0 }}>{idea.icon}</span>
+                  <span style={{ fontSize: 22, flexShrink: 0 }}>{trx(idea.icon)}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.1 }}>{idea.label}</div>
-                    <div style={{ fontFamily: "'Quicksand'", fontSize: 10.5, color: "#C9A6B8", fontWeight: 600 }}>{idea.desc}</div>
+                    <div style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.1 }}>{trx(idea.label)}</div>
+                    <div style={{ fontFamily: "'Quicksand'", fontSize: 10.5, color: "#C9A6B8", fontWeight: 600 }}>{trx(idea.desc)}</div>
                   </div>
                   <button onClick={(e) => { e.stopPropagation(); setHiddenIdeas((h) => [...h, idea.id]); }} style={{ flexShrink: 0, width: 22, height: 22, border: "none", cursor: "pointer", borderRadius: "50%", background: "rgba(219,39,119,.12)", color: "#DB2777", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700 }}>✕</button>
                 </div>
@@ -684,12 +681,10 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
                 style={{ position: "absolute", inset: 0, width: "100%", height: "100%", resize: "none", border: "none", outline: "none", background: "transparent", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "#831843", overflowY: "auto" }}
               />
               {!draft && !focused && (
-                <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)" }}>
-                  tap here and bloom…
-                </div>
+                <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1, pointerEvents: "none", fontFamily: "'Caveat',cursive", fontSize: 21, lineHeight: "29px", color: "rgba(201,166,184,.6)" }}>{tr("tap here and bloom…")}</div>
               )}
             </div>
-            <button onClick={() => setHiddenIdeas([])} style={{ flexShrink: 0, alignSelf: "center", border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: 999, background: "rgba(236,72,153,.12)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 11, color: "#DB2777" }}>✿ show ideas again</button>
+            <button onClick={() => setHiddenIdeas([])} style={{ flexShrink: 0, alignSelf: "center", border: "none", cursor: "pointer", padding: "6px 16px", borderRadius: 999, background: "rgba(236,72,153,.12)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 11, color: "#DB2777" }}>{tr("✿ show ideas again")}</button>
           </div>
         )}
       </div>
@@ -699,12 +694,12 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   /* ── Page 2: Memory ── */
   if (idx === 2) return (
     <div style={{ padding: "30px 28px" }}>
-      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>A memory to keep</div>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>{tr("A memory to keep")}</div>
       <div style={{ margin: "18px auto 0", width: "max-content", transform: "rotate(-3deg)", padding: "8px 8px 24px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 10px 22px rgba(131,24,67,.22)" }}>
         <div style={{ width: 150, height: 116, background: "linear-gradient(135deg,#FBE3F5,#FCE4EE)", borderRadius: 2, display: "grid", placeItems: "center" }}>
-          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#C9A6B8" }}>drop a photo</span>
+          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 13, color: "#C9A6B8" }}>{tr("drop a photo")}</span>
         </div>
-        <div style={{ textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 16, color: "#9D5C7E", marginTop: 4 }}>the day I felt free ♡</div>
+        <div style={{ textAlign: "center", fontFamily: "'Caveat',cursive", fontSize: 16, color: "#9D5C7E", marginTop: 4 }}>{tr("the day I felt free ♡")}</div>
       </div>
     </div>
   );
@@ -712,18 +707,18 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   /* ── Page 3: Gratitudes ── */
   if (idx === 3) return (
     <div style={{ padding: "30px 28px", position: "relative", height: "100%" }}>
-      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>Three soft gratitudes</div>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>{tr("Three soft gratitudes")}</div>
       <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 15 }}>
         {[
-          { text: "slow morning light", checked: true },
-          { text: "a friend who listens", checked: true },
-          { text: "add your own…", checked: false, placeholder: true },
+          { text: tr("slow morning light"), checked: true },
+          { text: tr("a friend who listens"), checked: true },
+          { text: tr("add your own…"), checked: false, placeholder: true },
         ].map((item, i) => (
           <div key={i} style={{ display: "flex", alignItems: "center", gap: 11 }}>
             <span style={{ width: 20, height: 20, borderRadius: 6, border: item.checked ? "1.8px solid #F472B6" : "1.8px dashed rgba(236,72,153,.4)", display: "grid", placeItems: "center", color: "#DB2777", fontSize: 13, flex: "0 0 auto" }}>
               {item.checked ? "✓" : ""}
             </span>
-            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 21, color: item.placeholder ? "#C9A6B8" : "#9D5C7E" }}>{item.text}</span>
+            <span style={{ fontFamily: "'Caveat',cursive", fontSize: 21, color: item.placeholder ? "#C9A6B8" : "#9D5C7E" }}>{trx(item.text)}</span>
           </div>
         ))}
       </div>
@@ -736,14 +731,13 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   /* ── Page 4: Reflection & mood ── */
   if (idx === 4) return (
     <div style={{ padding: "30px 28px" }}>
-      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>Reflection &amp; mood</div>
-      <div style={{ marginTop: 16, fontFamily: "'Caveat',cursive", fontSize: 24, lineHeight: 1.2, color: "#831843" }}>What is your inner voice whispering tonight?</div>
-      <div style={{ marginTop: 14, fontSize: 11.5, color: "#9D5C7E", fontFamily: "'Quicksand'", fontWeight: 600 }}>
-        Today you feel <strong style={{ color: "#DB2777" }}>{mood}</strong>
+      <div style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase", color: "#C58CA8" }}>{tr("Reflection & mood")}</div>
+      <div style={{ marginTop: 16, fontFamily: "'Caveat',cursive", fontSize: 24, lineHeight: 1.2, color: "#831843" }}>{tr("What is your inner voice whispering tonight?")}</div>
+      <div style={{ marginTop: 14, fontSize: 11.5, color: "#9D5C7E", fontFamily: "'Quicksand'", fontWeight: 600 }}>{tr("Today you feel")}{" "}<strong style={{ color: "#DB2777" }}>{trx(mood)}</strong>
       </div>
       <div style={{ marginTop: 14, width: "max-content", transform: "rotate(3deg)", padding: "7px 7px 20px", background: "#fffdf9", borderRadius: 3, boxShadow: "0 8px 16px rgba(131,24,67,.2)" }}>
         <div style={{ width: 120, height: 90, background: "linear-gradient(135deg,#FBE3F5,#FCE4EE)", borderRadius: 2, display: "grid", placeItems: "center" }}>
-          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 12, color: "#C9A6B8" }}>add a photo</span>
+          <span style={{ fontFamily: "'Caveat',cursive", fontSize: 12, color: "#C9A6B8" }}>{tr("add a photo")}</span>
         </div>
       </div>
     </div>
@@ -752,7 +746,7 @@ function DiaryBookPage({ idx, mood, draft, onDraft, onSave, onPhotoRequest, view
   /* ── Page 5: Closing ── */
   return (
     <div style={{ height: "100%", padding: "30px 28px", display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-      <div style={{ fontFamily: "'Caveat',cursive", fontSize: 25, color: "#B07291" }}>see you tomorrow,<br />bloom ✿</div>
+      <div style={{ fontFamily: "'Caveat',cursive", fontSize: 25, color: "#B07291" }}>{tr("see you tomorrow,")}<br />{tr("bloom ✿")}</div>
     </div>
   );
 }
@@ -960,7 +954,7 @@ export default function DiaryPage() {
 
   return (
     <div style={{ fontFamily: "'Quicksand',sans-serif", color: "#831843", position: "relative", isolation: "isolate" }}>
-      <style>{DIARY_CSS}</style>
+      <style>{trx(DIARY_CSS)}</style>
 
       {/* ── Blended hero BACKGROUND — same technique as Today: a full-width photo
              washed on the left (readable title) and dissolved toward the bottom,
@@ -988,14 +982,14 @@ export default function DiaryPage() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <button onClick={() => { const d = new Date(calViewMonth); d.setMonth(d.getMonth() - 1); setCalViewMonth(d); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(236,72,153,.12)", color: "#DB2777", fontSize: 16, lineHeight: 1, display: "grid", placeItems: "center" }}>‹</button>
               <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 18, color: "#DB2777", fontWeight: 700 }}>
-                {calViewMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+                {calViewMonth.toLocaleDateString(DATE_LOCALE, { month: "long", year: "numeric" })}
               </div>
               <button onClick={() => { const d = new Date(calViewMonth); d.setMonth(d.getMonth() + 1); setCalViewMonth(d); }} style={{ width: 28, height: 28, borderRadius: "50%", border: "none", cursor: "pointer", background: "rgba(236,72,153,.12)", color: "#DB2777", fontSize: 16, lineHeight: 1, display: "grid", placeItems: "center" }}>›</button>
             </div>
             {/* Weekday labels */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 2, marginBottom: 4 }}>
-              {["Su","Mo","Tu","We","Th","Fr","Sa"].map((d) => (
-                <div key={d} style={{ textAlign: "center", fontSize: 9.5, fontWeight: 700, color: "#C9A6B8", letterSpacing: ".05em", padding: "2px 0" }}>{d}</div>
+              {localWeekdays(["Su","Mo","Tu","We","Th","Fr","Sa"], "short").map((d) => (
+                <div key={d} style={{ textAlign: "center", fontSize: 9.5, fontWeight: 700, color: "#C9A6B8", letterSpacing: ".05em", padding: "2px 0" }}>{trx(d)}</div>
               ))}
             </div>
             {/* Days */}
@@ -1013,7 +1007,7 @@ export default function DiaryPage() {
               })}
             </div>
             {calPickerDate && (
-              <button onClick={() => { setCalPickerDate(null); setFilterOpen(false); }} style={{ marginTop: 10, width: "100%", padding: "7px", borderRadius: 11, border: "none", cursor: "pointer", background: "rgba(252,231,243,.8)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#9D5C7E" }}>✕ Show all entries</button>
+              <button onClick={() => { setCalPickerDate(null); setFilterOpen(false); }} style={{ marginTop: 10, width: "100%", padding: "7px", borderRadius: 11, border: "none", cursor: "pointer", background: "rgba(252,231,243,.8)", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#9D5C7E" }}>{tr("✕ Show all entries")}</button>
             )}
           </div>
         </>
@@ -1029,26 +1023,23 @@ export default function DiaryPage() {
 
         {/* Title + CTA row */}
         <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14 }}>
-          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", textShadow: "0 2px 8px rgba(255,255,255,.6)", animation: "dd-shimmer 5s ease-in-out infinite" }}>
-            Dreamy Diary <span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
+          <h1 style={{ margin: 0, fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: "clamp(32px,5.5vw,48px)", lineHeight: 1, color: "#DB2777", textShadow: "0 2px 8px rgba(255,255,255,.6)", animation: "dd-shimmer 5s ease-in-out infinite" }}>{tr("Dreamy Diary")}{" "}<span style={{ fontFamily: "'Quicksand'", fontSize: "clamp(16px,2.5vw,24px)" }}>✿</span>
           </h1>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
             {/* Mood circle — all devices */}
             <div style={{ position: "relative" }}>
               {showReminder && !moodSet && (
-                <div style={{ position: "absolute", bottom: 54, right: 0, whiteSpace: "nowrap", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", background: "linear-gradient(135deg,#F472B6,#DB2777)", padding: "5px 12px", borderRadius: 999, boxShadow: "0 4px 14px rgba(219,39,119,.35)", animation: "dd-toast .3s ease", zIndex: 10 }}>
-                  how's your mood? ✿
-                </div>
+                <div style={{ position: "absolute", bottom: 54, right: 0, whiteSpace: "nowrap", fontFamily: "'Caveat',cursive", fontSize: 14, color: "#fff", background: "linear-gradient(135deg,#F472B6,#DB2777)", padding: "5px 12px", borderRadius: 999, boxShadow: "0 4px 14px rgba(219,39,119,.35)", animation: "dd-toast .3s ease", zIndex: 10 }}>{tr("how's your mood? ✿")}</div>
               )}
               <button
                 ref={moodBtnRef}
                 onClick={() => openAtPage(0)}
-                title={moodSet ? `Today's mood: ${mood} — tap to start writing ✿` : "Tap to start a new entry ✿"}
-                aria-label="Start a new diary entry"
+                title={moodSet ? tr("Today's mood: {0} — tap to start writing ✿", { 0: mood }) : tr("Tap to start a new entry ✿")}
+                aria-label={tr("Start a new diary entry")}
                 style={{ width: 46, height: 46, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,.85)", background: "linear-gradient(135deg,#F472B6,#DB2777)", display: "grid", placeItems: "center", color: "#fff", animation: "dd-mood-bounce 2.6s ease-in-out infinite", boxShadow: "0 6px 18px rgba(219,39,119,.38)", cursor: "pointer" }}
               >
                 {moodSet
-                  ? <span style={{ display: "flex", color: "#fff" }}>{MOOD_DATA.find((m) => m.name === mood)?.icon}</span>
+                  ? <span style={{ display: "flex", color: "#fff" }}>{trx(MOOD_DATA.find((m) => m.name === mood)?.icon)}</span>
                   : <svg width="20" height="20" viewBox="0 0 24 24" style={{ animation: "dd-spin 4s linear infinite" }}>
                       <ellipse cx="12" cy="5.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
                       <ellipse cx="12" cy="18.5" rx="2.4" ry="3.4" fill="rgba(255,255,255,.9)"/>
@@ -1062,8 +1053,7 @@ export default function DiaryPage() {
             {/* New entry — desktop only (mobile uses FAB) */}
             {!mobile && (
               <button onClick={() => openAtPage(0)} style={{ border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, padding: "11px 22px", borderRadius: 999, background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 14, animation: "dd-glow 3.4s ease-in-out infinite" }}>
-                <span style={{ fontSize: 18, lineHeight: 0 }}>+</span> New entry
-              </button>
+                <span style={{ fontSize: 18, lineHeight: 0 }}>+</span>{" "}{tr("New entry")}</button>
             )}
           </div>
         </div>
@@ -1072,14 +1062,13 @@ export default function DiaryPage() {
         <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", marginTop: 18 }}>
           <div style={{ position: "relative", width: 64, height: 64, borderRadius: "50%", background: `conic-gradient(#EC4899 0% ${(cycleDay / 28) * 100}%, rgba(236,72,153,.16) ${(cycleDay / 28) * 100}% 100%)`, display: "grid", placeItems: "center", flex: "0 0 auto" }}>
             <div style={{ width: 48, height: 48, borderRadius: "50%", background: "rgba(255,255,255,.92)", display: "grid", placeItems: "center" }}>
-              <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 21, color: "#EC4899" }}>{cycleDay}</span>
+              <span style={{ fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 21, color: "#EC4899" }}>{trx(cycleDay)}</span>
             </div>
           </div>
           <div style={{ flex: 1, minWidth: 140 }}>
-            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 24, color: "#DB2777", lineHeight: 1 }}>Today's Bloom</div>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 24, color: "#DB2777", lineHeight: 1 }}>{tr("Today's Bloom")}</div>
             <div style={{ fontSize: 13, color: "#9D5C7E", marginTop: 3 }}>
-              <strong style={{ color: "#831843" }}>Day {cycleDay} · {phase} phase</strong> — soft, reflective energy. Honor your need for rest today. ✿
-            </div>
+              <strong style={{ color: "#831843" }}>{tr("Day")}{" "}{trx(cycleDay)} · {tr("{0} phase", { 0: phase })}</strong>{" "}{tr("— soft, reflective energy. Honor your need for rest today. ✿")}</div>
           </div>
         </div>
       </div>
@@ -1138,10 +1127,8 @@ export default function DiaryPage() {
                   <div style={{ position: "absolute", right: -2, top: "50%", transform: "translateY(-50%)", width: 24, height: 50, borderRadius: "8px 4px 4px 8px", background: "linear-gradient(90deg,#FCE7F3,#F9A8D4)", boxShadow: "0 4px 10px rgba(131,24,67,.35)" }} />
                   <div style={{ textAlign: "center", color: "#fff", padding: "0 18px" }}>
                     <div style={{ fontSize: 40, marginBottom: 4, textShadow: "0 4px 14px rgba(131,24,67,.4)" }}>✿</div>
-                    <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 40, lineHeight: 1, textShadow: "0 4px 16px rgba(131,24,67,.45)" }}>Dreamy Diary</div>
-                    <div style={{ marginTop: 18, display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 999, background: "rgba(255,255,255,.9)", color: "#DB2777", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 18px rgba(131,24,67,.25)", animation: "dd-hint 2.2s ease-in-out infinite" }}>
-                      Tap to open ✿
-                    </div>
+                    <div style={{ fontFamily: "'Dancing Script',cursive", fontWeight: 700, fontSize: 40, lineHeight: 1, textShadow: "0 4px 16px rgba(131,24,67,.45)" }}>{tr("Dreamy Diary")}</div>
+                    <div style={{ marginTop: 18, display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 18px", borderRadius: 999, background: "rgba(255,255,255,.9)", color: "#DB2777", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 18px rgba(131,24,67,.25)", animation: "dd-hint 2.2s ease-in-out infinite" }}>{tr("Tap to open ✿")}</div>
                   </div>
                 </div>
 
@@ -1166,9 +1153,7 @@ export default function DiaryPage() {
 
                 {/* Save toast */}
                 {toast && (
-                  <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 9, padding: "9px 18px", borderRadius: 999, background: "rgba(126,202,185,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 20px rgba(126,202,185,.5)", animation: "dd-toast .3s ease" }}>
-                    Saved to your diary ✨
-                  </div>
+                  <div style={{ position: "absolute", bottom: 14, left: "50%", transform: "translateX(-50%)", zIndex: 9, padding: "9px 18px", borderRadius: 999, background: "rgba(126,202,185,.95)", color: "#fff", fontFamily: "'Quicksand'", fontWeight: 700, fontSize: 13, boxShadow: "0 8px 20px rgba(126,202,185,.5)", animation: "dd-toast .3s ease" }}>{tr("Saved to your diary ✨")}</div>
                 )}
               </div>
             </div>
@@ -1181,7 +1166,7 @@ export default function DiaryPage() {
                 ))}
               </div>
               <div style={{ fontFamily: "'Caveat',cursive", fontSize: 18, color: "#B07291" }}>
-                {!open ? "tap the cover to open your diary ✿" : pg === 0 ? "your page is ready — just start writing ✿" : "use the ‹ › arrows to turn the page"}
+                {!open ? tr("tap the cover to open your diary ✿") : pg === 0 ? tr("your page is ready — just start writing ✿") : tr("use the ‹ › arrows to turn the page")}
               </div>
             </div>
           </div>
@@ -1189,12 +1174,12 @@ export default function DiaryPage() {
         {/* ── Recent memories ── */}
         <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px 16px", background: "rgba(255,255,255,.82)", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Recent memories</div>
+            <div style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>{tr("Recent memories")}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {/* Search */}
               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 999, background: "rgba(252,231,243,.7)", border: "1px solid rgba(236,72,153,.16)" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth={2} strokeLinecap="round" style={{ flex: "0 0 auto" }}><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
-                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="search…" style={{ border: "none", outline: "none", background: "transparent", width: 90, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#831843" }} />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tr("search…")} style={{ border: "none", outline: "none", background: "transparent", width: 90, fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, color: "#831843" }} />
               </div>
               {/* Date filter button */}
               <button
@@ -1211,7 +1196,7 @@ export default function DiaryPage() {
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "'Quicksand'", fontWeight: 600, fontSize: 12, background: calPickerDate ? "linear-gradient(135deg,#F472B6,#DB2777)" : "rgba(252,231,243,.7)", color: calPickerDate ? "#fff" : "#DB2777", transition: "all .2s ease" }}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                {calPickerDate ? calPickerDate.toLocaleDateString(undefined, { day: "numeric", month: "short" }) : "Date"}
+                {calPickerDate ? calPickerDate.toLocaleDateString(DATE_LOCALE, { day: "numeric", month: "short" }) : tr("Date")}
               </button>
             </div>
           </div>
@@ -1232,22 +1217,20 @@ export default function DiaryPage() {
                         : <MemFallback mood={entry.mood} tint={t.fp} />
                       }
                     </div>
-                    <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.05 }}>{entry.title}</div>
+                    <div style={{ marginTop: 10, fontFamily: "'Caveat',cursive", fontSize: 20, color: "#831843", lineHeight: 1.05 }}>{trx(entry.title)}</div>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3 }}>
                       <span style={{ fontSize: 11, color: "#9D5C7E", fontWeight: 600 }}>
-                        {new Date(entry.date + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+                        {new Date(entry.date + "T00:00:00").toLocaleDateString(DATE_LOCALE, { day: "numeric", month: "short" })}
                       </span>
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: t.tag, background: "rgba(255,255,255,.85)", padding: "3px 9px", borderRadius: 999 }}>
-                        {entry.mood}
+                        {trx(entry.mood)}
                       </span>
                     </div>
                   </div>
                 );
               })}
               {filteredMems.length === 0 && (
-                <div style={{ padding: "20px 8px", fontFamily: "'Caveat',cursive", fontSize: 19, color: "#C9A6B8" }}>
-                  no memories match — but tomorrow is a fresh page ✿
-                </div>
+                <div style={{ padding: "20px 8px", fontFamily: "'Caveat',cursive", fontSize: 19, color: "#C9A6B8" }}>{tr("no memories match — but tomorrow is a fresh page ✿")}</div>
               )}
             </div>
           </div>
@@ -1256,7 +1239,7 @@ export default function DiaryPage() {
         {/* ── Prompts to bloom ── */}
         <div style={{ marginTop: 24, borderRadius: 22, padding: "20px 22px 16px", background: "linear-gradient(150deg,rgba(255,255,255,.88),rgba(251,207,232,.5))", border: "1px solid rgba(236,72,153,.15)", boxShadow: "0 16px 36px rgba(236,72,153,.13)", backdropFilter: "blur(8px)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-            <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>Prompts to bloom</span>
+            <span style={{ fontFamily: "'Dancing Script',cursive", fontSize: 25, color: "#DB2777" }}>{tr("Prompts to bloom")}</span>
             <span style={{ fontSize: 16 }}>✿</span>
           </div>
           <div ref={promptScrollRef} className="dd-hbox" style={{ margin: "0 -22px", padding: "4px 22px 10px" }}>
@@ -1264,9 +1247,9 @@ export default function DiaryPage() {
               {[...PROMPT_DATA, ...PROMPT_DATA].map((p, i) => (
                 <button key={i} className="dd-prompt" onClick={() => openAtPage(0, p.text + "\n")} style={{ flex: "0 0 auto", width: 230, display: "flex", alignItems: "center", gap: 11, padding: "13px 15px", borderRadius: 16, border: "1px solid rgba(236,72,153,.12)", cursor: "pointer", transition: "transform .25s ease, box-shadow .25s ease", boxShadow: "0 6px 16px rgba(236,72,153,.08)", background: p.tint }}>
                   <span style={{ flex: "0 0 auto", width: 36, height: 36, borderRadius: 11, display: "grid", placeItems: "center", background: "#fff", color: p.ic, boxShadow: "0 3px 8px rgba(131,24,67,.12)" }}>
-                    {PROMPT_ICONS[p.icon]}
+                    {trx(PROMPT_ICONS[p.icon])}
                   </span>
-                  <span style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{p.text}</span>
+                  <span style={{ fontFamily: "'Caveat',cursive", fontSize: 19, color: "#831843", lineHeight: 1.15, textAlign: "left" }}>{trx(p.text)}</span>
                 </button>
               ))}
             </div>
@@ -1277,7 +1260,7 @@ export default function DiaryPage() {
 
       {/* Mobile FAB */}
       {mobile && (
-        <button onClick={() => openAtPage(0)} style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }} aria-label="New diary entry">+</button>
+        <button onClick={() => openAtPage(0)} style={{ position: "fixed", bottom: 82, right: 20, zIndex: 49, width: 56, height: 56, borderRadius: "50%", border: "none", cursor: "pointer", background: "linear-gradient(135deg,#F472B6,#DB2777)", color: "#fff", fontSize: 30, lineHeight: 1, display: "grid", placeItems: "center", boxShadow: "0 8px 24px rgba(219,39,119,.45)", animation: "dd-glow 3.4s ease-in-out infinite" }} aria-label={tr("New diary entry")}>+</button>
       )}
 
     </div>

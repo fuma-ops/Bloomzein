@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShoppingBag, ArrowRight, ChevronDown, Check, Wallet } from "lucide-react";
 import type { AffiliateProduct } from "@/lib/affiliateProducts";
+import { tr, trx } from "@/i18n";
 
 /**
  * The Bloomzein product card — an *honest review*, not an ad.
@@ -41,8 +42,7 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
       target="_blank"
       rel="nofollow sponsored noopener noreferrer"
       className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 opacity-90 transition hover:opacity-100"
-    >
-      Shop{product.price ? ` · ${product.price}` : ""} <ArrowRight className="h-3 w-3" strokeWidth={2.4} />
+    >{tr("Shop")}{product.price ? ` · ${product.price}` : ""} <ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2.4} />
     </a>
   );
 
@@ -54,13 +54,12 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
           <Tile />
           <span className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
             <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-600/80">
-              {product.type}
-              <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-600/90">affiliate</span>
+              {trx(product.type)}
+              <span className="ms-1 rounded-full bg-amber-100 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-600/90">{tr("affiliate")}</span>
             </span>
-            <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{product.name}</span>
-            <span className="mt-0.5 block text-[12px] text-rose/70 leading-snug">{lead || product.blurb}</span>
-            <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 opacity-90">
-              Shop <ArrowRight className="h-3 w-3" strokeWidth={2.4} />
+            <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{trx(product.name)}</span>
+            <span className="mt-0.5 block text-[12px] text-rose/70 leading-snug">{trx(lead) || trx(product.blurb)}</span>
+            <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 opacity-90">{tr("Shop")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2.4} />
             </span>
           </span>
         </a>
@@ -70,7 +69,7 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
 
   const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="grid grid-cols-[5.5rem_1fr] gap-2 py-1.5">
-      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-600/80 pt-0.5">{label}</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-amber-600/80 pt-0.5">{trx(label)}</span>
       <span className="text-[12.5px] leading-6 text-rose/85">{children}</span>
     </div>
   );
@@ -82,11 +81,11 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
         <Tile />
         <div className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
           <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-600/80">
-            {product.type}
-            <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-600/90">affiliate</span>
+            {trx(product.type)}
+            <span className="ms-1 rounded-full bg-amber-100 px-1.5 py-px text-[8px] font-semibold uppercase tracking-wide text-amber-600/90">{tr("affiliate")}</span>
           </span>
-          <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{product.name}</span>
-          {product.solves && <span className="mt-0.5 block text-[12px] text-rose/70 leading-snug">{product.solves}</span>}
+          <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{trx(product.name)}</span>
+          {product.solves && <span className="mt-0.5 block text-[12px] text-rose/70 leading-snug">{trx(product.solves)}</span>}
           <ShopLink />
         </div>
       </div>
@@ -95,7 +94,7 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
       {product.verdict && (
         <div className="mx-2.5 mb-2 flex items-start gap-1.5 rounded-xl bg-amber-100/50 px-3 py-2 sm:mx-3">
           <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" strokeWidth={2.4} />
-          <span className="text-[12px] font-medium leading-5 text-rose/85">{product.verdict}</span>
+          <span className="text-[12px] font-medium leading-5 text-rose/85">{trx(product.verdict)}</span>
         </div>
       )}
 
@@ -104,22 +103,22 @@ export function ProductCard({ product, lead }: { product: AffiliateProduct; lead
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-center gap-1 border-t border-amber-200/50 py-2 text-[11px] font-bold uppercase tracking-wide text-amber-600/90 transition hover:bg-amber-50/60"
       >
-        {open ? "Hide the details" : "The honest word"}
+        {open ? tr("Hide the details") : tr("The honest word")}
         <ChevronDown className={["h-3.5 w-3.5 transition-transform", open ? "rotate-180" : ""].join(" ")} strokeWidth={2.4} />
       </button>
 
       {open && (
         <div className="border-t border-amber-200/50 px-3 pb-3 pt-1 sm:px-4">
-          {product.solves && <Row label="Solves">{product.solves}</Row>}
-          {product.why && <Row label="Why this">{product.why}</Row>}
-          {product.bestFor && <Row label="Best for">{product.bestFor}</Row>}
-          {product.notFor && <Row label="Not for">{product.notFor}</Row>}
-          {product.actives && <Row label="What works">{product.actives}</Row>}
-          {product.results && <Row label="Expect">{product.results}</Row>}
+          {product.solves && <Row label={tr("Solves")}>{trx(product.solves)}</Row>}
+          {product.why && <Row label={tr("Why this")}>{trx(product.why)}</Row>}
+          {product.bestFor && <Row label={tr("Best for")}>{trx(product.bestFor)}</Row>}
+          {product.notFor && <Row label={tr("Not for")}>{trx(product.notFor)}</Row>}
+          {product.actives && <Row label={tr("What works")}>{trx(product.actives)}</Row>}
+          {product.results && <Row label={tr("Expect")}>{trx(product.results)}</Row>}
           {product.cheaper && (
             <div className="mt-1.5 flex items-start gap-1.5 rounded-xl bg-rose-50/70 px-3 py-2">
               <Wallet className="mt-0.5 h-3.5 w-3.5 shrink-0 text-rose/70" strokeWidth={2} />
-              <span className="text-[12px] leading-5 text-rose/85"><span className="font-semibold">Cheaper option:</span> {product.cheaper}</span>
+              <span className="text-[12px] leading-5 text-rose/85"><span className="font-semibold">{tr("Cheaper option:")}</span> {trx(product.cheaper)}</span>
             </div>
           )}
         </div>

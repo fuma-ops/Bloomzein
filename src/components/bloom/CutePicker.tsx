@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Clock, ChevronUp, ChevronDown, Check } from "lucide-react";
 import { useSmartPopoverPosition } from "@/lib/useSmartPopover";
+import { tr } from "@/i18n";
 
 interface TimePickerProps {
   value: string; // "HH:MM"
@@ -74,7 +75,7 @@ export function CuteTimePicker({ value, onChange }: TimePickerProps) {
             style={popoverStyle}
             className="rounded-3xl bg-white/95 backdrop-blur-xl p-4 shadow-2xl shadow-hotpink/20 ring-1 ring-petal animate-scale-in"
           >
-            <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">PICK A TIME ✿</p>
+            <p className="mb-2 text-center text-[10px] font-bold tracking-widest text-rose">{tr("PICK A TIME ✿")}</p>
             <div className="flex items-center justify-center gap-2">
               <Wheel value={h} pad={pad} onUp={() => nudgeH(1)} onDown={() => nudgeH(-1)} max={23} onSet={(n) => { setH(n); commit(n, m); }} />
               <span className="font-script text-3xl text-hotpink">:</span>
@@ -85,8 +86,7 @@ export function CuteTimePicker({ value, onChange }: TimePickerProps) {
               onClick={() => setOpen(false)}
               className="bloom-luxury-btn mt-3 inline-flex w-full items-center justify-center gap-1 px-3 py-1.5 text-xs font-bold text-white"
             >
-              <Check className="h-3 w-3" /> Done
-            </button>
+              <Check className="h-3 w-3" />{" "}{tr("Done")}</button>
           </div>,
           document.body
         )}

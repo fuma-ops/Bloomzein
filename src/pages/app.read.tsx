@@ -10,6 +10,7 @@ import { ArticleBody, parseArticle, type ParsedArticle } from "@/components/bloo
 import { ArticleTOC } from "@/components/bloom/read/ArticleTOC";
 import { BloomFlower } from "@/components/bloom/read/BloomFlower";
 import { ReviewPanel } from "@/components/bloom/read/ReviewPanel";
+import { tr, trx } from "@/i18n";
 
 /* ---------- data ---------- */
 /* Compact labels for the filter row (full category names elsewhere). */
@@ -67,7 +68,7 @@ const VISIBLE_FILTERS = FILTERS.filter(
 function TopicBadge({ topic }: { topic: string }) {
   return (
     <span className="inline-block rounded-full bg-white/85 backdrop-blur px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink border border-petal/60">
-      {topic}
+      {trx(topic)}
     </span>
   );
 }
@@ -75,8 +76,7 @@ function TopicBadge({ topic }: { topic: string }) {
 function ReadTime({ minutes, light }: { minutes: number; light?: boolean }) {
   return (
     <span className={["inline-flex items-center gap-1 text-[11px] font-semibold", light ? "text-white/95" : "text-rose/70"].join(" ")}>
-      <Clock className="h-3 w-3" strokeWidth={1.8} /> {minutes} min
-    </span>
+      <Clock className="h-3 w-3" strokeWidth={1.8} /> {trx(minutes)}{" "}{tr("min")}</span>
   );
 }
 
@@ -115,7 +115,7 @@ function BloomCount({ count, light }: { count: string; light?: boolean }) {
   const { ref, display } = useCountUp(count);
   return (
     <span ref={ref} className={["inline-flex items-center gap-1 text-[11px] font-semibold tabular-nums", light ? "text-white/95" : "text-rose/70"].join(" ")}>
-      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {display}
+      <Flower2 className="h-3 w-3" strokeWidth={1.8} /> {trx(display)}
     </span>
   );
 }
@@ -130,7 +130,7 @@ function HeartBtn({ saved, onClick }: { saved: boolean; onClick: (e: React.Mouse
         setPopped(true);
         setTimeout(() => setPopped(false), 400);
       }}
-      aria-label={saved ? "Unsave" : "Save"}
+      aria-label={saved ? tr("Unsave") : tr("Save")}
       className={[
         "grid h-8 w-8 place-items-center rounded-full transition border backdrop-blur",
         popped && "animate-heart-pop",
@@ -216,8 +216,8 @@ export default function ReadPage() {
       {/* HERO — transparent; the photo lives in the blended background above. */}
       <section ref={heroRef} className="relative -mx-3 sm:-mx-6 lg:-mx-8 -mt-3 sm:-mt-5 lg:-mt-6 min-h-0 animate-card-pop-in" style={{ animationDelay: "0ms" }}>
         <div className="relative z-[1] px-4 pt-2 pb-0 sm:px-8 sm:pt-7 sm:pb-0 max-w-[72%] sm:max-w-md">
-          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">Read <BookOpen className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} /></h1>
-          <p className="animate-fade-in mt-1 hidden sm:block font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>soft reads for <br className="sm:hidden" />your softest era ✿</p>
+          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{tr("Read")}{" "}<BookOpen className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} /></h1>
+          <p className="animate-fade-in mt-1 hidden sm:block font-script text-xl sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>{tr("soft reads for")}{" "}<br className="sm:hidden" />{tr("your softest era ✿")}</p>
         </div>
       </section>
 
@@ -226,7 +226,7 @@ export default function ReadPage() {
       <div className="relative z-[2] mt-1.5 sm:mt-2 px-1 flex flex-col items-start gap-1.5">
         <CyclePhasePill />
         <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-petal/80 backdrop-blur text-hotpink border border-hotpink/20 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 sm:px-3 sm:py-1 shadow-sm shadow-hotpink/10">
-          <BookOpen className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> {readCount} {readCount === 1 ? "read" : "reads"}
+          <BookOpen className="h-3 w-3 animate-icon-breathe" strokeWidth={2.4} /> {trx(readCount)} {readCount === 1 ? "read" : "reads"}
         </span>
       </div>
 
@@ -235,13 +235,13 @@ export default function ReadPage() {
           left, active chip glows, a soft fade hints there's more to swipe). */}
       <div className="relative z-[2] mt-4 sm:mt-3 mx-auto max-w-3xl rounded-[1.75rem] border border-white/60 bg-white/50 backdrop-blur-xl p-2.5 sm:p-3.5 shadow-[0_22px_55px_-26px_oklch(0.55_0.2_350/0.55)] animate-card-pop-in">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
+          <Search className="pointer-events-none absolute start-4 top-1/2 -translate-y-1/2 h-4 w-4 text-hotpink" strokeWidth={2.2} />
           <input
             id="search-reads"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="What would you like to bloom into today?"
-            className="w-full rounded-full bg-white/85 backdrop-blur pl-11 pr-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/50 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
+            placeholder={tr("What would you like to bloom into today?")}
+            className="w-full rounded-full bg-white/85 backdrop-blur ps-11 pe-4 py-2.5 sm:py-3 text-sm text-rose placeholder:text-rose/50 border border-petal/50 outline-none transition focus:ring-4 focus:ring-hotpink/20 focus:border-hotpink"
           />
         </div>
 
@@ -256,8 +256,8 @@ export default function ReadPage() {
                   key={t}
                   onClick={() => setTopic(t)}
                   className={[
-                    "shrink-0 inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs sm:text-[13px] font-semibold whitespace-nowrap border transition active:scale-95",
-                    pinned ? "sticky left-0 z-[1]" : "",
+                    "shrink-0 inline-flex items-center gap-1.5 rounded-full ps-2.5 pe-3 py-1.5 text-xs sm:text-[13px] font-semibold whitespace-nowrap border transition active:scale-95",
+                    pinned ? "sticky start-0 z-[1]" : "",
                     active
                       ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30 animate-selected-glow"
                       : "bg-white/85 text-rose border-petal/60 hover:bg-blush/70",
@@ -276,7 +276,7 @@ export default function ReadPage() {
       <section className="mt-5 sm:mt-6">
         {filtered.length === 0 ? (
           <EmptyCard
-            text={query ? `No items matching "${query}".` : "No reads in this topic yet."}
+            text={query ? tr("No items matching \"{0}\".", { 0: query }) : "No reads in this topic yet."}
             cta="See all reads"
             onClick={() => { setQuery(""); setTopic("All"); }}
           />
@@ -293,11 +293,10 @@ export default function ReadPage() {
       <section className="mt-8 sm:mt-12">
         <div className="mb-3 flex items-end justify-between gap-3">
           <div>
-            <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Recommended for you ✿</h2>
-            <p className="text-xs text-rose/70">Based on your cycle phase & recent reads</p>
+            <h2 className="font-script text-2xl sm:text-4xl text-hotpink">{tr("Recommended for you ✿")}</h2>
+            <p className="text-xs text-rose/70">{tr("Based on your cycle phase & recent reads")}</p>
           </div>
-          <button className="animate-cta-glow bloom-luxury-btn shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white">
-            See more <ArrowRight className="h-3 w-3" strokeWidth={2} />
+          <button className="animate-cta-glow bloom-luxury-btn shrink-0 inline-flex items-center gap-1 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white">{tr("See more")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2} />
           </button>
         </div>
         <div className="relative -mx-3 px-3 sm:mx-0 sm:px-0">
@@ -307,14 +306,14 @@ export default function ReadPage() {
                 key={a.id}
                 onClick={() => setOpenId(a.id)}
                 style={{ animationDelay: `${i * 0.06}s` }}
-                className="group relative self-start shrink-0 w-44 sm:w-64 text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
+                className="group relative self-start shrink-0 w-44 sm:w-64 text-start overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
               >
                 <div className="relative h-24 sm:h-36 overflow-hidden">
                   <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-                  <div className="absolute top-2 left-2"><TopicBadge topic={a.category} /></div>
+                  <div className="absolute top-2 start-2"><TopicBadge topic={a.category} /></div>
                 </div>
                 <div className="p-3 sm:p-4">
-                  <h3 className="text-xs sm:text-sm font-bold text-rose leading-tight line-clamp-2">{a.title}</h3>
+                  <h3 className="text-xs sm:text-sm font-bold text-rose leading-tight line-clamp-2">{trx(a.title)}</h3>
                   <div className="mt-2 flex items-center gap-2">
                     <ReadTime minutes={a.minutes} />
                     <BloomCount count={a.blooms} />
@@ -324,29 +323,28 @@ export default function ReadPage() {
             ))}
           </div>
           {/* edge fades hint there's more to scroll */}
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
+          <div className="pointer-events-none absolute inset-y-0 start-0 w-6 bg-gradient-to-r from-blush sm:from-background to-transparent sm:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 end-0 w-10 bg-gradient-to-l from-blush sm:from-background to-transparent" />
         </div>
       </section>
 
       {/* SAVED */}
       <section className="mt-8 sm:mt-12 mb-4">
         <div className="mb-3 flex items-end justify-between">
-          <h2 className="font-script text-2xl sm:text-4xl text-hotpink">Saved reads</h2>
-          {savedArticles.length > 0 && <span className="text-xs text-rose/70">{savedArticles.length} saved</span>}
+          <h2 className="font-script text-2xl sm:text-4xl text-hotpink">{tr("Saved reads")}</h2>
+          {savedArticles.length > 0 && <span className="text-xs text-rose/70">{trx(savedArticles.length)}{" "}{tr("saved")}</span>}
         </div>
         {savedArticles.length === 0 ? (
           <div className="bloom-pearl-card rounded-3xl p-8 text-center">
             <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-blush text-hotpink">
               <Heart className="h-5 w-5" strokeWidth={1.6} />
             </span>
-            <p className="mt-3 text-sm text-rose">Tap the heart on any article to save it here.</p>
+            <p className="mt-3 text-sm text-rose">{tr("Tap the heart on any article to save it here.")}</p>
             <button
               onClick={() => { setTopic("All"); setQuery(""); document.scrollingElement?.scrollTo({ top: 0, behavior: "smooth" }); }}
               className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
             >
-              <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} /> Browse articles
-            </button>
+              <BookOpen className="h-3.5 w-3.5" strokeWidth={1.8} />{" "}{tr("Browse articles")}</button>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 animate-fade-in">
@@ -431,9 +429,8 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
           onClick={onBack}
           className="inline-flex items-center gap-1.5 rounded-full bg-white/80 backdrop-blur px-3 py-1.5 text-xs font-semibold text-hotpink border border-white/70 shadow-sm hover:bg-white transition active:scale-95"
         >
-          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
-        </button>
-        <div className="ml-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
+          <ArrowLeft className="rtl:-scale-x-100 h-3.5 w-3.5" strokeWidth={1.8} />{" "}{tr("Back to Read")}</button>
+        <div className="ms-auto"><HeartBtn saved={saved} onClick={onSave} /></div>
       </div>
 
       {/* HERO TITLE — white, sitting on the pink-washed left of the image;
@@ -443,7 +440,7 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
           className="font-script text-[2.15rem] sm:text-5xl lg:text-[3.5rem] text-white leading-[1.0]"
           style={{ textShadow: "0 2px 16px rgba(140,18,74,0.55), 0 1px 2px rgba(140,18,74,0.45)" }}
         >
-          {headline}
+          {trx(headline)}
         </h1>
         {/* category on its own line; time + views sit under it (single row on ≥sm) */}
         <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2.5" style={{ filter: "drop-shadow(0 1px 5px rgba(140,18,74,0.4))" }}>
@@ -470,10 +467,10 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
         <div className="min-w-0">
           <div className="relative overflow-hidden rounded-[1.75rem] border border-petal/50 bg-white/92 backdrop-blur p-5 sm:p-8 lg:p-9 shadow-[0_18px_50px_-28px_oklch(0.6_0.22_350/0.4)]">
             {/* Soft, faded logo-flowers breathing in the article's white space. */}
-            <BloomFlower className="pointer-events-none absolute -right-8 top-24 w-32 sm:w-40 text-hotpink opacity-[0.08] animate-icon-breathe" />
-            <BloomFlower className="pointer-events-none absolute -left-10 top-[42%] w-36 sm:w-52 text-magenta opacity-[0.07] animate-icon-breathe" style={{ animationDelay: "1.1s" }} />
-            <BloomFlower className="pointer-events-none absolute -right-10 top-[70%] w-32 sm:w-44 text-hotpink opacity-[0.08] animate-icon-breathe" style={{ animationDelay: "2.2s" }} />
-            <BloomFlower className="pointer-events-none absolute left-[46%] bottom-6 w-24 sm:w-32 text-petal opacity-[0.12] animate-icon-breathe" style={{ animationDelay: "0.6s" }} />
+            <BloomFlower className="pointer-events-none absolute -end-8 top-24 w-32 sm:w-40 text-hotpink opacity-[0.08] animate-icon-breathe" />
+            <BloomFlower className="pointer-events-none absolute -start-10 top-[42%] w-36 sm:w-52 text-magenta opacity-[0.07] animate-icon-breathe" style={{ animationDelay: "1.1s" }} />
+            <BloomFlower className="pointer-events-none absolute -end-10 top-[70%] w-32 sm:w-44 text-hotpink opacity-[0.08] animate-icon-breathe" style={{ animationDelay: "2.2s" }} />
+            <BloomFlower className="pointer-events-none absolute start-[46%] bottom-6 w-24 sm:w-32 text-petal opacity-[0.12] animate-icon-breathe" style={{ animationDelay: "0.6s" }} />
 
             <div className="relative z-[1]">
               {loading || !parsed ? (
@@ -494,25 +491,25 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
           {/* KEEP READING — related picks so one article becomes three. */}
           {related.length > 0 && (
             <section className="mt-8">
-              <h2 className="font-script text-2xl sm:text-3xl text-hotpink">Keep reading ✿</h2>
-              <p className="text-xs text-rose/70">More for your {article.phase ? `${article.phase} phase` : article.category}</p>
+              <h2 className="font-script text-2xl sm:text-3xl text-hotpink">{tr("Keep reading ✿")}</h2>
+              <p className="text-xs text-rose/70">{tr("More for your")}{" "}{article.phase ? tr("{0} phase", { 0: article.phase }) : trx(article.category)}</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-3">
                 {related.map((a, i) => (
                   <button
                     key={a.id}
                     onClick={() => onOpenArticle(a.id)}
                     style={{ animationDelay: `${i * 0.06}s` }}
-                    className="group relative text-left overflow-hidden rounded-2xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
+                    className="group relative text-start overflow-hidden rounded-2xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] active:scale-95 animate-card-pop-in"
                   >
                     <div className="relative h-24 sm:h-28 overflow-hidden">
                       <img src={a.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-                      <div className="absolute top-2 left-2"><TopicBadge topic={a.category} /></div>
+                      <div className="absolute top-2 start-2"><TopicBadge topic={a.category} /></div>
                     </div>
                     <div className="p-3">
-                      <h3 className="text-[13px] font-bold text-rose leading-snug line-clamp-2">{a.title}</h3>
+                      <h3 className="text-[13px] font-bold text-rose leading-snug line-clamp-2">{trx(a.title)}</h3>
                       <div className="mt-1.5 flex items-center gap-2">
                         <ReadTime minutes={a.minutes} />
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition ml-auto">Read <ArrowRight className="h-3 w-3" strokeWidth={2} /></span>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition ms-auto">{tr("Read")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2} /></span>
                       </div>
                     </div>
                   </button>
@@ -526,8 +523,7 @@ function ArticleReader({ article, saved, onSave, onBack, onOpenArticle }: { arti
               onClick={onBack}
               className="inline-flex items-center gap-1.5 rounded-full bg-white/85 backdrop-blur px-4 py-2 text-xs font-semibold text-hotpink border border-petal/60 hover:bg-white transition active:scale-95"
             >
-              <ArrowLeft className="h-3.5 w-3.5" strokeWidth={1.8} /> Back to Read
-            </button>
+              <ArrowLeft className="rtl:-scale-x-100 h-3.5 w-3.5" strokeWidth={1.8} />{" "}{tr("Back to Read")}</button>
           </div>
         </div>
       </div>
@@ -543,28 +539,25 @@ function ArticleCard({ article, saved, onSave, onOpen, index = 0 }: { article: A
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onOpen(); }}
       style={{ animationDelay: `${index * 0.06}s` }}
-      className="group relative text-left overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] cursor-pointer animate-card-pop-in"
+      className="group relative text-start overflow-hidden rounded-2xl sm:rounded-3xl border border-petal/60 bg-white/85 backdrop-blur shadow-[0_8px_24px_-12px_oklch(0.7_0.18_350/0.3)] transition hover:-translate-y-1 hover:shadow-[0_18px_36px_-14px_oklch(0.7_0.22_350/0.45)] cursor-pointer animate-card-pop-in"
     >
       <div className="relative h-28 sm:h-44 overflow-hidden">
         <img src={article.image} alt="" className="block h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" referrerPolicy="no-referrer" />
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3"><TopicBadge topic={article.category} /></div>
-        <div className="absolute top-2 right-2 sm:top-3 sm:right-3"><HeartBtn saved={saved} onClick={onSave} /></div>
+        <div className="absolute top-2 start-2 sm:top-3 sm:start-3"><TopicBadge topic={article.category} /></div>
+        <div className="absolute top-2 end-2 sm:top-3 sm:end-3"><HeartBtn saved={saved} onClick={onSave} /></div>
         {REVIEW_MODE && article.status === "review" && (
-          <span className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 inline-flex items-center gap-1 rounded-full bg-hotpink/90 backdrop-blur px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm animate-selected-glow">
-            ✎ Review
-          </span>
+          <span className="absolute bottom-2 start-2 sm:bottom-3 sm:start-3 inline-flex items-center gap-1 rounded-full bg-hotpink/90 backdrop-blur px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm animate-selected-glow">{tr("✎ Review")}</span>
         )}
       </div>
       <div className="p-3 sm:p-5">
-        <h3 className="text-sm sm:text-base font-bold text-rose leading-snug line-clamp-2">{article.title}</h3>
-        <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-rose/75 line-clamp-2 hidden sm:block">{article.excerpt}</p>
+        <h3 className="text-sm sm:text-base font-bold text-rose leading-snug line-clamp-2">{trx(article.title)}</h3>
+        <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-rose/75 line-clamp-2 hidden sm:block">{trx(article.excerpt)}</p>
         <div className="mt-2 sm:mt-3 flex items-center justify-between">
           <span className="flex items-center gap-2">
             <ReadTime minutes={article.minutes} />
             <BloomCount count={article.blooms} />
           </span>
-          <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition">
-            Read <ArrowRight className="h-3 w-3" strokeWidth={2} />
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-hotpink opacity-0 group-hover:opacity-100 transition">{tr("Read")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2} />
           </span>
         </div>
       </div>
@@ -578,12 +571,12 @@ function EmptyCard({ text, cta, onClick }: { text: string; cta: string; onClick:
       <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-blush text-hotpink">
         <BookOpen className="h-5 w-5" strokeWidth={1.6} />
       </span>
-      <p className="mt-3 text-sm text-rose">{text}</p>
+      <p className="mt-3 text-sm text-rose">{trx(text)}</p>
       <button
         onClick={onClick}
         className="bloom-luxury-btn mt-3 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white"
       >
-        {cta} <ArrowRight className="h-3 w-3" strokeWidth={2} />
+        {trx(cta)} <ArrowRight className="rtl:-scale-x-100 h-3 w-3" strokeWidth={2} />
       </button>
     </div>
   );

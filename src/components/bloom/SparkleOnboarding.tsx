@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { ArrowRight } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================
    SparkleOnboarding — shared "wow" onboarding for Bloomzein tools.
@@ -55,7 +56,7 @@ function Lines({ lines }: { lines: string[] }) {
   return (
     <>
       {lines.map((l, i) => (
-        <Fragment key={i}>{i > 0 && <br />}{l}</Fragment>
+        <Fragment key={i}>{i > 0 && <br />}{trx(l)}</Fragment>
       ))}
     </>
   );
@@ -221,7 +222,7 @@ export function SparkleOnboarding({ steps, content, onDone }: {
           ))}
 
           <div className={`relative z-10 flex flex-col items-center text-center px-8 max-w-sm transition-all duration-[900ms] ease-out ${fadeIn ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}>
-            <div className="text-[9px] font-black tracking-[0.42em] uppercase mb-5" style={{ color: "#DB2777", opacity: 0.55 }}>{content.eyebrow}</div>
+            <div className="text-[9px] font-black tracking-[0.42em] uppercase mb-5" style={{ color: "#DB2777", opacity: 0.55 }}>{trx(content.eyebrow)}</div>
 
             <h1 className="font-script leading-none mb-2" style={{
               fontSize: "clamp(3rem,13vw,4.75rem)",
@@ -262,7 +263,7 @@ export function SparkleOnboarding({ steps, content, onDone }: {
             </div>
 
             <p className="text-[13px] leading-relaxed max-w-[250px] mb-8" style={{ color: "#9D5C7E", animation: "cyFadeUp 0.7s ease-out 0.5s both" }}>
-              {content.subtitle}
+              {trx(content.subtitle)}
             </p>
 
             <button onClick={() => { clearTimers(); setPhase("steps"); }}
@@ -272,18 +273,18 @@ export function SparkleOnboarding({ steps, content, onDone }: {
                 boxShadow: "0 10px 30px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.5)",
                 animation: "cyCTA 2.4s ease-in-out infinite",
               }}>
-              {content.ctaLabel}
-              <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+              {trx(content.ctaLabel)}
+              <ArrowRight className="rtl:-scale-x-100 h-4 w-4 shrink-0" strokeWidth={2.5} />
             </button>
 
             <div className="mt-6 w-32">
               <div className="h-[3px] rounded-full overflow-hidden" style={{ background: "rgba(219,39,119,0.14)" }}>
                 <div className="h-full rounded-full" style={{ width: `${timerPct}%`, background: "linear-gradient(90deg,#F472B6,#DB2777)", transition: "none" }} />
               </div>
-              <p className="text-[10px] text-center mt-1.5" style={{ color: "#C48AAE" }}>starting the tour…</p>
+              <p className="text-[10px] text-center mt-1.5" style={{ color: "#C48AAE" }}>{tr("starting the tour…")}</p>
             </div>
 
-            <button onClick={finish} className="mt-3 text-[11px] transition-colors" style={{ color: "#C48AAE" }}>skip</button>
+            <button onClick={finish} className="mt-3 text-[11px] transition-colors" style={{ color: "#C48AAE" }}>{tr("skip")}</button>
           </div>
         </div>
       )}
@@ -325,7 +326,7 @@ export function SparkleOnboarding({ steps, content, onDone }: {
               }}>
                 <div className="flex items-center justify-between mb-3.5">
                   <span className="text-[10px] font-black tracking-[0.28em]" style={{ color: "#DB2777" }}>
-                    {stepIdx + 1} / {steps.length}
+                    {stepIdx + 1} / {trx(steps.length)}
                   </span>
                   <div className="flex gap-1.5 items-center">
                     {steps.map((_, i) => (
@@ -347,8 +348,8 @@ export function SparkleOnboarding({ steps, content, onDone }: {
                     <Sparkle size={18} color="#fff" />
                   </span>
                   <div>
-                    <h3 className="font-script leading-tight" style={{ fontSize: 22, color: "#DB2777" }}>{currentStep.title}</h3>
-                    <p className="mt-0.5" style={{ fontSize: 12, lineHeight: 1.5, color: "#9D5C7E" }}>{currentStep.desc}</p>
+                    <h3 className="font-script leading-tight" style={{ fontSize: 22, color: "#DB2777" }}>{trx(currentStep.title)}</h3>
+                    <p className="mt-0.5" style={{ fontSize: 12, lineHeight: 1.5, color: "#9D5C7E" }}>{trx(currentStep.desc)}</p>
                   </div>
                 </div>
 
@@ -357,13 +358,13 @@ export function SparkleOnboarding({ steps, content, onDone }: {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <button onClick={finish} className="text-[11px] px-1 py-1" style={{ color: "#C48AAE" }}>skip</button>
+                  <button onClick={finish} className="text-[11px] px-1 py-1" style={{ color: "#C48AAE" }}>{tr("skip")}</button>
                   <button onClick={advance}
                     className="flex items-center gap-1.5 px-5 py-2.5 rounded-full text-white text-[13px] font-bold active:scale-95 transition-transform"
                     style={{ background: "linear-gradient(135deg,#EC4899,#DB2777)", boxShadow: "0 6px 18px rgba(236,72,153,0.4)" }}>
                     {stepIdx < steps.length - 1
-                      ? (<><span>Next</span><ArrowRight className="h-3.5 w-3.5" /></>)
-                      : (<><Sparkle size={15} color="#fff" /><span>Start</span></>)}
+                      ? (<><span>{tr("Next")}</span><ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></>)
+                      : (<><Sparkle size={15} color="#fff" /><span>{tr("Start")}</span></>)}
                   </button>
                 </div>
               </div>
@@ -396,7 +397,7 @@ export function SparkleOnboarding({ steps, content, onDone }: {
             <h2 className="font-script leading-none" style={{ fontSize: "clamp(2.5rem,11vw,3.75rem)", color: "#DB2777", filter: "drop-shadow(0 4px 16px rgba(236,72,153,0.3))" }}>
               <Lines lines={content.finaleLines} />
             </h2>
-            <p className="mt-2 text-[13px]" style={{ color: "#9D5C7E" }}>{content.finaleSubtitle}</p>
+            <p className="mt-2 text-[13px]" style={{ color: "#9D5C7E" }}>{trx(content.finaleSubtitle)}</p>
           </div>
         </div>
       )}

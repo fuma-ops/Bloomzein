@@ -7,6 +7,7 @@ import { hasCycleSettings } from "@/components/bloom/cyclePhase";
 import { hasMealPlan, hasMovementPlan } from "@/lib/crossToolData";
 import { hasDietSetup, RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { startGuide, isGuided } from "@/lib/guidedSetup";
+import { tr, trx, localWeekdays } from "@/i18n";
 
 /* ============================================================================
    Build your Bloom world — the guided setup on Today, as ONE premium container:
@@ -16,7 +17,7 @@ import { startGuide, isGuided } from "@/lib/guidedSetup";
    activates only once the four tools are configured.
 ============================================================================ */
 
-const DOW = ["S", "M", "T", "W", "T", "F", "S"];
+const DOW = localWeekdays(["S", "M", "T", "W", "T", "F", "S"], "narrow");
 
 // Three real recipes from our library for the Meals preview.
 const MEAL_PREVIEW = ["breakfast", "lunch", "dinner"]
@@ -40,8 +41,8 @@ function GoalGraph({ goalLine }: { goalLine: { target: number; toGo: number } | 
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[10px] font-bold text-rose/60">{goalLine ? `Goal: ${goalLine.target} kg` : "Your weight forecast"}</span>
-        {goalLine && <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-hotpink"><TrendingDown className="h-2.5 w-2.5" strokeWidth={2.5} />{Math.abs(goalLine.toGo)} kg to go</span>}
+        <span className="text-[10px] font-bold text-rose/60">{goalLine ? tr("Goal: {0} kg", { 0: goalLine.target }) : tr("Your weight forecast")}</span>
+        {goalLine && <span className="inline-flex items-center gap-0.5 text-[10px] font-black text-hotpink"><TrendingDown className="h-2.5 w-2.5" strokeWidth={2.5} />{Math.abs(goalLine.toGo)}{" "}{tr("kg to go")}</span>}
       </div>
       <svg viewBox="0 0 120 24" className="h-6 w-full" preserveAspectRatio="none">
         <defs>
@@ -80,15 +81,15 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
 
   const STEPS: Step[] = [
     {
-      n: 1, key: "cycle", title: "Set up your cycle", emoji: "🌸", done: cycleDone, href: "/app/tools/cycle", Icon: Flower2,
+      n: 1, key: "cycle", title: tr("Set up your cycle"), emoji: "🌸", done: cycleDone, href: "/app/tools/cycle", Icon: Flower2,
       image: "/images/setup-cycle.webp",
-      blurb: "Track your cycle and understand your body better.",
+      blurb: tr("Track your cycle and understand your body better."),
       unlocks: ["Personalized energy", "Mood predictions", "Symptom tracking", "Daily insights"],
       visual: (
         <div className="flex items-center gap-1.5">
           {DOW.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[9px] font-bold text-rose/45">{d}</span>
+              <span className="text-[9px] font-bold text-rose/45">{trx(d)}</span>
               <span className={["h-3.5 w-3.5 rounded-full", i === 3 ? "bg-hotpink ring-2 ring-hotpink/30" : i === 2 || i === 4 ? "bg-hotpink/40" : "bg-petal/60"].join(" ")} />
             </div>
           ))}
@@ -96,16 +97,16 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 2, key: "diet", title: "Set your goal", emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
+      n: 2, key: "diet", title: tr("Set your goal"), emoji: "🎯", done: dietDone, href: "/app/tools/diet", Icon: Target,
       image: "/images/setup-goal.webp",
-      blurb: "Set your goal and let Bloomzein calculate your daily targets.",
+      blurb: tr("Set your goal and let Bloomzein calculate your daily targets."),
       unlocks: ["Weight forecast", "Daily calorie target", "Macro balance", "Progress tracking"],
       visual: <GoalGraph goalLine={goalLine} />,
     },
     {
-      n: 3, key: "meals", title: "Plan your meals", emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
+      n: 3, key: "meals", title: tr("Plan your meals"), emoji: "🍽️", done: mealsDone, href: "/app/tools/meals", Icon: UtensilsCrossed,
       image: "/images/setup-meals.webp",
-      blurb: "Get personalized recipes, grocery lists and daily meal plans.",
+      blurb: tr("Get personalized recipes, grocery lists and daily meal plans."),
       unlocks: ["Personalized recipes", "Grocery lists", "Calories & macros", "Meal reminders"],
       visual: (
         <div className="flex items-center gap-2">
@@ -115,22 +116,22 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                 <img src={recipeImageSrc(r)} alt="" className="h-full w-full object-cover" loading="lazy"
                   onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
               </div>
-              <span className="mt-0.5 block truncate text-center text-[8px] font-bold uppercase tracking-wide text-rose/55">{r.name}</span>
+              <span className="mt-0.5 block truncate text-center text-[8px] font-bold uppercase tracking-wide text-rose/55">{trx(r.name)}</span>
             </div>
           ))}
         </div>
       ),
     },
     {
-      n: 4, key: "move", title: "Plan your movement", emoji: "🧘‍♀️", done: moveDone, href: "/app/tools/workout", Icon: Dumbbell,
+      n: 4, key: "move", title: tr("Plan your movement"), emoji: "🧘‍♀️", done: moveDone, href: "/app/tools/workout", Icon: Dumbbell,
       image: "/images/setup-movement.webp",
-      blurb: "Build a movement plan that matches your energy and goals.",
+      blurb: tr("Build a movement plan that matches your energy and goals."),
       unlocks: ["Workouts & yoga", "Recovery days", "Daily energy boost", "Wellness plan"],
       visual: (
         <div className="flex items-center gap-1.5">
           {DOW.map((d, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
-              <span className="text-[9px] font-bold text-rose/45">{d}</span>
+              <span className="text-[9px] font-bold text-rose/45">{trx(d)}</span>
               <span className={["grid h-5 w-5 place-items-center rounded-full", [1, 3, 5].includes(i) ? "bg-blush text-hotpink" : "bg-petal/40 text-rose/30"].join(" ")}>
                 {i === 1 ? <Dumbbell className="h-3 w-3" strokeWidth={2} /> : i === 3 ? <Flower2 className="h-3 w-3" strokeWidth={2} /> : i === 5 ? <Activity className="h-3 w-3" strokeWidth={2} /> : <span className="h-1 w-1 rounded-full bg-current" />}
               </span>
@@ -140,9 +141,9 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
       ),
     },
     {
-      n: 5, key: "ai", title: "Bloom AI Sync", emoji: "✨", done: allCore, Icon: Sparkles, sync: true,
+      n: 5, key: "ai", title: tr("Bloom AI Sync"), emoji: "✨", done: allCore, Icon: Sparkles, sync: true,
       image: "/images/setup-ai.webp",
-      blurb: "Everything works together into one connected, living routine — powered by Bloom AI.",
+      blurb: tr("Everything works together into one connected, living routine — powered by Bloom AI."),
       unlocks: ["Cycle-synced plan", "Smart daily Today", "Personalized coaching", "One magical routine"],
       visual: null,
     },
@@ -173,16 +174,16 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
           <div className="flex items-center gap-3">
             <span className="clay-blob animate-icon-breathe grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-md shadow-hotpink/30"><Sparkles className="h-6 w-6" strokeWidth={1.8} /></span>
             <div className="min-w-0 flex-1">
-              <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Build your Bloom world ✿</h2>
-              <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug">Let's set it up, step by step — watch Today come alive.</p>
+              <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("Build your Bloom world ✿")}</h2>
+              <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug">{tr("Let's set it up, step by step — watch Today come alive.")}</p>
             </div>
-            <span className="shrink-0 text-[11px] font-black uppercase tracking-wider text-hotpink/80 hidden sm:block">{doneCount} of {STEPS.length}</span>
+            <span className="shrink-0 text-[11px] font-black uppercase tracking-wider text-hotpink/80 hidden sm:block">{trx(doneCount)}{" "}{tr("of")}{" "}{trx(STEPS.length)}</span>
           </div>
           <div className="mt-4 flex items-center">
             {STEPS.map((s, i) => (
               <div key={s.key} className="flex flex-1 items-center last:flex-none">
                 <span className={["grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-black transition", s.done ? "bg-gradient-to-br from-hotpink to-magenta text-white shadow-sm shadow-hotpink/40" : "bg-white/90 text-rose/50 border border-petal/60"].join(" ")}>
-                  {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : s.n}
+                  {s.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : trx(s.n)}
                 </span>
                 {i < STEPS.length - 1 && <span className={["mx-1 h-[3px] flex-1 rounded-full", s.done ? "bg-hotpink/60" : "bg-white/70"].join(" ")} />}
               </div>
@@ -199,25 +200,25 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
             const NodeIcon = s.Icon;
             const ctaCls = (kind: "primary" | "ghost" | "locked") =>
               ["w-full lg:w-auto inline-flex items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-bold transition active:scale-95",
-                kind === "primary" ? "bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow"
-                : kind === "ghost" ? "bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50"
-                : "bg-petal/40 text-rose/50 cursor-not-allowed"].join(" ");
+                kind === "primary" ? tr("bg-gradient-to-r from-hotpink to-magenta text-white shadow-md shadow-hotpink/25 hover:brightness-105 animate-selected-glow")
+                : kind === "ghost" ? tr("bg-white text-hotpink border border-hotpink/40 hover:bg-blush/50")
+                : tr("bg-petal/40 text-rose/50 cursor-not-allowed")].join(" ");
 
             const wrapCls = ["group block overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:-translate-y-0.5",
-              isNext ? "border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow" : "border-petal/70"].join(" ");
-            const visualBox = <div className="rounded-xl bg-blush/35 border border-petal/40 px-3 py-2">{s.visual}</div>;
+              isNext ? tr("border-hotpink/60 ring-2 ring-hotpink/40 animate-selected-glow") : "border-petal/70"].join(" ");
+            const visualBox = <div className="rounded-xl bg-blush/35 border border-petal/40 px-3 py-2">{trx(s.visual)}</div>;
             const syncChips = (
               <div className="flex flex-wrap gap-x-3 gap-y-1">
                 {["Cycle", "Meals", "Movement", "Coach"].map((l) => (
-                  <span key={l} className="inline-flex items-center gap-1 text-[10.5px] font-bold text-hotpink"><span className="h-1.5 w-1.5 rounded-full bg-hotpink" /> {l}</span>
+                  <span key={l} className="inline-flex items-center gap-1 text-[10.5px] font-bold text-hotpink"><span className="h-1.5 w-1.5 rounded-full bg-hotpink" /> {trx(l)}</span>
                 ))}
               </div>
             );
             const cta = s.sync
               ? (allCore
-                  ? <span className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} /> Activate</span>
-                  : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} /> Locked</span>)
-              : <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? "Review" : "Continue"} <ArrowRight className="h-4 w-4" strokeWidth={2.5} /></span>;
+                  ? <span className={ctaCls("primary")}><Sparkles className="h-4 w-4" strokeWidth={2.2} />{" "}{tr("Activate")}</span>
+                  : <span className={ctaCls("locked")}><Lock className="h-3.5 w-3.5" strokeWidth={2.2} />{" "}{tr("Locked")}</span>)
+              : <span className={ctaCls(s.done ? "ghost" : "primary")}>{s.done ? tr("Review") : tr("Continue")} <ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} /></span>;
 
             const body = (
               <div className={["p-3.5 sm:p-4 lg:flex lg:items-center lg:gap-5", isNext ? "bg-blush/20" : ""].join(" ")}>
@@ -229,50 +230,50 @@ export function BuildBloomWorld({ moodDone, onLogMood }: { moodDone: boolean; on
                     <img src={s.image} alt="" className="h-full w-full object-cover" loading="lazy"
                       onError={(e) => { const el = e.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/meal-buddha.webp")) el.src = "/images/meal-buddha.webp"; }} />
                     {locked && <div className="absolute inset-0 grid place-items-center bg-white/45 backdrop-blur-[1px]"><Lock className="h-6 w-6 text-hotpink/70" strokeWidth={2} /></div>}
-                    <span className="absolute left-2 top-2 grid h-6 w-6 sm:h-7 sm:w-7 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[11px] sm:text-[12px] font-black text-white shadow-md">{s.n}</span>
+                    <span className="absolute start-2 top-2 grid h-6 w-6 sm:h-7 sm:w-7 place-items-center rounded-full bg-gradient-to-br from-hotpink to-magenta text-[11px] sm:text-[12px] font-black text-white shadow-md">{trx(s.n)}</span>
                   </div>
                   {/* title + blurb (+ visual on desktop only) */}
-                  <div className="min-w-0 flex-1 text-left">
+                  <div className="min-w-0 flex-1 text-start">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="inline-flex items-center gap-1.5 font-script text-xl sm:text-2xl text-hotpink leading-none">{s.title} <span className="text-base">{s.emoji}</span></h3>
-                      {isNext && <span className="rounded-full bg-hotpink px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-white animate-cta-bounce">Start here ✿</span>}
-                      {s.done && <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink"><Check className="h-2.5 w-2.5" strokeWidth={3.5} /> Done</span>}
+                      <h3 className="inline-flex items-center gap-1.5 font-script text-xl sm:text-2xl text-hotpink leading-none">{trx(s.title)} <span className="text-base">{trx(s.emoji)}</span></h3>
+                      {isNext && <span className="rounded-full bg-hotpink px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-white animate-cta-bounce">{tr("Start here ✿")}</span>}
+                      {s.done && <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 px-2 py-0.5 text-[8px] font-black uppercase tracking-wide text-hotpink"><Check className="h-2.5 w-2.5" strokeWidth={3.5} />{" "}{tr("Done")}</span>}
                     </div>
-                    <p className="mt-1 text-[12px] sm:text-[12.5px] text-[#831843] leading-snug">{s.blurb}</p>
-                    {s.visual && <div className="mt-2.5 hidden max-w-md lg:block">{visualBox}</div>}
-                    {s.sync && <div className="mt-2.5 hidden lg:block">{syncChips}</div>}
+                    <p className="mt-1 text-[12px] sm:text-[12.5px] text-[#831843] leading-snug">{trx(s.blurb)}</p>
+                    {s.visual && <div className="mt-2.5 hidden max-w-md lg:block">{trx(visualBox)}</div>}
+                    {s.sync && <div className="mt-2.5 hidden lg:block">{trx(syncChips)}</div>}
                   </div>
                 </div>
 
                 {/* Visual bar — mobile, full width under the header */}
-                {s.visual && <div className="mt-3 lg:hidden">{visualBox}</div>}
-                {s.sync && <div className="mt-2.5 lg:hidden">{syncChips}</div>}
+                {s.visual && <div className="mt-3 lg:hidden">{trx(visualBox)}</div>}
+                {s.sync && <div className="mt-2.5 lg:hidden">{trx(syncChips)}</div>}
 
                 {/* What you'll unlock */}
                 <div className="mt-3 lg:mt-0 lg:w-[190px] shrink-0">
-                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-hotpink/60 lg:hidden">What you'll unlock</p>
+                  <p className="mb-1.5 text-[9px] font-black uppercase tracking-wider text-hotpink/60 lg:hidden">{tr("What you'll unlock")}</p>
                   <ul className="grid grid-cols-2 gap-x-2 gap-y-1 lg:grid-cols-1">
                     {s.unlocks.map((u) => (
                       <li key={u} className="flex items-center gap-1.5 text-[11px] font-semibold text-[#831843]">
                         <span className="grid h-3.5 w-3.5 shrink-0 place-items-center rounded-full bg-hotpink/15 text-hotpink"><Check className="h-2 w-2" strokeWidth={4} /></span>
-                        <span className="truncate">{u}</span>
+                        <span className="truncate">{trx(u)}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* CTA */}
-                <div className="mt-3.5 lg:mt-0 lg:w-[172px] shrink-0">{cta}</div>
+                <div className="mt-3.5 lg:mt-0 lg:w-[172px] shrink-0">{trx(cta)}</div>
                 {!s.sync && <NodeIcon className="hidden" />}
               </div>
             );
 
             if (s.sync) {
               return allCore
-                ? <a key={s.key} href="/app/today" className={wrapCls}>{body}</a>
-                : <div key={s.key} className={wrapCls}>{body}</div>;
+                ? <a key={s.key} href="/app/today" className={wrapCls}>{trx(body)}</a>
+                : <div key={s.key} className={wrapCls}>{trx(body)}</div>;
             }
-            return <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrapCls} data-next-step={isNext ? "1" : undefined}>{body}</a>;
+            return <a key={s.key} href={s.href} onClick={() => startGuide()} className={wrapCls} data-next-step={isNext ? "1" : undefined}>{trx(body)}</a>;
           })}
         </div>
       </div>

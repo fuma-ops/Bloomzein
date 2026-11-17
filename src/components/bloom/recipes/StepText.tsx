@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { SUBRECIPES } from "./data";
+import { trx } from "@/i18n";
 
 /* Renders a recipe step string with two bits of inline markup:
  *   **ingredient**   → shown in solid pink so it stands out
@@ -17,11 +18,11 @@ function SubRecipe({ name }: { name: string }) {
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         className="font-bold text-hotpink underline decoration-dotted decoration-hotpink/50 underline-offset-2 hover:text-magenta transition"
       >
-        {name}
+        {trx(name)}
       </button>
       {open && how && (
         <span className="mt-1.5 mb-1 block rounded-xl bg-blush/60 border border-petal/60 px-3 py-2 text-[12px] leading-snug text-rose/85">
-          <b className="capitalize text-hotpink">{name} · </b>{how}
+          <b className="capitalize text-hotpink">{trx(name)} · </b>{trx(how)}
         </span>
       )}
     </>
@@ -40,7 +41,7 @@ export function StepText({ text }: { text: string }) {
         if (p.startsWith("[[") && p.endsWith("]]")) {
           return <SubRecipe key={i} name={p.slice(2, -2)} />;
         }
-        return <span key={i}>{p}</span>;
+        return <span key={i}>{trx(p)}</span>;
       })}
     </>
   );

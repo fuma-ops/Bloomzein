@@ -1,5 +1,6 @@
 import { Droplet, Bell, BellOff, Settings2, Sparkles, Brain, Dumbbell, Heart, Lightbulb, Clock } from "lucide-react";
 import { PHASE_LABEL, type CyclePhase } from "@/components/bloom/cyclePhase";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================================
    Daily Hydration — a phase-aware, motivational hydration dashboard for Today.
@@ -13,11 +14,11 @@ type Phase = Exclude<CyclePhase, "any">;
 
 // Phase-flavoured "why hydration matters today" + benefit emphasis.
 const PHASE_HYDRATION: Record<Phase, { body: string; benefits: { skin: number; focus: number; muscle: number; energy: number } }> = {
-  period:     { body: "Gentle hydration eases cramps and bloating and replaces the fluids you lose — sip warm water often and be kind to yourself.", benefits: { skin: 55, focus: 50, muscle: 45, energy: 50 } },
-  follicular: { body: "Your energy is rising! Staying hydrated helps your muscles perform better and keeps your skin naturally glowing.",              benefits: { skin: 70, focus: 60, muscle: 40, energy: 65 } },
-  fertile:    { body: "Water supports healthy cervical fluid and steady energy in your fertile window — keep your bottle close today.",                benefits: { skin: 68, focus: 62, muscle: 55, energy: 70 } },
-  ovulation:  { body: "Your fluid needs peak around ovulation — a couple of extra glasses keep your energy and skin at their very best.",              benefits: { skin: 72, focus: 65, muscle: 60, energy: 75 } },
-  luteal:     { body: "Water fights bloating and eases PMS fatigue — herbal teas count too. A steady sip-all-day rhythm feels best now.",              benefits: { skin: 60, focus: 55, muscle: 50, energy: 55 } },
+  period:     { body: tr("Gentle hydration eases cramps and bloating and replaces the fluids you lose — sip warm water often and be kind to yourself."), benefits: { skin: 55, focus: 50, muscle: 45, energy: 50 } },
+  follicular: { body: tr("Your energy is rising! Staying hydrated helps your muscles perform better and keeps your skin naturally glowing."),              benefits: { skin: 70, focus: 60, muscle: 40, energy: 65 } },
+  fertile:    { body: tr("Water supports healthy cervical fluid and steady energy in your fertile window — keep your bottle close today."),                benefits: { skin: 68, focus: 62, muscle: 55, energy: 70 } },
+  ovulation:  { body: tr("Your fluid needs peak around ovulation — a couple of extra glasses keep your energy and skin at their very best."),              benefits: { skin: 72, focus: 65, muscle: 60, energy: 75 } },
+  luteal:     { body: tr("Water fights bloating and eases PMS fatigue — herbal teas count too. A steady sip-all-day rhythm feels best now."),              benefits: { skin: 60, focus: 55, muscle: 50, energy: 55 } },
 };
 
 const DID_YOU_KNOW = [
@@ -29,12 +30,12 @@ const DID_YOU_KNOW = [
 ];
 
 function fmtAgo(ts: number | null): string {
-  if (!ts) return "not yet today";
+  if (!ts) return tr("not yet today");
   const min = Math.max(0, Math.round((Date.now() - ts) / 60000));
-  if (min < 1) return "just now";
-  if (min < 60) return `${min} min ago`;
+  if (min < 1) return tr("just now");
+  if (min < 60) return tr("{0} min ago", { 0: min });
   const h = Math.round(min / 60);
-  return `${h} hour${h === 1 ? "" : "s"} ago`;
+  return tr("{0} hour{1} ago", { 0: h, 1: h === 1 ? "" : "s" });
 }
 
 // Small progress bar used by the benefit cards.
@@ -42,11 +43,11 @@ function BenefitBar({ Icon, label, pct }: { Icon: typeof Heart; label: string; p
   return (
     <div className="rounded-2xl bg-white/70 border border-petal/50 p-3">
       <Icon className="h-6 w-6 text-hotpink" strokeWidth={1.8} />
-      <p className="mt-2 text-[12px] font-bold text-[#831843] leading-tight">{label}</p>
+      <p className="mt-2 text-[12px] font-bold text-[#831843] leading-tight">{trx(label)}</p>
       <div className="mt-1.5 h-1.5 rounded-full bg-petal/30 overflow-hidden">
         <div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all duration-700" style={{ width: `${pct}%` }} />
       </div>
-      <p className="mt-1 text-[11px] font-black text-hotpink tabular-nums">{pct}%</p>
+      <p className="mt-1 text-[11px] font-black text-hotpink tabular-nums">{trx(pct)}%</p>
     </div>
   );
 }
@@ -107,7 +108,7 @@ export function HydrationDashboard({
                    "Let's begin — one sip at a time 💧";
   const motivBody = reached
     ? "You've hit your water goal today. Your body — and your glow — thank you."
-    : `Your body still needs about ${remainingL}L today. Keep going, you're doing amazing!`;
+    : tr("Your body still needs about {0}L today. Keep going, you're doing amazing!", { 0: remainingL });
 
   // Coach nudge.
   const coachBody = reached
@@ -132,18 +133,17 @@ export function HydrationDashboard({
             <div className="min-w-0">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-md shadow-hotpink/30"><Droplet className="h-5 w-5" strokeWidth={1.9} fill="currentColor" /></span>
-                <h2 className="font-script text-[1.9rem] sm:text-4xl text-hotpink leading-none">Daily Hydration</h2>
+                <h2 className="font-script text-[1.9rem] sm:text-4xl text-hotpink leading-none">{tr("Daily Hydration")}</h2>
               </div>
-              <p className="mt-1.5 text-[12px] sm:text-sm text-rose/70 leading-snug max-w-sm">
-                Water is self-care. Every sip helps you feel your best, <span className="font-bold text-hotpink">inside</span> and <span className="font-bold text-hotpink">out</span>.
+              <p className="mt-1.5 text-[12px] sm:text-sm text-rose/70 leading-snug max-w-sm">{tr("Water is self-care. Every sip helps you feel your best,")}{" "}<span className="font-bold text-hotpink">{tr("inside")}</span>{" "}{tr("and")}{" "}<span className="font-bold text-hotpink">{tr("out")}</span>.
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <button onClick={onToggleReminders} disabled={reminderBusy} aria-label={remindersEnabled ? "Disable reminders" : "Enable reminders"} title={remindersEnabled ? "Reminders on — tap to turn off" : "Get gentle water reminders"}
+              <button onClick={onToggleReminders} disabled={reminderBusy} aria-label={remindersEnabled ? tr("Disable reminders") : tr("Enable reminders")} title={remindersEnabled ? tr("Reminders on — tap to turn off") : tr("Get gentle water reminders")}
                 className={["grid h-9 w-9 place-items-center rounded-full bg-white/80 border border-petal/50 text-hotpink shadow-sm transition disabled:opacity-60 active:scale-90", remindersEnabled ? "animate-icon-breathe" : "opacity-80"].join(" ")}>
                 {remindersEnabled ? <Bell className="h-4 w-4" strokeWidth={2} /> : <BellOff className="h-4 w-4" strokeWidth={2} />}
               </button>
-              <button onClick={onOpenSettings} aria-label="Water goal settings" className="grid h-9 w-9 place-items-center rounded-full bg-white/80 border border-petal/50 text-hotpink shadow-sm transition active:scale-90">
+              <button onClick={onOpenSettings} aria-label={tr("Water goal settings")} className="grid h-9 w-9 place-items-center rounded-full bg-white/80 border border-petal/50 text-hotpink shadow-sm transition active:scale-90">
                 <Settings2 className="h-4 w-4" strokeWidth={2} />
               </button>
             </div>
@@ -173,28 +173,28 @@ export function HydrationDashboard({
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center [text-shadow:0_1px_6px_rgba(255,255,255,0.95),0_1px_2px_rgba(255,255,255,0.9)]">
                   <Droplet className="h-8 w-8 text-hotpink mb-0.5 drop-shadow-[0_1px_3px_rgba(255,255,255,0.95)]" strokeWidth={1.6} fill="rgba(244,114,182,0.3)" />
-                  <p className="font-script text-5xl sm:text-6xl text-hotpink leading-none">{pct}%</p>
-                  <p className="mt-1 text-[13px] font-bold text-[#831843]">{count} of {goal} glasses</p>
-                  <p className="text-[12px] font-bold text-rose/80"><span className="text-hotpink">{doneL} L</span> / {totalL} L</p>
+                  <p className="font-script text-5xl sm:text-6xl text-hotpink leading-none">{trx(pct)}%</p>
+                  <p className="mt-1 text-[13px] font-bold text-[#831843]">{trx(count)}{" "}{tr("of")}{" "}{trx(goal)}{" "}{tr("glasses")}</p>
+                  <p className="text-[12px] font-bold text-rose/80"><span className="text-hotpink">{trx(doneL)} L</span> / {trx(totalL)} L</p>
                 </div>
               </div>
               </div>{/* /ring photo panel */}
 
               {/* Glasses row */}
               <div className="mt-4">
-                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843]"><Droplet className="h-4 w-4 text-hotpink" fill="currentColor" strokeWidth={1.5} /> Today's glasses</p>
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843]"><Droplet className="h-4 w-4 text-hotpink" fill="currentColor" strokeWidth={1.5} />{" "}{tr("Today's glasses")}</p>
                 <div className="mt-2 flex flex-wrap items-end gap-1.5">
                   {Array.from({ length: goal }).map((_, i) => (
-                    <button key={i} onClick={() => onTapGlass(i)} aria-label={i < count ? `Glass ${i + 1} filled` : `Fill glass ${i + 1}`} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
+                    <button key={i} onClick={() => onTapGlass(i)} aria-label={i < count ? tr("Glass {0} filled", { 0: i + 1 }) : tr("Fill glass {0}", { 0: i + 1 })} className="flex flex-col items-center gap-0.5 active:scale-90 transition-transform">
                       <Droplet className={["h-7 w-7 transition", i < count ? "text-hotpink" : "text-petal/60"].join(" ")} fill="currentColor" strokeWidth={1.4} />
                       <span className={["text-[9px] font-bold tabular-nums", i < count ? "text-hotpink" : "text-rose/40"].join(" ")}>{i + 1}</span>
                     </button>
                   ))}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl bg-white/70 border border-petal/50 px-3 py-2 text-[11px] font-semibold text-rose/70">
-                  <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} /> Last glass: <span className="text-[#831843]">{fmtAgo(lastGlassAt)}</span></span>
+                  <span className="inline-flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-hotpink" strokeWidth={2} />{" "}{tr("Last glass:")}{" "}<span className="text-[#831843]">{fmtAgo(lastGlassAt)}</span></span>
                   <span className="text-petal">·</span>
-                  <span>{remindersEnabled ? <>Next reminder in <span className="text-hotpink">{nextReminder} min</span></> : "Reminders off"}</span>
+                  <span>{remindersEnabled ? <>{tr("Next reminder in")}{" "}<span className="text-hotpink">{trx(nextReminder)}{" "}{tr("min")}</span></> : tr("Reminders off")}</span>
                 </div>
               </div>
             </div>
@@ -205,43 +205,43 @@ export function HydrationDashboard({
               <div className="flex items-center gap-3 rounded-2xl bg-white/75 border border-petal/50 p-3">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blush text-hotpink"><Droplet className="h-5 w-5" fill="currentColor" strokeWidth={1.4} /></span>
                 <div className="min-w-0">
-                  <p className="text-[14px] font-black text-hotpink leading-tight">{motivTitle}</p>
-                  <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{motivBody}</p>
+                  <p className="text-[14px] font-black text-hotpink leading-tight">{trx(motivTitle)}</p>
+                  <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{trx(motivBody)}</p>
                 </div>
               </div>
 
               {/* Why hydration matters — phase aware */}
               <div>
-                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843] mb-1.5"><Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} /> Why hydration matters today</p>
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843] mb-1.5"><Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} />{" "}{tr("Why hydration matters today")}</p>
                 <div className="relative overflow-hidden rounded-2xl bg-white/75 border border-petal/50 p-3">
-                  <img src="/images/me/energy-botanical.webp" alt="" className="pointer-events-none absolute -right-4 -bottom-4 h-24 w-24 object-contain opacity-40" loading="lazy" />
+                  <img src="/images/me/energy-botanical.webp" alt="" className="pointer-events-none absolute -end-4 -bottom-4 h-24 w-24 object-contain opacity-40" loading="lazy" />
                   <div className="relative">
-                    <p className="text-[13px] font-black text-hotpink">{cycleReady ? `You're in your ${PHASE_LABEL[phase]} Phase` : "Set up your cycle to personalise this"}</p>
-                    <p className="mt-1 text-[12px] text-[#831843] leading-snug max-w-sm">{cycleReady ? ph.body : "Once your cycle is set, we'll tailor every hydration tip to your exact phase."}</p>
+                    <p className="text-[13px] font-black text-hotpink">{cycleReady ? tr("You're in your {0} Phase", { 0: PHASE_LABEL[phase] }) : tr("Set up your cycle to personalise this")}</p>
+                    <p className="mt-1 text-[12px] text-[#831843] leading-snug max-w-sm">{cycleReady ? trx(ph.body) : tr("Once your cycle is set, we'll tailor every hydration tip to your exact phase.")}</p>
                   </div>
                 </div>
               </div>
 
               {/* Benefits */}
               <div>
-                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843] mb-1.5"><Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} /> Today's hydration benefits</p>
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-black text-[#831843] mb-1.5"><Sparkles className="h-4 w-4 text-hotpink" strokeWidth={2} />{" "}{tr("Today's hydration benefits")}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  <BenefitBar Icon={Sparkles} label="Skin glow"       pct={benefits.skin} />
-                  <BenefitBar Icon={Brain}    label="Better focus"    pct={benefits.focus} />
-                  <BenefitBar Icon={Dumbbell} label="Muscle recovery" pct={benefits.muscle} />
-                  <BenefitBar Icon={Heart}    label="More energy"     pct={benefits.energy} />
+                  <BenefitBar Icon={Sparkles} label={tr("Skin glow")}       pct={benefits.skin} />
+                  <BenefitBar Icon={Brain}    label={tr("Better focus")}    pct={benefits.focus} />
+                  <BenefitBar Icon={Dumbbell} label={tr("Muscle recovery")} pct={benefits.muscle} />
+                  <BenefitBar Icon={Heart}    label={tr("More energy")}     pct={benefits.energy} />
                 </div>
               </div>
 
               {/* Coach + Drink a glass */}
               <div className="flex items-center gap-3 rounded-2xl bg-white/75 border border-petal/50 p-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-black text-hotpink inline-flex items-center gap-1.5"><span className="text-sm">🧚‍♀️</span> Bloomzein Coach</p>
-                  <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{coachBody}</p>
+                  <p className="text-[12px] font-black text-hotpink inline-flex items-center gap-1.5"><span className="text-sm">🧚‍♀️</span>{" "}{tr("Bloomzein Coach")}</p>
+                  <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{trx(coachBody)}</p>
                 </div>
                 <button onClick={onDrinkGlass} disabled={reached}
                   className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-hotpink to-magenta px-4 py-2.5 text-[12.5px] font-bold text-white shadow-md shadow-hotpink/25 transition hover:brightness-105 active:scale-95 disabled:opacity-60 animate-selected-glow">
-                  {reached ? "All done ✿" : "Drink a Glass"} <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.4} />
+                  {reached ? tr("All done ✿") : tr("Drink a Glass")} <Droplet className="h-4 w-4" fill="currentColor" strokeWidth={1.4} />
                 </button>
               </div>
             </div>
@@ -252,17 +252,17 @@ export function HydrationDashboard({
             <div className="flex items-start gap-3 rounded-2xl bg-white/70 border border-petal/50 p-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blush text-hotpink"><Lightbulb className="h-4 w-4" strokeWidth={2} /></span>
               <div className="min-w-0">
-                <p className="text-[12px] font-black text-hotpink">Did you know?</p>
-                <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{fact}</p>
+                <p className="text-[12px] font-black text-hotpink">{tr("Did you know?")}</p>
+                <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{trx(fact)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-2xl bg-white/70 border border-petal/50 p-3">
               <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-black text-hotpink">Bloom Level</p>
-                <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">Keep blooming every day with healthy habits.</p>
+                <p className="text-[12px] font-black text-hotpink">{tr("Bloom Level")}</p>
+                <p className="mt-0.5 text-[12px] text-[#831843] leading-snug">{tr("Keep blooming every day with healthy habits.")}</p>
               </div>
               <MiniRing pct={bloomPercent}>
-                <span className="font-script text-lg text-hotpink leading-none">{bloomPercent}%</span>
+                <span className="font-script text-lg text-hotpink leading-none">{trx(bloomPercent)}%</span>
               </MiniRing>
             </div>
           </div>

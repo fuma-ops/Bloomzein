@@ -26,6 +26,7 @@
  */
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { tr, trx } from "@/i18n";
 
 const prefersReducedMotion = () =>
   typeof window !== "undefined" &&
@@ -129,9 +130,8 @@ function BrandLockup() {
   return (
     <div className="wz-brand">
       <Sakura className="wz-brand-mark" />
-      <div className="wz-wordmark">Bloomzein</div>
-      <div className="wz-tagline">
-        stay soft, bloom on. <Sakura className="wz-tag-flower" />
+      <div className="wz-wordmark">{tr("Bloomzein")}</div>
+      <div className="wz-tagline">{tr("stay soft, bloom on.")}{" "}<Sakura className="wz-tag-flower" />
       </div>
     </div>
   );
@@ -155,7 +155,7 @@ function Progress({ step, total = 3 }: { step: number; total?: number }) {
 function Cta({ label, onClick, delay = 0 }: { label: string; onClick: () => void; delay?: number }) {
   return (
     <button className="wz-cta" onClick={onClick} style={{ animationDelay: `${delay}s` }}>
-      <span className="wz-cta-label">{label}</span>
+      <span className="wz-cta-label">{trx(label)}</span>
       <svg className="wz-cta-arrow" viewBox="0 0 24 24" aria-hidden>
         <path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -171,7 +171,7 @@ function Words({ text, className, base = 0, step = 0.085 }: { text: string; clas
       {words.flatMap((w, i) => {
         const el = (
           <span key={i} className="wz-word" style={{ animationDelay: `${base + i * step}s` }}>
-            {w}
+            {trx(w)}
           </span>
         );
         // A fixed-width inline-block space between words — a plain trailing space
@@ -255,7 +255,7 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
   }, []);
 
   return (
-    <div className="wz-stage s1-stage" onClick={go} title="Continue">
+    <div className="wz-stage s1-stage" onClick={go} title={tr("Continue")}>
       {/* start the hand-off ~0.9s before the film ends so screen 2 emerges
           behind its final moment — smooth, no stop */}
       <Film src="/videos/entry-1.mp4" poster="/images/entry-1-poster.webp" scrim="wz-scrim--left" loop={false} onEnded={go} endLead={900} />
@@ -277,11 +277,7 @@ function ScreenIntro({ onNext }: { onNext: () => void }) {
           <div className="wz-divider wz-fade" style={{ animationDelay: "1.15s" }} aria-hidden>
             <span /> <Sakura className="wz-divider-flower" /> <span />
           </div>
-          <p className="s1-sub wz-fade" style={{ animationDelay: "1.3s" }}>
-            A little space for the woman
-            <br />
-            you're becoming.
-          </p>
+          <p className="s1-sub wz-fade" style={{ animationDelay: "1.3s" }}>{tr("A little space for the woman")}<br />{tr("you're becoming.")}</p>
         </div>
       </div>
     </div>
@@ -350,7 +346,7 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
                 <MiniBadge icon={n.icon} />
                 <div className="s3-card-heads">
                   <b>
-                    {n.a} {n.b}
+                    {trx(n.a)} {trx(n.b)}
                   </b>
                 </div>
               </div>
@@ -362,7 +358,7 @@ function ScreenConnected({ onNext }: { onNext: () => void }) {
         </div>
 
         <div className="wz-foot-row">
-          <Cta label="Show me my Bloom" onClick={onNext} delay={0.5} />
+          <Cta label={tr("Show me my Bloom")} onClick={onNext} delay={0.5} />
         </div>
       </div>
     </div>
@@ -378,7 +374,7 @@ function MiniBadge({ icon }: { icon: keyof typeof ico }) {
   return (
     <span className="s3-badge">
       <svg viewBox="0 0 24 24" aria-hidden>
-        {ico[icon]}
+        {trx(ico[icon])}
       </svg>
     </span>
   );
@@ -404,10 +400,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             </span>
           </h1>
 
-          <p className="s3-body-copy">
-            Bloomzein brings your days together so you can move with intention, make time for
-            yourself, and enjoy the little things again.
-          </p>
+          <p className="s3-body-copy">{tr("Bloomzein brings your days together so you can move with intention, make time for yourself, and enjoy the little things again.")}</p>
 
           <div className="wz-divider s3-divider" aria-hidden>
             <span /> <Sakura className="wz-divider-flower" /> <span />
@@ -415,14 +408,12 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
 
           <p className="s3-space">
             <span className="s3-space-strong">
-              <Sakura className="s3-space-flower" /> This is your space.
-            </span>
-            <br />
-            Your pace. Your rhythm. <em className="s3-space-script">Your Bloom.</em>{" "}
+              <Sakura className="s3-space-flower" />{" "}{tr("This is your space.")}</span>
+            <br />{tr("Your pace. Your rhythm.")}{" "}<em className="s3-space-script">{tr("Your Bloom.")}</em>{" "}
             <em className="wz-heart">♡</em>
           </p>
 
-          <Cta label="Start my Bloomzein journey" onClick={onEnter} delay={1.2} />
+          <Cta label={tr("Start my Bloomzein journey")} onClick={onEnter} delay={1.2} />
         </div>
 
         {/* ── floating life cards — arranged around a clear centre-top face zone ── */}
@@ -432,8 +423,8 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="meditate" />
               <div className="s3-card-heads">
-                <b>Meditation</b>
-                <small>10 min • Calm</small>
+                <b>{tr("Meditation")}</b>
+                <small>{tr("10 min • Calm")}</small>
               </div>
             </div>
             <div className="s3-thumb">
@@ -446,8 +437,8 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="lotus" />
               <div className="s3-card-heads">
-                <b>Morning Yoga</b>
-                <small>20 min • Flow</small>
+                <b>{tr("Morning Yoga")}</b>
+                <small>{tr("20 min • Flow")}</small>
               </div>
             </div>
             <div className="s3-thumb">
@@ -465,7 +456,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="bowl" />
               <div className="s3-card-heads">
-                <b>Nourishing Meal</b>
+                <b>{tr("Nourishing Meal")}</b>
               </div>
               <em className="s3-mini-heart">♡</em>
             </div>
@@ -479,12 +470,12 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="book" />
               <div className="s3-card-heads">
-                <b>Journal</b>
+                <b>{tr("Journal")}</b>
               </div>
               <em className="s3-mini-heart">♡</em>
             </div>
-            <p className="s3-note">Daily reflection</p>
-            <p className="s3-note s3-note-dim">A few lines for me, every day.</p>
+            <p className="s3-note">{tr("Daily reflection")}</p>
+            <p className="s3-note s3-note-dim">{tr("A few lines for me, every day.")}</p>
           </article>
 
           {/* Mood */}
@@ -492,12 +483,12 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="smile" />
               <div className="s3-card-heads">
-                <b>Mood</b>
+                <b>{tr("Mood")}</b>
               </div>
               <span className="s3-emoji">😊</span>
             </div>
-            <p className="s3-note s3-note-strong">Happy</p>
-            <p className="s3-note s3-note-dim">Today I feel grateful and calm.</p>
+            <p className="s3-note s3-note-strong">{tr("Happy")}</p>
+            <p className="s3-note s3-note-dim">{tr("Today I feel grateful and calm.")}</p>
           </article>
 
           {/* Water */}
@@ -505,10 +496,10 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="droplet" />
               <div className="s3-card-heads">
-                <b>Water</b>
+                <b>{tr("Water")}</b>
               </div>
             </div>
-            <p className="s3-note"><b className="s3-water-n">6</b> / 8 cups</p>
+            <p className="s3-note"><b className="s3-water-n">6</b>{" "}{tr("/ 8 cups")}</p>
             <div className="s3-bar">
               <span style={{ width: "75%" }} />
             </div>
@@ -519,10 +510,10 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="check" />
               <div className="s3-card-heads">
-                <b>Habits</b>
+                <b>{tr("Habits")}</b>
               </div>
             </div>
-            <p className="s3-note s3-note-dim">7-day streak</p>
+            <p className="s3-note s3-note-dim">{tr("7-day streak")}</p>
             <div className="s3-week">
               {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
                 <span key={i} className={i < 5 ? "on" : ""}>
@@ -531,7 +522,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
                       <path d="M6 12.5l3.6 3.6L18 7.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   ) : (
-                    d
+                    trx(d)
                   )}
                 </span>
               ))}
@@ -543,11 +534,11 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="bell" />
               <div className="s3-card-heads">
-                <b>Reminders</b>
+                <b>{tr("Reminders")}</b>
               </div>
             </div>
-            <p className="s3-note s3-note-strong">🎂 Mom's birthday</p>
-            <p className="s3-note s3-note-dim">Tomorrow • All day</p>
+            <p className="s3-note s3-note-strong">{tr("🎂 Mom's birthday")}</p>
+            <p className="s3-note s3-note-dim">{tr("Tomorrow • All day")}</p>
           </article>
 
           {/* Plan your day */}
@@ -555,7 +546,7 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             <div className="s3-card-top">
               <MiniBadge icon="cal" />
               <div className="s3-card-heads">
-                <b>Plan your day</b>
+                <b>{tr("Plan your day")}</b>
               </div>
             </div>
             {[
@@ -565,8 +556,8 @@ function ScreenLife({ onEnter }: { onEnter: () => void }) {
             ].map(([t, time]) => (
               <p key={t} className="s3-plan-row">
                 <i />
-                <span>{t}</span>
-                <small>{time}</small>
+                <span>{trx(t)}</span>
+                <small>{trx(time)}</small>
               </p>
             ))}
           </article>

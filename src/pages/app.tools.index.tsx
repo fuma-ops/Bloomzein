@@ -8,6 +8,7 @@ import { readTodayAffirmation } from "@/components/bloom/affirmations";
 import { CuteToolIcon } from "@/components/bloom/CuteToolIcon";
 import { isToolVisited } from "@/components/bloom/visitedTools";
 import { CyclePhasePill } from "@/components/bloom/CyclePhasePill";
+import { tr, trx } from "@/i18n";
 
 const LAST_KEY = "bloom:last-tool";
 const PINS_KEY = "bloom:pinned-tools";
@@ -63,12 +64,9 @@ export default function ToolsIndex() {
       {/* ── HERO — transparent; the photo lives in the blended background above. ── */}
       <section className="relative -mx-3 sm:-mx-6 md:-mx-8 -mt-3 sm:-mt-5 md:-mt-8 min-h-0 sm:min-h-[180px] animate-card-pop-in">
         <div className="relative z-[1] px-4 pt-3 pb-2 sm:px-8 sm:pt-7 sm:pb-4 max-w-[70%] sm:max-w-md">
-          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-            Tools <Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
+          <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{tr("Tools")}{" "}<Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
           </h1>
-          <p className="animate-fade-in mt-0 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
-            ✦ pick your bloom for today
-          </p>
+          <p className="animate-fade-in mt-0 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>{tr("✦ pick your bloom for today")}</p>
           <CyclePhasePill className="mt-1.5" />
         </div>
       </section>
@@ -121,7 +119,7 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
       className="bloom-pearl-card pearl-sheen group relative block overflow-hidden rounded-3xl p-4 sm:p-5 transition hover:-translate-y-0.5 animate-card-vibrate"
     >
       <div
-        className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
+        className="pointer-events-none absolute -end-6 -bottom-6 h-28 w-28 sm:h-32 sm:w-32 -z-10 rounded-full"
         style={{ background: "radial-gradient(circle, oklch(0.75 0.18 350 / 0.18), transparent 70%)" }}
       />
 
@@ -134,8 +132,8 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
         <div className="flex items-center gap-1">
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onTogglePin(); }}
-            aria-label={pinned ? "Unpin tool" : "Pin tool"}
-            title={pinned ? "Unpin" : "Pin to top"}
+            aria-label={pinned ? tr("Unpin tool") : tr("Pin tool")}
+            title={pinned ? tr("Unpin") : tr("Pin to top")}
             className={[
               "inline-flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full transition",
               pinned ? "text-hotpink opacity-100" : "text-rose/30 opacity-0 group-hover:opacity-100 hover:text-hotpink",
@@ -144,23 +142,20 @@ function ToolCard({ tool, onGo, pinned, onTogglePin, index }: { tool: Tool; onGo
             <Pin className="h-3.5 w-3.5" strokeWidth={2} fill={pinned ? "currentColor" : "none"} />
           </button>
           <ChevronRight
-            className="h-4 w-4 sm:h-5 sm:w-5 animate-chevron-glow"
+            className="rtl:-scale-x-100 h-4 w-4 sm:h-5 sm:w-5 animate-chevron-glow"
             strokeWidth={2}
           />
         </div>
       </div>
 
-      <h3 className="mt-3 sm:mt-4 font-bold text-sm sm:text-base text-[#831843] leading-snug">{tool.label}</h3>
-      <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/70 leading-snug line-clamp-2">{tool.blurb}</p>
+      <h3 className="mt-3 sm:mt-4 font-bold text-sm sm:text-base text-[#831843] leading-snug">{trx(tool.label)}</h3>
+      <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-sm text-rose/70 leading-snug line-clamp-2">{trx(tool.blurb)}</p>
 
       {pinned ? (
         <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-hotpink/10 text-hotpink text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-hotpink/20">
-          <Pin className="h-2.5 w-2.5" strokeWidth={2} fill="currentColor" /> Pinned
-        </span>
+          <Pin className="h-2.5 w-2.5" strokeWidth={2} fill="currentColor" />{" "}{tr("Pinned")}</span>
       ) : !explored ? (
-        <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-rose/10 text-rose/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-rose/15">
-          Not explored yet
-        </span>
+        <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-rose/10 text-rose/60 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 border border-rose/15">{tr("Not explored yet")}</span>
       ) : null}
     </a>
   );

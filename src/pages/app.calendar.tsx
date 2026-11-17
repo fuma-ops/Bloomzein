@@ -30,6 +30,7 @@ import { RECIPES, recipeImageSrc } from "@/components/bloom/recipes/data";
 import { readWorkoutPlanDays, readMealPlan, yogaFocusImage } from "@/lib/crossToolData";
 import { TODAY_WATER_KEY } from "./app.today";
 import { PlusLock } from "@/components/bloom/premium/PremiumKit";
+import { tr, trx, DATE_LOCALE, localMonths } from "@/i18n";
 
 function pad2(n: number) { return String(n).padStart(2, "0"); }
 function fmtLocalDate(d: Date) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
@@ -58,7 +59,8 @@ function startOfWeek(d: Date) {
 function mondayFirstLabel(date: Date) {
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
 }
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS = localMonths(["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], "long");
+const MONTHS_SHORT = localMonths(MONTHS.map((m) => m.slice(0, 3)), "short");
 
 /** 1-indexed day-of-cycle for a given date, matching phaseForDay's math. */
 function cycleDayForDate(date: Date, s: CycleSettings) {
@@ -82,21 +84,21 @@ interface PlanningItem {
 const CATEGORY_META: Record<string, { label: string; Icon: LucideIcon; chip: string; cell?: string }> = {
   // Cycle phases stay inside ONE pink family — a soft rose→pink→fuchsia degradé —
   // so the month never breaks into yellow/blue patches.
-  period:      { label: "Period",           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-100 border-rose-200" },
-  fertile:     { label: "Fertile Window",   Icon: Sprout,         chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-100 border-pink-200" },
-  ovulation:   { label: "Ovulation",        Icon: Star,           chip: "bg-fuchsia-100 text-fuchsia-600", cell: "bg-fuchsia-50 border-fuchsia-200" },
-  luteal:      { label: "Luteal Phase",     Icon: Moon,           chip: "bg-rose-100 text-rose-500",       cell: "bg-rose-50 border-rose-200" },
-  follicular:  { label: "Follicular Phase", Icon: Circle,         chip: "bg-pink-100 text-pink-500",       cell: "bg-pink-50 border-pink-200" },
-  workout:     { label: "Workout",          Icon: Dumbbell,       chip: "bg-orange-100 text-orange-600" },
-  yoga:        { label: "Yoga",             Icon: PersonStanding, chip: "bg-teal-100 text-teal-600" },
-  journal:     { label: "Journal",          Icon: BookOpen,       chip: "bg-indigo-100 text-indigo-600" },
-  appointment: { label: "Appointment",      Icon: CalendarClock,  chip: "bg-sky-100 text-sky-700" },
-  reminder:    { label: "Reminder",         Icon: Bell,           chip: "bg-yellow-100 text-yellow-700" },
-  mealplan:    { label: "Meal Plan",        Icon: Soup,           chip: "bg-lime-100 text-lime-700" },
-  selfcare:    { label: "Self Care",        Icon: Heart,          chip: "bg-pink-100 text-pink-600" },
-  water:       { label: "Water Goal",       Icon: Droplets,       chip: "bg-cyan-100 text-cyan-600" },
-  birthday:    { label: "Birthday",         Icon: Cake,           chip: "bg-fuchsia-100 text-fuchsia-600" },
-  vacation:    { label: "Vacation",         Icon: Plane,          chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-50 border-pink-200" },
+  period:      { label: tr("Period"),           Icon: Droplet,        chip: "bg-rose-100 text-rose-600",       cell: "bg-rose-100 border-rose-200" },
+  fertile:     { label: tr("Fertile Window"),   Icon: Sprout,         chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-100 border-pink-200" },
+  ovulation:   { label: tr("Ovulation"),        Icon: Star,           chip: "bg-fuchsia-100 text-fuchsia-600", cell: "bg-fuchsia-50 border-fuchsia-200" },
+  luteal:      { label: tr("Luteal Phase"),     Icon: Moon,           chip: "bg-rose-100 text-rose-500",       cell: "bg-rose-50 border-rose-200" },
+  follicular:  { label: tr("Follicular Phase"), Icon: Circle,         chip: "bg-pink-100 text-pink-500",       cell: "bg-pink-50 border-pink-200" },
+  workout:     { label: tr("Workout"),          Icon: Dumbbell,       chip: "bg-orange-100 text-orange-600" },
+  yoga:        { label: tr("Yoga"),             Icon: PersonStanding, chip: "bg-teal-100 text-teal-600" },
+  journal:     { label: tr("Journal"),          Icon: BookOpen,       chip: "bg-indigo-100 text-indigo-600" },
+  appointment: { label: tr("Appointment"),      Icon: CalendarClock,  chip: "bg-sky-100 text-sky-700" },
+  reminder:    { label: tr("Reminder"),         Icon: Bell,           chip: "bg-yellow-100 text-yellow-700" },
+  mealplan:    { label: tr("Meal Plan"),        Icon: Soup,           chip: "bg-lime-100 text-lime-700" },
+  selfcare:    { label: tr("Self Care"),        Icon: Heart,          chip: "bg-pink-100 text-pink-600" },
+  water:       { label: tr("Water Goal"),       Icon: Droplets,       chip: "bg-cyan-100 text-cyan-600" },
+  birthday:    { label: tr("Birthday"),         Icon: Cake,           chip: "bg-fuchsia-100 text-fuchsia-600" },
+  vacation:    { label: tr("Vacation"),         Icon: Plane,          chip: "bg-pink-100 text-pink-600",       cell: "bg-pink-50 border-pink-200" },
 };
 
 /** Maps a Reminders "event" sub-category onto a Calendar Key category. */
@@ -120,10 +122,10 @@ function phaseItemsForDate(date: Date): PlanningItem[] {
   const phase = phaseForDay(date, readCycleSettings());
   const dateStr = fmtLocalDate(date);
   if (phase === "period") {
-    return [{ id: `phase:${dateStr}`, emoji: "🩸", label: "Period", category: "period", sourceLabel: "Open Cycle Tracker →", sourceHref: "/app/tools/cycle" }];
+    return [{ id: `phase:${dateStr}`, emoji: "🩸", label: tr("Period"), category: "period", sourceLabel: "Open Cycle Tracker →", sourceHref: "/app/tools/cycle" }];
   }
   if (phase === "ovulation") {
-    return [{ id: `phase:${dateStr}`, emoji: "⭐", label: "Ovulation", category: "ovulation", sourceLabel: "Open Cycle Tracker →", sourceHref: "/app/tools/cycle" }];
+    return [{ id: `phase:${dateStr}`, emoji: "⭐", label: tr("Ovulation"), category: "ovulation", sourceLabel: "Open Cycle Tracker →", sourceHref: "/app/tools/cycle" }];
   }
   return [];
 }
@@ -149,7 +151,7 @@ function remindersForDate(reminders: Reminder[], date: Date): PlanningItem[] {
       if (anchor && anchor.getMonth() === date.getMonth() && anchor.getDate() === date.getDate()) {
         items.push({
           id: `${rem.id}:${dateStr}`, time: rem.time, emoji: "🎂", category: "birthday",
-          label: `${rem.title}'s birthday`, sourceLabel: "Edit in Reminders →", sourceHref: "/app/tools/notes",
+          label: tr("{0}'s birthday", { 0: rem.title }), sourceLabel: "Edit in Reminders →", sourceHref: "/app/tools/notes",
         });
       }
     } else if (rem.kind === "medication") {
@@ -173,7 +175,7 @@ function yogaForDate(schedule: Record<string, string | null>, reminder: string, 
   if (!focus) return [];
   return [{
     id: `yoga:${fmtLocalDate(date)}`, time: reminder, emoji: "🧘", category: "yoga",
-    label: `${focus} flow`, sourceLabel: "Edit in Yoga Flows →", sourceHref: "/app/tools/yoga",
+    label: tr("{0} flow", { 0: focus }), sourceLabel: "Edit in Yoga Flows →", sourceHref: "/app/tools/yoga",
   }];
 }
 
@@ -196,7 +198,7 @@ function plannedWorkoutForDate(planDays: string[], history: HistoryEntry[], date
   if (!planDays.includes(mondayFirstLabel(date))) return [];
   return [{
     id: `workout-plan:${dateStr}`, time: "17:30", emoji: "🏋️", category: "workout",
-    label: "Workout", sourceLabel: "Open Workout →", sourceHref: "/app/tools/workout",
+    label: tr("Workout"), sourceLabel: "Open Workout →", sourceHref: "/app/tools/workout",
   }];
 }
 
@@ -207,7 +209,7 @@ function mealForDate(plan: Record<string, Record<string, string | null>>, date: 
   if (!hasAny) return [];
   return [{
     id: `meal:${fmtLocalDate(date)}`, emoji: "🥣", category: "mealplan",
-    label: "Meal plan", sourceLabel: "Open Meal Plan →", sourceHref: "/app/tools/meals",
+    label: tr("Meal plan"), sourceLabel: "Open Meal Plan →", sourceHref: "/app/tools/meals",
   }];
 }
 
@@ -216,7 +218,7 @@ function journalForDate(entries: DiaryEntry[], date: Date): PlanningItem[] {
   if (!entries.some((e) => e.date === dateStr)) return [];
   return [{
     id: `journal:${dateStr}`, emoji: "📔", category: "journal",
-    label: "Journal entry", sourceLabel: "Open Diary →", sourceHref: "/app/tools/diary",
+    label: tr("Journal entry"), sourceLabel: "Open Diary →", sourceHref: "/app/tools/diary",
   }];
 }
 
@@ -224,7 +226,7 @@ function waterTodayItem(today: Date, date: Date, water: { date: string; count: n
   if (!sameDay(date, today) || water.count <= 0) return [];
   return [{
     id: `water:${fmtLocalDate(date)}`, emoji: "💧", category: "water",
-    label: `Water: ${water.count}/3`, sourceLabel: "Open Today →", sourceHref: "/app/today",
+    label: tr("Water: {0}/3", { 0: water.count }), sourceLabel: "Open Today →", sourceHref: "/app/today",
   }];
 }
 
@@ -274,15 +276,15 @@ function AuroraGlow() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
       <div
-        className="animate-bloom-aurora absolute -top-16 -left-10 h-56 w-56 rounded-full blur-3xl"
+        className="animate-bloom-aurora absolute -top-16 -start-10 h-56 w-56 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.22), transparent 70%)" }}
       />
       <div
-        className="animate-bloom-aurora absolute top-1/4 right-[-4rem] h-72 w-72 rounded-full blur-3xl"
+        className="animate-bloom-aurora absolute top-1/4 end-[-4rem] h-72 w-72 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(255,190,224,0.4), transparent 70%)", animationDelay: "-6s", animationDuration: "26s" }}
       />
       <div
-        className="animate-bloom-aurora absolute bottom-[-5rem] left-1/3 h-64 w-64 rounded-full blur-3xl"
+        className="animate-bloom-aurora absolute bottom-[-5rem] start-1/3 h-64 w-64 rounded-full blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.28), transparent 70%)", animationDelay: "-12s", animationDuration: "30s" }}
       />
     </div>
@@ -414,7 +416,7 @@ export default function CalendarPage() {
       const sameMonth = first.getMonth() === last.getMonth();
       return sameMonth
         ? `${MONTHS[first.getMonth()]} ${first.getDate()}–${last.getDate()}`
-        : `${MONTHS[first.getMonth()].slice(0, 3)} ${first.getDate()} – ${MONTHS[last.getMonth()].slice(0, 3)} ${last.getDate()}`;
+        : `${MONTHS_SHORT[first.getMonth()]} ${first.getDate()} – ${MONTHS_SHORT[last.getMonth()]} ${last.getDate()}`;
     }
     return `${MONTHS[cursor.getMonth()]} ${cursor.getFullYear()}`;
   }, [view, cursor, weekDays]);
@@ -436,12 +438,9 @@ export default function CalendarPage() {
           {/* Title + subtitle + phase pill. Month navigation lives on the month
               label row below. */}
           <div className="min-w-0 sm:max-w-md">
-            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-              Calendar <Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
+            <h1 className="animate-fade-in font-script text-[3.25rem] sm:text-6xl lg:text-7xl text-hotpink leading-[0.9] flex items-center gap-2 drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{tr("Calendar")}{" "}<Sparkles className="h-7 w-7 sm:h-9 sm:w-9" strokeWidth={1.8} />
             </h1>
-            <p className="animate-fade-in mt-1 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>
-              Your life, beautifully planned.
-            </p>
+            <p className="animate-fade-in mt-1 hidden sm:block font-script text-lg sm:text-2xl text-rose/90 leading-tight" style={{ animationDelay: "150ms" }}>{tr("Your life, beautifully planned.")}</p>
             <CyclePhasePill className="mt-1.5" />
           </div>
         </div>
@@ -450,14 +449,14 @@ export default function CalendarPage() {
       <div className="flex items-center justify-between gap-2 mb-3 px-1">
         {/* Month label with its prev / next arrows hugging it; tap the label for today. */}
         <div className="inline-flex items-center gap-1.5 shrink-0">
-          <button onClick={goPrev} aria-label="Previous" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
-            <ChevronLeft className="h-3.5 w-3.5" />
+          <button onClick={goPrev} aria-label={tr("Previous")} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+            <ChevronLeft className="rtl:-scale-x-100 h-3.5 w-3.5" />
           </button>
-          <button onClick={goToday} className="whitespace-nowrap shrink-0 text-sm font-bold text-hotpink px-0.5 transition hover:opacity-80 active:scale-95" title="Jump to today">
-            {rangeLabel}
+          <button onClick={goToday} className="whitespace-nowrap shrink-0 text-sm font-bold text-hotpink px-0.5 transition hover:opacity-80 active:scale-95" title={tr("Jump to today")}>
+            {trx(rangeLabel)}
           </button>
-          <button onClick={goNext} aria-label="Next" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
-            <ChevronRight className="h-3.5 w-3.5" />
+          <button onClick={goNext} aria-label={tr("Next")} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 backdrop-blur border border-petal/60 text-hotpink shadow-sm transition hover:bg-white active:scale-95">
+            <ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
           </button>
         </div>
         <div className="inline-flex shrink-0 rounded-full bg-white/80 border border-petal/60 p-0.5 shadow-sm">
@@ -468,7 +467,7 @@ export default function CalendarPage() {
               className={["px-2.5 py-1 rounded-full text-[10px] font-bold capitalize transition",
                 view === v ? "bg-hotpink text-white shadow shadow-hotpink/30" : "text-rose hover:bg-blush/60"].join(" ")}
             >
-              {v}
+              {trx(v)}
             </button>
           ))}
         </div>
@@ -514,9 +513,7 @@ export default function CalendarPage() {
 
       <div className="mt-4 rounded-2xl bg-blush/40 border border-petal/50 p-3.5 flex items-start gap-2.5">
         <Lightbulb className="h-4 w-4 text-hotpink shrink-0 mt-0.5" />
-        <p className="text-xs text-[#831843] leading-snug">
-          All your plans, sessions, reminders and cycle phases in one beautiful view 🌸
-        </p>
+        <p className="text-xs text-[#831843] leading-snug">{tr("All your plans, sessions, reminders and cycle phases in one beautiful view 🌸")}</p>
       </div>
 
       {selected && (
@@ -548,17 +545,17 @@ function FilterBar({ stats, activeFilter, onToggle }: {
   const fmtRange = (start: Date, end: Date) => {
     const sameMonth = start.getMonth() === end.getMonth();
     return sameMonth
-      ? `${MONTHS[start.getMonth()].slice(0, 3)} ${start.getDate()} – ${end.getDate()}`
-      : `${MONTHS[start.getMonth()].slice(0, 3)} ${start.getDate()} – ${MONTHS[end.getMonth()].slice(0, 3)} ${end.getDate()}`;
+      ? `${MONTHS_SHORT[start.getMonth()]} ${start.getDate()} – ${end.getDate()}`
+      : `${MONTHS_SHORT[start.getMonth()]} ${start.getDate()} – ${MONTHS_SHORT[end.getMonth()]} ${end.getDate()}`;
   };
 
   const items: { key: string; Icon: LucideIcon; label: string }[] = [];
   // Phase is shown in the hero pill now, so the filter row is activities only.
-  items.push({ key: "workout", Icon: Dumbbell, label: `${stats.workouts} Workout${stats.workouts === 1 ? "" : "s"}` });
-  items.push({ key: "yoga", Icon: PersonStanding, label: `${stats.yogaCount} Yoga Session${stats.yogaCount === 1 ? "" : "s"}` });
-  items.push({ key: "journal", Icon: BookOpen, label: `${stats.journalCount} Journal Entr${stats.journalCount === 1 ? "y" : "ies"}` });
-  items.push({ key: "reminder", Icon: Bell, label: `${stats.reminderCount} Reminder${stats.reminderCount === 1 ? "" : "s"}` });
-  if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: `Vacation · ${fmtRange(stats.vacation.start, stats.vacation.end)}` });
+  items.push({ key: "workout", Icon: Dumbbell, label: tr("{0} Workout{1}", { 0: stats.workouts, 1: stats.workouts === 1 ? "" : "s" }) });
+  items.push({ key: "yoga", Icon: PersonStanding, label: tr("{0} Yoga Session{1}", { 0: stats.yogaCount, 1: stats.yogaCount === 1 ? "" : "s" }) });
+  items.push({ key: "journal", Icon: BookOpen, label: tr("{0} Journal Entr{1}", { 0: stats.journalCount, 1: stats.journalCount === 1 ? "y" : "ies" }) });
+  items.push({ key: "reminder", Icon: Bell, label: tr("{0} Reminder{1}", { 0: stats.reminderCount, 1: stats.reminderCount === 1 ? "" : "s" }) });
+  if (stats.vacation) items.push({ key: "vacation", Icon: Plane, label: tr("Vacation · {0}", { 0: fmtRange(stats.vacation.start, stats.vacation.end) }) });
 
   return (
     <div className="overflow-x-auto scrollbar-hide pb-0.5 mb-2.5 -mx-1 px-1">
@@ -574,7 +571,7 @@ function FilterBar({ stats, activeFilter, onToggle }: {
               style={{ animationDelay: `${i * 0.05}s` }}
             >
               <it.Icon className={["h-3 w-3 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} />
-              {it.label}
+              {trx(it.label)}
             </button>
           );
         })}
@@ -587,9 +584,9 @@ function ItemChip({ item }: { item: PlanningItem }) {
   const meta = CATEGORY_META[item.category];
   return (
     <div className="flex items-center gap-1.5 rounded-full bg-blush/50 border border-petal/50 px-2 py-1 text-[10px] font-semibold text-rose">
-      {meta ? <meta.Icon className="h-3 w-3" /> : <span>{item.emoji}</span>}
-      {item.time && <span className="text-rose/60">{item.time}</span>}
-      <span className="truncate max-w-[8rem]">{item.label}</span>
+      {meta ? <meta.Icon className="h-3 w-3" /> : <span>{trx(item.emoji)}</span>}
+      {item.time && <span className="text-rose/60">{trx(item.time)}</span>}
+      <span className="truncate max-w-[8rem]">{trx(item.label)}</span>
     </div>
   );
 }
@@ -611,7 +608,7 @@ function WeekView({
       <AuroraGlow />
       <div className="relative z-[1] space-y-2.5">
         {activeFilter && !days.some((d) => planningFor(d).filter((it) => !hiddenCats.has(it.category)).some((it) => filterMatch(it.category, activeFilter))) && (
-          <p className="text-center text-sm text-white py-6" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>Nothing with this in view — try another week or filter ✿</p>
+          <p className="text-center text-sm text-white py-6" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>{tr("Nothing with this in view — try another week or filter ✿")}</p>
         )}
         {days.map((day, i) => {
           const phase = phaseForDay(day, readCycleSettings());
@@ -625,7 +622,7 @@ function WeekView({
             <button
               key={fmtLocalDate(day)}
               onClick={() => onSelect(day)}
-              className={["w-full text-left rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
+              className={["w-full text-start rounded-2xl border p-3 transition hover:shadow-md hover:shadow-hotpink/10 animate-card-pop-in",
                 isToday ? "bg-blush/70 border-hotpink/40 ring-1 ring-hotpink/30" : "bg-white/90 border-petal/50",
                 activeFilter ? "ring-2 ring-hotpink/50" : ""].join(" ")}
               style={{ animationDelay: `${i * 0.05}s` }}
@@ -636,17 +633,17 @@ function WeekView({
                   {day.getDate()}
                 </span>
                 <span className="text-xs font-bold uppercase tracking-wide text-rose/70">
-                  {day.toLocaleDateString(undefined, { weekday: "short" })}
+                  {day.toLocaleDateString(DATE_LOCALE, { weekday: "short" })}
                 </span>
                 <PhaseChip phase={phase} />
                 {mood && (
-                  <span className="ml-auto inline-flex items-center gap-1 text-rose/70" title={mood.label}>
+                  <span className="ms-auto inline-flex items-center gap-1 text-rose/70" title={mood.label}>
                     <mood.Icon className="h-3.5 w-3.5" />
                   </span>
                 )}
               </div>
               {items.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5 pl-11">
+                <div className="mt-2 flex flex-wrap gap-1.5 ps-11">
                   {items.map((item) => <ItemChip key={item.id} item={item} />)}
                 </div>
               )}
@@ -674,7 +671,7 @@ function MonthGrid({
       <CalBloomBackdrop />
       <AuroraGlow />
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5 text-center mb-1.5">
-        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>{d}</p>)}
+        {dayLabels.map((d) => <p key={d} className="text-[9px] sm:text-[10px] lg:text-xs font-bold uppercase tracking-wider text-white" style={{ textShadow: "0 1px 3px rgba(190,24,93,0.55)" }}>{trx(d)}</p>)}
       </div>
       <div className="relative z-[1] grid grid-cols-7 gap-1 sm:gap-1.5">
         {cells.map((cell, i) => {
@@ -690,7 +687,7 @@ function MonthGrid({
             <button
               key={fmtLocalDate(cell.date)}
               onClick={() => onSelect(cell.date)}
-              className={["min-h-[60px] sm:min-h-[78px] lg:min-h-[110px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 lg:p-2 gap-0.5 lg:gap-1 text-left transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
+              className={["min-h-[60px] sm:min-h-[78px] lg:min-h-[110px] rounded-[8px] sm:rounded-[10px] border flex flex-col items-stretch p-1 lg:p-2 gap-0.5 lg:gap-1 text-start transition hover:shadow-md hover:shadow-hotpink/10 overflow-hidden animate-card-pop-in",
                 cellTone ?? "bg-white/90 border-petal/40",
                 cell.inMonth ? "" : "opacity-40",
                 activeFilter ? (matches ? "ring-2 ring-hotpink/60 shadow-md shadow-hotpink/20" : "opacity-15 grayscale") : ""].join(" ")}
@@ -710,11 +707,11 @@ function MonthGrid({
                         <span className={["grid h-2.5 w-2.5 sm:h-3 sm:w-3 lg:h-4 lg:w-4 place-items-center rounded-full shrink-0", meta.chip].join(" ")}>
                           <meta.Icon className="h-1.5 w-1.5 sm:h-2 sm:w-2 lg:h-2.5 lg:w-2.5" />
                         </span>
-                        <span className="text-[6px] sm:text-[7px] lg:text-[10px] leading-tight truncate text-[#831843]">{item.label}</span>
+                        <span className="text-[6px] sm:text-[7px] lg:text-[10px] leading-tight truncate text-[#831843]">{trx(item.label)}</span>
                       </div>
                     );
                   })}
-                  {items.length > 3 && <span className="text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-rose/50 leading-none">+{items.length - 3} more</span>}
+                  {items.length > 3 && <span className="text-[6px] sm:text-[7px] lg:text-[10px] font-bold text-rose/50 leading-none">+{items.length - 3}{" "}{tr("more")}</span>}
                 </div>
               )}
             </button>
@@ -739,15 +736,15 @@ function TodayCard({ href, image, title, meta, time, phaseLabel, delay = 0 }: {
         <img src={image} alt="" className="h-full w-full object-cover" loading="lazy" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug truncate">{title}</p>
-        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/60 leading-snug">{meta}</p>
+        <p className="text-sm sm:text-base font-bold text-[#831843] leading-snug truncate">{trx(title)}</p>
+        <p className="mt-0.5 text-[11px] sm:text-xs text-rose/60 leading-snug">{trx(meta)}</p>
         <div className="mt-1 flex items-center gap-2">
-          {time && <span className="text-[9px] font-semibold text-rose/40">{time}</span>}
-          <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">✿ {phaseLabel} phase</span>
+          {time && <span className="text-[9px] font-semibold text-rose/40">{trx(time)}</span>}
+          <span className="text-[9px] font-bold uppercase tracking-wider text-hotpink/55">✿ {tr("{0} phase", { 0: phaseLabel })}</span>
         </div>
       </div>
       <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink/10 text-hotpink animate-selected-glow transition group-hover:bg-hotpink group-hover:text-white group-active:scale-90">
-        <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+        <ArrowRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
       </span>
     </a>
   );
@@ -786,9 +783,7 @@ function DayPlanCards({ date, mealsPlan, reminders, yogaSchedule, yogaReminder, 
 
   if (empty) {
     return (
-      <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">
-        Nothing planned this day yet — open your tools to fill it ✿
-      </div>
+      <div className="rounded-3xl bg-white/85 border border-petal/60 p-8 text-center text-sm text-rose/60">{tr("Nothing planned this day yet — open your tools to fill it ✿")}</div>
     );
   }
 
@@ -796,29 +791,29 @@ function DayPlanCards({ date, mealsPlan, reminders, yogaSchedule, yogaReminder, 
     <div className="space-y-3">
       {yogaFocus && (
         <TodayCard href="/app/tools/yoga" image={yogaFocusImage(yogaFocus)} phaseLabel={phaseLabel} delay={nextDelay()}
-          title={`${yogaFocus} flow`} time={yogaReminder} meta="Yoga · gentle movement" />
+          title={tr("{0} flow", { 0: yogaFocus })} time={yogaReminder} meta="Yoga · gentle movement" />
       )}
 
       {meals.map(({ slot, r }) => (
         <TodayCard key={slot} href="/app/tools/meals" image={recipeImageSrc(r)} phaseLabel={phaseLabel} delay={nextDelay()}
           title={r.name} time={SLOT_TIME[slot]}
-          meta={`${SLOT_LABEL[slot]} · ${r.macros.calories} kcal · ${r.macros.protein}g protein`} />
+          meta={tr("{0} · {1} kcal · {2}g protein", { 0: SLOT_LABEL[slot], 1: r.macros.calories, 2: r.macros.protein })} />
       ))}
 
       {workouts.map((w, i) => (
         <TodayCard key={`w${i}`} href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={nextDelay()}
-          title={w.sessionName || "Workout"}
-          meta={`Workout · ${w.durationMin} min · ${w.zone} focus · ${w.calories} kcal`} />
+          title={w.sessionName || tr("Workout")}
+          meta={tr("Workout · {0} min · {1} focus · {2} kcal", { 0: w.durationMin, 1: w.zone, 2: w.calories })} />
       ))}
 
       {plannedWorkout && (
         <TodayCard href="/app/tools/workout" image="/images/workout-hero-session.webp" phaseLabel={phaseLabel} delay={nextDelay()}
-          title="Workout planned" time="17:30" meta="Workout · tap to start today's session" />
+          title={tr("Workout planned")} time="17:30" meta="Workout · tap to start today's session" />
       )}
 
       {dayReminders.length > 0 && (
         <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 animate-card-pop-in" style={{ animationDelay: `${nextDelay()}s` }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" /> Reminders</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-hotpink mb-2 flex items-center gap-1.5"><Bell className="h-3.5 w-3.5" />{" "}{tr("Reminders")}</p>
           <div className="space-y-2">
             {dayReminders.map((it) => (
               <a key={it.id} href={it.sourceHref} className="flex items-center gap-2.5 rounded-2xl bg-blush/40 border border-petal/50 p-2.5 hover:bg-blush/60 transition">
@@ -826,8 +821,8 @@ function DayPlanCards({ date, mealsPlan, reminders, yogaSchedule, yogaReminder, 
                   {(() => { const Ico = CATEGORY_META[it.category]?.Icon ?? Bell; return <Ico className="h-4 w-4" strokeWidth={2} />; })()}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-[#831843] truncate">{it.label}</p>
-                  {it.time && <p className="text-[11px] text-rose/60">{it.time}</p>}
+                  <p className="text-sm font-semibold text-[#831843] truncate">{trx(it.label)}</p>
+                  {it.time && <p className="text-[11px] text-rose/60">{trx(it.time)}</p>}
                 </div>
               </a>
             ))}
@@ -857,13 +852,13 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
       {/* Date header — standalone, NOT on the lined background */}
       <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">{today.toLocaleDateString(undefined, { weekday: "long" })}</p>
-          <h3 className="font-script text-3xl text-hotpink leading-none">{MONTHS[today.getMonth()]} {today.getDate()}</h3>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-rose/50">{today.toLocaleDateString(DATE_LOCALE, { weekday: "long" })}</p>
+          <h3 className="font-script text-3xl text-hotpink leading-none">{trx(MONTHS[today.getMonth()])} {today.getDate()}</h3>
         </div>
         {plannedCalories > 0 && (
           <div className="text-center rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-1.5">
-            <p className="font-script text-2xl text-hotpink leading-none">{plannedCalories}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">kcal planned</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(plannedCalories)}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">{tr("kcal planned")}</p>
           </div>
         )}
       </div>
@@ -887,8 +882,8 @@ function TodayView({ today, mealsPlan, reminders, yogaSchedule, yogaReminder, hi
 function CalendarKey({ hiddenCats, onToggle }: { hiddenCats: Set<string>; onToggle: (key: string) => void }) {
   return (
     <section className="mt-4 rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-6">
-      <p className="text-sm font-bold text-hotpink">Calendar Key</p>
-      <p className="text-[11px] text-rose/60 mb-3">Tap an item to show/hide</p>
+      <p className="text-sm font-bold text-hotpink">{tr("Calendar Key")}</p>
+      <p className="text-[11px] text-rose/60 mb-3">{tr("Tap an item to show/hide")}</p>
       <div className="flex flex-wrap gap-2">
         {Object.entries(CATEGORY_META).map(([key, meta], i) => {
           const hidden = hiddenCats.has(key);
@@ -900,7 +895,7 @@ function CalendarKey({ hiddenCats, onToggle }: { hiddenCats: Set<string>; onTogg
                 hidden ? "opacity-40 border-petal/40 bg-white/50 text-rose/50" : ["border-transparent", meta.chip].join(" ")].join(" ")}
               style={{ animationDelay: `${i * 0.04}s` }}
             >
-              <meta.Icon className="h-3 w-3" /> {meta.label}
+              <meta.Icon className="h-3 w-3" /> {trx(meta.label)}
             </button>
           );
         })}
@@ -914,7 +909,7 @@ function PhaseChip({ phase }: { phase: Phase }) {
   const meta = PHASE_META[phase];
   return (
     <span className={["inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide", meta.color].join(" ")}>
-      <meta.Icon className="h-3 w-3" /> {meta.label}
+      <meta.Icon className="h-3 w-3" /> {trx(meta.label)}
     </span>
   );
 }
@@ -948,30 +943,30 @@ function DayDrawer({
         className="relative w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-[2rem] bg-white/95 backdrop-blur-xl p-6 shadow-2xl shadow-hotpink/30 animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-blush/60 text-rose hover:bg-blush transition">
+        <button onClick={onClose} aria-label={tr("Close")} className="absolute end-4 top-4 grid h-8 w-8 place-items-center rounded-full bg-blush/60 text-rose hover:bg-blush transition">
           <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-start justify-between gap-3 pr-8">
+        <div className="flex items-start justify-between gap-3 pe-8">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">
-              {date.toLocaleDateString(undefined, { weekday: "long" })}
+              {date.toLocaleDateString(DATE_LOCALE, { weekday: "long" })}
             </p>
             <h2 className="font-script text-3xl text-hotpink leading-tight">
-              {MONTHS[date.getMonth()]} {date.getDate()}
+              {trx(MONTHS[date.getMonth()])} {date.getDate()}
             </h2>
           </div>
           {plannedCalories > 0 && (
             <div className="text-center shrink-0 rounded-2xl bg-blush/50 border border-petal/50 px-3.5 py-1.5">
-              <p className="font-script text-2xl text-hotpink leading-none">{plannedCalories}</p>
-              <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">kcal planned</p>
+              <p className="font-script text-2xl text-hotpink leading-none">{trx(plannedCalories)}</p>
+              <p className="text-[9px] font-bold uppercase tracking-wider text-rose/60">{tr("kcal planned")}</p>
             </div>
           )}
         </div>
 
         {meta && (
           <div className={["mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide", meta.color].join(" ")}>
-            <meta.Icon className="h-3.5 w-3.5" /> {meta.label}
+            <meta.Icon className="h-3.5 w-3.5" /> {trx(meta.label)}
           </div>
         )}
 
@@ -981,8 +976,8 @@ function DayDrawer({
         </div>
 
         <div className="mt-5">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">Plans this day</p>
-          <PlusLock feature="coach" title="This day's plan" blurb="Your meals, movement & flow for the day — planned around your cycle." minH="min-h-[160px]">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">{tr("Plans this day")}</p>
+          <PlusLock feature="coach" title={tr("This day's plan")} blurb="Your meals, movement & flow for the day — planned around your cycle." minH="min-h-[160px]">
             <DayPlanCards
               date={date} mealsPlan={mealsPlan} reminders={reminders}
               yogaSchedule={yogaSchedule} yogaReminder={yogaReminder}
@@ -993,7 +988,7 @@ function DayDrawer({
 
         {mood && (
           <div className="mt-5">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">Mood that day</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60 mb-2">{tr("Mood that day")}</p>
             <a
               href="/app/tools/diary"
               className="flex items-center gap-3 rounded-2xl bg-white/80 border border-petal/50 p-3 hover:border-hotpink/40 transition group"
@@ -1001,8 +996,8 @@ function DayDrawer({
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-blush/60 text-rose">
                 <mood.Icon className="h-4.5 w-4.5" />
               </span>
-              <p className="text-sm font-semibold text-[#831843] flex-1">{mood.label}</p>
-              <span className="text-[11px] font-semibold text-hotpink opacity-70 group-hover:opacity-100 transition">Open Diary →</span>
+              <p className="text-sm font-semibold text-[#831843] flex-1">{trx(mood.label)}</p>
+              <span className="text-[11px] font-semibold text-hotpink opacity-70 group-hover:opacity-100 transition">{tr("Open Diary →")}</span>
             </a>
           </div>
         )}

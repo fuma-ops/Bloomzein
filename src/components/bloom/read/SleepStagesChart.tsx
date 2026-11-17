@@ -4,6 +4,7 @@
  * deep sleep front-loaded early and dreaming (REM) growing toward morning.
  * Hand-tuned for understanding, not clinical data.
  */
+import { tr, trx } from "@/i18n";
 const L = 52, R = 328, T = 16, B = 120; // plot area (viewBox 0 0 340 148)
 const px = (t: number) => L + t * (R - L);
 
@@ -38,14 +39,14 @@ const INK = "oklch(0.55 0.22 350)"; // hotpink line
 export function SleepStagesChart() {
   return (
     <figure className="my-7 rounded-[1.6rem] border border-petal/60 bg-white/90 backdrop-blur p-4 sm:p-5 shadow-[0_14px_34px_-20px_oklch(0.6_0.22_350/0.4)]">
-      <figcaption className="mb-2 font-script text-xl text-hotpink leading-none">One night, four cycles</figcaption>
+      <figcaption className="mb-2 font-script text-xl text-hotpink leading-none">{tr("One night, four cycles")}</figcaption>
 
-      <svg viewBox="0 0 340 148" className="w-full h-auto" role="img" aria-label="A night of sleep moving through awake, REM, light and deep stages in repeating cycles">
+      <svg viewBox="0 0 340 148" className="w-full h-auto" role="img" aria-label={tr("A night of sleep moving through awake, REM, light and deep stages in repeating cycles")}>
         {/* stage lanes + labels */}
         {STAGES.map((s) => (
           <g key={s.key}>
             <rect x={L} y={B - (s.level + 1) * laneH} width={R - L} height={laneH} fill={s.band} />
-            <text x={L - 6} y={yc(s.level) + 3.5} textAnchor="end" fontSize="9.5" fontWeight="700" fill={s.line}>{s.key}</text>
+            <text x={L - 6} y={yc(s.level) + 3.5} textAnchor="end" fontSize="9.5" fontWeight="700" fill={s.line}>{trx(s.key)}</text>
           </g>
         ))}
         {/* lane dividers */}
@@ -57,13 +58,11 @@ export function SleepStagesChart() {
         <path d={stepPath(NIGHT)} fill="none" stroke={INK} strokeWidth="2.25" strokeLinejoin="round" strokeLinecap="round" />
 
         {/* bedtime → morning axis */}
-        <text x={L} y={B + 16} textAnchor="start" fontSize="9" fill="oklch(0.6 0.14 350 / 0.7)">Asleep</text>
-        <text x={R} y={B + 16} textAnchor="end" fontSize="9" fill="oklch(0.6 0.14 350 / 0.7)">Morning ✿</text>
+        <text x={L} y={B + 16} textAnchor="start" fontSize="9" fill="oklch(0.6 0.14 350 / 0.7)">{tr("Asleep")}</text>
+        <text x={R} y={B + 16} textAnchor="end" fontSize="9" fill="oklch(0.6 0.14 350 / 0.7)">{tr("Morning ✿")}</text>
       </svg>
 
-      <p className="mt-3 text-center text-[11px] leading-5 text-rose/60">
-        A full night is 4–5 cycles of about 90 minutes. Deep, repairing sleep loads early; dreaming (REM) grows toward morning. Wake mid-cycle and you feel groggy — wake at the top of one and you feel clear.
-      </p>
+      <p className="mt-3 text-center text-[11px] leading-5 text-rose/60">{tr("A full night is 4–5 cycles of about 90 minutes. Deep, repairing sleep loads early; dreaming (REM) grows toward morning. Wake mid-cycle and you feel groggy — wake at the top of one and you feel clear.")}</p>
     </figure>
   );
 }

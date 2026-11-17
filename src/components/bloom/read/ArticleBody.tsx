@@ -6,19 +6,20 @@ import { SleepStagesChart } from "./SleepStagesChart";
 import { SleepQualityChart } from "./SleepQualityChart";
 import { PRODUCTS } from "@/lib/affiliateProducts";
 import { ProductCard } from "./ProductCard";
+import { tr, trx } from "@/i18n";
 
 /**
  * In-article CTAs that softly surface a Bloomzein tool. Authored in the body as
  *   @tool cycle | Track your period as you read it — open your Cycle Tracker
  */
 const TOOLS: Record<string, { href: string; label: string; icon: typeof Sparkles; image: string }> = {
-  cycle:   { href: "/app/tools/cycle",   label: "Cycle Tracker",   icon: CalendarHeart,   image: "/images/setup-cycle.webp" },
-  mood:    { href: "/app/tools/diary",   label: "Mood & Journal",  icon: PenLine,         image: "/images/diary-hero.webp" },
-  diary:   { href: "/app/tools/diary",   label: "Diary",           icon: PenLine,         image: "/images/diary-hero.webp" },
-  meals:   { href: "/app/tools/meals",   label: "Meals Planner",   icon: Salad,           image: "/images/setup-meals.webp" },
-  diet:    { href: "/app/tools/diet",    label: "Cycle Nutrition", icon: Salad,           image: "/images/setup-meals.webp" },
-  yoga:    { href: "/app/tools/yoga",    label: "Yoga",            icon: PersonStanding,  image: "/images/setup-movement.webp" },
-  workout: { href: "/app/tools/workout", label: "Movement",        icon: Dumbbell,        image: "/images/setup-movement.webp" },
+  cycle:   { href: "/app/tools/cycle",   label: tr("Cycle Tracker"),   icon: CalendarHeart,   image: "/images/setup-cycle.webp" },
+  mood:    { href: "/app/tools/diary",   label: tr("Mood & Journal"),  icon: PenLine,         image: "/images/diary-hero.webp" },
+  diary:   { href: "/app/tools/diary",   label: tr("Diary"),           icon: PenLine,         image: "/images/diary-hero.webp" },
+  meals:   { href: "/app/tools/meals",   label: tr("Meals Planner"),   icon: Salad,           image: "/images/setup-meals.webp" },
+  diet:    { href: "/app/tools/diet",    label: tr("Cycle Nutrition"), icon: Salad,           image: "/images/setup-meals.webp" },
+  yoga:    { href: "/app/tools/yoga",    label: tr("Yoga"),            icon: PersonStanding,  image: "/images/setup-movement.webp" },
+  workout: { href: "/app/tools/workout", label: tr("Movement"),        icon: Dumbbell,        image: "/images/setup-movement.webp" },
 };
 
 /**
@@ -38,11 +39,11 @@ const TOOLS: Record<string, { href: string; label: string; icon: typeof Sparkles
  */
 
 const BLOOM_BLOCKS: Record<string, { icon: typeof Sparkles; label: string }> = {
-  "bloom reflection": { icon: Flower2, label: "Bloom Reflection" },
-  "bloom tips": { icon: Sparkles, label: "Bloom Tips" },
-  "today's bloom": { icon: Sun, label: "Today's Bloom" },
-  "todays bloom": { icon: Sun, label: "Today's Bloom" },
-  "bloom reminder": { icon: Quote, label: "Bloom Reminder" },
+  "bloom reflection": { icon: Flower2, label: tr("Bloom Reflection") },
+  "bloom tips": { icon: Sparkles, label: tr("Bloom Tips") },
+  "today's bloom": { icon: Sun, label: tr("Today's Bloom") },
+  "todays bloom": { icon: Sun, label: tr("Today's Bloom") },
+  "bloom reminder": { icon: Quote, label: tr("Bloom Reminder") },
 };
 
 type Block =
@@ -255,7 +256,7 @@ function DropCapParagraph({ text, k }: { text: string; k: string }) {
   const rest = text.slice(1);
   return (
     <p className="mt-1 text-[15px] sm:text-[17px] leading-8 text-rose/90 text-pretty sm:text-justify [hyphens:auto]">
-      <span className="float-left mr-2.5 mt-1.5 font-script text-6xl sm:text-7xl leading-[0.7] text-hotpink">{first}</span>
+      <span className="float-left me-2.5 mt-1.5 font-script text-6xl sm:text-7xl leading-[0.7] text-hotpink">{trx(first)}</span>
       {inline(rest, k)}
     </p>
   );
@@ -290,7 +291,7 @@ function BloomCard({ block, index }: { block: Extract<Block, { kind: "bloom" }>;
         ].join(" ")}>
           <Icon className="h-4 w-4" strokeWidth={1.9} />
         </span>
-        <h3 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{block.label}</h3>
+        <h3 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{trx(block.label)}</h3>
       </div>
 
       <div className={isReminder ? "mt-3" : "mt-2"}>
@@ -335,9 +336,9 @@ export function ArticleBody({
         const k = `b${i}`;
         switch (b.kind) {
           case "h2":
-            return <h2 key={k} id={b.id} style={{ scrollMarginTop: "5rem" }} className="mt-10 mb-1 font-script text-3xl sm:text-4xl text-hotpink leading-tight">{b.text}</h2>;
+            return <h2 key={k} id={b.id} style={{ scrollMarginTop: "5rem" }} className="mt-10 mb-1 font-script text-3xl sm:text-4xl text-hotpink leading-tight">{trx(b.text)}</h2>;
           case "h3":
-            return <h3 key={k} className="mt-6 font-script text-2xl text-hotpink leading-tight">{b.text}</h3>;
+            return <h3 key={k} className="mt-6 font-script text-2xl text-hotpink leading-tight">{trx(b.text)}</h3>;
           case "p": {
             if (!firstParaSeen) { firstParaSeen = true; return <DropCapParagraph key={k} text={b.text} k={k} />; }
             return <p key={k} className="mt-4 text-[15px] sm:text-[17px] leading-8 text-rose/90 text-pretty sm:text-justify [hyphens:auto]">{inline(b.text, k)}</p>;
@@ -362,17 +363,16 @@ export function ArticleBody({
                 <span className="relative h-16 w-16 sm:h-[4.5rem] sm:w-[4.5rem] shrink-0 overflow-hidden rounded-[1.1rem] shadow-md shadow-hotpink/20">
                   <img src={tool.image} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-110" loading="lazy" referrerPolicy="no-referrer" />
                   <span className="absolute inset-0 bg-gradient-to-t from-hotpink/45 via-transparent to-transparent" />
-                  <span className="absolute bottom-1 left-1 grid h-5 w-5 place-items-center rounded-full bg-white/95 text-hotpink shadow-sm">
+                  <span className="absolute bottom-1 start-1 grid h-5 w-5 place-items-center rounded-full bg-white/95 text-hotpink shadow-sm">
                     <Icon className="h-3 w-3" strokeWidth={2.2} />
                   </span>
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col justify-center py-0.5">
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.14em] text-hotpink/70">
-                    <Sparkles className="h-3 w-3" strokeWidth={2.2} /> {tool.label}
+                    <Sparkles className="h-3 w-3" strokeWidth={2.2} /> {trx(tool.label)}
                   </span>
                   <span className="mt-0.5 block text-[14px] sm:text-[15px] font-semibold text-rose leading-snug">{inline(b.text, k)}</span>
-                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink opacity-80">
-                    Open <ArrowRight className="h-3 w-3 transition group-hover:translate-x-0.5" strokeWidth={2.4} />
+                  <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-hotpink opacity-80">{tr("Open")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3 transition group-hover:translate-x-0.5" strokeWidth={2.4} />
                   </span>
                 </span>
               </a>
@@ -397,7 +397,7 @@ export function ArticleBody({
               >
                 <BookOpen className="h-4 w-4 shrink-0 text-hotpink" strokeWidth={2} />
                 <span className="min-w-0 flex-1 text-[14px] font-semibold text-hotpink leading-snug">{inline(b.text, k)}</span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-hotpink transition group-hover:translate-x-0.5" strokeWidth={2.2} />
+                <ArrowRight className="rtl:-scale-x-100 h-4 w-4 shrink-0 text-hotpink transition group-hover:translate-x-0.5" strokeWidth={2.2} />
               </a>
             );
           case "ul":

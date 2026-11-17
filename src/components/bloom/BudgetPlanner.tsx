@@ -18,6 +18,7 @@ import { estimateWeeklyGroceryCost } from "./mealsBudget";
 import { CyclePhasePill } from "./CyclePhasePill";
 import { isPremium, usePremium, openPaywall } from "@/lib/entitlements";
 import { PremiumBadge } from "@/components/bloom/premium/PremiumKit";
+import { tr, trx, DATE_LOCALE, localMonths, localWeekdays } from "@/i18n";
 
 /** Budget tabs reserved for Bloom+ (goals & insights). */
 const PREMIUM_BUDGET_TABS = new Set(["Savings Goals", "Reports"]);
@@ -51,25 +52,25 @@ function CatIcon({ cat, className = "h-3.5 w-3.5", color = "#EC4899" }: { cat?: 
 }
 
 const DEFAULT_CATS: Cat[] = [
-  { key: "rent",    label: "Rent/Mortgage",      Icon: HomeIcon,        emoji: "🏠", group: "need" },
-  { key: "food",    label: "Food & Groceries",   Icon: ShoppingCart,    emoji: "🛒", group: "need" },
-  { key: "edu",     label: "Education",          Icon: GraduationCap,   emoji: "🎓", group: "need" },
-  { key: "transp",  label: "Transport",          Icon: Car,             emoji: "🚗", group: "need" },
-  { key: "gym",     label: "Gym & Sport",        Icon: Dumbbell,        emoji: "💪", group: "want" },
-  { key: "elec",    label: "Electricity",        Icon: Zap,             emoji: "⚡", group: "need" },
-  { key: "water",   label: "Water",              Icon: Droplets,        emoji: "💧", group: "need" },
-  { key: "gas",     label: "Gas",                Icon: Flame,           emoji: "🔥", group: "need" },
-  { key: "phone",   label: "Phone & Internet",   Icon: Smartphone,      emoji: "📱", group: "want" },
-  { key: "health",  label: "Health & Pharmacy",  Icon: Pill,            emoji: "💊", group: "need" },
-  { key: "beauty",  label: "Beauty & Skincare",  Icon: Sparkle,         emoji: "💅", group: "want" },
-  { key: "enter",   label: "Entertainment",      Icon: Film,            emoji: "🎬", group: "want" },
-  { key: "shop",    label: "Shopping & Clothing",Icon: Shirt,           emoji: "👗", group: "want" },
-  { key: "travel",  label: "Travel & Vacation",  Icon: Plane,           emoji: "✈️", group: "want" },
-  { key: "self",    label: "Self-care & Wellness",Icon: Heart,          emoji: "🌸", group: "want" },
-  { key: "rest",    label: "Restaurants & Dining",Icon: UtensilsCrossed,emoji: "🍽️", group: "want" },
-  { key: "kids",    label: "Kids & Family",      Icon: Baby,            emoji: "👶", group: "need" },
-  { key: "pets",    label: "Pets",               Icon: PawPrint,        emoji: "🐾", group: "want" },
-  { key: "other",   label: "Divers/Other",       Icon: Package,         emoji: "📦", group: "need" },
+  { key: "rent",    label: tr("Rent/Mortgage"),      Icon: HomeIcon,        emoji: "🏠", group: "need" },
+  { key: "food",    label: tr("Food & Groceries"),   Icon: ShoppingCart,    emoji: "🛒", group: "need" },
+  { key: "edu",     label: tr("Education"),          Icon: GraduationCap,   emoji: "🎓", group: "need" },
+  { key: "transp",  label: tr("Transport"),          Icon: Car,             emoji: "🚗", group: "need" },
+  { key: "gym",     label: tr("Gym & Sport"),        Icon: Dumbbell,        emoji: "💪", group: "want" },
+  { key: "elec",    label: tr("Electricity"),        Icon: Zap,             emoji: "⚡", group: "need" },
+  { key: "water",   label: tr("Water"),              Icon: Droplets,        emoji: "💧", group: "need" },
+  { key: "gas",     label: tr("Gas"),                Icon: Flame,           emoji: "🔥", group: "need" },
+  { key: "phone",   label: tr("Phone & Internet"),   Icon: Smartphone,      emoji: "📱", group: "want" },
+  { key: "health",  label: tr("Health & Pharmacy"),  Icon: Pill,            emoji: "💊", group: "need" },
+  { key: "beauty",  label: tr("Beauty & Skincare"),  Icon: Sparkle,         emoji: "💅", group: "want" },
+  { key: "enter",   label: tr("Entertainment"),      Icon: Film,            emoji: "🎬", group: "want" },
+  { key: "shop",    label: tr("Shopping & Clothing"),Icon: Shirt,           emoji: "👗", group: "want" },
+  { key: "travel",  label: tr("Travel & Vacation"),  Icon: Plane,           emoji: "✈️", group: "want" },
+  { key: "self",    label: tr("Self-care & Wellness"),Icon: Heart,          emoji: "🌸", group: "want" },
+  { key: "rest",    label: tr("Restaurants & Dining"),Icon: UtensilsCrossed,emoji: "🍽️", group: "want" },
+  { key: "kids",    label: tr("Kids & Family"),      Icon: Baby,            emoji: "👶", group: "need" },
+  { key: "pets",    label: tr("Pets"),               Icon: PawPrint,        emoji: "🐾", group: "want" },
+  { key: "other",   label: tr("Divers/Other"),       Icon: Package,         emoji: "📦", group: "need" },
 ];
 
 const INCOME_SOURCES = ["Salary","Freelance","Business","Rental","Investment","Side hustle","Other"];
@@ -77,26 +78,26 @@ const FREQUENCIES = ["Monthly","Weekly","Bi-weekly","One-time"] as const;
 type Frequency = typeof FREQUENCIES[number];
 
 const MOODS = [
-  { key: "planned",   label: "Planned",   Icon: Target,       tone: "bg-mint/30 text-emerald-700 border-emerald-200" },
-  { key: "necessary", label: "Necessary", Icon: CheckCircle2, tone: "bg-pink-100 text-hotpink border-pink-200" },
-  { key: "impulsive", label: "Impulsive", Icon: Zap,          tone: "bg-rose-100 text-magenta border-rose-200" },
+  { key: "planned",   label: tr("Planned"),   Icon: Target,       tone: "bg-mint/30 text-emerald-700 border-emerald-200" },
+  { key: "necessary", label: tr("Necessary"), Icon: CheckCircle2, tone: "bg-pink-100 text-hotpink border-pink-200" },
+  { key: "impulsive", label: tr("Impulsive"), Icon: Zap,          tone: "bg-rose-100 text-magenta border-rose-200" },
 ] as const;
 type MoodKey = typeof MOODS[number]["key"];
 
 const PRESET_GOALS = ["Emergency Fund","Vacation","New Device","Investment","Wedding","Home","Education","Car"];
 
 const HERO_CONFIG: Record<string, { title: string; sub: string }> = {
-  Dashboard:       { title: "You're blooming",         sub: "Your budget. Your dreams. Your future." },
-  Incomes:         { title: "Your income garden ✿",   sub: "Grow every stream, bloom every month." },
-  "Budget Setup":  { title: "Build your plan ✦",       sub: "A clear budget is your map to every dream." },
-  "Savings Goals": { title: "Dream big, save smart ✦",sub: "Every dirham saved brings you closer." },
-  Reports:         { title: "Know your numbers ✦",     sub: "Clarity is the first step to financial freedom." },
+  Dashboard:       { title: tr("You're blooming"),         sub: tr("Your budget. Your dreams. Your future.") },
+  Incomes:         { title: tr("Your income garden ✿"),   sub: tr("Grow every stream, bloom every month.") },
+  "Budget Setup":  { title: tr("Build your plan ✦"),       sub: tr("A clear budget is your map to every dream.") },
+  "Savings Goals": { title: tr("Dream big, save smart ✦"),sub: tr("Every dirham saved brings you closer.") },
+  Reports:         { title: tr("Know your numbers ✦"),     sub: tr("Clarity is the first step to financial freedom.") },
 };
 
 const BUDGET_GUIDE_CONTENT: SparkleContent = {
   eyebrow: "✦ your budget ✦",
   titleLines: ["Meet your", "money"],
-  subtitle: "A soft little tour of your income, budget & dreamy savings goals.",
+  subtitle: tr("A soft little tour of your income, budget & dreamy savings goals."),
   ctaLabel: "Show me around",
   finaleLines: ["You're all set,", "gorgeous"],
   finaleSubtitle: "Your money garden is ready to bloom. ✿",
@@ -107,29 +108,29 @@ const GUIDE_STEPS = [
     key: "income",
     tab: "Incomes" as TabKey,
     selector: "[data-tour='incomes-tab']",
-    title: "Add your income",
-    desc: "Your salary, freelance income, or any stream of money — this is where your garden gets its water.",
+    title: tr("Add your income"),
+    desc: tr("Your salary, freelance income, or any stream of money — this is where your garden gets its water."),
   },
   {
     key: "budget",
     tab: "Budget Setup" as TabKey,
     selector: "[data-tour='budget-tab']",
-    title: "Plan your budget",
-    desc: "Pick life categories and set monthly amounts. A clear plan becomes your map to every dream.",
+    title: tr("Plan your budget"),
+    desc: tr("Pick life categories and set monthly amounts. A clear plan becomes your map to every dream."),
   },
   {
     key: "goals",
     tab: "Savings Goals" as TabKey,
     selector: "[data-tour='goals-tab']",
-    title: "Set your dream goals",
-    desc: "Give your savings a name — a vacation, an emergency fund, a new chapter of life.",
+    title: tr("Set your dream goals"),
+    desc: tr("Give your savings a name — a vacation, an emergency fund, a new chapter of life."),
   },
   {
     key: "spend",
     tab: "Dashboard" as TabKey,
     selector: "[data-tour='spend-fab']",
-    title: "Log extra spends",
-    desc: "Whenever you spend outside your plan, tap this button. Your dashboard adapts instantly.",
+    title: tr("Log extra spends"),
+    desc: tr("Whenever you spend outside your plan, tap this button. Your dashboard adapts instantly."),
   },
 ] as const;
 
@@ -157,7 +158,7 @@ function syncBillReminder(bill: Bill): void {
     const rest = Array.isArray(list) ? list.filter((r) => r?.id !== rid) : [];
     if (bill.remind && !bill.paid) {
       rest.push({
-        id: rid, kind: "event", title: `${bill.name} bill due`, category: "Bills",
+        id: rid, kind: "event", title: tr("{0} bill due", { 0: bill.name }), category: "Bills",
         date: bill.due, time: "09:00", times: [], weekdays: [],
         leadDays: Math.max(0, bill.remindDays ?? 3), done: false,
         createdAt: new Date().toISOString(),
@@ -264,16 +265,16 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left"
+        className="w-full flex items-center justify-between rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-start"
       >
-        <span className="truncate">{selected?.label ?? placeholder}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ml-2" />
+        <span className="truncate">{trx(selected?.label) ?? trx(placeholder)}</span>
+        <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0 ms-2" />
       </button>
       {open && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
           <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100 shrink-0">
-              <h3 className="font-script text-2xl text-[#831843]">Choose ✿</h3>
+              <h3 className="font-script text-2xl text-[#831843]">{tr("Choose ✿")}</h3>
               <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] hover:text-hotpink transition">
                 <X className="h-4 w-4" />
               </button>
@@ -285,16 +286,14 @@ function PinkSelect({ value, onChange, options, placeholder = "Select..." }: {
                   <button key={o.value} onClick={() => { onChange(o.value); setOpen(false); }}
                     className={["w-full flex items-center justify-between px-4 py-3 rounded-2xl transition active:scale-[0.98]",
                       active ? "bg-hotpink/10 border border-hotpink/30" : "hover:bg-pink-50 border border-transparent"].join(" ")}>
-                    <span className={["text-sm font-semibold", active ? "text-[#831843]" : "text-[#9D5C7E]"].join(" ")}>{o.label}</span>
+                    <span className={["text-sm font-semibold", active ? "text-[#831843]" : "text-[#9D5C7E]"].join(" ")}>{trx(o.label)}</span>
                     {active && <Check className="h-4 w-4 text-[#EC4899]" strokeWidth={2.5} />}
                   </button>
                 );
               })}
             </div>
             <div className="px-5 pb-5 pt-2 shrink-0">
-              <button onClick={() => setOpen(false)} className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white">
-                Done ✿
-              </button>
+              <button onClick={() => setOpen(false)} className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white">{tr("Done ✿")}</button>
             </div>
           </div>
         </div>,
@@ -320,11 +319,11 @@ function PinkDatePicker({ value, onChange, className = "" }: {
   }
 
   const display = value
-    ? new Date(value + "T00:00:00").toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    ? new Date(value + "T00:00:00").toLocaleDateString(DATE_LOCALE, { day: "2-digit", month: "short", year: "numeric" })
     : "Select date";
 
-  const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const DAY_HDR = ["Mo","Tu","We","Th","Fr","Sa","Su"];
+  const MONTHS = localMonths(["January","February","March","April","May","June","July","August","September","October","November","December"], "long");
+  const DAY_HDR = localWeekdays(["Mo","Tu","We","Th","Fr","Sa","Su"], "short", true);
 
   const firstOfMonth = new Date(view.y, view.m, 1);
   const offset = (firstOfMonth.getDay() + 6) % 7;
@@ -338,30 +337,30 @@ function PinkDatePicker({ value, onChange, className = "" }: {
   return (
     <>
       <button type="button" onClick={openPicker}
-        className={`flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left ${className}`}>
+        className={`flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-start ${className}`}>
         <Calendar className="h-3.5 w-3.5 text-[#EC4899] shrink-0" />
-        <span className="flex-1 truncate">{display}</span>
+        <span className="flex-1 truncate">{trx(display)}</span>
       </button>
       {open && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center" onClick={() => setOpen(false)}>
           <div className="relative w-full max-w-sm mx-4 mb-4 sm:mb-0 rounded-[2rem] bg-white border-2 border-pink-200/70 shadow-2xl shadow-pink-300/30 animate-scale-in overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
-              <h3 className="font-script text-2xl text-[#831843]">Pick a date ✿</h3>
+              <h3 className="font-script text-2xl text-[#831843]">{tr("Pick a date ✿")}</h3>
               <button onClick={() => setOpen(false)} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition"><X className="h-4 w-4" /></button>
             </div>
             <div className="flex items-center justify-between px-5 py-3">
               <button onClick={() => setView(v => { const d = new Date(v.y, v.m-1); return {y:d.getFullYear(),m:d.getMonth()}; })}
                 className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
               </button>
-              <span className="font-semibold text-sm text-[#831843]">{MONTHS[view.m]} {view.y}</span>
+              <span className="font-semibold text-sm text-[#831843]">{trx(MONTHS[view.m])} {trx(view.y)}</span>
               <button onClick={() => setView(v => { const d = new Date(v.y, v.m+1); return {y:d.getFullYear(),m:d.getMonth()}; })}
                 className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
               </button>
             </div>
             <div className="grid grid-cols-7 px-4 pb-1">
-              {DAY_HDR.map(d => <div key={d} className="text-center text-[10px] font-bold text-[#C4A0CE] pb-1">{d}</div>)}
+              {DAY_HDR.map(d => <div key={d} className="text-center text-[10px] font-bold text-[#C4A0CE] pb-1">{trx(d)}</div>)}
             </div>
             <div className="grid grid-cols-7 px-4 pb-5 gap-y-0.5">
               {cells.map(({ iso, d, inMonth, isToday, isSelected }) => (
@@ -377,10 +376,8 @@ function PinkDatePicker({ value, onChange, className = "" }: {
             </div>
             <div className="px-5 pb-5 flex gap-2">
               <button onClick={() => { onChange(todayStr); setOpen(false); }}
-                className="flex-1 rounded-full bg-pink-50 py-2 text-xs font-semibold text-[#9D5C7E] hover:bg-pink-100 transition border border-pink-200/60">
-                Today
-              </button>
-              <button onClick={() => setOpen(false)} className="flex-1 bloom-luxury-btn py-2 text-sm font-bold text-white">Done ✿</button>
+                className="flex-1 rounded-full bg-pink-50 py-2 text-xs font-semibold text-[#9D5C7E] hover:bg-pink-100 transition border border-pink-200/60">{tr("Today")}</button>
+              <button onClick={() => setOpen(false)} className="flex-1 bloom-luxury-btn py-2 text-sm font-bold text-white">{tr("Done ✿")}</button>
             </div>
           </div>
         </div>,
@@ -439,7 +436,7 @@ function Donut({ data, total, currency, size = 180 }: {
         })}
       </svg>
       <div className="-mt-[60%] mb-[20%] text-center pointer-events-none">
-        <div className="text-[10px] font-bold tracking-widest text-[#9D5C7E]">TOTAL</div>
+        <div className="text-[10px] font-bold tracking-widest text-[#9D5C7E]">{tr("TOTAL")}</div>
         <div className="font-script text-3xl text-[#831843]">{fmt(total, currency)}</div>
       </div>
     </div>
@@ -472,7 +469,7 @@ function LineChart({ points }: { points: number[] }) {
         return <circle key={i} cx={x} cy={y} r="4" fill="#EC4899" />;
       })}
       {["W1","W2","W3","W4"].map((l, i) => (
-        <text key={l} x={pad + i * step} y={h - 4} fontSize="10" fill="#9D5C7E" textAnchor="middle">{l}</text>
+        <text key={l} x={pad + i * step} y={h - 4} fontSize="10" fill="#9D5C7E" textAnchor="middle">{trx(l)}</text>
       ))}
     </svg>
   );
@@ -492,7 +489,7 @@ function HealthRing({ pct, label, tone, size = 150 }: { pct: number; label: stri
       <div className="absolute inset-0 grid place-items-center text-center">
         <div>
           <div className="text-2xl font-bold" style={{ color: tone }}>{Math.round(pct)}%</div>
-          {label && <div className="text-[11px] font-semibold text-[#9D5C7E]">{label}</div>}
+          {label && <div className="text-[11px] font-semibold text-[#9D5C7E]">{trx(label)}</div>}
         </div>
       </div>
     </div>
@@ -513,7 +510,7 @@ function MiniRing({ pct, size = 96 }: { pct: number; size?: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
         <div className="text-2xl font-extrabold leading-none">{Math.round(pct)}%</div>
-        <div className="text-[8px] font-semibold opacity-75 leading-tight text-center mt-0.5">reached</div>
+        <div className="text-[8px] font-semibold opacity-75 leading-tight text-center mt-0.5">{tr("reached")}</div>
       </div>
     </div>
   );
@@ -700,7 +697,7 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
                 </>
               )}
               <text x={cx} y={labelY} fontSize="6.5" fill="#E11D48"
-                textAnchor="middle" fontWeight="700">{labelText}</text>
+                textAnchor="middle" fontWeight="700">{trx(labelText)}</text>
             </g>
           );
         })}
@@ -718,10 +715,10 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
         <text x={xp(1)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">1</text>
         {/* "Today" label at today's x position */}
         <text x={todayX} y={H - 3} fontSize="8" fill="#EC4899" textAnchor="middle" fontWeight="700">
-          {today}
+          {trx(today)}
         </text>
         <text x={xp(daysInMonth)} y={H - 3} fontSize="8" fill="#C4A0B8" textAnchor="middle">
-          {daysInMonth}
+          {trx(daysInMonth)}
         </text>
       </svg>
 
@@ -729,17 +726,16 @@ function BudgetHistorique({ planned, extraTxns, currency, income }: {
       <div className="flex items-center gap-4 mt-1.5 px-1">
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#F9A8D4" strokeWidth="2" strokeDasharray="6 4" /></svg>
-          <span className={`text-[10px] font-semibold ${isOverBudget ? "text-rose-500" : "text-[#9D5C7E]"}`}>
-            Budget · {fmt(planned, currency)}
+          <span className={`text-[10px] font-semibold ${isOverBudget ? "text-rose-500" : "text-[#9D5C7E]"}`}>{tr("Budget ·")}{" "}{fmt(planned, currency)}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg width="18" height="8"><line x1="0" y1="4" x2="18" y2="4" stroke="#EC4899" strokeWidth="2.5" /></svg>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">Spending</span>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{tr("Spending")}</span>
         </div>
-        <div className="flex items-center gap-1.5 ml-auto">
+        <div className="flex items-center gap-1.5 ms-auto">
           <svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="#EC4899" /></svg>
-          <span className="text-[10px] font-semibold text-[#EC4899]">Today ({today})</span>
+          <span className="text-[10px] font-semibold text-[#EC4899]">{tr("Today (")}{trx(today)})</span>
         </div>
       </div>
 
@@ -759,7 +755,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-    return { y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleString("default", { month: "short" }), isCurrent: i === 5 };
+    return { y: d.getFullYear(), m: d.getMonth(), label: d.toLocaleString(DATE_LOCALE, { month: "short" }), isCurrent: i === 5 };
   });
 
   const monthData = months.map(mo => {
@@ -870,7 +866,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
         {incomeY !== null && (
           <>
             <rect x={pL} y={incomeY - 11} width={36} height={10} rx="2.5" fill="white" fillOpacity="0.92" />
-            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">Income</text>
+            <text x={pL + 2} y={incomeY - 3} fontSize="6.5" fill="#10B981" fontWeight="700">{tr("Income")}</text>
           </>
         )}
         {/* Bar value labels + month labels */}
@@ -893,7 +889,7 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
               )}
               <text x={cx} y={H - 3} fontSize="8.5" textAnchor="middle"
                 fill={mo.isCurrent ? "#F472B6" : "#C4A0B8"}
-                fontWeight={mo.isCurrent ? "700" : "400"}>{mo.label}</text>
+                fontWeight={mo.isCurrent ? "700" : "400"}>{trx(mo.label)}</text>
             </g>
           );
         })}
@@ -903,21 +899,21 @@ function MonthlyPatternsChart({ txns, plannedBudget, income, currency }: {
       <div className="flex items-center gap-4 mt-1 px-1">
         <div className="flex items-center gap-1.5">
           <div className="h-2.5 w-4 rounded-sm" style={{ background: "linear-gradient(to right, #F472B6, #F9A8D4)" }} />
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">Total spend</span>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{tr("Total spend")}</span>
         </div>
         {income > 0 && (
           <div className="flex items-center gap-1.5">
             <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#10B981" strokeWidth="1.5" strokeDasharray="4 3" /></svg>
-            <span className="text-[10px] font-semibold text-[#9D5C7E]">Income</span>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">{tr("Income")}</span>
           </div>
         )}
         {plannedBudget > 0 && (
           <div className="flex items-center gap-1.5">
             <svg width="16" height="6"><line x1="0" y1="3" x2="16" y2="3" stroke="#F472B6" strokeWidth="1" strokeDasharray="5 3" opacity="0.5" /></svg>
-            <span className="text-[10px] font-semibold text-[#9D5C7E]">Planned</span>
+            <span className="text-[10px] font-semibold text-[#9D5C7E]">{tr("Planned")}</span>
           </div>
         )}
-        <span className="ml-auto text-[9px] text-[#C4A0B8]">approx · current plan</span>
+        <span className="ms-auto text-[9px] text-[#C4A0B8]">{tr("approx · current plan")}</span>
       </div>
     </div>
   );
@@ -958,17 +954,17 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
     <div className="flex items-center justify-center gap-6 sm:gap-9">
       {/* Legend stacked on the left — PLANNED over EXTRA, matched sizes */}
       <div className="flex flex-col gap-4">
-        <div className="text-left">
+        <div className="text-start">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: plannedColor }} />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">PLANNED</span>
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">{tr("PLANNED")}</span>
           </div>
           <p className="text-xl font-bold tabular-nums leading-none text-[#EC5A9C]">{fmt(totalPlanned, currency)}</p>
         </div>
-        <div className="text-left">
+        <div className="text-start">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ background: extraColor }} />
-            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">EXTRA</span>
+            <span className="text-[9px] font-bold tracking-widest text-[#9D5C7E]">{tr("EXTRA")}</span>
           </div>
           <p className="text-xl font-bold tabular-nums leading-none text-[#F472B6]">
             {hasExtra ? `+${fmt(totalOverage, currency)}` : "—"}
@@ -995,21 +991,21 @@ function BudgetSummaryChart({ totalPlanned, totalOverage, currency, income }: {
             <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#E11D48" fontWeight="700">
               −{fmt(Math.abs(income - total), currency)}
             </text>
-            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over income</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">{tr("over income")}</text>
           </>
         ) : hasExtra ? (
           <>
             <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#EC5A9C" fontWeight="700">
               +{fmt(totalOverage, currency)}
             </text>
-            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">over budget</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">{tr("over budget")}</text>
           </>
         ) : (
           <>
             <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fill="#831843" fontWeight="700">
               {fmt(totalPlanned, currency)}
             </text>
-            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">on budget ✓</text>
+            <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7" fill="#9D5C7E">{tr("on budget ✓")}</text>
           </>
         )}
       </svg>
@@ -1134,7 +1130,7 @@ export function BudgetPlanner() {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
     const iso = d.toISOString().slice(0, 10);
     const spent = txns.filter(t => t.date === iso && t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    return { iso, label: ["S","M","T","W","T","F","S"][d.getDay()], spent, isToday: i === 6 };
+    return { iso, label: localWeekdays(["S","M","T","W","T","F","S"], "narrow")[d.getDay()], spent, isToday: i === 6 };
   }), [txns]);
 
   const allCats: Cat[] = useMemo(() => [
@@ -1181,33 +1177,33 @@ export function BudgetPlanner() {
     ]);
     setTxns([
       // June 2026
-      { id: "dt1",  date: "2026-06-03", catKey: "food",   amount: 340,  description: "Extra groceries & snacks",       mood: "planned",   type: "expense" },
-      { id: "dt2",  date: "2026-06-07", catKey: "rest",   amount: 580,  description: "Anniversary dinner",             mood: "necessary", type: "expense" },
-      { id: "dt3",  date: "2026-06-11", catKey: "shop",   amount: 1450, description: "Summer clothes haul",            mood: "impulsive", type: "expense" },
-      { id: "dt4",  date: "2026-06-15", catKey: "health", amount: 320,  description: "Pharmacy run",                   mood: "necessary", type: "expense" },
-      { id: "dt5",  date: "2026-06-18", catKey: "enter",  amount: 200,  description: "Cinema + dinner",                mood: "planned",   type: "expense" },
-      { id: "dt6",  date: "2026-06-21", catKey: "transp", amount: 120,  description: "Ride-sharing this week",         mood: "necessary", type: "expense" },
+      { id: "dt1",  date: "2026-06-03", catKey: "food",   amount: 340,  description: tr("Extra groceries & snacks"),       mood: "planned",   type: "expense" },
+      { id: "dt2",  date: "2026-06-07", catKey: "rest",   amount: 580,  description: tr("Anniversary dinner"),             mood: "necessary", type: "expense" },
+      { id: "dt3",  date: "2026-06-11", catKey: "shop",   amount: 1450, description: tr("Summer clothes haul"),            mood: "impulsive", type: "expense" },
+      { id: "dt4",  date: "2026-06-15", catKey: "health", amount: 320,  description: tr("Pharmacy run"),                   mood: "necessary", type: "expense" },
+      { id: "dt5",  date: "2026-06-18", catKey: "enter",  amount: 200,  description: tr("Cinema + dinner"),                mood: "planned",   type: "expense" },
+      { id: "dt6",  date: "2026-06-21", catKey: "transp", amount: 120,  description: tr("Ride-sharing this week"),         mood: "necessary", type: "expense" },
       // May 2026
-      { id: "dt7",  date: "2026-05-04", catKey: "food",   amount: 210,  description: "Farmers market haul",            mood: "planned",   type: "expense" },
-      { id: "dt8",  date: "2026-05-09", catKey: "shop",   amount: 1200, description: "Shoes & bag",                    mood: "impulsive", type: "expense" },
-      { id: "dt9",  date: "2026-05-14", catKey: "rest",   amount: 470,  description: "Friends birthday brunch",        mood: "necessary", type: "expense" },
-      { id: "dt10", date: "2026-05-20", catKey: "self",   amount: 400,  description: "Spa & massage day",              mood: "planned",   type: "expense" },
-      { id: "dt11", date: "2026-05-25", catKey: "enter",  amount: 280,  description: "Concert night",                  mood: "planned",   type: "expense" },
-      { id: "dt12", date: "2026-05-29", catKey: "travel", amount: 650,  description: "Weekend getaway deposit",        mood: "impulsive", type: "expense" },
+      { id: "dt7",  date: "2026-05-04", catKey: "food",   amount: 210,  description: tr("Farmers market haul"),            mood: "planned",   type: "expense" },
+      { id: "dt8",  date: "2026-05-09", catKey: "shop",   amount: 1200, description: tr("Shoes & bag"),                    mood: "impulsive", type: "expense" },
+      { id: "dt9",  date: "2026-05-14", catKey: "rest",   amount: 470,  description: tr("Friends birthday brunch"),        mood: "necessary", type: "expense" },
+      { id: "dt10", date: "2026-05-20", catKey: "self",   amount: 400,  description: tr("Spa & massage day"),              mood: "planned",   type: "expense" },
+      { id: "dt11", date: "2026-05-25", catKey: "enter",  amount: 280,  description: tr("Concert night"),                  mood: "planned",   type: "expense" },
+      { id: "dt12", date: "2026-05-29", catKey: "travel", amount: 650,  description: tr("Weekend getaway deposit"),        mood: "impulsive", type: "expense" },
       // April 2026
-      { id: "dt13", date: "2026-04-02", catKey: "food",   amount: 180,  description: "Easter special groceries",       mood: "planned",   type: "expense" },
-      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: "Trip to Marrakech 🌴",           mood: "impulsive", type: "expense" },
-      { id: "dt15", date: "2026-04-18", catKey: "shop",   amount: 870,  description: "Spring wardrobe refresh",        mood: "impulsive", type: "expense" },
-      { id: "dt16", date: "2026-04-24", catKey: "health", amount: 250,  description: "Dental checkup",                 mood: "necessary", type: "expense" },
+      { id: "dt13", date: "2026-04-02", catKey: "food",   amount: 180,  description: tr("Easter special groceries"),       mood: "planned",   type: "expense" },
+      { id: "dt14", date: "2026-04-10", catKey: "travel", amount: 3200, description: tr("Trip to Marrakech 🌴"),           mood: "impulsive", type: "expense" },
+      { id: "dt15", date: "2026-04-18", catKey: "shop",   amount: 870,  description: tr("Spring wardrobe refresh"),        mood: "impulsive", type: "expense" },
+      { id: "dt16", date: "2026-04-24", catKey: "health", amount: 250,  description: tr("Dental checkup"),                 mood: "necessary", type: "expense" },
       // March 2026
-      { id: "dt17", date: "2026-03-05", catKey: "rest",   amount: 320,  description: "Work team dinner",               mood: "necessary", type: "expense" },
-      { id: "dt18", date: "2026-03-12", catKey: "health", amount: 480,  description: "Doctor + pharmacy",              mood: "necessary", type: "expense" },
-      { id: "dt19", date: "2026-03-19", catKey: "enter",  amount: 190,  description: "Movie & events",                 mood: "planned",   type: "expense" },
-      { id: "dt20", date: "2026-03-26", catKey: "shop",   amount: 2100, description: "Ramadan shopping",               mood: "necessary", type: "expense" },
+      { id: "dt17", date: "2026-03-05", catKey: "rest",   amount: 320,  description: tr("Work team dinner"),               mood: "necessary", type: "expense" },
+      { id: "dt18", date: "2026-03-12", catKey: "health", amount: 480,  description: tr("Doctor + pharmacy"),              mood: "necessary", type: "expense" },
+      { id: "dt19", date: "2026-03-19", catKey: "enter",  amount: 190,  description: tr("Movie & events"),                 mood: "planned",   type: "expense" },
+      { id: "dt20", date: "2026-03-26", catKey: "shop",   amount: 2100, description: tr("Ramadan shopping"),               mood: "necessary", type: "expense" },
       // February 2026
-      { id: "dt21", date: "2026-02-10", catKey: "food",   amount: 290,  description: "Valentine's dinner ingredients", mood: "planned",   type: "expense" },
-      { id: "dt22", date: "2026-02-14", catKey: "rest",   amount: 850,  description: "Valentine's romantic dinner",    mood: "impulsive", type: "expense" },
-      { id: "dt23", date: "2026-02-22", catKey: "shop",   amount: 600,  description: "Winter sale picks",              mood: "impulsive", type: "expense" },
+      { id: "dt21", date: "2026-02-10", catKey: "food",   amount: 290,  description: tr("Valentine's dinner ingredients"), mood: "planned",   type: "expense" },
+      { id: "dt22", date: "2026-02-14", catKey: "rest",   amount: 850,  description: tr("Valentine's romantic dinner"),    mood: "impulsive", type: "expense" },
+      { id: "dt23", date: "2026-02-22", catKey: "shop",   amount: 600,  description: tr("Winter sale picks"),              mood: "impulsive", type: "expense" },
     ]);
     setBills([
       { id: "db1", name: "Monthly Rent",    due: "2026-07-01", amount: 3200, paid: false },
@@ -1224,7 +1220,7 @@ export function BudgetPlanner() {
   // setup (incomes, budgets, savings goals) is left untouched — those aren't
   // "this month's" data, they carry across every month.
   function resetSelectedMonth() {
-    const label = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+    const label = new Date(month.y, month.m, 1).toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" });
     if (!window.confirm(`Reset all data for ${label}?\n\nThis clears logged spends and bill payments for that month. Your incomes, budgets and savings goals stay.`)) return;
     setTxns(prev => prev.filter(t => (t.date ?? "").slice(0, 7) !== monthKey));
     setBills(prev => prev.map(b => (b.due ?? "").slice(0, 7) === monthKey ? { ...b, paid: false } : b));
@@ -1262,8 +1258,8 @@ export function BudgetPlanner() {
           >
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100/70">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-rose">Settings</p>
-                <h3 className="font-script text-2xl text-[#831843] leading-tight">Budget settings ✿</h3>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-rose">{tr("Settings")}</p>
+                <h3 className="font-script text-2xl text-[#831843] leading-tight">{tr("Budget settings ✿")}</h3>
               </div>
               <button
                 onClick={() => setShowSettings(false)}
@@ -1274,9 +1270,9 @@ export function BudgetPlanner() {
             </div>
             <div className="px-3 py-3 space-y-1">
               {[
-                { icon: Coins, label: "Currency", hint: `${currency} — ${CURRENCIES[currency].symbol}`, onClick: () => { setShowSettings(false); setShowCurrencyPicker(true); } },
-                { icon: Sparkles, label: "Guided tour", hint: "Replay the walkthrough", onClick: () => { setShowSettings(false); setShowGuide(true); } },
-                { icon: Sprout, label: "Load demo data", hint: "Fill with a sample budget", onClick: () => { setShowSettings(false); seedDemoData(); } },
+                { icon: Coins, label: tr("Currency"), hint: `${currency} — ${CURRENCIES[currency].symbol}`, onClick: () => { setShowSettings(false); setShowCurrencyPicker(true); } },
+                { icon: Sparkles, label: tr("Guided tour"), hint: tr("Replay the walkthrough"), onClick: () => { setShowSettings(false); setShowGuide(true); } },
+                { icon: Sprout, label: tr("Load demo data"), hint: tr("Fill with a sample budget"), onClick: () => { setShowSettings(false); seedDemoData(); } },
               ].map((row) => (
                 <button
                   key={row.label}
@@ -1286,11 +1282,11 @@ export function BudgetPlanner() {
                   <span className="grid h-9 w-9 place-items-center rounded-xl bg-pink-100/70 text-rose shrink-0">
                     <row.icon className="h-4 w-4" strokeWidth={1.8} />
                   </span>
-                  <span className="flex-1 text-left min-w-0">
-                    <span className="block text-sm font-semibold text-[#831843]">{row.label}</span>
-                    <span className="block text-[11px] text-[#9D5C7E] truncate">{row.hint}</span>
+                  <span className="flex-1 text-start min-w-0">
+                    <span className="block text-sm font-semibold text-[#831843]">{trx(row.label)}</span>
+                    <span className="block text-[11px] text-[#9D5C7E] truncate">{trx(row.hint)}</span>
                   </span>
-                  <ChevronRight className="h-4 w-4 text-rose/40 shrink-0" />
+                  <ChevronRight className="rtl:-scale-x-100 h-4 w-4 text-rose/40 shrink-0" />
                 </button>
               ))}
             </div>
@@ -1303,13 +1299,12 @@ export function BudgetPlanner() {
                 <span className="grid h-9 w-9 place-items-center rounded-xl bg-rose-100/70 text-rose-500 shrink-0">
                   <RotateCcw className="h-4 w-4" strokeWidth={1.8} />
                 </span>
-                <span className="flex-1 text-left min-w-0">
-                  <span className="block text-sm font-semibold text-rose-600">
-                    Reset {new Date(month.y, month.m, 1).toLocaleString("default", { month: "long" })}
+                <span className="flex-1 text-start min-w-0">
+                  <span className="block text-sm font-semibold text-rose-600">{tr("Reset")}{" "}{new Date(month.y, month.m, 1).toLocaleString(DATE_LOCALE, { month: "long" })}
                   </span>
-                  <span className="block text-[11px] text-rose-400/90 truncate">Clear this month's spends & bill payments</span>
+                  <span className="block text-[11px] text-rose-400/90 truncate">{tr("Clear this month's spends & bill payments")}</span>
                 </span>
-                <ChevronRight className="h-4 w-4 text-rose-300 shrink-0" />
+                <ChevronRight className="rtl:-scale-x-100 h-4 w-4 text-rose-300 shrink-0" />
               </button>
             </div>
           </div>
@@ -1330,8 +1325,8 @@ export function BudgetPlanner() {
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-pink-100">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Currency</p>
-                <h3 className="font-script text-2xl text-[#831843] leading-tight">Choose your currency ✿</h3>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{tr("Currency")}</p>
+                <h3 className="font-script text-2xl text-[#831843] leading-tight">{tr("Choose your currency ✿")}</h3>
               </div>
               <button
                 onClick={() => setShowCurrencyPicker(false)}
@@ -1356,8 +1351,8 @@ export function BudgetPlanner() {
                     ].join(" ")}
                   >
                     <span className={["font-semibold text-sm", active ? "text-[#831843]" : "text-[#9D5C7E]"].join(" ")}>
-                      {k} — {CURRENCIES[k].symbol}
-                      <span className="ml-2 text-xs font-normal opacity-70">{CURRENCIES[k].name}</span>
+                      {trx(k)} — {trx(CURRENCIES[k].symbol)}
+                      <span className="ms-2 text-xs font-normal opacity-70">{trx(CURRENCIES[k].name)}</span>
                     </span>
                     <span className={[
                       "grid h-5 w-5 place-items-center rounded-full border-2 transition",
@@ -1373,9 +1368,7 @@ export function BudgetPlanner() {
               <button
                 onClick={() => setShowCurrencyPicker(false)}
                 className="bloom-luxury-btn w-full py-2.5 text-sm font-bold text-white"
-              >
-                Done ✿
-              </button>
+              >{tr("Done ✿")}</button>
             </div>
           </div>
         </div>,
@@ -1406,9 +1399,9 @@ export function BudgetPlanner() {
             <div className="relative z-[1] pt-0.5 pb-1">
               <div className="max-w-[72%]">
                 <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">
-                  {isDash ? "My budget" : hc.title}
+                  {isDash ? tr("My budget") : trx(hc.title)}
                 </h2>
-                {!isDash && <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{hc.sub}</p>}
+                {!isDash && <p className="mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight">{trx(hc.sub)}</p>}
                 <CyclePhasePill className="mt-1.5" hideWhenUnset />
                 <div className="mt-2 flex items-center gap-2 flex-wrap">
                   {isDash && (
@@ -1416,17 +1409,15 @@ export function BudgetPlanner() {
                       className="inline-flex items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3 py-1.5 text-xs text-rose font-semibold transition hover:bg-white/80 active:scale-95 shadow-sm shadow-rose/10">
                       <Calendar className="h-3 w-3" />
                       {viewMode === "present"
-                        ? "This month"
-                        : new Date(month.y, month.m, 1).toLocaleString("default", { month: "short", year: "numeric" })}
+                        ? tr("This month")
+                        : new Date(month.y, month.m, 1).toLocaleString(DATE_LOCALE, { month: "short", year: "numeric" })}
                       {viewMode === "future" && <span className="text-[9px] font-bold text-rose/70">{monthPlan?.activated ? " ✓" : " ✦"}</span>}
                       <ChevronDown className="h-3 w-3 opacity-70" />
                     </button>
                   )}
-                  <button onClick={() => setShowSettings(true)} aria-label="Settings"
+                  <button onClick={() => setShowSettings(true)} aria-label={tr("Settings")}
                     className="inline-flex items-center gap-1.5 rounded-full bg-white/60 backdrop-blur-md border border-white/60 px-3 py-1.5 text-xs text-rose font-semibold transition hover:bg-white/80 active:scale-95 shadow-sm shadow-rose/10">
-                    <Settings className="h-3.5 w-3.5" strokeWidth={1.8} />
-                    Settings
-                  </button>
+                    <Settings className="h-3.5 w-3.5" strokeWidth={1.8} />{tr("Settings")}</button>
                 </div>
               </div>
             </div>
@@ -1456,14 +1447,14 @@ export function BudgetPlanner() {
                       : "bg-white/70 backdrop-blur text-[#9D5C7E] border-pink-300/50 hover:bg-white/90",
                   ].join(" ")}
                 >
-                  {t}
+                  {trx(t)}
                   {!premium && PREMIUM_BUDGET_TABS.has(t) && <PremiumBadge />}
                 </button>
               );
             })}
           </div>
           {/* right-edge fade — hints at horizontal scroll on mobile/tablet */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-[#FDF2F8] to-transparent lg:hidden" />
+          <div className="pointer-events-none absolute inset-y-0 end-0 w-10 bg-gradient-to-l from-[#FDF2F8] to-transparent lg:hidden" />
         </div>
       </div>
 
@@ -1563,17 +1554,15 @@ export function BudgetPlanner() {
       {viewMode === "past" && (
         <div className="mt-3 flex items-center gap-2 rounded-2xl bg-pink-50 border border-pink-200/60 px-4 py-2.5">
           <Calendar className="h-4 w-4 text-[#9D5C7E] shrink-0" />
-          <p className="text-xs text-[#9D5C7E] font-semibold">Historique — lecture seule. Dépenses non modifiables.</p>
+          <p className="text-xs text-[#9D5C7E] font-semibold">{tr("Historique — lecture seule. Dépenses non modifiables.")}</p>
           <button onClick={() => setMonth({ y: _now.getFullYear(), m: _now.getMonth() })}
-            className="ml-auto shrink-0 text-[10px] font-bold text-[#EC4899] hover:underline whitespace-nowrap">
-            Mois en cours ›
-          </button>
+            className="ms-auto shrink-0 text-[10px] font-bold text-[#EC4899] hover:underline whitespace-nowrap">{tr("Mois en cours ›")}</button>
         </div>
       )}
 
       {/* Activated future month — show plan info + reset */}
       {viewMode === "future" && monthPlan?.activated && (() => {
-        const monthName = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+        const monthName = new Date(month.y, month.m, 1).toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" });
         // Count how many months after this one are also planned (will also be reset)
         const cascade = Object.keys(months).filter(k => k > monthKey && months[k]?.activated).length;
         return (
@@ -1581,11 +1570,10 @@ export function BudgetPlanner() {
             <Flag className="h-4 w-4 text-violet-500 shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-violet-700 font-semibold truncate">
-                {monthName} · Planifié ✓
-              </p>
+                {trx(monthName)}{" "}{tr("· Planifié ✓")}</p>
               {cascade > 0 && (
                 <p className="text-[10px] text-violet-500">
-                  + {cascade} mois suivant{cascade > 1 ? "s" : ""} planifié{cascade > 1 ? "s" : ""}
+                  + {trx(cascade)}{" "}{tr("mois suivant")}{cascade > 1 ? "s" : ""}{" "}{tr("planifié")}{cascade > 1 ? "s" : ""}
                 </p>
               )}
             </div>
@@ -1596,9 +1584,8 @@ export function BudgetPlanner() {
                   : `Réinitialiser le plan de ${monthName} ?`;
                 if (window.confirm(label)) resetPlannedMonth(monthKey);
               }}
-              className="ml-2 shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-full px-2.5 py-1 transition active:scale-95 whitespace-nowrap">
-              <XCircle className="h-3 w-3" /> Réinitialiser
-            </button>
+              className="ms-2 shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-rose-500 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-full px-2.5 py-1 transition active:scale-95 whitespace-nowrap">
+              <XCircle className="h-3 w-3" />{" "}{tr("Réinitialiser")}</button>
           </div>
         );
       })()}
@@ -1608,19 +1595,19 @@ export function BudgetPlanner() {
       {viewMode === "present" && hasSetup && <button
         data-tour="spend-fab"
         onClick={() => setShowExtraSpend(true)}
-        className="fixed right-4 z-40 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-6 flex items-center gap-2 rounded-full pl-2 pr-4 h-12 text-white active:scale-95 transition hover:-translate-y-0.5"
+        className="fixed end-4 z-40 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] lg:bottom-6 flex items-center gap-2 rounded-full ps-2 pe-4 h-12 text-white active:scale-95 transition hover:-translate-y-0.5"
         style={{
           background: 'linear-gradient(135deg,#F472B6 0%,#EC4899 100%)',
           boxShadow: '0 10px 26px -6px rgba(236,72,153,0.5), inset 0 1px 0 rgba(255,255,255,0.4)',
           border: '1px solid rgba(255,255,255,0.6)',
           animation: 'ctaBreathe 3.6s ease-in-out infinite',
         }}
-        aria-label="Add spend"
+        aria-label={tr("Add spend")}
       >
         <span className="grid h-8 w-8 place-items-center rounded-full bg-white/25 backdrop-blur-sm">
           <Plus className="h-4 w-4" strokeWidth={2.6} />
         </span>
-        <span className="text-sm font-bold tracking-wide">Spend</span>
+        <span className="text-sm font-bold tracking-wide">{tr("Spend")}</span>
       </button>}
 
       <ExtraSpendModal
@@ -1690,26 +1677,26 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
 
   const cards = [
     {
-      label: "Income",
+      label: tr("Income"),
       Icon: Wallet,
       v: income,
-      sub: "monthly earnings",
+      sub: tr("monthly earnings"),
       glow: null as Glow | null,          // no ring, no glow
       textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
       growthIcon: false,
       badge: income > 0
         ? surplus >= 0
-          ? { text: `Balance +${fmt(surplus, currency)}`, tone: "green" as const }
-          : { text: `Over −${fmt(Math.abs(surplus), currency)}`, tone: "red" as const }
+          ? { text: tr("Balance +{0}", { 0: fmt(surplus, currency) }), tone: "green" as const }
+          : { text: tr("Over −{0}", { 0: fmt(Math.abs(surplus), currency) }), tone: "red" as const }
         : null,
     },
     {
-      label: "Budget",
+      label: tr("Budget"),
       Icon: PiggyBank,
       v: plannedBudget + goalsMonthly,
       sub: goalsMonthly > 0
-        ? `${fmt(plannedBudget, currency)} budget + ${fmt(goalsMonthly, currency)} goals`
+        ? tr("{0} budget + {1} goals", { 0: fmt(plannedBudget, currency), 1: fmt(goalsMonthly, currency) })
         : "committed this month",
       glow: null as Glow | null,
       textGlow: null as TGlow | null,
@@ -1718,10 +1705,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       badge: null,
     },
     {
-      label: "Spent",
+      label: tr("Spent"),
       Icon: Receipt,
       v: plannedBudget + goalsMonthly + realExpenses,
-      sub: "committed + extra this month",
+      sub: tr("committed + extra this month"),
       glow: null as Glow | null,
       // Kept visually simple like the other cards — the extra spend shows as a
       // small rose "€… extra" label, with no coloured glow behind the content.
@@ -1733,10 +1720,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
       extraAmt: realExpenses > 0 ? fmt(realExpenses, currency) : null,
     },
     {
-      label: "Saved",
+      label: tr("Saved"),
       Icon: Sprout,
       v: goalsSaved,
-      sub: "across all goals",
+      sub: tr("across all goals"),
       glow: null as Glow | null,
       textGlow: null as TGlow | null,
       numGlow: null as TGlow | null,
@@ -1753,10 +1740,10 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
           style={it.textGlow ? { textShadow: TEXT_GLOW[it.textGlow] } : undefined}
         >
           {/* cute category icon, top-right */}
-          <span className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-gradient-to-br from-pink-100/90 to-rose-100/80 ring-1 ring-white/70 shadow-sm">
+          <span className="absolute top-2 end-2 sm:top-2.5 sm:end-2.5 grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full bg-gradient-to-br from-pink-100/90 to-rose-100/80 ring-1 ring-white/70 shadow-sm">
             <it.Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#EC5A9C]" strokeWidth={1.9} />
           </span>
-          <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight pr-8">{it.label}</div>
+          <div className="text-[9px] sm:text-[10px] font-bold tracking-widest text-[#9D5C7E] uppercase leading-tight pe-8">{trx(it.label)}</div>
           <div className="mt-1 font-script text-2xl sm:text-3xl font-extrabold leading-none text-[#D6558F] flex items-center gap-1.5"
             style={it.numGlow ? { textShadow: TEXT_GLOW[it.numGlow] } : undefined}>
             <StatNumber value={it.v} currency={currency} />
@@ -1767,17 +1754,17 @@ function StatCards({ income, plannedBudget, goalsMonthly, realExpenses, goalsSav
           </div>
           {"planSub" in it ? (
             <div className="mt-0.5 flex items-center flex-wrap gap-x-0.5 text-[9px] text-[#9D5C7E] leading-tight">
-              {it.extraAmt && <span className="text-rose-600 font-bold">{it.extraAmt} extra</span>}
+              {it.extraAmt && <span className="text-rose-600 font-bold">{trx(it.extraAmt)}{" "}{tr("extra")}</span>}
               {it.extraAmt && <span className="text-[#9D5C7E]">+</span>}
-              <span className="text-[#9D5C7E]">{it.planSub} planned</span>
+              <span className="text-[#9D5C7E]">{trx(it.planSub)}{" "}{tr("planned")}</span>
             </div>
           ) : it.badge ? (
             <span className={`mt-0.5 inline-flex items-center gap-1 text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-tight bg-white/70 ${it.badge.tone === "green" ? "text-emerald-600" : "text-rose-600"}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${it.badge.tone === "green" ? "bg-emerald-500" : "bg-rose-500"}`} />
-              {it.badge.text}
+              {trx(it.badge.text)}
             </span>
           ) : (
-            <div className="mt-0.5 text-[9px] text-[#9D5C7E] leading-tight">{it.sub}</div>
+            <div className="mt-0.5 text-[9px] text-[#9D5C7E] leading-tight">{trx(it.sub)}</div>
           )}
         </Card>
       ))}
@@ -1844,7 +1831,7 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#EC4899]/10 text-[#EC4899]">
               <Plus className="h-4 w-4" />
             </div>
-            <h3 className="font-script text-2xl text-[#831843]">Extra Spend ✿</h3>
+            <h3 className="font-script text-2xl text-[#831843]">{tr("Extra Spend ✿")}</h3>
           </div>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-pink-50 hover:bg-pink-100 text-[#9D5C7E] transition">
             <X className="h-4 w-4" />
@@ -1856,15 +1843,15 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             <div className="grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-300/40 animate-scale-in">
               <Check className="h-8 w-8" strokeWidth={3} />
             </div>
-            <p className="font-script text-3xl text-[#831843]">Saved ✿</p>
-            <p className="text-sm text-[#9D5C7E]">{CURRENCIES[currency].symbol}{amount} · {allCats.find(c => c.key === catKey)?.label ?? catKey}</p>
+            <p className="font-script text-3xl text-[#831843]">{tr("Saved ✿")}</p>
+            <p className="text-sm text-[#9D5C7E]">{trx(CURRENCIES[currency].symbol)}{trx(amount)} · {trx(allCats.find(c => c.key === catKey)?.label) ?? trx(catKey)}</p>
           </div>
         ) : (
           <div className="px-5 py-4 space-y-4 max-h-[78vh] overflow-y-auto">
             {/* Categories grid — pick first */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Category</p>
-              <div className="grid grid-cols-4 gap-2 max-h-44 overflow-y-auto pr-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">{tr("Category")}</p>
+              <div className="grid grid-cols-4 gap-2 max-h-44 overflow-y-auto pe-0.5">
                 {allCats.map(c => (
                   <button key={c.key} onClick={() => setCatKey(c.key)}
                     className={[
@@ -1874,13 +1861,13 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
                         : "bg-pink-50/80 text-[#9D5C7E] border-pink-100 hover:border-pink-300"
                     ].join(" ")}>
                     <c.Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-                    <span className="text-[9px] font-semibold leading-tight line-clamp-2">{c.label}</span>
+                    <span className="text-[9px] font-semibold leading-tight line-clamp-2">{trx(c.label)}</span>
                   </button>
                 ))}
                 <button onClick={() => setShowAddCat(v => !v)}
                   className="flex flex-col items-center gap-0.5 rounded-xl py-2 px-1 border border-dashed border-pink-300 bg-pink-50/40 text-[#EC4899] transition-all hover:bg-pink-100">
                   <span className="text-base font-bold">+</span>
-                  <span className="text-[9px] font-semibold">New</span>
+                  <span className="text-[9px] font-semibold">{tr("New")}</span>
                 </button>
               </div>
             </div>
@@ -1888,19 +1875,19 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
             {/* Add new category inline form */}
             {showAddCat && (
               <div className="rounded-2xl border border-pink-200 bg-pink-50/60 p-3 space-y-2 animate-fade-in">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">New Category</p>
-                <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder="Category name"
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tr("New Category")}</p>
+                <input value={newCatLabel} onChange={e => setNewCatLabel(e.target.value)} placeholder={tr("Category name")}
                   className="w-full rounded-xl bg-white border border-pink-200 px-3 py-2 text-sm font-medium text-[#831843] outline-none focus:ring-1 focus:ring-pink-400" />
                 <div className="flex gap-2">
-                  <button onClick={() => setShowAddCat(false)} className="flex-1 rounded-xl border border-pink-200 py-1.5 text-xs font-semibold text-[#9D5C7E]">Cancel</button>
-                  <button onClick={addCustomCat} className="flex-1 rounded-xl bg-[#EC4899] text-white py-1.5 text-xs font-bold hover:bg-[#DB2777] transition">Add</button>
+                  <button onClick={() => setShowAddCat(false)} className="flex-1 rounded-xl border border-pink-200 py-1.5 text-xs font-semibold text-[#9D5C7E]">{tr("Cancel")}</button>
+                  <button onClick={addCustomCat} className="flex-1 rounded-xl bg-[#EC4899] text-white py-1.5 text-xs font-bold hover:bg-[#DB2777] transition">{tr("Add")}</button>
                 </div>
               </div>
             )}
 
             {/* Amount */}
             <div className="flex items-center gap-2 rounded-2xl bg-pink-50/80 border border-pink-200/60 px-4 focus-within:ring-2 focus-within:ring-pink-400/50">
-              <span className="text-xl font-bold text-[#EC4899] shrink-0">{CURRENCIES[currency].symbol}</span>
+              <span className="text-xl font-bold text-[#EC4899] shrink-0">{trx(CURRENCIES[currency].symbol)}</span>
               <input
                 ref={inputRef} type="number" inputMode="decimal" value={amount}
                 onChange={e => setAmount(e.target.value)}
@@ -1914,7 +1901,7 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
 
             {/* Mood / Spend type */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">Spend type</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] mb-2">{tr("Spend type")}</p>
               <div className="flex gap-2">
                 {MOODS.map(m => (
                   <button key={m.key} onClick={() => setMood(m.key)}
@@ -1924,23 +1911,21 @@ function ExtraSpendModal({ open, onClose, onSave, allCats, setCustomCats, curren
                         ? "bg-[#EC4899]/10 border-[#EC4899]/40 text-[#EC4899]"
                         : "bg-white border-pink-200/60 text-[#9D5C7E] hover:border-pink-300"
                     ].join(" ")}>
-                    <m.Icon className="h-3.5 w-3.5" /> {m.label}
+                    <m.Icon className="h-3.5 w-3.5" /> {trx(m.label)}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Description */}
-            <Input placeholder="What did you spend on? (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+            <Input placeholder={tr("What did you spend on? (optional)")} value={desc} onChange={e => setDesc(e.target.value)} />
 
             {/* Save button */}
             <button
               onClick={handleSave} disabled={!amount || parseFloat(amount) <= 0}
               className="w-full bloom-luxury-btn py-3.5 text-base font-bold text-white rounded-2xl disabled:opacity-40 transition-all"
               style={{ animation: amount && parseFloat(amount) > 0 ? 'ctaBreathe 2.8s ease-in-out infinite' : 'none' }}
-            >
-              Save Spend ✿
-            </button>
+            >{tr("Save Spend ✿")}</button>
           </div>
         )}
       </div>
@@ -1976,7 +1961,7 @@ function MonthPickerModal({
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
-          <h2 className="text-base font-bold text-[#831843]">Choisir un mois</h2>
+          <h2 className="text-base font-bold text-[#831843]">{tr("Choisir un mois")}</h2>
           <button onClick={onClose} className="text-[#9D5C7E] hover:text-[#831843] transition">
             <X className="h-5 w-5" />
           </button>
@@ -1986,12 +1971,12 @@ function MonthPickerModal({
         <div className="flex items-center justify-between px-5 pb-3">
           <button onClick={() => setPickerYear(y => y - 1)}
             className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
           </button>
-          <span className="text-sm font-bold text-[#831843]">{pickerYear}</span>
+          <span className="text-sm font-bold text-[#831843]">{trx(pickerYear)}</span>
           <button onClick={() => setPickerYear(y => y + 1)}
             className="rounded-full p-1.5 hover:bg-pink-50 text-[#9D5C7E] transition active:scale-95">
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
           </button>
         </div>
 
@@ -2033,8 +2018,8 @@ function MonthPickerModal({
               <button key={m} disabled={isLocked}
                 onClick={() => setMonth({ y: pickerYear, m })}
                 className={cls}>
-                <span>{name}</span>
-                {badge && <span className="text-[9px] leading-none opacity-80">{badge}</span>}
+                <span>{trx(name)}</span>
+                {badge && <span className="text-[9px] leading-none opacity-80">{trx(badge)}</span>}
               </button>
             );
           })}
@@ -2043,14 +2028,11 @@ function MonthPickerModal({
         {/* Legend */}
         <div className="flex items-center flex-wrap gap-x-3 gap-y-1 px-5 pb-4 border-t border-pink-100 pt-3">
           <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#EC4899]" /> En cours
-          </span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-[#EC4899]" />{" "}{tr("En cours")}</span>
           <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-violet-200" /> Planifié ✓
-          </span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-violet-200" />{" "}{tr("Planifié ✓")}</span>
           <span className="flex items-center gap-1 text-[10px] text-[#9D5C7E]">
-            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-violet-400" /> Planifier ✦
-          </span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full border-2 border-dashed border-violet-400" />{" "}{tr("Planifier ✦")}</span>
         </div>
       </div>
     </div>,
@@ -2080,7 +2062,7 @@ function PlanningOverlay({
     () => existing?.goalsOverride ?? Object.fromEntries(goals.map(g => [g.id, g.monthly]))
   );
 
-  const monthName = new Date(month.y, month.m, 1).toLocaleString("default", { month: "long", year: "numeric" });
+  const monthName = new Date(month.y, month.m, 1).toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" });
   const totalInc  = draftIncomes.reduce((s, i) => s + toMonthly(i), 0);
   const totalBudg = selectedCats.filter(k => (sameBudget ? budget[k] : draftBudget[k]) ?? 0 > 0)
     .reduce((s, k) => s + ((sameBudget ? budget[k] : draftBudget[k]) ?? 0), 0);
@@ -2108,12 +2090,12 @@ function PlanningOverlay({
 
         {/* Header */}
         <div className="p-5" style={{ background: "linear-gradient(135deg,#EC4899 0%,#8B5CF6 100%)" }}>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">✦ Planning mode</p>
-          <h2 className="font-script text-2xl text-white mt-0.5">{monthName}</h2>
-          <p className="text-xs text-white/80 mt-1">Confirme ou ajuste ton plan avant de commencer ce mois</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/70">{tr("✦ Planning mode")}</p>
+          <h2 className="font-script text-2xl text-white mt-0.5">{trx(monthName)}</h2>
+          <p className="text-xs text-white/80 mt-1">{tr("Confirme ou ajuste ton plan avant de commencer ce mois")}</p>
           <div className={`mt-3 flex items-center gap-2 rounded-2xl px-3 py-2 ${balance >= 0 ? "bg-white/20" : "bg-red-400/30"}`}>
-            <span className="text-xs font-semibold text-white/80">Solde prévu</span>
-            <span className={`ml-auto text-sm font-bold tabular-nums ${balance >= 0 ? "text-white" : "text-red-200"}`}>
+            <span className="text-xs font-semibold text-white/80">{tr("Solde prévu")}</span>
+            <span className={`ms-auto text-sm font-bold tabular-nums ${balance >= 0 ? "text-white" : "text-red-200"}`}>
               {balance >= 0 ? "+" : ""}{fmt(balance, currency)}
             </span>
           </div>
@@ -2123,11 +2105,11 @@ function PlanningOverlay({
           {/* Incomes */}
           <div className="p-4 space-y-3">
             <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
-              <Wallet className="h-3 w-3" /> Revenus · {fmt(totalInc, currency)}
+              <Wallet className="h-3 w-3" />{" "}{tr("Revenus ·")}{" "}{fmt(totalInc, currency)}
             </p>
             {draftIncomes.map((inc, i) => (
               <div key={inc.id} className="flex items-center gap-2">
-                <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{inc.source}</span>
+                <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{trx(inc.source)}</span>
                 <div className="flex items-center gap-1 shrink-0">
                   <input type="number" min={0} value={inc.amount}
                     onChange={e => {
@@ -2135,9 +2117,9 @@ function PlanningOverlay({
                       next[i] = { ...inc, amount: Math.max(0, Number(e.target.value)) };
                       setDraftIncomes(next);
                     }}
-                    className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-right text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
+                    className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-end text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
                   />
-                  <span className="text-[10px] text-[#9D5C7E] w-5">{CURRENCIES[currency].symbol}</span>
+                  <span className="text-[10px] text-[#9D5C7E] w-5">{trx(CURRENCIES[currency].symbol)}</span>
                 </div>
               </div>
             ))}
@@ -2147,29 +2129,28 @@ function PlanningOverlay({
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
-                <Receipt className="h-3 w-3" /> Budget · {fmt(totalBudg, currency)}
+                <Receipt className="h-3 w-3" />{" "}{tr("Budget ·")}{" "}{fmt(totalBudg, currency)}
               </p>
               <button onClick={() => setSameBudget(v => !v)}
                 className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold transition ${sameBudget ? "bg-emerald-100 text-emerald-700" : "bg-violet-100 text-violet-700"}`}>
-                {sameBudget ? <><Check className="h-3 w-3" /> Même plan</> : <><Sparkles className="h-3 w-3" /> Ajuster</>}
+                {sameBudget ? <><Check className="h-3 w-3" />{" "}{tr("Même plan")}</> : <><Sparkles className="h-3 w-3" />{" "}{tr("Ajuster")}</>}
               </button>
             </div>
             {sameBudget ? (
               <p className="text-[10px] text-[#9D5C7E] italic">
-                {selectedCats.filter(k => (budget[k] ?? 0) > 0).length} catégories reconduites sans changement
-              </p>
+                {trx(selectedCats.filter(k => (budget[k] ?? 0) > 0).length)}{" "}{tr("catégories reconduites sans changement")}</p>
             ) : selectedCats.filter(k => (budget[k] ?? 0) > 0).map(k => {
               const cat = allCats.find(c => c.key === k);
               return (
                 <div key={k} className="flex items-center gap-2">
                   <CatIcon cat={cat} />
-                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
+                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{trx(cat?.label) ?? trx(k)}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     <input type="number" min={0} value={draftBudget[k] ?? 0}
                       onChange={e => setDraftBudget(prev => ({ ...prev, [k]: Math.max(0, Number(e.target.value)) }))}
-                      className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-right text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
+                      className="w-24 rounded-xl border border-pink-200 bg-pink-50 px-2 py-1 text-end text-xs font-bold text-[#831843] focus:outline-none focus:border-[#EC4899]"
                     />
-                    <span className="text-[10px] text-[#9D5C7E] w-5">{CURRENCIES[currency].symbol}</span>
+                    <span className="text-[10px] text-[#9D5C7E] w-5">{trx(CURRENCIES[currency].symbol)}</span>
                   </div>
                 </div>
               );
@@ -2180,17 +2161,16 @@ function PlanningOverlay({
           {goals.length > 0 && (
             <div className="p-4 space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
-                <Flag className="h-3 w-3" /> Objectifs · {fmt(totalGoal, currency)}/mo
-              </p>
+                <Flag className="h-3 w-3" />{" "}{tr("Objectifs ·")}{" "}{fmt(totalGoal, currency)}{tr("/mo")}</p>
               {goals.map(g => (
                 <div key={g.id} className="flex items-center gap-2">
-                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                  <span className="flex-1 text-[11px] font-semibold text-[#831843] truncate">{trx(g.name)}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     <input type="number" min={0} value={draftGoals[g.id] ?? g.monthly}
                       onChange={e => setDraftGoals(prev => ({ ...prev, [g.id]: Math.max(0, Number(e.target.value)) }))}
-                      className="w-24 rounded-xl border border-violet-200 bg-violet-50 px-2 py-1 text-right text-xs font-bold text-violet-700 focus:outline-none focus:border-violet-500"
+                      className="w-24 rounded-xl border border-violet-200 bg-violet-50 px-2 py-1 text-end text-xs font-bold text-violet-700 focus:outline-none focus:border-violet-500"
                     />
-                    <span className="text-[10px] text-[#9D5C7E]">/mo</span>
+                    <span className="text-[10px] text-[#9D5C7E]">{tr("/mo")}</span>
                   </div>
                 </div>
               ))}
@@ -2202,12 +2182,9 @@ function PlanningOverlay({
         <div className="p-4 bg-gradient-to-b from-white to-pink-50/50">
           <button onClick={activate}
             className="bloom-luxury-btn w-full py-3.5 text-white font-bold text-sm rounded-2xl flex items-center justify-center gap-2">
-            <Check className="h-4 w-4" />
-            Activer {monthName} ✦
+            <Check className="h-4 w-4" />{tr("Activer")}{" "}{trx(monthName)} ✦
           </button>
-          <p className="text-center text-[10px] text-[#9D5C7E] mt-2 opacity-70">
-            Modifiable à tout moment depuis les onglets Revenus, Budget Setup et Objectifs
-          </p>
+          <p className="text-center text-[10px] text-[#9D5C7E] mt-2 opacity-70">{tr("Modifiable à tout moment depuis les onglets Revenus, Budget Setup et Objectifs")}</p>
         </div>
       </div>
     </div>,
@@ -2246,10 +2223,10 @@ function DashboardTab(props: {
   const [setupDismissed, setSetupDismissed] = useLocal<boolean>("bp:setup-dismissed", false);
 
   const steps = [
-    { key: "income", label: "Add your income",      hint: "Tell Bloom how much you earn each month",       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
-    { key: "setup",  label: "Set up your budget",   hint: "Pick spending categories & set monthly limits", done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
-    { key: "goals",  label: "Add a savings goal",   hint: "A vacation, an emergency fund — dream big",     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
-    { key: "track",  label: "Log your extra spends", hint: "Record any extra or unplanned expenses",        done: txns.filter(t => t.type === "expense").length > 0,              tab: "Reports"       as TabKey, Icon: FileBarChart },
+    { key: "income", label: tr("Add your income"),      hint: tr("Tell Bloom how much you earn each month"),       done: incomes.length > 0,                                                 tab: "Incomes"       as TabKey, Icon: Wallet },
+    { key: "setup",  label: tr("Set up your budget"),   hint: tr("Pick spending categories & set monthly limits"), done: selectedCats.length > 0 && Object.values(budget).some(v => v > 0), tab: "Budget Setup"  as TabKey, Icon: Receipt },
+    { key: "goals",  label: tr("Add a savings goal"),   hint: tr("A vacation, an emergency fund — dream big"),     done: goals.length > 0,                                                   tab: "Savings Goals" as TabKey, Icon: Flag },
+    { key: "track",  label: tr("Log your extra spends"), hint: tr("Record any extra or unplanned expenses"),        done: txns.filter(t => t.type === "expense").length > 0,              tab: "Reports"       as TabKey, Icon: FileBarChart },
   ];
   const completed = steps.filter(s => s.done).length;
   const nextStep  = steps.find(s => !s.done);
@@ -2298,15 +2275,15 @@ function DashboardTab(props: {
   const insights = useMemo(() => {
     const r: { icon: string; main: string; sub: string }[] = [];
     if (totalIncome > 0 && effectiveSpend > totalIncome)
-      r.push({ icon: "♥", main: "Over income this month", sub: `Committed ${fmt(effectiveSpend, currency)} vs ${fmt(totalIncome, currency)} income — review your plan ✿` });
+      r.push({ icon: "♥", main: "Over income this month", sub: tr("Committed {0} vs {1} income — review your plan ✿", { 0: fmt(effectiveSpend, currency), 1: fmt(totalIncome, currency) }) });
     else if (extraLogged > 0)
-      r.push({ icon: "✿", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} still available` : "Budget is tight — take a soft pause ✿" });
+      r.push({ icon: "✿", main: `+${fmt(extraLogged, currency)} in extra spends`, sub: effectiveSave > 0 ? tr("{0} still available", { 0: fmt(effectiveSave, currency) }) : "Budget is tight — take a soft pause ✿" });
     else if (plannedTotal > 0)
-      r.push({ icon: "✿", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? `${fmt(effectiveSave, currency)} available after plan` : "Income fully allocated" });
+      r.push({ icon: "✿", main: `${fmt(plannedTotal, currency)} committed`, sub: effectiveSave > 0 ? tr("{0} available after plan", { 0: fmt(effectiveSave, currency) }) : "Income fully allocated" });
     if (goals.length > 0)
-      r.push({ icon: "✦", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: "You are amazing!" });
+      r.push({ icon: "✦", main: `${goals.length} savings goal${goals.length > 1 ? "s" : ""} in progress`, sub: tr("You are amazing!") });
     if (r.length === 0)
-      r.push({ icon: "✿", main: "Start tracking to see your story", sub: "bloom here ✿" });
+      r.push({ icon: "✿", main: "Start tracking to see your story", sub: tr("bloom here ✿") });
     return r.slice(0, 3);
   }, [effectiveSpend, extraLogged, effectiveSave, plannedTotal, goals, totalIncome, currency]);
 
@@ -2321,34 +2298,31 @@ function DashboardTab(props: {
     return (
       <div className="space-y-3 animate-fade-in">
         <Card className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-12 -right-12 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-8 -left-8 h-36 w-36 rounded-full bg-purple-200/30 blur-2xl" />
+          <div className="pointer-events-none absolute -top-12 -end-12 h-48 w-48 rounded-full bg-pink-200/40 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-8 -start-8 h-36 w-36 rounded-full bg-purple-200/30 blur-2xl" />
           <div className="relative">
             <span className="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-[11px] font-bold tracking-widest text-[#9D5C7E]">
-              <Sparkles className="h-3 w-3 text-[#EC4899]" /> WELCOME TO YOUR BUDGET
-            </span>
-            <h2 className="mt-2 font-script text-3xl sm:text-5xl text-[#831843] leading-tight">Let's bloom your budget ✿</h2>
-            <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg leading-relaxed">
-              Four gentle steps and you're set. Bloom guides you from your first paycheck to your dream savings goal — no spreadsheets, no stress.
-            </p>
+              <Sparkles className="h-3 w-3 text-[#EC4899]" />{" "}{tr("WELCOME TO YOUR BUDGET")}</span>
+            <h2 className="mt-2 font-script text-3xl sm:text-5xl text-[#831843] leading-tight">{tr("Let's bloom your budget ✿")}</h2>
+            <p className="mt-2 text-sm text-[#9D5C7E] max-w-lg leading-relaxed">{tr("Four gentle steps and you're set. Bloom guides you from your first paycheck to your dream savings goal — no spreadsheets, no stress.")}</p>
             <div className="mt-5 flex items-center gap-3">
               <div className="flex-1 h-2.5 rounded-full bg-pink-100 overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${(completed / steps.length) * 100}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
               </div>
-              <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{completed}/{steps.length} done</span>
+              <span className="shrink-0 text-xs font-bold tracking-widest text-[#9D5C7E]">{trx(completed)}/{trx(steps.length)}{" "}{tr("done")}</span>
             </div>
             <div className="mt-6">
               <PrimaryBtn onClick={() => setTab("Incomes")}
                 className="bloom-luxury-btn text-sm sm:text-base px-6 py-3 shadow-lg shadow-pink-400/40"
                 style={{ animation: 'ctaBreathe 2.8s ease-in-out infinite' }}>
-                <Wallet className="h-4 w-4" /> Start — Add your income <ArrowRight className="h-4 w-4" />
+                <Wallet className="h-4 w-4" />{" "}{tr("Start — Add your income")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
               </PrimaryBtn>
             </div>
           </div>
         </Card>
         <Card>
-          <h3 className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-4 uppercase">Your 4-step path</h3>
+          <h3 className="text-[10px] font-bold tracking-widest text-[#9D5C7E] mb-4 uppercase">{tr("Your 4-step path")}</h3>
           <ol className="space-y-2.5">
             {steps.map((s, i) => {
               const isNext = s === nextStep;
@@ -2363,17 +2337,16 @@ function DashboardTab(props: {
                     {s.done ? <Check className="h-5 w-5" strokeWidth={2.5} /> : <s.Icon className="h-4 w-4" strokeWidth={1.8} />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[9px] font-bold tracking-widest text-[#C4A0CE] uppercase">Step {i + 1}</div>
-                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>{s.label}</div>
-                    {!s.done && <div className="text-[10px] text-[#9D5C7E] mt-0.5 leading-snug">{s.hint}</div>}
+                    <div className="text-[9px] font-bold tracking-widest text-[#C4A0CE] uppercase">{tr("Step")}{" "}{i + 1}</div>
+                    <div className={["text-sm font-semibold truncate", s.done ? "text-emerald-700 line-through decoration-emerald-300/60" : "text-[#831843]"].join(" ")}>{trx(s.label)}</div>
+                    {!s.done && <div className="text-[10px] text-[#9D5C7E] mt-0.5 leading-snug">{trx(s.hint)}</div>}
                   </div>
                   {isNext && (
                     <button onClick={() => setTab(s.tab)}
-                      className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#EC4899] px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-pink-400/30 hover:bg-[#DB2777] transition active:scale-95">
-                      Go <ArrowRight className="h-3 w-3" />
+                      className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#EC4899] px-3 py-1.5 text-xs font-bold text-white shadow-md shadow-pink-400/30 hover:bg-[#DB2777] transition active:scale-95">{tr("Go")}{" "}<ArrowRight className="rtl:-scale-x-100 h-3 w-3" />
                     </button>
                   )}
-                  {s.done && <span className="shrink-0 text-[11px] font-bold text-emerald-600">✓ Done</span>}
+                  {s.done && <span className="shrink-0 text-[11px] font-bold text-emerald-600">{tr("✓ Done")}</span>}
                 </li>
               );
             })}
@@ -2390,7 +2363,7 @@ function DashboardTab(props: {
       {/* Smart guide banner */}
       {!allDone && nextStep && (
         <div className="relative overflow-hidden rounded-2xl border border-pink-200/60 bg-gradient-to-r from-pink-50 via-white to-purple-50/40 px-4 py-4 shadow-sm">
-          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-pink-200/30 blur-2xl" />
+          <div className="pointer-events-none absolute -end-8 -top-8 h-32 w-32 rounded-full bg-pink-200/30 blur-2xl" />
           <div className="relative flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#EC4899] text-white shadow-md shadow-pink-400/30"
@@ -2398,9 +2371,9 @@ function DashboardTab(props: {
                 <nextStep.Icon className="h-4 w-4" strokeWidth={1.8} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9D5C7E]">Next step · {completed}/{steps.length} done</p>
-                <p className="text-sm font-bold text-[#831843] truncate">{nextStep.label}</p>
-                <p className="text-[11px] text-[#9D5C7E] leading-snug">{nextStep.hint}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[#9D5C7E]">{tr("Next step ·")}{" "}{trx(completed)}/{trx(steps.length)}{" "}{tr("done")}</p>
+                <p className="text-sm font-bold text-[#831843] truncate">{trx(nextStep.label)}</p>
+                <p className="text-[11px] text-[#9D5C7E] leading-snug">{trx(nextStep.hint)}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 shrink-0">
@@ -2411,7 +2384,7 @@ function DashboardTab(props: {
                 ))}
               </div>
               <PrimaryBtn onClick={() => setTab(nextStep.tab)}>
-                {nextStep.label} <ArrowRight className="h-3.5 w-3.5" />
+                {trx(nextStep.label)} <ArrowRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
               </PrimaryBtn>
             </div>
           </div>
@@ -2423,8 +2396,8 @@ function DashboardTab(props: {
             <Check className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-emerald-800">Setup complete — you're blooming! ✿</p>
-            <p className="text-[11px] text-emerald-600">Log extra spends to track what you bought on top of your plan.</p>
+            <p className="text-sm font-bold text-emerald-800">{tr("Setup complete — you're blooming! ✿")}</p>
+            <p className="text-[11px] text-emerald-600">{tr("Log extra spends to track what you bought on top of your plan.")}</p>
           </div>
           <button
             onClick={() => setSetupDismissed(true)}
@@ -2464,10 +2437,8 @@ function DashboardTab(props: {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Budget vs Reality
-              </h3>
-              <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                Edit <ChevronRight className="h-3 w-3" />
+                <Receipt className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />{" "}{tr("Budget vs Reality")}</h3>
+              <button onClick={() => setTab("Budget Setup")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">{tr("Edit")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3 w-3" />
               </button>
             </div>
             <BudgetSummaryChart totalPlanned={totalPlanned} totalOverage={totalOverage} currency={currency} income={totalIncome} />
@@ -2494,10 +2465,10 @@ function DashboardTab(props: {
                         <div className="flex items-center justify-between mb-1">
                           <div className="flex items-center gap-1.5 min-w-0">
                             <CatIcon cat={cat} />
-                            <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                            {status === "over" && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">Over</span>}
+                            <span className="text-[11px] font-semibold text-[#831843] truncate">{trx(cat?.label) ?? trx(k)}</span>
+                            {status === "over" && <span className="shrink-0 text-[9px] font-bold text-rose-600 bg-rose-100 rounded-full px-1.5 py-0.5">{tr("Over")}</span>}
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0 ml-2 tabular-nums">
+                          <div className="flex items-center gap-1.5 shrink-0 ms-2 tabular-nums">
                             {actual > 0 && (
                               <span className="text-[11px] font-bold text-rose-500">
                                 +{fmt(actual, currency)} /
@@ -2529,7 +2500,7 @@ function DashboardTab(props: {
                   {budgetedCats.length > 5 && (
                     <button onClick={() => setBudgetShowAll(v => !v)}
                       className="w-full text-center text-xs font-bold text-[#EC4899] hover:underline py-0.5">
-                      {budgetShowAll ? "Show less ↑" : `Show all ${budgetedCats.length} categories ↓`}
+                      {budgetShowAll ? tr("Show less ↑") : tr("Show all {0} categories ↓", { 0: budgetedCats.length })}
                     </button>
                   )}
 
@@ -2540,16 +2511,16 @@ function DashboardTab(props: {
                     if (billBars.length === 0) return null;
                     return (
                       <div className="pt-2 border-t border-pink-100 space-y-3">
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Bills in this budget</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tr("Bills in this budget")}</p>
                         {billBars.map(bl => (
                           <div key={bl.id}>
                             <div className="flex items-center justify-between mb-1">
                               <div className="flex items-center gap-1.5 min-w-0">
                                 <Bell className="h-3.5 w-3.5 text-[#EC4899] shrink-0" strokeWidth={1.8} />
-                                <span className="text-[11px] font-semibold text-[#831843] truncate">{bl.name}</span>
-                                <span className="shrink-0 text-[9px] font-bold text-[#DB2777] bg-[#FCE7F3] rounded-full px-1.5 py-0.5">Bill</span>
+                                <span className="text-[11px] font-semibold text-[#831843] truncate">{trx(bl.name)}</span>
+                                <span className="shrink-0 text-[9px] font-bold text-[#DB2777] bg-[#FCE7F3] rounded-full px-1.5 py-0.5">{tr("Bill")}</span>
                               </div>
-                              <span className="text-[11px] font-semibold text-[#9D5C7E] tabular-nums shrink-0 ml-2">{fmt(bl.amount, currency)}</span>
+                              <span className="text-[11px] font-semibold text-[#9D5C7E] tabular-nums shrink-0 ms-2">{fmt(bl.amount, currency)}</span>
                             </div>
                             <div className="flex h-1.5 rounded-full overflow-hidden bg-pink-100/60">
                               <div className="h-full w-full transition-all duration-700" style={{ background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
@@ -2562,7 +2533,7 @@ function DashboardTab(props: {
 
                   {unplannedEntries.length > 0 && (
                     <div className="pt-2 border-t border-pink-100 space-y-3">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">Unplanned spends</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E]">{tr("Unplanned spends")}</p>
                       {(() => {
                         const maxUnplanned = Math.max(...unplannedEntries.map(([, v]) => v), 1);
                         return unplannedEntries.map(([k, amt]) => {
@@ -2573,13 +2544,13 @@ function DashboardTab(props: {
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-1.5 min-w-0">
                                   <CatIcon cat={cat} />
-                                  <span className="text-[11px] font-semibold text-[#831843] truncate">{cat?.label ?? k}</span>
-                                  <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">New</span>
+                                  <span className="text-[11px] font-semibold text-[#831843] truncate">{trx(cat?.label) ?? trx(k)}</span>
+                                  <span className="shrink-0 text-[9px] font-bold text-[#EC4899] bg-pink-100 rounded-full px-1.5 py-0.5">{tr("New")}</span>
                                 </div>
-                                <span className="text-[11px] font-bold text-[#EC4899] tabular-nums shrink-0 ml-2">{fmt(amt, currency)}</span>
+                                <span className="text-[11px] font-bold text-[#EC4899] tabular-nums shrink-0 ms-2">{fmt(amt, currency)}</span>
                               </div>
                               <div className="relative h-1.5 rounded-full overflow-hidden bg-pink-200/40">
-                                <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                                <div className="absolute inset-y-0 start-0 rounded-full transition-all duration-700"
                                   style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F8B4D4,#F472B6)" }} />
                               </div>
                             </div>
@@ -2597,8 +2568,7 @@ function DashboardTab(props: {
               <div className="mt-4 space-y-3">
                 <div className="border-t border-pink-100 mb-3" />
                 <p className="text-[9px] font-bold uppercase tracking-widest text-[#9D5C7E] flex items-center gap-1.5">
-                  <Flag className="h-3 w-3" /> Savings Goals
-                </p>
+                  <Flag className="h-3 w-3" />{" "}{tr("Savings Goals")}</p>
                 {goals.map(g => {
                   const pct = g.target > 0 ? Math.min(100, (g.saved / g.target) * 100) : 0;
                   return (
@@ -2606,16 +2576,16 @@ function DashboardTab(props: {
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span className="shrink-0 text-[9px] font-bold text-violet-600 bg-violet-100 rounded-full px-1.5 py-0.5">{Math.round(pct)}%</span>
-                          <span className="text-[11px] font-semibold text-[#831843] truncate">{g.name}</span>
+                          <span className="text-[11px] font-semibold text-[#831843] truncate">{trx(g.name)}</span>
                         </div>
-                        <div className="flex items-center gap-0.5 shrink-0 ml-2 tabular-nums text-[11px]">
-                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}/mo</span>
+                        <div className="flex items-center gap-0.5 shrink-0 ms-2 tabular-nums text-[11px]">
+                          <span className="font-bold text-violet-600">{fmt(g.monthly, currency)}{tr("/mo")}</span>
                           <span className="text-[#9D5C7E] mx-0.5">·</span>
-                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)} goal</span>
+                          <span className="text-[#9D5C7E]">{fmt(g.target, currency)}{" "}{tr("goal")}</span>
                         </div>
                       </div>
                       <div className="relative h-1.5 rounded-full overflow-hidden bg-violet-100/50">
-                        <div className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                        <div className="absolute inset-y-0 start-0 rounded-full transition-all duration-700"
                           style={{ width: `${pct}%`, background: "linear-gradient(90deg,#CBB6E4,#A98BD9)" }} />
                       </div>
                     </div>
@@ -2631,18 +2601,15 @@ function DashboardTab(props: {
       <Card>
         <div className="flex items-center justify-between mb-3">
           <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} /> Spending Categories
-          </h3>
+            <Sparkles className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />{" "}{tr("Spending Categories")}</h3>
           <div className="flex items-center gap-2">
             {mealEstimate && !budget["food"] && (
               <button onClick={() => setTab("Budget Setup")}
                 className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#EC4899] hover:underline">
-                <UtensilsCrossed className="h-3 w-3" /> Sync meals
-              </button>
+                <UtensilsCrossed className="h-3 w-3" />{" "}{tr("Sync meals")}</button>
             )}
             {catSpend.length > 0 && (
-              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">
-                See all <ChevronRight className="h-3 w-3" />
+              <button onClick={() => setTab("Reports")} className="text-xs font-semibold text-[#EC4899] hover:underline inline-flex items-center gap-0.5">{tr("See all")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3 w-3" />
               </button>
             )}
           </div>
@@ -2663,7 +2630,7 @@ function DashboardTab(props: {
                   ].join(" ")}>
                     <CatIcon cat={cat} className="h-5 w-5" color={isOver ? "#EF4444" : isUnplanned ? "#F59E0B" : "#EC4899"} />
                   </div>
-                  <p className="text-[9px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{cat?.label ?? key}</p>
+                  <p className="text-[9px] font-semibold text-[#831843] text-center leading-tight line-clamp-2 w-full">{trx(cat?.label) ?? trx(key)}</p>
                   {/* two-part bar */}
                   <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-pink-100">
                     {isUnplanned
@@ -2671,11 +2638,11 @@ function DashboardTab(props: {
                       : <>
                           <div className="h-full transition-all duration-700"
                             style={{ width: `${pinkPct}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)", borderRadius: isOver ? "9999px 0 0 9999px" : "9999px" }} />
-                          {isOver && <div className="h-full flex-1 rounded-r-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
+                          {isOver && <div className="h-full flex-1 rounded-e-full" style={{ background: "linear-gradient(90deg,#FCA5A5,#EF4444)" }} />}
                         </>}
                   </div>
                   <p className={["text-[9px] font-bold", isOver ? "text-rose-500" : isUnplanned ? "text-amber-500" : "text-emerald-600"].join(" ")}>
-                    {isUnplanned ? "New" : isOver ? `+${overPct}%` : "✓ Plan"}
+                    {isUnplanned ? tr("New") : isOver ? `+${overPct}%` : tr("✓ Plan")}
                   </p>
                 </div>
               );
@@ -2687,12 +2654,10 @@ function DashboardTab(props: {
               <ArrowDownRight className="h-4 w-4" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-bold text-[#831843]">Log your first spend ✿</p>
-              <p className="text-[11px] text-[#9D5C7E]">Track where your money goes — every spend counts</p>
+              <p className="text-sm font-bold text-[#831843]">{tr("Log your first spend ✿")}</p>
+              <p className="text-[11px] text-[#9D5C7E]">{tr("Track where your money goes — every spend counts")}</p>
             </div>
-            <button onClick={() => setTab("Reports")} className="shrink-0 text-xs font-bold text-[#EC4899] hover:underline">
-              Add
-            </button>
+            <button onClick={() => setTab("Reports")} className="shrink-0 text-xs font-bold text-[#EC4899] hover:underline">{tr("Add")}</button>
           </div>
         )}
       </Card>
@@ -2735,14 +2700,13 @@ function DashboardTab(props: {
                     <div className="relative flex items-center justify-between gap-3 p-4">
                       <div className="flex-1 min-w-0">
                         <p className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-white/80">
-                          <Sparkles className="h-2.5 w-2.5" /> Dream Goal
-                        </p>
-                        <h3 className="font-script text-xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                          <Sparkles className="h-2.5 w-2.5" />{" "}{tr("Dream Goal")}</p>
+                        <h3 className="font-script text-xl text-white mt-0.5 leading-tight truncate">{trx(goal.name)}</h3>
                         <p className="text-xs text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
                         <div className="mt-2 h-1 rounded-full bg-white/25 overflow-hidden max-w-[160px]">
                           <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
                         </div>
-                        <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                        <p className="mt-1 text-[10px] font-bold text-white/90">{Math.round(pct)}{tr("% completed")}</p>
                       </div>
                       <MiniRing pct={pct} size={88} />
                     </div>
@@ -2751,12 +2715,12 @@ function DashboardTab(props: {
               );
             })}
             <button onClick={() => setGoalIdx(p => Math.max(0, p - 1))} disabled={clampedGoalIdx === 0}
-              className="absolute left-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+              className="absolute start-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
             </button>
             <button onClick={() => setGoalIdx(p => Math.min(goals.length - 1, p + 1))} disabled={clampedGoalIdx === goals.length - 1}
-              className="absolute right-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
-              <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+              className="absolute end-0 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-white/60 text-[#9D5C7E] shadow-md backdrop-blur-sm transition disabled:opacity-0 hover:bg-white/90 active:scale-95">
+              <ChevronRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
             </button>
             {goals.length > 1 && (
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1.5 z-30">
@@ -2783,14 +2747,13 @@ function DashboardTab(props: {
                   <div className="relative flex items-center justify-between gap-3 p-5">
                     <div className="flex-1 min-w-0">
                       <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/80">
-                        <Sparkles className="h-3 w-3" /> Dream Goal
-                      </p>
-                      <h3 className="font-script text-2xl text-white mt-0.5 leading-tight truncate">{goal.name}</h3>
+                        <Sparkles className="h-3 w-3" />{" "}{tr("Dream Goal")}</p>
+                      <h3 className="font-script text-2xl text-white mt-0.5 leading-tight truncate">{trx(goal.name)}</h3>
                       <p className="text-sm text-white/90 mt-0.5">{fmt(goal.saved, currency)} / {fmt(goal.target, currency)}</p>
                       <div className="mt-2.5 h-1 rounded-full bg-white/25 overflow-hidden">
                         <div className="h-full rounded-full bg-white transition-all duration-700" style={{ width: `${pct}%` }} />
                       </div>
-                      <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(pct)}% completed</p>
+                      <p className="mt-1 text-[11px] font-bold text-white/90">{Math.round(pct)}{tr("% completed")}</p>
                     </div>
                     <MiniRing pct={pct} size={80} />
                   </div>
@@ -2801,11 +2764,10 @@ function DashboardTab(props: {
         </>
       ) : (
         <Card className="border-dashed border-pink-300/50 text-center py-5">
-          <p className="font-script text-2xl text-[#831843]">Add your first dream goal ✿</p>
-          <p className="text-xs text-[#9D5C7E] mt-1">A vacation, an emergency fund — dream big</p>
+          <p className="font-script text-2xl text-[#831843]">{tr("Add your first dream goal ✿")}</p>
+          <p className="text-xs text-[#9D5C7E] mt-1">{tr("A vacation, an emergency fund — dream big")}</p>
           <PrimaryBtn onClick={() => setTab("Savings Goals")} className="mt-3">
-            <Flag className="h-4 w-4" /> Add Goal
-          </PrimaryBtn>
+            <Flag className="h-4 w-4" />{" "}{tr("Add Goal")}</PrimaryBtn>
         </Card>
       )}
 
@@ -2820,15 +2782,15 @@ function DashboardTab(props: {
             <Card className={storyOver ? "bg-rose-50/60 border-rose-200/60" : ""}>
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843] mb-3">
                 <Sparkles className={`h-4 w-4 ${storyOver ? "text-red-500" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                {viewPeriod === "week" ? "This week's story" : "This month's story"}
+                {viewPeriod === "week" ? tr("This week's story") : tr("This month's story")}
               </h3>
               <ul className="space-y-3">
                 {insights.map((ins, i) => (
                   <li key={i} className="flex items-start gap-2.5">
-                    <span className="text-base leading-none mt-0.5 shrink-0 text-[#EC4899]">{ins.icon}</span>
+                    <span className="text-base leading-none mt-0.5 shrink-0 text-[#EC4899]">{trx(ins.icon)}</span>
                     <div>
-                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-red-700" : "text-[#831843]"}`}>{ins.main}</p>
-                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-red-500" : "text-[#9D5C7E]"}`}>{ins.sub}</p>
+                      <p className={`text-sm font-semibold leading-snug ${storyOver && i === 0 ? "text-red-700" : "text-[#831843]"}`}>{trx(ins.main)}</p>
+                      <p className={`text-[11px] ${storyOver && i === 0 ? "text-red-500" : "text-[#9D5C7E]"}`}>{trx(ins.sub)}</p>
                     </div>
                   </li>
                 ))}
@@ -2837,12 +2799,11 @@ function DashboardTab(props: {
 
             <Card className={storyOver ? "bg-rose-50/60 border-rose-200/60" : ""}>
               <div className="flex items-center justify-between mb-3">
-                <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>Income vs Expenses</h3>
+                <h3 className={`text-sm font-bold ${storyOver ? "text-red-700" : "text-[#831843]"}`}>{tr("Income vs Expenses")}</h3>
                 <div className="flex items-center gap-2 text-[10px] text-[#9D5C7E] font-semibold">
-                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full inline-block" style={{ background: "#F472B6" }} /> Income</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full inline-block" style={{ background: "#F472B6" }} />{" "}{tr("Income")}</span>
                   <span className="flex items-center gap-1">
-                    <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} /> Expenses
-                  </span>
+                    <span className="h-2 w-2 rounded-full inline-block transition-colors duration-500" style={{ background: expenseBarColor }} />{" "}{tr("Expenses")}</span>
                 </div>
               </div>
               {totalIncome === 0 && effectiveSpend === 0 ? (
@@ -2864,7 +2825,7 @@ function DashboardTab(props: {
                             <div className="w-9 sm:w-11 rounded-t-xl transition-all duration-700 shadow-[0_2px_8px_-2px_rgba(244,114,182,0.4)]"
                               style={{ height: barPx, background: fill }} />
                           </div>
-                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>{type}</span>
+                          <span className={`text-[10px] font-semibold capitalize ${storyOver && type === "expenses" ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>{trx(type)}</span>
                         </div>
                       );
                     })}
@@ -2877,7 +2838,7 @@ function DashboardTab(props: {
                         tone={ringTone}
                         size={104}
                       />
-                      <p className={`text-[10px] font-semibold -mt-1.5 ${storyOver ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>of income spent</p>
+                      <p className={`text-[10px] font-semibold -mt-1.5 ${storyOver ? "text-[#E11D48]" : "text-[#9D5C7E]"}`}>{tr("of income spent")}</p>
                     </div>
                   )}
                 </div>
@@ -2896,11 +2857,9 @@ function DashboardTab(props: {
           <Card>
             <div className="flex items-center justify-between mb-3">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
-                Spending History
-              </h3>
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />{tr("Spending History")}</h3>
               <span className="text-[10px] text-[#9D5C7E] font-semibold">
-                {new Date().toLocaleString("default", { month: "long", year: "numeric" })}
+                {new Date().toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" })}
               </span>
             </div>
             <BudgetHistorique
@@ -2920,10 +2879,8 @@ function DashboardTab(props: {
           <Card>
             <div className="flex items-center justify-between mb-3">
               <h3 className="flex items-center gap-1.5 text-sm font-bold text-[#831843]">
-                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />
-                6-Month Overview
-              </h3>
-              <span className="text-[10px] text-[#9D5C7E] font-semibold">spend vs income trend</span>
+                <TrendingUp className="h-4 w-4 text-[#EC4899]" strokeWidth={1.6} />{tr("6-Month Overview")}</h3>
+              <span className="text-[10px] text-[#9D5C7E] font-semibold">{tr("spend vs income trend")}</span>
             </div>
             <MonthlyPatternsChart
               txns={txns}
@@ -2959,38 +2916,36 @@ function AddTxnForm({ amount, setAmount, catKey, setCatKey, desc, setDesc, date,
       {/* Amount row */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#EC4899]">{CURRENCIES[currency].symbol}</span>
+          <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#EC4899]">{trx(CURRENCIES[currency].symbol)}</span>
           <Input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)}
-            className="pl-7 text-lg font-bold" onKeyDown={e => e.key === "Enter" && addTxn()} />
+            className="ps-7 text-lg font-bold" onKeyDown={e => e.key === "Enter" && addTxn()} />
         </div>
         <PinkDatePicker value={date} onChange={setDate} className="w-36 shrink-0" />
       </div>
       {/* Category + Mood */}
       <div className="flex gap-2">
         <button onClick={() => setShowCatModal(true)}
-          className="flex-1 flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-left">
+          className="flex-1 flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-sm text-[#831843] border-[0.5px] border-pink-300/40 hover:border-pink-400 transition text-start">
           <CatIcon cat={currentCat} className="h-4 w-4" />
-          <span className="flex-1 truncate font-medium">{currentCat?.label ?? catKey}</span>
+          <span className="flex-1 truncate font-medium">{trx(currentCat?.label) ?? trx(catKey)}</span>
           <ChevronDown className="h-3.5 w-3.5 text-[#9D5C7E] shrink-0" />
         </button>
         <button onClick={() => setShowMoodModal(true)}
           className={["flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold border transition shrink-0", currentMood.tone].join(" ")}>
-          <currentMood.Icon className="h-3.5 w-3.5" /> {currentMood.label}
+          <currentMood.Icon className="h-3.5 w-3.5" /> {trx(currentMood.label)}
           <ChevronDown className="h-3 w-3 opacity-60" />
         </button>
       </div>
       {/* Description */}
-      <Input placeholder="What did you spend on? (optional)" value={desc} onChange={e => setDesc(e.target.value)} />
+      <Input placeholder={tr("What did you spend on? (optional)")} value={desc} onChange={e => setDesc(e.target.value)} />
       {/* Save */}
       <div className="flex items-center justify-between pt-1">
         {txnSaved ? (
           <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 animate-fade-in">
-            <Check className="h-4 w-4" /> Saved ✿
-          </span>
+            <Check className="h-4 w-4" />{" "}{tr("Saved ✿")}</span>
         ) : <span />}
         <PrimaryBtn onClick={addTxn} disabled={!amount || parseFloat(amount) <= 0}>
-          <Plus className="h-4 w-4" /> Save spend
-        </PrimaryBtn>
+          <Plus className="h-4 w-4" />{" "}{tr("Save spend")}</PrimaryBtn>
       </div>
     </div>
   );
@@ -3017,14 +2972,14 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
   return (
     <div className="space-y-3 sm:space-y-4">
       <div className="flex justify-end">
-        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" /> Add Income</PrimaryBtn>
+        <PrimaryBtn onClick={add}><Plus className="h-4 w-4" />{" "}{tr("Add Income")}</PrimaryBtn>
       </div>
 
       {incomes.length === 0 ? (
         <Card>
           <EmptyState
             Icon={Coins}
-            title="Let's add your first income source"
+            title={tr("Let's add your first income source")}
             text="Tell Bloom what you earn so it can plan a soft, smart budget for you."
             cta={{ label: "Add Income", onClick: add }}
           />
@@ -3039,13 +2994,13 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
                     options={INCOME_SOURCES.map(s => ({ value: s, label: s }))} />
                 </div>
                 <Input type="number" value={i.amount || ""} onChange={(e) => update(i.id, { amount: parseFloat(e.target.value) || 0 })}
-                  placeholder="Amount" className="sm:col-span-3" />
+                  placeholder={tr("Amount")} className="sm:col-span-3" />
                 <div className="sm:col-span-3">
                   <PinkSelect value={i.frequency} onChange={(v) => update(i.id, { frequency: v as Frequency })}
                     options={FREQUENCIES.map(f => ({ value: f, label: f }))} />
                 </div>
                 <div className="sm:col-span-2 flex items-center justify-between sm:justify-end gap-2">
-                  <span className="text-xs text-[#9D5C7E]">≈ {fmt(toMonthly(i), currency)}/mo</span>
+                  <span className="text-xs text-[#9D5C7E]">≈ {fmt(toMonthly(i), currency)}{tr("/mo")}</span>
                   <button onClick={() => remove(i.id)} className="grid h-9 w-9 place-items-center rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200 transition">
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -3054,7 +3009,7 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
             ))}
           </ul>
           <div className="mt-4 flex items-center justify-between rounded-2xl bg-gradient-to-r from-pink-100 to-rose-100 px-4 py-3">
-            <span className="font-semibold text-[#831843]">Total Monthly Income</span>
+            <span className="font-semibold text-[#831843]">{tr("Total Monthly Income")}</span>
             <span className="font-script text-3xl text-[#EC4899]">{fmt(total, currency)}</span>
           </div>
         </Card>
@@ -3063,11 +3018,10 @@ function IncomesTab({ incomes, setIncomes, currency, setTab }: {
       {total > 0 && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
-            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">NICE WORK</p>
-            <p className="font-script text-2xl text-[#831843] leading-tight">Income added — let's plan your budget.</p>
+            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">{tr("NICE WORK")}</p>
+            <p className="font-script text-2xl text-[#831843] leading-tight">{tr("Income added — let's plan your budget.")}</p>
           </div>
-          <PrimaryBtn onClick={() => setTab("Budget Setup")} className="shadow-lg shadow-pink-400/40">
-            Next: Budget Setup <ArrowRight className="h-4 w-4" />
+          <PrimaryBtn onClick={() => setTab("Budget Setup")} className="shadow-lg shadow-pink-400/40">{tr("Next: Budget Setup")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
           </PrimaryBtn>
         </Card>
       )}
@@ -3147,18 +3101,16 @@ function BudgetSetupTab(props: {
       {mealEstimate && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
-            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">FROM YOUR MEAL PLAN</p>
-            <p className="font-script text-2xl text-[#831843] leading-tight">
-              Your {mealEstimate.mealCount}-meal weekly plan is about {fmt(mealEstimate.weekly, currency)}/week in groceries
-            </p>
-            <p className="text-xs text-[#9D5C7E] mt-1">≈ {fmt(mealEstimate.monthly, currency)}/month — a rough estimate based on each recipe's cost level.</p>
+            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">{tr("FROM YOUR MEAL PLAN")}</p>
+            <p className="font-script text-2xl text-[#831843] leading-tight">{tr("Your")}{" "}{trx(mealEstimate.mealCount)}{tr("-meal weekly plan is about")}{" "}{fmt(mealEstimate.weekly, currency)}{tr("/week in groceries")}</p>
+            <p className="text-xs text-[#9D5C7E] mt-1">≈ {fmt(mealEstimate.monthly, currency)}{tr("/month — a rough estimate based on each recipe's cost level.")}</p>
           </div>
-          <GhostBtn onClick={useMealEstimate}><UtensilsCrossed className="h-4 w-4" /> Use for Food budget</GhostBtn>
+          <GhostBtn onClick={useMealEstimate}><UtensilsCrossed className="h-4 w-4" />{" "}{tr("Use for Food budget")}</GhostBtn>
         </Card>
       )}
 
       <Card>
-        <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">STEP 1 · CHOOSE CATEGORIES</h3>
+        <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-3">{tr("STEP 1 · CHOOSE CATEGORIES")}</h3>
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5">
           {allCats.map(c => {
             const on = selectedCats.includes(c.key);
@@ -3171,44 +3123,42 @@ function BudgetSetupTab(props: {
                 ].join(" ")}
               >
                 <c.Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${on ? "text-white" : "text-[#EC4899]"}`} strokeWidth={1.6} />
-                <span className="text-center leading-tight text-[9px] sm:text-[11px]">{c.label}</span>
+                <span className="text-center leading-tight text-[9px] sm:text-[11px]">{trx(c.label)}</span>
               </button>
             );
           })}
           <button onClick={() => setShowCustom(v => !v)}
             className="flex flex-col items-center justify-center gap-0.5 rounded-xl p-1.5 sm:p-2.5 text-sm font-semibold border-[0.5px] border-dashed border-pink-400/60 text-[#EC4899] bg-pink-50/40 hover:bg-pink-100">
             <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="text-[9px] sm:text-[11px]">Custom</span>
+            <span className="text-[9px] sm:text-[11px]">{tr("Custom")}</span>
           </button>
         </div>
 
         {showCustom && (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
-            <Input placeholder="Category name" value={customName} onChange={(e) => setCustomName(e.target.value)} className="sm:col-span-7" />
+            <Input placeholder={tr("Category name")} value={customName} onChange={(e) => setCustomName(e.target.value)} className="sm:col-span-7" />
             <div className="sm:col-span-3">
               <PinkSelect value={customGroup} onChange={(v) => setCustomGroup(v as Need)}
                 options={[{ value: "need", label: "Need" }, { value: "want", label: "Want" }, { value: "savings", label: "Savings" }]} />
             </div>
-            <PrimaryBtn onClick={addCustom} className="sm:col-span-2"><Plus className="h-4 w-4" /> Add</PrimaryBtn>
+            <PrimaryBtn onClick={addCustom} className="sm:col-span-2"><Plus className="h-4 w-4" />{" "}{tr("Add")}</PrimaryBtn>
           </div>
         )}
       </Card>
 
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E]">STEP 2 · SET AMOUNTS</h3>
+          <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E]">{tr("STEP 2 · SET AMOUNTS")}</h3>
           <div className="flex items-center gap-2">
-            {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" /> Saved</span>}
+            {saved && <span className="text-xs font-semibold text-emerald-700 inline-flex items-center gap-1"><Check className="h-3 w-3" />{" "}{tr("Saved")}</span>}
             <button
               onClick={() => { if (window.confirm("Reset everything? This will clear your budget setup AND all recorded transactions.")) { setBudget({}); setSelectedCats([]); props.setTxns([]); } }}
-              className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">
-              Reset
-            </button>
-            <PrimaryBtn onClick={save}>Save Budget</PrimaryBtn>
+              className="text-xs font-semibold text-[#9D5C7E] border border-pink-200 rounded-full px-3 py-1.5 hover:bg-pink-50 transition active:scale-95">{tr("Reset")}</button>
+            <PrimaryBtn onClick={save}>{tr("Save Budget")}</PrimaryBtn>
           </div>
         </div>
         {selectedCats.length === 0 ? (
-          <EmptyState Icon={Sparkles} title="Pick a few categories above" text="Tap any category card to add it to your monthly budget." />
+          <EmptyState Icon={Sparkles} title={tr("Pick a few categories above")} text="Tap any category card to add it to your monthly budget." />
         ) : (
           <ul className="space-y-2">
             {selectedCats.map(k => {
@@ -3218,7 +3168,7 @@ function BudgetSetupTab(props: {
               return (
                 <li key={k} className="flex items-center gap-2 rounded-xl bg-pink-50/40 px-2.5 py-2">
                   <c.Icon className="h-4 w-4 shrink-0 text-[#EC4899]" strokeWidth={1.6} />
-                  <span className="flex-1 min-w-0 truncate text-xs sm:text-sm font-semibold text-[#831843]">{c.label}</span>
+                  <span className="flex-1 min-w-0 truncate text-xs sm:text-sm font-semibold text-[#831843]">{trx(c.label)}</span>
                   <div className="w-20 sm:w-28 shrink-0">
                     <Input type="number" value={budget[k] || ""} placeholder="0"
                       onChange={(e) => setBudget(prev => ({ ...prev, [k]: parseFloat(e.target.value) || 0 }))} />
@@ -3238,11 +3188,10 @@ function BudgetSetupTab(props: {
       {hasAmounts && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
-            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">BUDGET SET</p>
-            <p className="font-script text-2xl text-[#831843] leading-tight">Now set a sweet little savings goal.</p>
+            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">{tr("BUDGET SET")}</p>
+            <p className="font-script text-2xl text-[#831843] leading-tight">{tr("Now set a sweet little savings goal.")}</p>
           </div>
-          <PrimaryBtn onClick={() => setTab("Savings Goals")} className="shadow-lg shadow-pink-400/40">
-            Next: Savings Goals <ArrowRight className="h-4 w-4" />
+          <PrimaryBtn onClick={() => setTab("Savings Goals")} className="shadow-lg shadow-pink-400/40">{tr("Next: Savings Goals")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
           </PrimaryBtn>
         </Card>
       )}
@@ -3251,10 +3200,10 @@ function BudgetSetupTab(props: {
         <Card>
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
-              <h3 className="font-script text-2xl text-[#831843]">Smart Suggestion · 50/30/20</h3>
-              <p className="text-xs text-[#9D5C7E]">Let Bloom auto-fill your amounts based on your income.</p>
+              <h3 className="font-script text-2xl text-[#831843]">{tr("Smart Suggestion · 50/30/20")}</h3>
+              <p className="text-xs text-[#9D5C7E]">{tr("Let Bloom auto-fill your amounts based on your income.")}</p>
             </div>
-            <GhostBtn onClick={applySuggestions}><Sparkles className="h-4 w-4" /> Apply Suggested Amounts</GhostBtn>
+            <GhostBtn onClick={applySuggestions}><Sparkles className="h-4 w-4" />{" "}{tr("Apply Suggested Amounts")}</GhostBtn>
           </div>
         </Card>
       )}
@@ -3289,26 +3238,26 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
   return (
     <div className="space-y-3 sm:space-y-4">
       <div className="flex justify-end">
-        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" /> Add Goal</PrimaryBtn>
+        <PrimaryBtn onClick={() => setShowAdd(v => !v)}><Plus className="h-4 w-4" />{" "}{tr("Add Goal")}</PrimaryBtn>
       </div>
 
       <Card>
-        <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-2">QUICK ADD</h3>
+        <h3 className="text-xs font-bold tracking-widest text-[#9D5C7E] mb-2">{tr("QUICK ADD")}</h3>
         <div className="flex flex-wrap gap-2">
           {PRESET_GOALS.map(p => (
             <button key={p} onClick={() => add(p)}
               className="rounded-full bg-[#FCE7F3] px-3 py-1.5 text-xs font-semibold text-[#9D5C7E] border-[0.5px] border-pink-400/30 hover:bg-pink-200 transition">
-              + {p}
+              + {trx(p)}
             </button>
           ))}
         </div>
 
         {showAdd && (
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-3 rounded-2xl bg-pink-50/60 p-3">
-            <Input placeholder="Goal name" value={name} onChange={(e) => setName(e.target.value)} className="sm:col-span-5" />
-            <Input type="number" placeholder="Target amount" value={target} onChange={(e) => setTarget(e.target.value)} className="sm:col-span-3" />
-            <Input type="number" placeholder="Monthly saving" value={monthly} onChange={(e) => setMonthly(e.target.value)} className="sm:col-span-2" />
-            <PrimaryBtn onClick={() => add()} className="sm:col-span-2">Add</PrimaryBtn>
+            <Input placeholder={tr("Goal name")} value={name} onChange={(e) => setName(e.target.value)} className="sm:col-span-5" />
+            <Input type="number" placeholder={tr("Target amount")} value={target} onChange={(e) => setTarget(e.target.value)} className="sm:col-span-3" />
+            <Input type="number" placeholder={tr("Monthly saving")} value={monthly} onChange={(e) => setMonthly(e.target.value)} className="sm:col-span-2" />
+            <PrimaryBtn onClick={() => add()} className="sm:col-span-2">{tr("Add")}</PrimaryBtn>
           </div>
         )}
       </Card>
@@ -3317,7 +3266,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
         <Card>
           <EmptyState
             Icon={Flag}
-            title="Set your first savings goal"
+            title={tr("Set your first savings goal")}
             text="Pick a preset above or open the form to dream up your own."
             cta={{ label: "Add a Goal", onClick: () => setShowAdd(true) }}
           />
@@ -3340,7 +3289,7 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
-                <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
+                <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{trx(status.l)}</span>
                 <div className="mt-3 relative h-3 rounded-full bg-pink-100 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700"
                     style={{ width: `${pct}%`, background: "linear-gradient(90deg,#F9A8D4,#F472B6)" }} />
@@ -3348,22 +3297,22 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
                   <label className="block">
-                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">SAVED</span>
+                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">{tr("SAVED")}</span>
                     <Input type="number" value={g.saved || ""} onChange={(e) => update(g.id, { saved: parseFloat(e.target.value) || 0 })} />
                   </label>
                   <label className="block">
-                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">TARGET</span>
+                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">{tr("TARGET")}</span>
                     <Input type="number" value={g.target || ""} onChange={(e) => update(g.id, { target: parseFloat(e.target.value) || 0 })} />
                   </label>
                   <label className="block">
-                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">MONTHLY</span>
+                    <span className="text-[10px] tracking-widest text-[#9D5C7E]">{tr("MONTHLY")}</span>
                     <Input type="number" value={g.monthly || ""} onChange={(e) => update(g.id, { monthly: parseFloat(e.target.value) || 0 })} />
                   </label>
                 </div>
                 <p className="mt-2 text-xs text-[#9D5C7E]">
                   {months !== null
-                    ? <>At this rate you'll reach it in <span className="font-semibold text-[#EC4899]">{months} months</span>.</>
-                    : "Set a monthly amount to estimate timing."}
+                    ? <>{tr("At this rate you'll reach it in")}{" "}<span className="font-semibold text-[#EC4899]">{trx(months)}{" "}{tr("months")}</span>.</>
+                    : tr("Set a monthly amount to estimate timing.")}
                 </p>
               </Card>
             );
@@ -3374,11 +3323,10 @@ function GoalsTab({ goals, setGoals, currency, setTab }: {
       {goals.length > 0 && (
         <Card className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-pink-300/40">
           <div>
-            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">DREAM LOCKED IN</p>
-            <p className="font-script text-2xl text-[#831843] leading-tight">Final step — track your spending.</p>
+            <p className="text-xs font-bold tracking-widest text-[#9D5C7E]">{tr("DREAM LOCKED IN")}</p>
+            <p className="font-script text-2xl text-[#831843] leading-tight">{tr("Final step — track your spending.")}</p>
           </div>
-          <PrimaryBtn onClick={() => setTab("Reports")} className="shadow-lg shadow-pink-400/40">
-            Next: Reports <ArrowRight className="h-4 w-4" />
+          <PrimaryBtn onClick={() => setTab("Reports")} className="shadow-lg shadow-pink-400/40">{tr("Next: Reports")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
           </PrimaryBtn>
         </Card>
       )}
@@ -3420,7 +3368,7 @@ function ReportsTab(props: {
       const amt = budget[k] ?? 0;
       if (amt > 0) rows.push({
         id: `vb_${k}`, kind: "planned", date: monthFirst,
-        catKey: k, amount: amt, description: "Planned budget", type: "expense",
+        catKey: k, amount: amt, description: tr("Planned budget"), type: "expense",
       });
     });
     // Bills flagged into this month's budget count as planned expense operations too.
@@ -3521,38 +3469,38 @@ function ReportsTab(props: {
     <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <div className="flex items-center justify-end gap-2">
         <button onClick={() => shiftMonth(-1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
         </button>
         <span className="text-sm font-semibold text-[#831843] min-w-[100px] text-center">
-          {new Date(month.y, month.m).toLocaleString(undefined, { month: "long", year: "numeric" })}
+          {new Date(month.y, month.m).toLocaleString(DATE_LOCALE, { month: "long", year: "numeric" })}
         </span>
         <button onClick={() => shiftMonth(1)} className="grid h-8 w-8 place-items-center rounded-full bg-[#FCE7F3] text-[#9D5C7E] hover:bg-pink-200 transition">
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
         </button>
       </div>
 
       <Card>
         <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-script text-xl text-[#831843]">All Operations</h3>
-          <span className="text-[10px] font-semibold text-[#9D5C7E]">{ledger.length} operation{ledger.length !== 1 ? "s" : ""}</span>
+          <h3 className="font-script text-xl text-[#831843]">{tr("All Operations")}</h3>
+          <span className="text-[10px] font-semibold text-[#9D5C7E]">{trx(ledger.length)}{" "}{tr("operation")}{ledger.length !== 1 ? "s" : ""}</span>
         </div>
 
         {/* Monthly summary chips */}
         <div className="flex gap-2 flex-wrap mb-3">
           <div className="flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1">
-            <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+            <ArrowUpRight className="rtl:-scale-x-100 h-3 w-3 text-emerald-600" />
             <span className="text-[10px] font-bold text-emerald-700">{fmt(ledgerStats.incomeTotal, currency)}</span>
-            <span className="text-[9px] text-emerald-500">income</span>
+            <span className="text-[9px] text-emerald-500">{tr("income")}</span>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-violet-50 border border-violet-200 px-2.5 py-1">
             <span className="text-[9px] text-violet-500">✦</span>
             <span className="text-[10px] font-bold text-violet-700">{fmt(ledgerStats.plannedTotal, currency)}</span>
-            <span className="text-[9px] text-violet-500">planned</span>
+            <span className="text-[9px] text-violet-500">{tr("planned")}</span>
           </div>
           <div className="flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1">
             <ArrowDownRight className="h-3 w-3 text-rose-500" />
             <span className="text-[10px] font-bold text-rose-700">{fmt(ledgerStats.extraTotal, currency)}</span>
-            <span className="text-[9px] text-rose-400">extra</span>
+            <span className="text-[9px] text-rose-400">{tr("extra")}</span>
           </div>
         </div>
 
@@ -3577,7 +3525,7 @@ function ReportsTab(props: {
         </div>
 
         {ledger.length === 0 ? (
-          <EmptyState Icon={Receipt} title="No operations this month" text="Add income, set up your budget, or log a spend to see all operations here." />
+          <EmptyState Icon={Receipt} title={tr("No operations this month")} text="Add income, set up your budget, or log a spend to see all operations here." />
         ) : (
           <ul className="divide-y divide-pink-100">
             {ledger.map(entry => {
@@ -3602,28 +3550,27 @@ function ReportsTab(props: {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="text-xs font-bold text-[#831843] truncate">
-                        {(isIncome || isBill) ? entry.description : (c?.label ?? entry.catKey)}
+                        {(isIncome || isBill) ? trx(entry.description) : (c?.label ?? entry.catKey)}
                       </span>
                       {isIncome && (
                         <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200">
-                          <ArrowUpRight className="h-2.5 w-2.5" />Income
-                        </span>
+                          <ArrowUpRight className="rtl:-scale-x-100 h-2.5 w-2.5" />{tr("Income")}</span>
                       )}
                       {isPlanned && (
                         <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border bg-violet-50 text-violet-600 border-violet-200">
-                          {isBill ? "Bill" : "✦ Planned"}
+                          {isBill ? tr("Bill") : tr("✦ Planned")}
                         </span>
                       )}
                       {isExtra && mood && (
                         <span className={`shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-semibold border ${mood.tone}`}>
-                          <mood.Icon className="h-2.5 w-2.5" />{mood.label}
+                          <mood.Icon className="h-2.5 w-2.5" />{trx(mood.label)}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[10px] text-[#9D5C7E]">{entry.date}</span>
-                      {isPlanned && <span className="text-[9px] text-violet-400">· {isBill ? "bill due" : "monthly allocation"}</span>}
-                      {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {entry.description}</span>}
+                      <span className="text-[10px] text-[#9D5C7E]">{trx(entry.date)}</span>
+                      {isPlanned && <span className="text-[9px] text-violet-400">· {isBill ? tr("bill due") : tr("monthly allocation")}</span>}
+                      {isExtra && entry.description && <span className="text-[10px] text-[#9D5C7E] truncate">· {trx(entry.description)}</span>}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-0.5 shrink-0">
@@ -3633,8 +3580,7 @@ function ReportsTab(props: {
                     <div className="flex items-center gap-1.5">
                       {isExtra && (
                         <span className="inline-flex items-center text-rose-500 text-[9px] font-semibold gap-0.5">
-                          <ArrowDownRight className="h-2.5 w-2.5" />Extra
-                        </span>
+                          <ArrowDownRight className="h-2.5 w-2.5" />{tr("Extra")}</span>
                       )}
                       {isExtra && (
                         <button onClick={() => setTxns(prev => prev.filter(x => x.id !== entry.id))} className="text-rose-400 hover:text-rose-600 transition">
@@ -3653,52 +3599,52 @@ function ReportsTab(props: {
       {/* Bills */}
       <Card>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-script text-2xl text-[#831843]">Upcoming Bills</h3>
-          <GhostBtn onClick={() => setBillOpen(v => !v)}><Plus className="h-4 w-4" /> Add Bill</GhostBtn>
+          <h3 className="font-script text-2xl text-[#831843]">{tr("Upcoming Bills")}</h3>
+          <GhostBtn onClick={() => setBillOpen(v => !v)}><Plus className="h-4 w-4" />{" "}{tr("Add Bill")}</GhostBtn>
         </div>
         {billOpen && (
           <div className="mb-3 rounded-2xl bg-pink-50/60 p-3 space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-              <Input placeholder="Bill name" value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-5" />
+              <Input placeholder={tr("Bill name")} value={bName} onChange={(e) => setBName(e.target.value)} className="sm:col-span-5" />
               <div className="sm:col-span-4"><PinkDatePicker value={bDate} onChange={setBDate} className="w-full" /></div>
-              <Input type="number" placeholder="Amount" value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
+              <Input type="number" placeholder={tr("Amount")} value={bAmt} onChange={(e) => setBAmt(e.target.value)} className="sm:col-span-3" />
             </div>
             {/* Count this bill in this month's budget (dashboard + stat cards) */}
             <label className="flex items-start gap-2 cursor-pointer select-none">
               <input type="checkbox" checked={bPlanned} onChange={(e) => setBPlanned(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#EC4899]" />
               <span className="text-[12px] text-[#831843] leading-snug">
-                <b>Add to this month's budget</b>
-                <span className="text-[#9D5C7E]"> — it counts as planned budget and shows on your dashboard & stat cards.</span>
+                <b>{tr("Add to this month's budget")}</b>
+                <span className="text-[#9D5C7E]">{" "}{tr("— it counts as planned budget and shows on your dashboard & stat cards.")}</span>
               </span>
             </label>
             {/* Reminder */}
             <label className="flex items-start gap-2 cursor-pointer select-none">
               <input type="checkbox" checked={bRemind} onChange={(e) => setBRemind(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#EC4899]" />
               <span className="text-[12px] text-[#831843] leading-snug">
-                <b>Remind me</b>
-                <span className="text-[#9D5C7E]"> — added to your Reminders tool + a phone notification.</span>
+                <b>{tr("Remind me")}</b>
+                <span className="text-[#9D5C7E]">{" "}{tr("— added to your Reminders tool + a phone notification.")}</span>
               </span>
             </label>
             {bRemind && (
-              <div className="flex items-center gap-2 pl-6 text-[12px] text-[#9D5C7E]">
-                <span>Nudge me</span>
+              <div className="flex items-center gap-2 ps-6 text-[12px] text-[#9D5C7E]">
+                <span>{tr("Nudge me")}</span>
                 <div className="inline-flex items-center rounded-full bg-white border border-pink-200 overflow-hidden">
                   <button type="button" onClick={() => setBRemindDays(d => Math.max(0, d - 1))} className="px-2.5 py-1 text-[#EC4899] font-bold hover:bg-pink-50">−</button>
-                  <span className="px-2 min-w-[2.5rem] text-center font-bold text-[#831843] tabular-nums">{bRemindDays}</span>
+                  <span className="px-2 min-w-[2.5rem] text-center font-bold text-[#831843] tabular-nums">{trx(bRemindDays)}</span>
                   <button type="button" onClick={() => setBRemindDays(d => Math.min(30, d + 1))} className="px-2.5 py-1 text-[#EC4899] font-bold hover:bg-pink-50">+</button>
                 </div>
-                <span>day{bRemindDays === 1 ? "" : "s"} before it's due</span>
+                <span>{tr("day")}{bRemindDays === 1 ? "" : "s"}{" "}{tr("before it's due")}</span>
               </div>
             )}
             <div className="flex justify-end">
-              <PrimaryBtn onClick={addBill}>Add bill</PrimaryBtn>
+              <PrimaryBtn onClick={addBill}>{tr("Add bill")}</PrimaryBtn>
             </div>
           </div>
         )}
         {bills.length === 0 ? (
           <EmptyState
             Icon={Calendar}
-            title="No upcoming bills"
+            title={tr("No upcoming bills")}
             text="Add a bill so Bloom can remind you before it's due."
             cta={{ label: "Add a Bill", onClick: () => setBillOpen(true) }}
           />
@@ -3712,17 +3658,17 @@ function ReportsTab(props: {
               return (
                 <li key={b.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-pink-50/40 px-3 py-2">
                   <div>
-                    <div className="font-semibold text-[#831843]">{b.name}</div>
-                    <div className="text-xs text-[#9D5C7E]">{b.due} · in {d} days · {fmt(b.amount, currency)}</div>
+                    <div className="font-semibold text-[#831843]">{trx(b.name)}</div>
+                    <div className="text-xs text-[#9D5C7E]">{trx(b.due)}{" "}{tr("· in")}{" "}{trx(d)}{" "}{tr("days ·")}{" "}{fmt(b.amount, currency)}</div>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      {b.plannedThisMonth && !b.paid && <span className="rounded-full bg-[#FCE7F3] text-[#DB2777] text-[10px] font-bold px-2 py-0.5">In budget</span>}
-                      {b.remind && !b.paid && <span className="inline-flex items-center gap-1 rounded-full bg-white border border-pink-200 text-[#9D5C7E] text-[10px] font-bold px-2 py-0.5"><Bell className="h-2.5 w-2.5" />{b.remindDays ?? 3}d before</span>}
+                      {b.plannedThisMonth && !b.paid && <span className="rounded-full bg-[#FCE7F3] text-[#DB2777] text-[10px] font-bold px-2 py-0.5">{tr("In budget")}</span>}
+                      {b.remind && !b.paid && <span className="inline-flex items-center gap-1 rounded-full bg-white border border-pink-200 text-[#9D5C7E] text-[10px] font-bold px-2 py-0.5"><Bell className="h-2.5 w-2.5" />{trx(b.remindDays) ?? 3}{tr("d before")}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{status.l}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.c}`}>{trx(status.l)}</span>
                     <button onClick={() => toggleBill(b.id)} className="rounded-full bg-[#EC4899] text-white text-xs font-semibold px-3 py-1 hover:bg-[#DB2777]">
-                      {b.paid ? "Mark Unpaid" : "Mark as Paid"}
+                      {b.paid ? tr("Mark Unpaid") : tr("Mark as Paid")}
                     </button>
                     <button onClick={() => removeBill(b.id)} className="grid h-7 w-7 place-items-center rounded-full bg-rose-100 text-rose-600 hover:bg-rose-200">
                       <Trash2 className="h-3.5 w-3.5" />
@@ -3736,20 +3682,19 @@ function ReportsTab(props: {
       </Card>
 
       <Card>
-        <h3 className="font-script text-2xl text-[#831843] mb-3">Export</h3>
+        <h3 className="font-script text-2xl text-[#831843] mb-3">{tr("Export")}</h3>
         <div className="flex flex-wrap gap-2">
-          <PrimaryBtn onClick={exportCSV}><Download className="h-4 w-4" /> Export to CSV</PrimaryBtn>
-          <GhostBtn onClick={exportSummary}><Download className="h-4 w-4" /> Export Budget Summary</GhostBtn>
+          <PrimaryBtn onClick={exportCSV}><Download className="h-4 w-4" />{" "}{tr("Export to CSV")}</PrimaryBtn>
+          <GhostBtn onClick={exportSummary}><Download className="h-4 w-4" />{" "}{tr("Export Budget Summary")}</GhostBtn>
         </div>
       </Card>
 
       {/* All-set → send them to the Dashboard to see the whole setup come together */}
       <Card className="text-center">
-        <p className="font-script text-2xl text-[#831843] leading-tight">That's your whole plan ✿</p>
-        <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">See it all bloom together — income, budget, goals & spending — on your dashboard.</p>
+        <p className="font-script text-2xl text-[#831843] leading-tight">{tr("That's your whole plan ✿")}</p>
+        <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">{tr("See it all bloom together — income, budget, goals & spending — on your dashboard.")}</p>
         <div className="mt-3 flex justify-center">
-          <PrimaryBtn onClick={() => { setTab("Dashboard"); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} className="shadow-lg shadow-pink-400/40">
-            View my dashboard <ArrowRight className="h-4 w-4" />
+          <PrimaryBtn onClick={() => { setTab("Dashboard"); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }); }} className="shadow-lg shadow-pink-400/40">{tr("View my dashboard")}{" "}<ArrowRight className="rtl:-scale-x-100 h-4 w-4" />
           </PrimaryBtn>
         </div>
       </Card>
@@ -3783,13 +3728,13 @@ function EmptyState({
         <Icon className={compact ? "h-5 w-5" : "h-7 w-7"} strokeWidth={1.6} />
       </div>
       {title && (
-        <p className="font-script text-2xl text-[#831843] leading-tight">{title}</p>
+        <p className="font-script text-2xl text-[#831843] leading-tight">{trx(title)}</p>
       )}
-      <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">{text}</p>
+      <p className="mt-1 text-sm text-[#9D5C7E] max-w-md mx-auto">{trx(text)}</p>
       {cta && (
         <div className="mt-3">
           <PrimaryBtn onClick={cta.onClick}>
-            <Plus className="h-4 w-4" /> {cta.label}
+            <Plus className="h-4 w-4" /> {trx(cta.label)}
           </PrimaryBtn>
         </div>
       )}

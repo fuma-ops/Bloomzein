@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check, type LucideIcon } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 /* ============================================================
    PickerField — an on-brand replacement for a native <select>.
@@ -49,7 +50,7 @@ export function PickerField({
         className={`${triggerClass} ${className}`}
       >
         {Icon && <Icon className="h-3.5 w-3.5 shrink-0 text-hotpink/80" />}
-        <span className="truncate">{current?.label ?? "Select"}</span>
+        <span className="truncate">{trx(current?.label) ?? tr("Select")}</span>
         <ChevronDown className="h-3.5 w-3.5 shrink-0 text-hotpink/70" />
       </button>
 
@@ -64,7 +65,7 @@ export function PickerField({
           >
             {title && (
               <div className="sticky top-0 z-10 bg-white/95 backdrop-blur px-5 pt-4 pb-2.5 border-b border-petal/40">
-                <p className="font-script text-xl text-hotpink leading-none">{title}</p>
+                <p className="font-script text-xl text-hotpink leading-none">{trx(title)}</p>
               </div>
             )}
             <div className="p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
@@ -75,9 +76,9 @@ export function PickerField({
                     key={o.value}
                     type="button"
                     onClick={() => { onChange(o.value); setOpen(false); }}
-                    className={`w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3 text-left text-sm font-semibold transition active:scale-[0.99] ${sel ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "text-rose hover:bg-blush"}`}
+                    className={`w-full flex items-center justify-between gap-2 rounded-xl px-4 py-3 text-start text-sm font-semibold transition active:scale-[0.99] ${sel ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "text-rose hover:bg-blush"}`}
                   >
-                    <span>{o.label}</span>
+                    <span>{trx(o.label)}</span>
                     {sel && <Check className="h-4 w-4 shrink-0" strokeWidth={3} />}
                   </button>
                 );

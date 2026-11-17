@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Flower2, Heart, Flower, type LucideIcon } from "lucide-react";
+import { tr, trx } from "@/i18n";
 
 /**
  * BloomzeinIntro — a slow (~8.5s) branded opener that plays full-screen before a
@@ -139,7 +140,7 @@ export function BloomzeinIntro({
 
   return createPortal(
     <div ref={rootRef} className="bz-root" onClick={finish} style={{ opacity: 0 }}>
-      <style>{CSS}</style>
+      <style>{trx(CSS)}</style>
 
       {/* the woman, faded behind */}
       <div className="bz-layer bz-womanlayer">
@@ -162,7 +163,7 @@ export function BloomzeinIntro({
               <FlowerMark className="h-[24vmin] w-[24vmin]" />
             </div>
           </div>
-          <div className="bz-wordmark bz-script" style={{ fontSize: "clamp(3rem,12vw,8rem)", textAlign: "center" }}>Bloomzein</div>
+          <div className="bz-wordmark bz-script" style={{ fontSize: "clamp(3rem,12vw,8rem)", textAlign: "center" }}>{tr("Bloomzein")}</div>
         </div>
       </div>
 
@@ -171,13 +172,13 @@ export function BloomzeinIntro({
         <div style={{ textAlign: "center", padding: "0 6vw" }}>
           {channel && (
             <div className="bz-title-line" style={{ color: "#fff", fontWeight: 700, letterSpacing: "0.3em", textTransform: "uppercase",
-              fontSize: "clamp(.7rem,1.6vw,1rem)", opacity: 0.9, marginBottom: "1.6vh" }}>{channel}</div>
+              fontSize: "clamp(.7rem,1.6vw,1rem)", opacity: 0.9, marginBottom: "1.6vh" }}>{trx(channel)}</div>
           )}
-          <div className="bz-script bz-title-line" style={{ fontSize: "clamp(2.8rem,9.5vw,7rem)" }}>{sessionTitle}</div>
+          <div className="bz-script bz-title-line" style={{ fontSize: "clamp(2.8rem,9.5vw,7rem)" }}>{trx(sessionTitle)}</div>
           {sessionMeta && (
             <div className="bz-title-line" style={{ display: "inline-block", marginTop: "2.6vh", padding: ".55em 1.6em", borderRadius: "9999px",
               background: "rgba(255,255,255,.2)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,.45)",
-              color: "#fff", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", fontSize: "clamp(.95rem,2.6vw,1.5rem)" }}>{sessionMeta}</div>
+              color: "#fff", fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase", fontSize: "clamp(.95rem,2.6vw,1.5rem)" }}>{trx(sessionMeta)}</div>
           )}
           {pillars?.length > 0 && (
             <div style={{ marginTop: "3.6vh", display: "flex", gap: "6vw", justifyContent: "center", alignItems: "flex-start" }}>
@@ -186,7 +187,7 @@ export function BloomzeinIntro({
                 return (
                   <div key={p} className="bz-pillar" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "1vh", color: "#fff" }}>
                     <Icon style={{ width: "clamp(20px,3.4vw,34px)", height: "clamp(20px,3.4vw,34px)" }} strokeWidth={1.8} />
-                    <span style={{ fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", fontSize: "clamp(.6rem,1.4vw,.9rem)" }}>{p}</span>
+                    <span style={{ fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", fontSize: "clamp(.6rem,1.4vw,.9rem)" }}>{trx(p)}</span>
                   </div>
                 );
               })}
@@ -195,7 +196,7 @@ export function BloomzeinIntro({
         </div>
       </div>
 
-      <div style={{ position: "absolute", inset: "auto 0 3vh 0", textAlign: "center", color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 600, letterSpacing: ".08em" }}>tap to skip</div>
+      <div style={{ position: "absolute", inset: "auto 0 3vh 0", textAlign: "center", color: "rgba(255,255,255,.6)", fontSize: 12, fontWeight: 600, letterSpacing: ".08em" }}>{tr("tap to skip")}</div>
     </div>,
     document.body,
   );

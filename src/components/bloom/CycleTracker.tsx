@@ -53,6 +53,7 @@ import { CycleOnboarding } from "./CycleOnboarding";
 import { SYMPTOMS_LOG_KEY, SYMPTOM_OPTIONS } from "@/lib/crossToolData";
 import { CycleInsights } from "./cycle/CycleInsights";
 import { logPeriodStart, removePeriodStart, skipPeriodPromptToday, readPeriodStarts, PERIOD_EVENT } from "@/lib/periodLog";
+import { tr, trx, DATE_LOCALE, localMonths, localWeekdays } from "@/i18n";
 
 const CYCLE_ONBOARDED_KEY = "bloom:cycle-onboarded";
 
@@ -100,34 +101,34 @@ const PHASE_WHY: Record<Exclude<Phase, null>, { yoga: string; workout: string; m
 
 const PHASE_TODAY_INSIGHTS: Record<Exclude<Phase, null>, { label: string; value: string; Icon: LucideIcon; color: string; bg: string }[]> = {
   period: [
-    { label: "Energy",    value: "Low",            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
-    { label: "Hydration", value: "Stay Focused",   Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: "Movement",  value: "Gentle Yoga",    Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
-    { label: "Nutrition", value: "Iron-rich foods",Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: "Low",            Icon: Zap,      color: "text-rose-400",    bg: "bg-rose-50"    },
+    { label: tr("Hydration"), value: "Stay Focused",   Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: "Gentle Yoga",    Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Nutrition"), value: "Iron-rich foods",Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
   follicular: [
-    { label: "Energy",    value: "Rising",         Icon: Zap,      color: "text-magenta",   bg: "bg-pink-50"   },
-    { label: "Hydration", value: "Stay Active",    Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: "Movement",  value: "Strength",       Icon: Dumbbell, color: "text-magenta",  bg: "bg-pink-50"  },
-    { label: "Nutrition", value: "Protein-rich",   Icon: Sprout,   color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: "Rising",         Icon: Zap,      color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Hydration"), value: "Stay Active",    Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: "Strength",       Icon: Dumbbell, color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: tr("Nutrition"), value: "Protein-rich",   Icon: Sprout,   color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   fertile: [
-    { label: "Energy",    value: "High",           Icon: Zap,      color: "text-pink-500",    bg: "bg-pink-50"    },
-    { label: "Hydration", value: "Active day",     Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: "Movement",  value: "Power Flow",     Icon: Flame,    color: "text-rose-500",    bg: "bg-rose-50"    },
-    { label: "Nutrition", value: "Fresh & Light",  Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: "High",           Icon: Zap,      color: "text-pink-500",    bg: "bg-pink-50"    },
+    { label: tr("Hydration"), value: "Active day",     Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: "Power Flow",     Icon: Flame,    color: "text-rose-500",    bg: "bg-rose-50"    },
+    { label: tr("Nutrition"), value: "Fresh & Light",  Icon: Leaf,     color: "text-hotpink",   bg: "bg-pink-50"   },
   ],
   ovulation: [
-    { label: "Energy",    value: "Peak",           Icon: Zap,      color: "text-rose-500",  bg: "bg-rose-50"  },
-    { label: "Hydration", value: "Intense",        Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: "Movement",  value: "HIIT",           Icon: Flame,    color: "text-rose-500",     bg: "bg-rose-50"     },
-    { label: "Nutrition", value: "Energizing",     Icon: Sprout,   color: "text-hotpink", bg: "bg-pink-50" },
+    { label: tr("Energy"),    value: "Peak",           Icon: Zap,      color: "text-rose-500",  bg: "bg-rose-50"  },
+    { label: tr("Hydration"), value: "Intense",        Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: "HIIT",           Icon: Flame,    color: "text-rose-500",     bg: "bg-rose-50"     },
+    { label: tr("Nutrition"), value: "Energizing",     Icon: Sprout,   color: "text-hotpink", bg: "bg-pink-50" },
   ],
   luteal: [
-    { label: "Energy",    value: "Winding",        Icon: Zap,      color: "text-rose-400",  bg: "bg-rose-50"  },
-    { label: "Hydration", value: "Wind Down",      Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
-    { label: "Movement",  value: "Gentle Tone",    Icon: Leaf,     color: "text-magenta",  bg: "bg-pink-50"  },
-    { label: "Nutrition", value: "Comforting",     Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
+    { label: tr("Energy"),    value: "Winding",        Icon: Zap,      color: "text-rose-400",  bg: "bg-rose-50"  },
+    { label: tr("Hydration"), value: "Wind Down",      Icon: Droplets, color: "text-rose-400",     bg: "bg-rose-50"     },
+    { label: tr("Movement"),  value: "Gentle Tone",    Icon: Leaf,     color: "text-magenta",  bg: "bg-pink-50"  },
+    { label: tr("Nutrition"), value: "Comforting",     Icon: Sprout,   color: "text-magenta",   bg: "bg-pink-50"   },
   ],
 };
 
@@ -146,22 +147,22 @@ const PHASE_RECOMMEND: Record<Exclude<Phase, null>, {
   read:    { title: string; img: string };
   shop:    { title: string; img: string };
 }> = {
-  period:     { yoga: { title: "Soft yoga for cramps",       img: "/images/pose-childs-pose.webp"  }, workout: { title: "Light mobility & core",   img: "/images/zone-core.webp"       }, meal: { title: "Iron-rich warm stew",    img: "/images/meal-stew.webp"     }, read: { title: "Rest is productive",    img: "/images/read-cycle.webp"    }, shop: { title: "Cozy Heat Wrap",     img: "/images/shop-cat-cycle.webp"    } },
-  follicular: { yoga: { title: "Energising morning flow",    img: "/images/pose-warrior-1.webp"    }, workout: { title: "Full-body strength",      img: "/images/zone-full-body.webp"  }, meal: { title: "Protein buddha bowl",   img: "/images/meal-buddha.webp"   }, read: { title: "Cycle syncing 101",  img: "/images/read-cycle.webp"    }, shop: { title: "Soft Glow Leggings",  img: "/images/shop-cat-active.webp"  } },
-  fertile:    { yoga: { title: "Power & balance flow",       img: "/images/pose-tree.webp"          }, workout: { title: "Glutes & legs burn",      img: "/images/zone-glutes.webp"     }, meal: { title: "Fresh cute lunchbox",  img: "/images/meal-lunchbox.webp" }, read: { title: "Your magnetic era",  img: "/images/read-selfcare.webp" }, shop: { title: "Pillow Lip Gloss",    img: "/images/shop-cat-beauty.webp"  } },
-  ovulation:  { yoga: { title: "Dynamic energy flow",        img: "/images/pose-warrior-2.webp"    }, workout: { title: "High-intensity session",  img: "/images/zone-arms.webp"       }, meal: { title: "Cozy energising oats", img: "/images/meal-oats.webp"    }, read: { title: "Glow & confidence", img: "/images/read-mindset.webp"  }, shop: { title: "Rose Petal Serum",    img: "/images/shop-cat-beauty.webp"  } },
-  luteal:     { yoga: { title: "Calming wind-down flow",     img: "/images/pose-cat-cow.webp"      }, workout: { title: "Gentle toning",           img: "/images/zone-back.webp"       }, meal: { title: "Comforting warm stew", img: "/images/meal-stew.webp"    }, read: { title: "Luteal phase glow-up",img: "/images/read-cycle.webp"   }, shop: { title: "Silk Sleep Mask",     img: "/images/shop-cat-selfcare.webp"} },
+  period:     { yoga: { title: tr("Soft yoga for cramps"),       img: "/images/pose-childs-pose.webp"  }, workout: { title: tr("Light mobility & core"),   img: "/images/zone-core.webp"       }, meal: { title: tr("Iron-rich warm stew"),    img: "/images/meal-stew.webp"     }, read: { title: tr("Rest is productive"),    img: "/images/read-cycle.webp"    }, shop: { title: tr("Cozy Heat Wrap"),     img: "/images/shop-cat-cycle.webp"    } },
+  follicular: { yoga: { title: tr("Energising morning flow"),    img: "/images/pose-warrior-1.webp"    }, workout: { title: tr("Full-body strength"),      img: "/images/zone-full-body.webp"  }, meal: { title: tr("Protein buddha bowl"),   img: "/images/meal-buddha.webp"   }, read: { title: tr("Cycle syncing 101"),  img: "/images/read-cycle.webp"    }, shop: { title: tr("Soft Glow Leggings"),  img: "/images/shop-cat-active.webp"  } },
+  fertile:    { yoga: { title: tr("Power & balance flow"),       img: "/images/pose-tree.webp"          }, workout: { title: tr("Glutes & legs burn"),      img: "/images/zone-glutes.webp"     }, meal: { title: tr("Fresh cute lunchbox"),  img: "/images/meal-lunchbox.webp" }, read: { title: tr("Your magnetic era"),  img: "/images/read-selfcare.webp" }, shop: { title: tr("Pillow Lip Gloss"),    img: "/images/shop-cat-beauty.webp"  } },
+  ovulation:  { yoga: { title: tr("Dynamic energy flow"),        img: "/images/pose-warrior-2.webp"    }, workout: { title: tr("High-intensity session"),  img: "/images/zone-arms.webp"       }, meal: { title: tr("Cozy energising oats"), img: "/images/meal-oats.webp"    }, read: { title: tr("Glow & confidence"), img: "/images/read-mindset.webp"  }, shop: { title: tr("Rose Petal Serum"),    img: "/images/shop-cat-beauty.webp"  } },
+  luteal:     { yoga: { title: tr("Calming wind-down flow"),     img: "/images/pose-cat-cow.webp"      }, workout: { title: tr("Gentle toning"),           img: "/images/zone-back.webp"       }, meal: { title: tr("Comforting warm stew"), img: "/images/meal-stew.webp"    }, read: { title: tr("Luteal phase glow-up"),img: "/images/read-cycle.webp"   }, shop: { title: tr("Silk Sleep Mask"),     img: "/images/shop-cat-selfcare.webp"} },
 };
 
 const MOODS = [
-  { key: "calm",      label: "Calm",      Icon: Leaf      },
-  { key: "happy",     label: "Happy",     Icon: Smile     },
-  { key: "energetic", label: "Energetic", Icon: Zap       },
-  { key: "sensitive", label: "Sensitive", Icon: HeartCrack},
-  { key: "sad",       label: "Sad",       Icon: CloudRain },
-  { key: "tired",     label: "Tired",     Icon: Moon      },
-  { key: "cramps",    label: "Cramps",    Icon: Flame     },
-  { key: "bloated",   label: "Bloated",   Icon: Cloud     },
+  { key: "calm",      label: tr("Calm"),      Icon: Leaf      },
+  { key: "happy",     label: tr("Happy"),     Icon: Smile     },
+  { key: "energetic", label: tr("Energetic"), Icon: Zap       },
+  { key: "sensitive", label: tr("Sensitive"), Icon: HeartCrack},
+  { key: "sad",       label: tr("Sad"),       Icon: CloudRain },
+  { key: "tired",     label: tr("Tired"),     Icon: Moon      },
+  { key: "cramps",    label: tr("Cramps"),    Icon: Flame     },
+  { key: "bloated",   label: tr("Bloated"),   Icon: Cloud     },
 ] as const;
 
 const MOOD_LOG_KEY     = "bloom:mood-log-v2";
@@ -235,8 +236,8 @@ function dateKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const WEEKDAYS = ["SU","MO","TU","WE","TH","FR","SA"];
-const MONTHS   = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const WEEKDAYS = localWeekdays(["SU","MO","TU","WE","TH","FR","SA"], "short");
+const MONTHS   = localMonths(["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"], "short");
 const MS_DAY   = 1000 * 60 * 60 * 24;
 
 function sameDay(a: Date, b: Date) {
@@ -249,7 +250,7 @@ function readJSON<T>(key: string, fallback: T): T {
 }
 
 function fmtDate(d: Date) {
-  return d.toLocaleDateString("en", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(DATE_LOCALE, { month: "short", day: "numeric" });
 }
 
 // Design system helpers
@@ -275,10 +276,10 @@ function hexRgba(hex: string, a: number): string {
 }
 
 const JOURNEY_STEPS = [
-  { key: 'period'     as const, label: 'Period',     path: PHASE_ICON_PATH.period     },
-  { key: 'follicular' as const, label: 'Follicular', path: PHASE_ICON_PATH.follicular },
-  { key: 'ovulation'  as const, label: 'Ovul.',      path: PHASE_ICON_PATH.ovulation  },
-  { key: 'luteal'     as const, label: 'Luteal',     path: PHASE_ICON_PATH.luteal     },
+  { key: 'period'     as const, label: tr("Period"),     path: PHASE_ICON_PATH.period     },
+  { key: 'follicular' as const, label: tr("Follicular"), path: PHASE_ICON_PATH.follicular },
+  { key: 'ovulation'  as const, label: tr("Ovul."),      path: PHASE_ICON_PATH.ovulation  },
+  { key: 'luteal'     as const, label: tr("Luteal"),     path: PHASE_ICON_PATH.luteal     },
 ];
 
 const PHASE_TO_STEP: Record<Exclude<Phase, null>, number> = {
@@ -421,9 +422,9 @@ export function CycleTracker() {
 
   const daysToPeriod   = useMemo(() => Math.ceil((nextPeriodDate.getTime() - today.getTime()) / MS_DAY), [nextPeriodDate, today]);
   // Positive → upcoming; 0 → expected today; negative → she's late by |n| days.
-  const periodTiming   = daysToPeriod > 0 ? `in ${daysToPeriod} days`
+  const periodTiming   = daysToPeriod > 0 ? tr("in {0} days", { 0: daysToPeriod })
                        : daysToPeriod === 0 ? "expected today"
-                       : `${-daysToPeriod} ${-daysToPeriod === 1 ? "day" : "days"} late`;
+                       : tr("{0} {1} late", { 0: -daysToPeriod, 1: -daysToPeriod === 1 ? "day" : "days" });
   // ovulationDayOfCycle is 0-indexed (e.g. 14 for a 28-day cycle = cycle day 15)
   // Add the 0-indexed offset directly to currentCycleStart to match phaseForDay logic
   const ovulationDate  = useMemo(() => new Date(currentCycleStart.getTime() + ovulationDayOfCycle       * MS_DAY), [currentCycleStart, ovulationDayOfCycle]);
@@ -441,10 +442,10 @@ export function CycleTracker() {
   // ovulationDayOfCycle is 0-indexed; cycleDay is 1-indexed (cycleDay = 0-indexed day + 1)
   // phaseForDay boundaries (0-indexed): period 0..pLen-1, follicular pLen..ovDay-5, fertile ovDay-4..ovDay+2, luteal ovDay+3+
   const journeySteps = [
-    { key: "period"     as const, label: "Period",     Icon: Droplet,  active: cycleDay <= settings.periodLength },
-    { key: "follicular" as const, label: "Follicular", Icon: Sprout,   active: cycleDay > settings.periodLength && cycleDay <= ovulationDayOfCycle - 4 },
-    { key: "ovulation"  as const, label: "Ovulation",  Icon: Sun,      active: cycleDay > ovulationDayOfCycle - 4 && cycleDay <= ovulationDayOfCycle + 3 },
-    { key: "luteal"     as const, label: "Luteal",     Icon: Moon,     active: cycleDay > ovulationDayOfCycle + 3 },
+    { key: "period"     as const, label: tr("Period"),     Icon: Droplet,  active: cycleDay <= settings.periodLength },
+    { key: "follicular" as const, label: tr("Follicular"), Icon: Sprout,   active: cycleDay > settings.periodLength && cycleDay <= ovulationDayOfCycle - 4 },
+    { key: "ovulation"  as const, label: tr("Ovulation"),  Icon: Sun,      active: cycleDay > ovulationDayOfCycle - 4 && cycleDay <= ovulationDayOfCycle + 3 },
+    { key: "luteal"     as const, label: tr("Luteal"),     Icon: Moon,     active: cycleDay > ovulationDayOfCycle + 3 },
   ];
   const activeIdx    = journeySteps.findIndex((s) => s.active);
   const progressPct  = activeIdx >= 0 ? (activeIdx / (journeySteps.length - 1)) * 100 : 0;
@@ -599,8 +600,8 @@ export function CycleTracker() {
               breathing = not logged yet. Tap either to go log it on Today. */}
           <button
             onClick={() => { window.location.href = "/app/today"; }}
-            title={moodChecked ? `Today's mood: ${moodLabelToday}` : "Log today's mood on Today"}
-            aria-label={moodChecked ? "Mood logged today" : "Log today's mood"}
+            title={moodChecked ? tr("Today's mood: {0}", { 0: moodLabelToday }) : tr("Log today's mood on Today")}
+            aria-label={moodChecked ? tr("Mood logged today") : tr("Log today's mood")}
             className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition active:scale-90",
               moodChecked ? "bg-hotpink text-white shadow-sm shadow-hotpink/30" : "bg-blush/70 text-hotpink ring-1 ring-hotpink/30 animate-icon-breathe"].join(" ")}
           >
@@ -608,29 +609,29 @@ export function CycleTracker() {
           </button>
           <button
             onClick={() => { window.location.href = "/app/today"; }}
-            title={symptomsChecked ? "Symptoms logged today" : "Log today's symptoms on Today"}
-            aria-label={symptomsChecked ? "Symptoms logged today" : "Log today's symptoms"}
+            title={symptomsChecked ? tr("Symptoms logged today") : tr("Log today's symptoms on Today")}
+            aria-label={symptomsChecked ? tr("Symptoms logged today") : tr("Log today's symptoms")}
             className={["grid h-6 w-6 shrink-0 place-items-center rounded-full transition active:scale-90",
               symptomsChecked ? "bg-rose-400 text-white shadow-sm shadow-rose-300/40" : "bg-blush/70 text-rose-400 ring-1 ring-rose-300/40 animate-icon-breathe"].join(" ")}
           >
             <HeartPulse className="h-3.5 w-3.5" strokeWidth={2} />
           </button>
-          <p className="font-script leading-none" style={{ fontSize: '22px', color: '#DB2777' }}>Mood &amp; symptom insights</p>
+          <p className="font-script leading-none" style={{ fontSize: '22px', color: '#DB2777' }}>{tr("Mood & symptom insights")}</p>
         </div>
         {/* 2×2 legend */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', marginBottom: '5px' }}>
           {[
-            { color: '#EC4899', dash: false, label: 'Mood logged' },
-            { color: '#DB2777', dash: true,  label: 'Mood estimate' },
-            { color: '#FB7185', dash: false, label: 'Symptoms logged' },
-            { color: '#FECDD3', dash: true,  label: 'Symptom estimate' },
+            { color: '#EC4899', dash: false, label: tr("Mood logged") },
+            { color: '#DB2777', dash: true,  label: tr("Mood estimate") },
+            { color: '#FB7185', dash: false, label: tr("Symptoms logged") },
+            { color: '#FECDD3', dash: true,  label: tr("Symptom estimate") },
           ].map((item) => (
             <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
               <svg width="16" height="4" style={{ overflow: 'visible', flexShrink: 0 }}>
                 <line x1="0" y1="2" x2="16" y2="2" stroke={item.color} strokeWidth={item.dash ? '2' : '3'}
                   strokeDasharray={item.dash ? '3 3' : undefined} strokeLinecap="round" />
               </svg>
-              <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#9D5C7E', lineHeight: 1 }}>{item.label}</span>
+              <span style={{ fontSize: '8.5px', fontWeight: 700, color: '#9D5C7E', lineHeight: 1 }}>{trx(item.label)}</span>
             </div>
           ))}
         </div>
@@ -675,16 +676,14 @@ export function CycleTracker() {
           {/* Labels — hide an endpoint label when "today" sits on top of it so
               they never overlap (e.g. when today is at/near the last cycle day) */}
           {todayDotX > PX + 34 && (
-            <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day 1</text>
+            <text x={PX} y={VH - 4} textAnchor="start" fontSize="9.5" fontWeight="600" fill="#9D5C7E">{tr("Day 1")}</text>
           )}
-          <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">today</text>
+          <text x={todayDotX} y={VH - 4} textAnchor="middle" fontSize="10" fontWeight="700" fill="#DB2777">{tr("today")}</text>
           {todayDotX < VW - PX - 34 && (
-            <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#9D5C7E">Day {cycleLen}</text>
+            <text x={VW - PX} y={VH - 4} textAnchor="end" fontSize="9.5" fontWeight="600" fill="#9D5C7E">{tr("Day")}{" "}{trx(cycleLen)}</text>
           )}
         </svg>
-        <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>
-          Both curves build as you log — solid lines are real, dashed are estimates.
-        </p>
+        <p style={{ margin: '4px 0 0', fontSize: '10px', fontWeight: 500, color: '#9D5C7E', lineHeight: 1.45 }}>{tr("Both curves build as you log — solid lines are real, dashed are estimates.")}</p>
       </>
     );
   }
@@ -698,7 +697,7 @@ export function CycleTracker() {
       { tag: "Yoga",    img: sp.yoga.image,             title: sp.yoga.title,      why: why.yoga,    href: "/app/tools/yoga",    launch: { key: LAUNCH_YOGA_KEY, val: sp.yoga.launch } as null | { key: string; val: unknown } },
       { tag: "Workout", img: sp.workout.image,          title: sp.workout.title,   why: why.workout, href: "/app/tools/workout", launch: { key: LAUNCH_WORKOUT_KEY, val: sp.workout.launch } as null | { key: string; val: unknown } },
       { tag: "Meal",    img: sp.meal.image,             title: sp.meal.title,      why: why.meal,    href: "/app/tools/diet",    launch: null as null | { key: string; val: unknown } },
-      { tag: "Journal", img: "/images/diary-hero.webp", title: "Reflect on today", why: why.journal, href: "/app/tools/diary",   launch: null as null | { key: string; val: unknown } },
+      { tag: "Journal", img: "/images/diary-hero.webp", title: tr("Reflect on today"), why: why.journal, href: "/app/tools/diary",   launch: null as null | { key: string; val: unknown } },
     ];
     return (
       <div className="flex flex-col gap-[9px] mt-3">
@@ -720,11 +719,11 @@ export function CycleTracker() {
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
-                <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{item.tag}</p>
+                <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{trx(item.tag)}</p>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#DB2777" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6"/></svg>
               </div>
-              <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843', lineHeight: 1.25 }}>{item.title}</p>
-              <p style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.35, marginTop: '2px' }}>{item.why}</p>
+              <p style={{ fontWeight: 700, fontSize: '13.5px', color: '#831843', lineHeight: 1.25 }}>{trx(item.title)}</p>
+              <p style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.35, marginTop: '2px' }}>{trx(item.why)}</p>
             </div>
           </a>
         ))}
@@ -751,31 +750,27 @@ export function CycleTracker() {
         <div className="fixed inset-0 z-[140] flex items-center justify-center p-4" onClick={() => setConfirmDay(null)}>
           <div className="absolute inset-0 animate-fade-in" style={{ background: 'rgba(190,24,93,0.22)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }} />
           <div onClick={(e) => e.stopPropagation()} className="relative w-full max-w-xs rounded-[2rem] bg-white p-6 text-center animate-scale-in" style={{ boxShadow: '0 24px 60px rgba(190,24,93,0.35)' }}>
-            <button onClick={() => setConfirmDay(null)} aria-label="Close" className="absolute right-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
+            <button onClick={() => setConfirmDay(null)} aria-label={tr("Close")} className="absolute end-3.5 top-3.5 grid h-7 w-7 place-items-center rounded-full text-rose/50 transition hover:bg-blush hover:text-hotpink active:scale-90">
               <X className="h-4 w-4" />
             </button>
             <span className="mx-auto mb-3 grid h-16 w-16 place-items-center rounded-full text-white animate-icon-breathe" style={{ background: 'linear-gradient(135deg,#EC4899,#BE185D)', boxShadow: '0 10px 26px rgba(219,39,119,0.42)' }}>
               <Droplet className="h-8 w-8" strokeWidth={1.8} />
             </span>
             {(() => {
-              const dayLabel = sameDay(confirmDay, today) ? 'today' : confirmDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+              const dayLabel = sameDay(confirmDay, today) ? 'today' : confirmDay.toLocaleDateString(DATE_LOCALE, { month: 'long', day: 'numeric' });
               const isLogged = readPeriodStarts().includes(dateKey(confirmDay));
               const isTodayOrOverdue = sameDay(confirmDay, today);
               if (isLogged) {
                 // Already checked → let her un-check it right on the calendar.
                 return (
                   <>
-                    <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
-                      Period logged<br />{dayLabel === 'today' ? 'for today' : `on ${dayLabel}`}
+                    <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>{tr("Period logged")}<br />{dayLabel === 'today' ? tr("for today") : `on ${dayLabel}`}
                     </p>
-                    <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>Wasn't this the day? Un-check it and I'll re-tune your cycle &amp; predictions ✿</p>
+                    <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>{tr("Wasn't this the day? Un-check it and I'll re-tune your cycle & predictions ✿")}</p>
                     <div className="mt-4 grid gap-2">
                       <button onClick={() => { removePeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold active:scale-95 transition" style={{ color: '#BE185D', background: 'rgba(252,231,243,0.9)', boxShadow: '0 6px 18px rgba(219,39,119,0.18)' }}>
-                        <X className="h-4 w-4" strokeWidth={3} /> My period didn't start this day
-                      </button>
-                      <button onClick={() => setConfirmDay(null)} className="rounded-full py-2.5 text-[13px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
-                        Keep it ✓
-                      </button>
+                        <X className="h-4 w-4" strokeWidth={3} />{" "}{tr("My period didn't start this day")}</button>
+                      <button onClick={() => setConfirmDay(null)} className="rounded-full py-2.5 text-[13px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>{tr("Keep it ✓")}</button>
                     </div>
                   </>
                 );
@@ -783,16 +778,14 @@ export function CycleTracker() {
               // Not logged → check it as the real start, or say it hasn't come yet.
               return (
                 <>
-                  <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>
-                    Did your period start<br />{dayLabel}?
+                  <p className="font-script leading-tight" style={{ fontSize: '26px', color: '#BE185D' }}>{tr("Did your period start")}<br />{trx(dayLabel)}?
                   </p>
-                  <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>I'll log it as your real start and re-tune your cycle &amp; predictions ✿</p>
+                  <p className="mt-2 text-[12.5px] leading-snug" style={{ color: '#9D5C7E' }}>{tr("I'll log it as your real start and re-tune your cycle & predictions ✿")}</p>
                   <div className="mt-4 grid gap-2">
                     <button onClick={() => { logPeriodStart(dateKey(confirmDay)); setConfirmDay(null); }} className="inline-flex items-center justify-center gap-1.5 rounded-full py-3 text-[14px] font-bold text-white active:scale-95 transition" style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}>
-                      <Check className="h-4 w-4" strokeWidth={3} /> Yes, my period started this day
-                    </button>
+                      <Check className="h-4 w-4" strokeWidth={3} />{" "}{tr("Yes, my period started this day")}</button>
                     <button onClick={() => { if (isTodayOrOverdue) skipPeriodPromptToday(); setConfirmDay(null); }} className="rounded-full py-2.5 text-[13px] font-bold active:scale-95 transition" style={{ color: '#9D5C7E', background: 'rgba(252,231,243,0.7)' }}>
-                      {isTodayOrOverdue ? "Not yet — it hasn't started" : 'No, not this day'}
+                      {isTodayOrOverdue ? tr("Not yet — it hasn't started") : tr("No, not this day")}
                     </button>
                   </div>
                 </>
@@ -805,16 +798,16 @@ export function CycleTracker() {
       {awaitDiet && (
         <button
           onClick={isSetup ? returnToDiet : () => setSetupOpen(true)}
-          className={["relative z-10 w-full mb-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-left text-white shadow-lg shadow-hotpink/30 active:scale-[0.99] transition", isSetup ? "bg-gradient-to-r from-emerald-500 to-hotpink animate-selected-glow" : "bg-gradient-to-r from-hotpink to-[#DB2777]"].join(" ")}
+          className={["relative z-10 w-full mb-3 flex items-center gap-3 rounded-2xl px-4 py-3 text-start text-white shadow-lg shadow-hotpink/30 active:scale-[0.99] transition", isSetup ? "bg-gradient-to-r from-emerald-500 to-hotpink animate-selected-glow" : "bg-gradient-to-r from-hotpink to-[#DB2777]"].join(" ")}
         >
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/25">
             {isSetup ? <Check className="h-5 w-5" strokeWidth={3} /> : <Sparkles className="h-5 w-5" />}
           </span>
           <span className="flex-1 min-w-0">
-            <span className="block text-[10px] font-bold uppercase tracking-widest text-white/75">Setting up your Diet plan</span>
-            <span className="block text-sm font-bold leading-tight">{isSetup ? "Cycle synced ✿ — back to My Diet" : "Sync your cycle, then we'll bring you back"}</span>
+            <span className="block text-[10px] font-bold uppercase tracking-widest text-white/75">{tr("Setting up your Diet plan")}</span>
+            <span className="block text-sm font-bold leading-tight">{isSetup ? tr("Cycle synced ✿ — back to My Diet") : tr("Sync your cycle, then we'll bring you back")}</span>
           </span>
-          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{isSetup ? "Continue" : "Set up"} <ChevronRight className="h-3.5 w-3.5" /></span>
+          <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/25 px-3 py-1 text-xs font-bold">{isSetup ? tr("Continue") : tr("Set up")} <ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></span>
         </button>
       )}
       {/* Decorative background blobs — give glass cards something to blur through */}
@@ -856,9 +849,7 @@ export function CycleTracker() {
               }}
             />
             {/* "Cycle Tracker" title inside the hero */}
-            <h1 className="font-script animate-scale-in" style={{ fontSize: '34px', lineHeight: 1, color: 'white', marginBottom: '10px' }}>
-              Cycle Tracker
-            </h1>
+            <h1 className="font-script animate-scale-in" style={{ fontSize: '34px', lineHeight: 1, color: 'white', marginBottom: '10px' }}>{tr("Cycle Tracker")}</h1>
 
             {/* Phase chip */}
             <div
@@ -869,25 +860,24 @@ export function CycleTracker() {
                 <path d={PHASE_ICON_PATH[currentPhase]} />
               </svg>
               <span style={{ color: 'white', fontSize: '10px', fontWeight: 800, letterSpacing: '.08em' }}>
-                {isSetup ? `${PHASE_LABEL[currentPhase].toUpperCase()} PHASE` : "NOT SET UP YET"}
+                {isSetup ? tr("{0} PHASE", { 0: PHASE_LABEL[currentPhase].toUpperCase() }) : tr("NOT SET UP YET")}
               </span>
             </div>
 
             {/* Day heading */}
             <h2 className="font-script" style={{ fontSize: isSetup ? '38px' : '30px', lineHeight: isSetup ? 1 : 1.05, marginTop: '11px', color: 'white' }}>
-              {isSetup ? `Day ${cycleDay}` : "Let's map your cycle ✿"}
+              {isSetup ? tr("Day {0}", { 0: cycleDay }) : tr("Let's map your cycle ✿")}
             </h2>
 
             {/* Phase subtitle */}
             <p style={{ fontSize: '13px', fontWeight: 500, marginTop: '6px', color: 'rgba(255,255,255,.92)' }}>
-              {isSetup ? PHASE_SUBTITLE[currentPhase] : "Add your last period date to unlock your phase, fertile window & daily insights ✿"}
+              {isSetup ? trx(PHASE_SUBTITLE[currentPhase]) : tr("Add your last period date to unlock your phase, fertile window & daily insights ✿")}
             </p>
 
             {/* Big obvious CTA while she hasn't set up — the whole card is tappable too */}
             {!isSetup && (
               <span className="mt-3.5 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-1.5 text-[12px] font-bold text-hotpink shadow-md animate-cta-bounce">
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Tap to set up your cycle ✿
-              </span>
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />{" "}{tr("Tap to set up your cycle ✿")}</span>
             )}
 
             {/* Journey stepper — two-row layout so labels sit exactly under their nodes */}
@@ -945,7 +935,7 @@ export function CycleTracker() {
                         lineHeight: 1.2, whiteSpace: 'nowrap',
                         textShadow: isActive ? '0 1px 4px rgba(0,0,0,.2)' : 'none',
                       }}>
-                        {step.label}
+                        {trx(step.label)}
                       </span>
                     </div>,
                   ];
@@ -971,17 +961,14 @@ export function CycleTracker() {
                 <div className="grid h-14 w-14 place-items-center rounded-full animate-selected-glow" style={{ background: '#FCE7F3' }}>
                   <TrendingUp className="h-7 w-7" style={{ color: '#EC4899' }} strokeWidth={2} />
                 </div>
-                <p className="font-script leading-none" style={{ fontSize: '26px', color: '#DB2777' }}>Your insights await ✿</p>
-                <p style={{ fontSize: '12px', maxWidth: '250px', lineHeight: 1.45, color: '#9D5C7E' }}>
-                  Set up your cycle to unlock your hormone curve, wellness trends, fertile window &amp; daily insights.
-                </p>
+                <p className="font-script leading-none" style={{ fontSize: '26px', color: '#DB2777' }}>{tr("Your insights await ✿")}</p>
+                <p style={{ fontSize: '12px', maxWidth: '250px', lineHeight: 1.45, color: '#9D5C7E' }}>{tr("Set up your cycle to unlock your hormone curve, wellness trends, fertile window & daily insights.")}</p>
                 <button
                   onClick={() => setSetupOpen(true)}
                   className="mt-1.5 inline-flex items-center gap-1.5 rounded-full text-white active:scale-95 transition animate-cta-bounce"
                   style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', padding: '10px 22px', fontSize: '14px', fontWeight: 700, boxShadow: '0 8px 22px rgba(219,39,119,0.4)' }}
                 >
-                  <Sparkles className="h-4 w-4" strokeWidth={2.2} /> Set me up ✿
-                </button>
+                  <Sparkles className="h-4 w-4" strokeWidth={2.2} />{" "}{tr("Set me up ✿")}</button>
               </div>
             </div>
           )}
@@ -994,27 +981,27 @@ export function CycleTracker() {
             <div className="grid grid-cols-4 gap-[6px] md:gap-3 mt-3.5">
               {/* Next Period */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
-                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Next Period</p>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>{tr("Next Period")}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#EC4899' }}>{fmtDate(nextPeriodDate)}</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: daysToPeriod < 0 ? '#DB2777' : '#9D5C7E' }}>{periodTiming}</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: daysToPeriod < 0 ? '#DB2777' : '#9D5C7E' }}>{trx(periodTiming)}</p>
               </div>
               {/* Fertile */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
-                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Fertile</p>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>{tr("Fertile")}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#F472B6' }}>{fmtDate(fertileStart)}</p>
                 <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>→ {fmtDate(fertileEnd)}</p>
               </div>
               {/* Ovulation */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
-                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Ovulation</p>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>{tr("Ovulation")}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#DB2777' }}>{fmtDate(ovulationDate)}</p>
-                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>day {ovulationDayOfCycle + 1}</p>
+                <p style={{ fontSize: '10px', fontWeight: 600, color: '#9D5C7E' }}>{tr("day")}{" "}{ovulationDayOfCycle + 1}</p>
               </div>
               {/* Daily Pill */}
               <div style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: '16px', padding: '9px 7px', boxShadow: '0 6px 18px rgba(236,72,153,.10)', border: '1px solid rgba(255,255,255,0.5)' }}>
-                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>Daily {pillLabel}</p>
+                <p style={{ fontSize: '8.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textTransform: 'uppercase' }}>{tr("Daily")}{" "}{trx(pillLabel)}</p>
                 <p className="font-script" style={{ fontSize: '21px', lineHeight: 1, marginTop: '3px', color: '#BE185D' }}>
-                  {pillTaken ? "Taken ✓" : "Log it"}
+                  {pillTaken ? tr("Taken ✓") : tr("Log it")}
                 </p>
                 <div className="flex items-center gap-2 mt-[5px]">
                   <button
@@ -1037,7 +1024,7 @@ export function CycleTracker() {
                       fontFamily: 'inherit',
                     }}
                   >
-                    {pillTaken ? "Undo" : "Mark taken"}
+                    {pillTaken ? tr("Undo") : tr("Mark taken")}
                   </button>
                 </div>
               </div>
@@ -1050,17 +1037,17 @@ export function CycleTracker() {
               <span className="grid place-items-center rounded-full" style={{ width: 24, height: 24, background: 'linear-gradient(135deg,#EC4899,#DB2777)' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[currentPhase]} /></svg>
               </span>
-              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>Today, in your {PHASE_LABEL[currentPhase].toLowerCase()} phase</h3>
+              <h3 className="font-script" style={{ fontSize: '20px', color: '#DB2777' }}>{tr("Today, in your {0} phase", { 0: PHASE_LABEL[currentPhase].toLowerCase() })}</h3>
             </div>
-            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{PHASE_INSIGHT[currentPhase]}</p>
+            <p style={{ fontSize: '11.5px', lineHeight: 1.5, color: '#9D5C7E', marginBottom: '11px' }}>{trx(PHASE_INSIGHT[currentPhase])}</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-[9px] md:gap-2.5">
               {PHASE_TODAY_INSIGHTS[currentPhase].map((it) => (
                 <div key={it.label} className={["rounded-2xl p-2.5 flex flex-col gap-1", it.bg].join(" ")} style={{ border: '1px solid rgba(236,72,153,.08)' }}>
                   <span className={["grid h-7 w-7 place-items-center rounded-full bg-white/70", it.color].join(" ")}>
                     <it.Icon className="h-3.5 w-3.5" strokeWidth={1.8} />
                   </span>
-                  <p style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{it.label}</p>
-                  <p className={["text-[12px] font-bold leading-tight", it.color].join(" ")}>{it.value}</p>
+                  <p style={{ fontSize: '8px', fontWeight: 700, letterSpacing: '.05em', color: '#9D5C7E', textTransform: 'uppercase' }}>{trx(it.label)}</p>
+                  <p className={["text-[12px] font-bold leading-tight", it.color].join(" ")}>{trx(it.value)}</p>
                 </div>
               ))}
             </div>
@@ -1075,18 +1062,14 @@ export function CycleTracker() {
                   <CalendarDays className="h-6 w-6" style={{ color: '#EC4899' }} />
                 </div>
                 <div className="text-center">
-                  <p className="font-script text-2xl leading-none" style={{ color: '#EC4899' }}>Set me up ♥</p>
-                  <p className="mt-1 text-[10px] max-w-[170px] leading-snug" style={{ color: '#9D5C7E' }}>
-                    Tell us when your last period was and we'll colour your whole cycle
-                  </p>
+                  <p className="font-script text-2xl leading-none" style={{ color: '#EC4899' }}>{tr("Set me up ♥")}</p>
+                  <p className="mt-1 text-[10px] max-w-[170px] leading-snug" style={{ color: '#9D5C7E' }}>{tr("Tell us when your last period was and we'll colour your whole cycle")}</p>
                 </div>
                 <button
                   onClick={() => setSetupOpen(true)}
                   className="animate-cta-bounce px-5 py-2 text-[11px] font-bold text-white rounded-full"
                   style={{ background: 'linear-gradient(135deg,#EC4899,#DB2777)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Get started ♥
-                </button>
+                >{tr("Get started ♥")}</button>
               </div>
             )}
 
@@ -1098,17 +1081,17 @@ export function CycleTracker() {
                   className="grid place-items-center rounded-full"
                   style={{ width: 28, height: 28, background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777' }}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
                 </button>
                 <h3 className="font-script px-2" style={{ fontSize: '20px', color: '#DB2777' }}>
-                  {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
+                  {trx(MONTHS[cursor.getMonth()])} {cursor.getFullYear()}
                 </h3>
                 <button
                   onClick={() => shift(1)}
                   className="grid place-items-center rounded-full"
                   style={{ width: 28, height: 28, background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777' }}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
                 </button>
               </div>
               {/* Settings button — moved here from header */}
@@ -1118,33 +1101,27 @@ export function CycleTracker() {
                   className="inline-flex items-center gap-1 rounded-full font-bold animate-card-breathe"
                   style={{ padding: '5px 11px', background: '#FCE7F3', border: 'none', cursor: 'pointer', color: '#DB2777', fontSize: '10px', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(236,72,153,.18)' }}
                 >
-                  <Settings className="h-3 w-3" /> Settings
-                </button>
+                  <Settings className="h-3 w-3" />{" "}{tr("Settings")}</button>
                 {showResetMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowResetMenu(false)} />
-                    <div className="absolute right-0 bottom-full mb-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
+                    <div className="absolute end-0 bottom-full mb-1 z-20 w-36 animate-scale-in rounded-xl bg-white border shadow-xl overflow-hidden" style={{ borderColor: 'rgba(236,72,153,.12)' }}>
                       <button
                         onClick={() => { setShowResetMenu(false); setSetupOpen(true); }}
-                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
+                        className="w-full text-start px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition"
                         style={{ color: '#9D5C7E' }}
-                      >
-                        Edit settings
-                      </button>
+                      >{tr("Edit settings")}</button>
                       <button
                         onClick={() => { setShowResetMenu(false); setShowOnboarding(true); }}
-                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition border-t flex items-center gap-1.5"
+                        className="w-full text-start px-3 py-2 text-[10px] font-semibold hover:bg-pink-50 transition border-t flex items-center gap-1.5"
                         style={{ color: '#DB2777', borderColor: 'rgba(236,72,153,.08)' }}
                       >
-                        <Sparkles className="h-3 w-3" /> Replay tour
-                      </button>
+                        <Sparkles className="h-3 w-3" />{" "}{tr("Replay tour")}</button>
                       <button
                         onClick={resetAllData}
-                        className="w-full text-left px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
+                        className="w-full text-start px-3 py-2 text-[10px] font-semibold hover:bg-rose-50 transition border-t"
                         style={{ color: '#EC4899', borderColor: 'rgba(236,72,153,.08)' }}
-                      >
-                        Reset all data
-                      </button>
+                      >{tr("Reset all data")}</button>
                     </div>
                   </>
                 )}
@@ -1153,8 +1130,8 @@ export function CycleTracker() {
 
             {/* Weekday labels */}
             <div className="grid grid-cols-7 text-center mb-1.5">
-              {["S","M","T","W","T","F","S"].map((d, i) => (
-                <div key={i} style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textAlign: 'center' }}>{d}</div>
+              {localWeekdays(["S","M","T","W","T","F","S"], "narrow").map((d, i) => (
+                <div key={i} style={{ fontSize: '9.5px', fontWeight: 700, letterSpacing: '.06em', color: '#9D5C7E', textAlign: 'center' }}>{trx(d)}</div>
               ))}
             </div>
 
@@ -1205,7 +1182,7 @@ export function CycleTracker() {
                         position: 'absolute', top: -9, left: '50%', transform: 'translateX(-50%)',
                         background: '#DB2777', color: '#fff', fontSize: '8px', fontWeight: 800,
                         padding: '2px 6px', borderRadius: '999px', whiteSpace: 'nowrap', zIndex: 2,
-                      }}>PEAK</span>
+                      }}>{tr("PEAK")}</span>
                     )}
                     {/* Selection glow ring */}
                     {isSelected && (
@@ -1244,7 +1221,7 @@ export function CycleTracker() {
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={hex} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d={PHASE_ICON_PATH[phase]} />
                   </svg>
-                  {PHASE_LABEL[phase]}
+                  {trx(PHASE_LABEL[phase])}
                 </div>
               ))}
             </div>
@@ -1268,25 +1245,24 @@ export function CycleTracker() {
 
           {/* ── SUGGESTIONS CARD (mobile/tablet) ── */}
           <div data-tour="recommend" style={{ ...cardStyle, scrollMarginTop: 90, scrollMarginBottom: 90 }} className="reveal-on-scroll lg:hidden">
-            <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
-            <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.</p>
+            <h3 className="font-script reveal-on-scroll" data-reveal-delay="60ms" style={{ fontSize: '21px', color: '#DB2777' }}>{tr("For this phase")}</h3>
+            <p className="reveal-on-scroll" data-reveal-delay="90ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>{tr("Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.")}</p>
             {renderSuggestions()}
           </div>
 
           {/* ── CYCLE NUTRITION CTA (replaces the affirmation photo) ── */}
           <a href="/app/tools/diet" className="relative block rounded-[22px] overflow-hidden no-underline" style={{ background: 'linear-gradient(135deg,#FFE9F3 0%,#FBD0E6 100%)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 8px 24px rgba(236,72,153,.14)' }}>
-            <Sprout aria-hidden className="absolute -right-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
-            <Sparkles aria-hidden className="absolute right-6 bottom-4 h-4 w-4 text-hotpink opacity-[0.14]" />
+            <Sprout aria-hidden className="absolute -end-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
+            <Sparkles aria-hidden className="absolute end-6 bottom-4 h-4 w-4 text-hotpink opacity-[0.14]" />
             <div className="relative z-10 p-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1">
                 <Sparkles className="h-3 w-3 text-hotpink" strokeWidth={2} />
-                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>Did you know?</span>
+                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>{tr("Did you know?")}</span>
               </span>
-              <p className="font-script font-bold" style={{ fontSize: '20px', lineHeight: 1.2, marginTop: '9px', color: '#9D174D' }}>What you eat shapes your cycle &amp; hormones.</p>
-              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px', maxWidth: '280px' }}>Iron, magnesium, protein &amp; the right carbs can ease cramps, steady your mood and lift your energy — phase by phase.</p>
+              <p className="font-script font-bold" style={{ fontSize: '20px', lineHeight: 1.2, marginTop: '9px', color: '#9D174D' }}>{tr("What you eat shapes your cycle & hormones.")}</p>
+              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px', maxWidth: '280px' }}>{tr("Iron, magnesium, protein & the right carbs can ease cramps, steady your mood and lift your energy — phase by phase.")}</p>
               <span className="inline-flex items-center gap-1.5 animate-cta-bounce" style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px' }}>
-                <Sprout className="h-3.5 w-3.5" /> Explore cycle nutrition
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                <Sprout className="h-3.5 w-3.5" />{" "}{tr("Explore cycle nutrition")}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </span>
             </div>
           </a>
@@ -1322,8 +1298,8 @@ export function CycleTracker() {
 
           {/* Suggestions */}
           <div data-tour="recommend" className="mb-5" style={{ scrollMarginTop: 90, scrollMarginBottom: 90 }}>
-            <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>For this phase</h3>
-            <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.</p>
+            <h3 className="font-script reveal-on-scroll" data-reveal-delay="0ms" style={{ fontSize: '21px', color: '#DB2777' }}>{tr("For this phase")}</h3>
+            <p className="reveal-on-scroll" data-reveal-delay="30ms" style={{ fontSize: '11px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '2px' }}>{tr("Yoga, movement, food & journaling for your phase — and why each one helps. Tap to start.")}</p>
             {renderSuggestions()}
             <a
               href="/app/tools/yoga"
@@ -1337,23 +1313,21 @@ export function CycleTracker() {
               }}
               data-reveal-delay="360ms"
             >
-              <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
-            </a>
+              <Play className="h-4 w-4 fill-white" />{" "}{tr("Start 15-Min Flow")}</a>
           </div>
 
           {/* Cycle Nutrition CTA (replaces the affirmation photo) */}
           <a href="/app/tools/diet" className="relative block rounded-[22px] overflow-hidden no-underline" style={{ background: 'linear-gradient(135deg,#FFE9F3 0%,#FBD0E6 100%)', border: '1px solid rgba(255,255,255,0.6)' }}>
-            <Sprout aria-hidden className="absolute -right-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
+            <Sprout aria-hidden className="absolute -end-3 -top-3 h-20 w-20 text-hotpink opacity-[0.10]" strokeWidth={1.4} />
             <div className="relative z-10 p-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1">
                 <Sparkles className="h-3 w-3 text-hotpink" strokeWidth={2} />
-                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>Did you know?</span>
+                <span style={{ fontSize: '9.5px', fontWeight: 800, letterSpacing: '.06em', color: '#DB2777', textTransform: 'uppercase' }}>{tr("Did you know?")}</span>
               </span>
-              <p className="font-script font-bold" style={{ fontSize: '19px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>What you eat shapes your cycle &amp; hormones.</p>
-              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px' }}>Iron, magnesium &amp; the right carbs ease cramps, steady mood and lift energy — phase by phase.</p>
+              <p className="font-script font-bold" style={{ fontSize: '19px', lineHeight: 1.2, marginTop: '8px', color: '#9D174D' }}>{tr("What you eat shapes your cycle & hormones.")}</p>
+              <p style={{ fontSize: '11.5px', color: '#9D5C7E', lineHeight: 1.4, marginTop: '4px' }}>{tr("Iron, magnesium & the right carbs ease cramps, steady mood and lift energy — phase by phase.")}</p>
               <span className="inline-flex items-center gap-1.5 animate-cta-bounce" style={{ background: '#DB2777', color: '#fff', borderRadius: '999px', padding: '9px 16px', fontWeight: 700, fontSize: '12px', marginTop: '12px' }}>
-                <Sprout className="h-3.5 w-3.5" /> Explore cycle nutrition
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                <Sprout className="h-3.5 w-3.5" />{" "}{tr("Explore cycle nutrition")}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
               </span>
             </div>
           </a>
@@ -1366,7 +1340,7 @@ export function CycleTracker() {
       {isSetup && (
       <a
         href="/app/tools/yoga"
-        className="lg:hidden fixed left-4 right-4 z-30 flex items-center justify-center gap-2 rounded-full py-3.5 font-bold text-white"
+        className="lg:hidden fixed start-4 end-4 z-30 flex items-center justify-center gap-2 rounded-full py-3.5 font-bold text-white"
         style={{
           bottom: '74px',
           fontSize: '14.5px',
@@ -1375,8 +1349,7 @@ export function CycleTracker() {
           textDecoration: 'none',
         }}
       >
-        <Play className="h-4 w-4 fill-white" /> Start 15-Min Flow
-      </a>
+        <Play className="h-4 w-4 fill-white" />{" "}{tr("Start 15-Min Flow")}</a>
       )}
 
       <PeriodSetup
@@ -1431,18 +1404,15 @@ function CycleSetupCelebration({ phase, onContinue, onStay }: {
         <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-hotpink to-[#DB2777] shadow-xl shadow-hotpink/40 animate-icon-breathe">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d={PHASE_ICON_PATH[phase]} /></svg>
         </div>
-        <h2 className="mt-4 font-script text-4xl leading-tight text-hotpink">You're all set, gorgeous ✿</h2>
-        <p className="mt-2 text-[11px] font-bold uppercase tracking-[.15em] text-hotpink/70">You're in your {PHASE_LABEL[phase]} phase</p>
-        <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-rose/80">{PHASE_INSIGHT[phase]}</p>
+        <h2 className="mt-4 font-script text-4xl leading-tight text-hotpink">{tr("You're all set, gorgeous ✿")}</h2>
+        <p className="mt-2 text-[11px] font-bold uppercase tracking-[.15em] text-hotpink/70">{tr("You're in your")}{" "}{tr("{0} phase", { 0: PHASE_LABEL[phase] })}</p>
+        <p className="mx-auto mt-3 max-w-xs text-[13px] leading-relaxed text-rose/80">{trx(PHASE_INSIGHT[phase])}</p>
         <button
           onClick={onContinue}
           className="bloom-luxury-btn hover-scale animate-cta-bounce mt-6 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
         >
-          <Sparkles className="h-4 w-4" strokeWidth={2} /> Continue on Today
-        </button>
-        <button onClick={onStay} className="mt-3 text-xs font-semibold text-rose/50 transition hover:text-hotpink">
-          Stay on my cycle
-        </button>
+          <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Continue on Today")}</button>
+        <button onClick={onStay} className="mt-3 text-xs font-semibold text-rose/50 transition hover:text-hotpink">{tr("Stay on my cycle")}</button>
       </div>
     </div>,
     document.body

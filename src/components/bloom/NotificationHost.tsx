@@ -11,6 +11,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { BloomFlower } from "./BloomFlower";
 import { NOTIFY_EVENT, notify, type NotifyOptions } from "@/lib/notify";
+import { tr, trx } from "@/i18n";
 
 type Item = NotifyOptions & { id: number };
 
@@ -60,7 +61,7 @@ export function NotificationHost() {
   if (typeof document === "undefined") return null;
 
   return createPortal(
-    <div className="pointer-events-none fixed inset-x-0 top-0 z-[200] flex flex-col items-center gap-2 px-3 sm:items-end sm:pr-4"
+    <div className="pointer-events-none fixed inset-x-0 top-0 z-[200] flex flex-col items-center gap-2 px-3 sm:items-end sm:pe-4"
          style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
       <style>{`@keyframes bz-toast-in{0%{opacity:0;transform:translateY(-16px) scale(.95)}60%{transform:translateY(0) scale(1.01)}100%{opacity:1;transform:none}}`}</style>
       {items.map((it) => {
@@ -76,16 +77,16 @@ export function NotificationHost() {
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full text-white shadow-[0_8px_18px_-6px_rgba(219,39,119,0.85)]"
                   style={{ background: tone.grad }}>
               {it.icon
-                ? <span className="text-[18px] leading-none">{it.icon}</span>
+                ? <span className="text-[18px] leading-none">{trx(it.icon)}</span>
                 : tone.emoji
-                  ? <span className="text-[18px] leading-none">{tone.emoji}</span>
+                  ? <span className="text-[18px] leading-none">{trx(tone.emoji)}</span>
                   : <BloomFlower size={20} petal="#FFFFFF" center="#FFE4F0" />}
             </span>
             <div className="min-w-0 flex-1 pt-0.5">
-              <p className="text-[14px] font-extrabold leading-tight text-[#7a1247]">{it.title}</p>
-              {it.body && <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-rose/70">{it.body}</p>}
+              <p className="text-[14px] font-extrabold leading-tight text-[#7a1247]">{trx(it.title)}</p>
+              {it.body && <p className="mt-0.5 text-[12.5px] font-semibold leading-snug text-rose/70">{trx(it.body)}</p>}
             </div>
-            <button className="-mr-1 shrink-0 rounded-full p-1 text-rose/40 transition hover:text-rose/70" aria-label="Dismiss">
+            <button className="-me-1 shrink-0 rounded-full p-1 text-rose/40 transition hover:text-rose/70" aria-label={tr("Dismiss")}>
               <X className="h-4 w-4" />
             </button>
           </div>

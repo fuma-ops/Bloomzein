@@ -4,6 +4,7 @@
 import { useEffect, useRef } from "react";
 import { usePremium } from "@/lib/entitlements";
 import { AD_CLIENT } from "@/lib/ads";
+import { tr } from "@/i18n";
 
 declare global {
   interface Window { adsbygoogle?: unknown[] }
@@ -31,7 +32,7 @@ export function AdSlot({ slot, format = "auto", className = "", label = true }: 
 
   return (
     <div className={`my-6 overflow-hidden rounded-2xl ${className}`}>
-      {label && <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-rose/40">Advertisement</p>}
+      {label && <p className="mb-1 text-center text-[10px] font-semibold uppercase tracking-wider text-rose/40">{tr("Advertisement")}</p>}
       <ins
         className="adsbygoogle"
         style={{ display: "block" }}

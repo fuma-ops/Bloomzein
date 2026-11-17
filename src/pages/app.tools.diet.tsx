@@ -108,6 +108,7 @@ import {
   type CookingFrequency,
   type DietRegime,
 } from "@/components/bloom/diet/data";
+import { tr, trx, DATE_LOCALE } from "@/i18n";
 
 /* ---------- localStorage ---------- */
 
@@ -125,7 +126,7 @@ const LS = {
 const DIET_TOUR_CONTENT: SparkleContent = {
   eyebrow: "✦ your diet ✦",
   titleLines: ["Meet your", "plan"],
-  subtitle: "A soft little tour of your plan, your cycle & your weight.",
+  subtitle: tr("A soft little tour of your plan, your cycle & your weight."),
   ctaLabel: "Show me around",
   finaleLines: ["You're all set,", "gorgeous"],
   finaleSubtitle: "Eat in sync, bloom all month. ✿",
@@ -134,20 +135,20 @@ const DIET_TOUR_STEPS: SparkleStep[] = [
   {
     key: "plan",
     selector: "#diet-plan",
-    title: "Your eating plan",
-    desc: "Pick a real diet — every recipe is filtered to match it.",
+    title: tr("Your eating plan"),
+    desc: tr("Pick a real diet — every recipe is filtered to match it."),
   },
   {
     key: "weight",
     selector: "#diet-weight",
-    title: "Track your weight",
-    desc: "Log your weight, set a goal, and watch the trend.",
+    title: tr("Track your weight"),
+    desc: tr("Log your weight, set a goal, and watch the trend."),
   },
   {
     key: "tabs",
     selector: "#diet-tabs",
-    title: "Cycle, log & browse",
-    desc: "Cycle Nutrition syncs food to your phase · Today logs meals · Recipes browses your library.",
+    title: tr("Cycle, log & browse"),
+    desc: tr("Cycle Nutrition syncs food to your phase · Today logs meals · Recipes browses your library."),
   },
 ];
 
@@ -205,7 +206,7 @@ function loadWorkoutHistory(): HistoryEntry[] {
 }
 
 function fmtMacroLine(m: { calories: number; protein: number; carbs: number; fat: number }) {
-  return `${m.calories} kcal · ${m.protein}g protein · ${m.carbs}g carbs · ${m.fat}g fat`;
+  return tr("{0} kcal · {1}g protein · {2}g carbs · {3}g fat", { 0: m.calories, 1: m.protein, 2: m.carbs, 3: m.fat });
 }
 
 interface LoggedMeal {
@@ -365,14 +366,14 @@ function RingProgress({
         className="-mt-[4.6rem] sm:-mt-[4.6rem] flex flex-col items-center"
         style={{ marginTop: `-${size - 14}px` }}
       >
-        <span className="text-sm sm:text-base font-bold text-magenta">{value}</span>
+        <span className="text-sm sm:text-base font-bold text-magenta">{trx(value)}</span>
         <span className="text-[9px] text-rose/60">
-          / {target}
-          {sub}
+          / {trx(target)}
+          {trx(sub)}
         </span>
       </div>
       <span className="mt-9 text-[10px] sm:text-xs font-bold uppercase tracking-wide text-rose/80">
-        {label}
+        {trx(label)}
       </span>
     </div>
   );
@@ -393,11 +394,11 @@ function MicroBar({
   return (
     <div>
       <div className="flex items-center justify-between text-xs font-semibold text-rose/80">
-        <span>{label}</span>
+        <span>{trx(label)}</span>
         <span>
           {value.toFixed(1)}
-          {unit} / {target}
-          {unit}
+          {trx(unit)} / {trx(target)}
+          {trx(unit)}
         </span>
       </div>
       <div className="mt-1 h-2 w-full rounded-full bg-blush overflow-hidden">
@@ -415,7 +416,7 @@ function RecipePlaceholder({ name, className = "" }: { name: string; className?:
     <div
       className={`flex aspect-[4/3] w-full items-center justify-center rounded-xl border-[1.5px] border-dashed border-petal text-center bg-blush ${className}`}
     >
-      <span className="px-2 text-[10px] font-medium text-rose/60">{name}</span>
+      <span className="px-2 text-[10px] font-medium text-rose/60">{trx(name)}</span>
     </div>
   );
 }
@@ -423,7 +424,7 @@ function RecipePlaceholder({ name, className = "" }: { name: string; className?:
 function PhasePillTag({ phase }: { phase: DietPhase }) {
   return (
     <span className="rounded-full bg-blush px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-hotpink">
-      {PHASE_INFO[phase].label}
+      {trx(PHASE_INFO[phase].label)}
     </span>
   );
 }
@@ -432,7 +433,7 @@ function PhasePillTag({ phase }: { phase: DietPhase }) {
 
 function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="h-full w-full text-left">
+    <button onClick={onOpen} className="h-full w-full text-start">
       <Glass className="flex h-full flex-col overflow-hidden p-2.5 transition hover:shadow-xl hover:shadow-hotpink/15 active:scale-[0.98]">
         <img
           src={recipeImageSrc(recipe)}
@@ -446,22 +447,21 @@ function RecipeCard({ recipe, onOpen }: { recipe: Recipe; onOpen: () => void }) 
           }}
         />
         <div className="mt-2 flex flex-1 flex-col">
-          <p className="text-sm font-bold text-magenta leading-snug">{recipe.name}</p>
+          <p className="text-sm font-bold text-magenta leading-snug">{trx(recipe.name)}</p>
           <div className="mt-1 flex flex-wrap items-center gap-1">
             <PhasePillTag phase={recipe.phases[0]} />
             {recipe.dietTags[0] && (
               <span className="rounded-full bg-white border border-petal/60 px-2 py-0.5 text-[10px] font-semibold text-rose/80">
-                {recipe.dietTags[0]}
+                {trx(recipe.dietTags[0])}
               </span>
             )}
           </div>
           {/* push the time + macros to the bottom so every card's footer lines up */}
           <div className="mt-auto pt-1.5 flex items-center gap-1 text-[11px] text-rose/70">
-            <Clock className="h-3 w-3" /> {recipe.prepTime + recipe.cookTime} min
-          </div>
+            <Clock className="h-3 w-3" /> {recipe.prepTime + recipe.cookTime}{" "}{tr("min")}</div>
           <p className="mt-0.5 text-[11px] font-semibold text-rose/80">
-            {recipe.macros.calories} kcal · {recipe.macros.protein}g P · {recipe.macros.carbs}g C ·{" "}
-            {recipe.macros.fat}g F
+            {trx(recipe.macros.calories)}{" "}{tr("kcal ·")}{" "}{trx(recipe.macros.protein)}g P · {trx(recipe.macros.carbs)}g C ·{" "}
+            {trx(recipe.macros.fat)}g F
           </p>
         </div>
       </Glass>
@@ -508,7 +508,7 @@ function RecipeModal({
         <div className="relative p-4 sm:p-6">
           <button
             onClick={onClose}
-            className="absolute right-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink"
+            className="absolute end-4 top-4 z-10 grid h-9 w-9 place-items-center rounded-full bg-blush text-hotpink"
           >
             <X className="h-4 w-4" />
           </button>
@@ -526,22 +526,20 @@ function RecipeModal({
               }
             }}
           />
-          <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
-          <p className="text-sm text-rose/70">{recipe.cuisine} cuisine</p>
+          <h2 className="mt-3 font-script text-2xl text-hotpink leading-tight">{trx(recipe.name)}</h2>
+          <p className="text-sm text-rose/70">{trx(recipe.cuisine)}{" "}{tr("cuisine")}</p>
 
           {/* Prep / cook / yield meta */}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] font-semibold text-rose/70">
             <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5 text-hotpink" /> Prep {recipe.prepTime} min
-            </span>
+              <Clock className="h-3.5 w-3.5 text-hotpink" />{" "}{tr("Prep")}{" "}{trx(recipe.prepTime)}{" "}{tr("min")}</span>
             <span className="inline-flex items-center gap-1">
-              <Flame className="h-3.5 w-3.5 text-hotpink" /> Cook {recipe.cookTime} min
-            </span>
+              <Flame className="h-3.5 w-3.5 text-hotpink" />{" "}{tr("Cook")}{" "}{trx(recipe.cookTime)}{" "}{tr("min")}</span>
             <span className="inline-flex items-center gap-1">
-              <UtensilsCrossed className="h-3.5 w-3.5 text-hotpink" /> Serves {recipe.servings}
+              <UtensilsCrossed className="h-3.5 w-3.5 text-hotpink" />{" "}{tr("Serves")}{" "}{trx(recipe.servings)}
             </span>
             <span className="capitalize inline-flex items-center gap-1">
-              <Sparkles className="h-3.5 w-3.5 text-hotpink" /> {recipe.difficulty}
+              <Sparkles className="h-3.5 w-3.5 text-hotpink" /> {trx(recipe.difficulty)}
             </span>
           </div>
 
@@ -554,13 +552,11 @@ function RecipeModal({
                 key={t}
                 className="rounded-full bg-white border border-petal/60 px-2 py-0.5 text-[10px] font-semibold text-rose/80"
               >
-                {t}
+                {trx(t)}
               </span>
             ))}
             {recipe.allergens.length === 0 && (
-              <span className="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] font-semibold text-green-700">
-                allergen-free
-              </span>
+              <span className="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-[10px] font-semibold text-green-700">{tr("allergen-free")}</span>
             )}
           </div>
 
@@ -618,14 +614,14 @@ function RecipeModal({
           {/* Equipment */}
           {recipe.equipment && recipe.equipment.length > 0 && (
             <>
-              <h3 className="mt-4 font-script text-lg text-hotpink">You'll need</h3>
+              <h3 className="mt-4 font-script text-lg text-hotpink">{tr("You'll need")}</h3>
               <div className="mt-1 flex flex-wrap gap-1.5">
                 {recipe.equipment.map((e) => (
                   <span
                     key={e}
                     className="rounded-full bg-blush/70 border border-petal/50 px-2.5 py-0.5 text-[11px] font-semibold text-magenta"
                   >
-                    {e}
+                    {trx(e)}
                   </span>
                 ))}
               </div>
@@ -633,24 +629,23 @@ function RecipeModal({
           )}
 
           {/* Ingredients — amounts scaled to the planned portion */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">
-            Ingredients{" "}
+          <h3 className="mt-4 font-script text-lg text-hotpink">{tr("Ingredients")}{" "}
             <span className="text-xs font-sans font-semibold text-rose/50">
               ·{" "}
               {scaled
-                ? "portioned for your goal ✿"
-                : `makes ${recipe.servings} serving${recipe.servings === 1 ? "" : "s"}`}
+                ? tr("portioned for your goal ✿")
+                : tr("makes {0} serving{1}", { 0: recipe.servings, 1: recipe.servings === 1 ? "" : "s" })}
             </span>
           </h3>
-          <p className="mt-0.5 text-[11px] text-rose/50">1 tablespoon ≈ 15 ml · 1 teaspoon ≈ 5 ml · 1 cup ≈ 240 ml</p>
+          <p className="mt-0.5 text-[11px] text-rose/50">{tr("1 tablespoon ≈ 15 ml · 1 teaspoon ≈ 5 ml · 1 cup ≈ 240 ml")}</p>
           <ul className="mt-1 space-y-1 text-sm text-rose/90">
             {recipe.ingredients.map((ing) => (
               <li
                 key={ing.name}
                 className="flex items-start justify-between gap-3 border-b border-petal/40 py-1"
               >
-                <span className="font-medium">{ing.name}</span>
-                <span className="text-rose/60 text-right shrink-0 max-w-[55%]">
+                <span className="font-medium">{trx(ing.name)}</span>
+                <span className="text-rose/60 text-end shrink-0 max-w-[55%]">
                   {scaleQuantity(ing.quantity, ingF)}
                 </span>
               </li>
@@ -658,7 +653,7 @@ function RecipeModal({
           </ul>
 
           {/* Steps */}
-          <h3 className="mt-4 font-script text-lg text-hotpink">Method</h3>
+          <h3 className="mt-4 font-script text-lg text-hotpink">{tr("Method")}</h3>
           <ol className="mt-2 space-y-3">
             {recipe.steps.map((s, i) => (
               <li key={i} className="flex gap-3 text-sm text-rose/90 leading-relaxed">
@@ -679,7 +674,7 @@ function RecipeModal({
                 <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3 flex items-start gap-2">
                   <Sparkles className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
                   <p className="text-[12.5px] text-rose/80 leading-snug">
-                    <b className="text-hotpink">Swap:</b> {recipe.substitutionTip}
+                    <b className="text-hotpink">{tr("Swap:")}</b> {trx(recipe.substitutionTip)}
                   </p>
                 </div>
               )}
@@ -687,7 +682,7 @@ function RecipeModal({
                 <div className="rounded-2xl bg-blush/50 border border-petal/50 p-3 flex items-start gap-2">
                   <Leaf className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" />
                   <p className="text-[12.5px] text-rose/80 leading-snug">
-                    <b className="text-hotpink">Make ahead:</b> {recipe.batchTip}
+                    <b className="text-hotpink">{tr("Make ahead:")}</b> {trx(recipe.batchTip)}
                   </p>
                 </div>
               )}
@@ -706,11 +701,9 @@ function RecipeModal({
             >
               {added ? (
                 <>
-                  <Check className="h-4 w-4" /> Added
-                </>
+                  <Check className="h-4 w-4" />{" "}{tr("Added")}</>
               ) : (
-                <>
-                  Add to meal plan <ChevronRight className="h-4 w-4" />
+                <>{tr("Add to meal plan")}{" "}<ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
                 </>
               )}
             </PinkBtn>
@@ -725,28 +718,28 @@ function RecipeModal({
 /* ---------- Setup screen ---------- */
 
 const GOAL_OPTIONS: { key: DietGoal; label: string }[] = [
-  { key: "lose", label: "Lose weight" },
-  { key: "maintain", label: "Maintain" },
-  { key: "gain", label: "Gain & tone" },
+  { key: "lose", label: tr("Lose weight") },
+  { key: "maintain", label: tr("Maintain") },
+  { key: "gain", label: tr("Gain & tone") },
 ];
 const DIET_TYPE_OPTIONS: { key: DietType; label: string }[] = [
-  { key: "omnivore", label: "Omnivore" },
-  { key: "vegetarian", label: "Vegetarian" },
-  { key: "vegan", label: "Vegan" },
-  { key: "gluten-free", label: "Gluten-free" },
-  { key: "halal", label: "Halal" },
+  { key: "omnivore", label: tr("Omnivore") },
+  { key: "vegetarian", label: tr("Vegetarian") },
+  { key: "vegan", label: tr("Vegan") },
+  { key: "gluten-free", label: tr("Gluten-free") },
+  { key: "halal", label: tr("Halal") },
 ];
 const ALLERGY_OPTIONS: { key: Allergy; label: string }[] = [
-  { key: "dairy", label: "Dairy" },
-  { key: "nuts", label: "Nuts" },
-  { key: "eggs", label: "Eggs" },
-  { key: "soy", label: "Soy" },
-  { key: "shellfish", label: "Shellfish" },
+  { key: "dairy", label: tr("Dairy") },
+  { key: "nuts", label: tr("Nuts") },
+  { key: "eggs", label: tr("Eggs") },
+  { key: "soy", label: tr("Soy") },
+  { key: "shellfish", label: tr("Shellfish") },
 ];
 const COOKING_OPTIONS: { key: CookingFrequency; label: string }[] = [
-  { key: "quick", label: "Quick — under 15 min" },
-  { key: "normal", label: "Normal — under 30 min" },
-  { key: "love", label: "Love cooking" },
+  { key: "quick", label: tr("Quick — under 15 min") },
+  { key: "normal", label: tr("Normal — under 30 min") },
+  { key: "love", label: tr("Love cooking") },
 ];
 
 /** App-style popup to edit body & goal (weight · height · goal weight),
@@ -779,21 +772,19 @@ function BodyGoalEditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <h3 className="font-script text-2xl text-hotpink">Edit your body &amp; goal</h3>
+          <h3 className="font-script text-2xl text-hotpink">{tr("Edit your body & goal")}</h3>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr("Close")}
             className="rounded-full bg-blush/70 p-1.5 text-rose active:scale-90 transition"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-[11px] text-rose/60 leading-snug mb-4">
-          These keep your calorie target &amp; timeline accurate.
-        </p>
+        <p className="text-[11px] text-rose/60 leading-snug mb-4">{tr("These keep your calorie target & timeline accurate.")}</p>
         <div className="space-y-2.5">
           <SetupNumber
-            label="Weight"
+            label={tr("Weight")}
             unit="kg"
             value={weight}
             onChange={setWeight}
@@ -801,14 +792,14 @@ function BodyGoalEditModal({
             autoFocus
           />
           <SetupNumber
-            label="Height"
+            label={tr("Height")}
             unit="cm"
             value={height}
             onChange={setHeight}
             placeholder="165"
           />
           <SetupNumber
-            label="Goal weight"
+            label={tr("Goal weight")}
             unit="kg"
             value={target}
             onChange={setTarget}
@@ -816,32 +807,32 @@ function BodyGoalEditModal({
           />
           {showPace && (
             <div>
-              <p className="text-xs font-bold text-rose/80 mb-1.5">Pace</p>
+              <p className="text-xs font-bold text-rose/80 mb-1.5">{tr("Pace")}</p>
               <div className="grid grid-cols-2 gap-2">
                 {([
-                  { key: "steady", label: "Steady", sub: "Gentle & sustainable" },
-                  { key: "faster", label: "Faster", sub: `A bigger deficit to ${paceVerb} sooner` },
+                  { key: "steady", label: tr("Steady"), sub: tr("Gentle & sustainable") },
+                  { key: "faster", label: tr("Faster"), sub: tr("A bigger deficit to {0} sooner", { 0: paceVerb }) },
                 ] as { key: DietPace; label: string; sub: string }[]).map((o) => (
                   <button
                     key={o.key}
                     type="button"
                     onClick={() => setPace(o.key)}
                     className={[
-                      "rounded-2xl border px-3 py-2 text-left transition active:scale-95",
+                      "rounded-2xl border px-3 py-2 text-start transition active:scale-95",
                       pace === o.key
                         ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30"
                         : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40",
                     ].join(" ")}
                   >
-                    <span className="block text-sm font-bold leading-none">{o.label}</span>
-                    <span className={["block text-[10px] leading-snug mt-1", pace === o.key ? "text-white/85" : "text-rose/55"].join(" ")}>{o.sub}</span>
+                    <span className="block text-sm font-bold leading-none">{trx(o.label)}</span>
+                    <span className={["block text-[10px] leading-snug mt-1", pace === o.key ? "text-white/85" : "text-rose/55"].join(" ")}>{trx(o.sub)}</span>
                   </button>
                 ))}
               </div>
               <p className="mt-1.5 text-[10px] text-rose/50 leading-snug">
                 {profile.goal === "gain"
-                  ? "You'll still eat back every calorie you train off — pace only sets your surplus."
-                  : "You'll still eat back every calorie you burn training — pace only sets your deficit."}
+                  ? tr("You'll still eat back every calorie you train off — pace only sets your surplus.")
+                  : tr("You'll still eat back every calorie you burn training — pace only sets your deficit.")}
               </p>
             </div>
           )}
@@ -850,9 +841,7 @@ function BodyGoalEditModal({
           <button
             onClick={onClose}
             className="rounded-full bg-white border border-petal/60 px-4 py-2.5 text-sm font-semibold text-rose active:scale-95 transition"
-          >
-            Cancel
-          </button>
+          >{tr("Cancel")}</button>
           <PinkBtn
             className="flex-1 justify-center"
             onClick={() =>
@@ -863,8 +852,7 @@ function BodyGoalEditModal({
                 pace,
               })
             }
-          >
-            Save <Check className="h-4 w-4" />
+          >{tr("Save")}{" "}<Check className="h-4 w-4" />
           </PinkBtn>
         </div>
       </div>
@@ -904,24 +892,20 @@ function EatingPlanEditModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-1">
-          <h3 className="font-script text-2xl text-hotpink">Your eating plan</h3>
+          <h3 className="font-script text-2xl text-hotpink">{tr("Your eating plan")}</h3>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tr("Close")}
             className="rounded-full bg-blush/70 p-1.5 text-rose active:scale-90 transition"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-[11px] text-rose/60 leading-snug mb-4">
-          Your diet, allergies &amp; cooking time — every recipe re-filters to match.{" "}
-          <b className="text-hotpink">{matchCount} recipes</b> fit right now.
-        </p>
+        <p className="text-[11px] text-rose/60 leading-snug mb-4">{tr("Your diet, allergies & cooking time — every recipe re-filters to match.")}{" "}
+          <b className="text-hotpink">{trx(matchCount)}{" "}{tr("recipes")}</b>{" "}{tr("fit right now.")}</p>
         <div className="space-y-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-              Diet
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Diet")}</p>
             <div className="flex gap-1.5 overflow-x-auto no-scrollbar snap-x pb-1">
               {DIET_REGIMES.map((r) => (
                 <SelectPill
@@ -931,16 +915,14 @@ function EatingPlanEditModal({
                     setProfile((p) => ({ ...p, regime: r.key, dietType: regimeToDietType(r.key) }))
                   }
                 >
-                  {r.label}
+                  {trx(r.label)}
                 </SelectPill>
               ))}
             </div>
-            <p className="mt-1.5 text-[11.5px] text-rose/70 leading-snug">{regime.blurb}</p>
+            <p className="mt-1.5 text-[11.5px] text-rose/70 leading-snug">{trx(regime.blurb)}</p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-              Allergies
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Allergies")}</p>
             <div className="flex flex-wrap gap-1.5">
               {ALLERGY_OPTIONS.map((o) => (
                 <SelectPill
@@ -955,21 +937,17 @@ function EatingPlanEditModal({
                     }))
                   }
                 >
-                  {o.label}
+                  {trx(o.label)}
                 </SelectPill>
               ))}
               <SelectPill
                 active={profile.allergies.length === 0}
                 onClick={() => setProfile((p) => ({ ...p, allergies: [] }))}
-              >
-                None
-              </SelectPill>
+              >{tr("None")}</SelectPill>
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-              Cooking time
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Cooking time")}</p>
             <div className="flex flex-wrap gap-1.5">
               {COOKING_OPTIONS.map((o) => (
                 <SelectPill
@@ -977,14 +955,13 @@ function EatingPlanEditModal({
                   active={profile.cookingFrequency === o.key}
                   onClick={() => setProfile((p) => ({ ...p, cookingFrequency: o.key }))}
                 >
-                  {o.label}
+                  {trx(o.label)}
                 </SelectPill>
               ))}
             </div>
           </div>
         </div>
-        <PinkBtn className="mt-5 w-full justify-center" onClick={onClose}>
-          Done <Check className="h-4 w-4" />
+        <PinkBtn className="mt-5 w-full justify-center" onClick={onClose}>{tr("Done")}{" "}<Check className="h-4 w-4" />
         </PinkBtn>
       </div>
     </div>,
@@ -1022,11 +999,11 @@ function SetupNumber({
     >
       <span
         className={[
-          "pl-3.5 pr-2 text-[11px] font-bold uppercase tracking-wide",
+          "ps-3.5 pe-2 text-[11px] font-bold uppercase tracking-wide",
           error ? "text-rose-500" : "text-rose/50",
         ].join(" ")}
       >
-        {label}
+        {trx(label)}
       </span>
       <input
         value={value}
@@ -1036,7 +1013,7 @@ function SetupNumber({
         placeholder={placeholder}
         className="flex-1 min-w-0 text-center text-lg font-bold text-rose outline-none py-2.5"
       />
-      <span className="pr-3.5 text-[12px] font-bold text-rose/50">{unit}</span>
+      <span className="pe-3.5 text-[12px] font-bold text-rose/50">{trx(unit)}</span>
     </label>
   );
 }
@@ -1083,23 +1060,23 @@ function SetupScreen({
   const STEPS = [
     {
       key: "body",
-      title: "About your body",
-      hint: "This powers your exact calorie target — nothing is shared.",
+      title: tr("About your body"),
+      hint: tr("This powers your exact calorie target — nothing is shared."),
     },
     {
       key: "goal",
-      title: "Your goal",
-      hint: "We'll tailor your calories, protein & timeline to this.",
+      title: tr("Your goal"),
+      hint: tr("We'll tailor your calories, protein & timeline to this."),
     },
     {
       key: "plan",
-      title: "Your eating plan",
-      hint: "Sets which recipes you'll be offered all month.",
+      title: tr("Your eating plan"),
+      hint: tr("Sets which recipes you'll be offered all month."),
     },
     {
       key: "prefs",
-      title: "A few preferences",
-      hint: "So every suggestion is safe and doable for you.",
+      title: tr("A few preferences"),
+      hint: tr("So every suggestion is safe and doable for you."),
     },
   ] as const;
   const isLast = step === STEPS.length - 1;
@@ -1148,8 +1125,7 @@ function SetupScreen({
         href="/app/tools"
         className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink"
       >
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("All tools")}</a>
       {/* HERO banner — matches the first-page-after-reset heroes across the app */}
       <div className="relative w-full min-h-[140px] sm:min-h-[210px] lg:min-h-[250px] rounded-3xl overflow-hidden border border-pink-200/60 shadow-xl shadow-pink-200/30 mb-4 animate-card-pop-in">
         <img
@@ -1163,20 +1139,15 @@ function SetupScreen({
         <div className="relative flex flex-col justify-center min-h-[140px] sm:min-h-[210px] lg:min-h-[250px] p-4 sm:p-6">
           <div className="max-w-[70%] sm:max-w-[60%]">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/85 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-hotpink border border-white/60">
-              <Sparkles className="h-3 w-3" strokeWidth={2.2} /> Diet
-            </span>
+              <Sparkles className="h-3 w-3" strokeWidth={2.2} />{" "}{tr("Diet")}</span>
             <h1
               className="mt-1.5 animate-fade-in font-script text-3xl sm:text-5xl text-white leading-none"
               style={{ animationDelay: "0ms", textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}
-            >
-              Let's set up your Diet
-            </h1>
+            >{tr("Let's set up your Diet")}</h1>
             <p
               className="animate-fade-in mt-1 text-xs sm:text-sm font-medium text-white/95 leading-snug"
               style={{ animationDelay: "200ms", textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}
-            >
-              One little step at a time — takes under a minute ✿
-            </p>
+            >{tr("One little step at a time — takes under a minute ✿")}</p>
           </div>
         </div>
       </div>
@@ -1195,20 +1166,19 @@ function SetupScreen({
       </div>
 
       <Glass className="p-4 sm:p-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mb-1">
-          Step {step + 1} of {STEPS.length}
+        <p className="text-[10px] font-bold uppercase tracking-widest text-rose/45 mb-1">{tr("Step")}{" "}{step + 1}{" "}{tr("of")}{" "}{trx(STEPS.length)}
         </p>
-        <h2 className="font-script text-2xl text-hotpink mb-1">{STEPS[step].title}</h2>
+        <h2 className="font-script text-2xl text-hotpink mb-1">{trx(STEPS[step].title)}</h2>
         <p className="text-[12px] text-rose/70 leading-snug mb-4 flex items-start gap-1.5">
           <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-          {STEPS[step].hint}
+          {trx(STEPS[step].hint)}
         </p>
 
         {step === 0 && (
           <div className="space-y-2.5">
             <SetupNumber
               key={`w-${squeeze}`}
-              label="Weight"
+              label={tr("Weight")}
               unit="kg"
               value={weight}
               onChange={setWeight}
@@ -1219,7 +1189,7 @@ function SetupScreen({
             <div className="flex gap-2.5">
               <SetupNumber
                 key={`h-${squeeze}`}
-                label="Height"
+                label={tr("Height")}
                 unit="cm"
                 value={height}
                 onChange={setHeight}
@@ -1228,7 +1198,7 @@ function SetupScreen({
               />
               <SetupNumber
                 key={`a-${squeeze}`}
-                label="Age"
+                label={tr("Age")}
                 unit="yr"
                 value={age}
                 onChange={setAge}
@@ -1240,10 +1210,7 @@ function SetupScreen({
             <div className="flex items-start gap-2 rounded-2xl border border-hotpink/30 bg-blush/50 px-3 py-2.5">
               <Info className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
               <p className="text-[11.5px] text-rose/80 leading-snug">
-                <b className="text-hotpink">Important — please fill all three.</b> Your weight,
-                height &amp; age power the precision of your calorie target, energy balance &amp;
-                weight projections. The more accurate, the better your plan fits you.
-              </p>
+                <b className="text-hotpink">{tr("Important — please fill all three.")}</b>{" "}{tr("Your weight, height & age power the precision of your calorie target, energy balance & weight projections. The more accurate, the better your plan fits you.")}</p>
             </div>
           </div>
         )}
@@ -1253,25 +1220,21 @@ function SetupScreen({
             <div className="flex flex-wrap gap-2">
               {GOAL_OPTIONS.map((o) => (
                 <SelectPill key={o.key} active={goal === o.key} onClick={() => setGoal(o.key)}>
-                  {o.label}
+                  {trx(o.label)}
                 </SelectPill>
               ))}
             </div>
             {goal !== "maintain" && (
               <div className="pt-1">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-                  Goal weight (optional)
-                </p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Goal weight (optional)")}</p>
                 <SetupNumber
-                  label="Target"
+                  label={tr("Target")}
                   unit="kg"
                   value={targetWeight}
                   onChange={setTargetWeight}
                   placeholder={goal === "lose" ? "60" : "70"}
                 />
-                <p className="mt-1.5 text-[11px] text-rose/50">
-                  Set this to unlock your realistic timeline on the goal-path card.
-                </p>
+                <p className="mt-1.5 text-[11px] text-rose/50">{tr("Set this to unlock your realistic timeline on the goal-path card.")}</p>
               </div>
             )}
           </div>
@@ -1282,12 +1245,12 @@ function SetupScreen({
             <div className="flex flex-wrap gap-2">
               {DIET_REGIMES.map((o) => (
                 <SelectPill key={o.key} active={regime === o.key} onClick={() => setRegime(o.key)}>
-                  {o.label}
+                  {trx(o.label)}
                 </SelectPill>
               ))}
             </div>
             <p className="mt-2.5 text-[12px] text-rose/70 leading-snug">
-              {dietRegimeInfo(regime).blurb}
+              {trx(dietRegimeInfo(regime).blurb)}
             </p>
           </div>
         )}
@@ -1295,9 +1258,7 @@ function SetupScreen({
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-                Allergies
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Allergies")}</p>
               <div className="flex flex-wrap gap-2">
                 {ALLERGY_OPTIONS.map((o) => (
                   <SelectPill
@@ -1305,18 +1266,14 @@ function SetupScreen({
                     active={allergies.includes(o.key)}
                     onClick={() => toggleAllergy(o.key)}
                   >
-                    {o.label}
+                    {trx(o.label)}
                   </SelectPill>
                 ))}
-                <SelectPill active={allergies.length === 0} onClick={() => setAllergies([])}>
-                  None
-                </SelectPill>
+                <SelectPill active={allergies.length === 0} onClick={() => setAllergies([])}>{tr("None")}</SelectPill>
               </div>
             </div>
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">
-                Cooking time
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-rose/50 mb-1.5">{tr("Cooking time")}</p>
               <div className="flex flex-wrap gap-2">
                 {COOKING_OPTIONS.map((o) => (
                   <SelectPill
@@ -1324,7 +1281,7 @@ function SetupScreen({
                     active={cooking === o.key}
                     onClick={() => setCooking(o.key)}
                   >
-                    {o.label}
+                    {trx(o.label)}
                   </SelectPill>
                 ))}
               </div>
@@ -1339,17 +1296,14 @@ function SetupScreen({
               onClick={() => setStep((s) => s - 1)}
               className="inline-flex items-center gap-1 rounded-full bg-white/90 border border-petal/60 px-4 py-2.5 text-sm font-semibold text-rose active:scale-95 transition"
             >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </button>
+              <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("Back")}</button>
           )}
           <PinkBtn className="flex-1 justify-center" onClick={handleNext}>
             {isLast ? (
-              <>
-                Save &amp; start blooming <Sparkles className="h-4 w-4" />
+              <>{tr("Save & start blooming")}{" "}<Sparkles className="h-4 w-4" />
               </>
             ) : (
-              <>
-                Continue <ChevronRight className="h-4 w-4" />
+              <>{tr("Continue")}{" "}<ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
               </>
             )}
           </PinkBtn>
@@ -1366,11 +1320,11 @@ function StepHeader({ step, title, sub }: { step: number; title: string; sub: st
   return (
     <div className="flex items-center gap-2 mb-2 mt-1">
       <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-hotpink text-white text-[11px] font-black">
-        {step}
+        {trx(step)}
       </span>
       <div className="min-w-0">
-        <p className="font-script text-lg text-hotpink leading-none truncate">{title}</p>
-        <p className="text-[10.5px] text-rose/55 leading-tight">{sub}</p>
+        <p className="font-script text-lg text-hotpink leading-none truncate">{trx(title)}</p>
+        <p className="text-[10.5px] text-rose/55 leading-tight">{trx(sub)}</p>
       </div>
     </div>
   );
@@ -1395,7 +1349,7 @@ function weightFeedback(
   if (goal === "maintain" || target == null) {
     if (prev == null) return { tone: "ontrack", msg: "First weigh-in saved — this is your baseline. Log daily to see your trend ✿" };
     if (Math.abs(d) <= 0.3) return { tone: "excellent", msg: "Beautifully steady — right where you want to be ✿" };
-    return { tone: "ontrack", msg: d > 0 ? `Up ${Math.abs(d)} kg since last time — keep your plate balanced and it'll settle ✿` : `Down ${Math.abs(d)} kg — nothing to worry about, stay steady ✿` };
+    return { tone: "ontrack", msg: d > 0 ? tr("Up {0} kg since last time — keep your plate balanced and it'll settle ✿", { 0: Math.abs(d) }) : tr("Down {0} kg — nothing to worry about, stay steady ✿", { 0: Math.abs(d) }) };
   }
 
   const wantDown = goal === "lose";
@@ -1426,9 +1380,7 @@ function WeightChart({
 }) {
   if (history.length < 1)
     return (
-      <p className="text-[11px] text-rose/50 italic">
-        Log your weight to see your graph & estimate ✿
-      </p>
+      <p className="text-[11px] text-rose/50 italic">{tr("Log your weight to see your graph & estimate ✿")}</p>
     );
   const w = 320,
     h = 152;
@@ -1439,7 +1391,7 @@ function WeightChart({
   const startMs = new Date(history[0].date + "T00:00:00").getTime();
   const dayOf = (d: string) => (new Date(d + "T00:00:00").getTime() - startMs) / 864e5;
   const dateAtDay = (day: number) => new Date(startMs + day * 864e5);
-  const fmtDate = (d: Date) => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const fmtDate = (d: Date) => d.toLocaleDateString(DATE_LOCALE, { month: "short", day: "numeric" });
   const lastReal = history[history.length - 1];
   const lastDay = dayOf(lastReal.date);
   const loseDir = target != null && target < lastReal.kg; // goal is below current
@@ -1544,9 +1496,7 @@ function WeightChart({
           fill="#C4849F"
           textAnchor="end"
           fontWeight="700"
-        >
-          kg
-        </text>
+        >{tr("kg")}</text>
 
         {/* Soft pink area under the weight line (real → projection) */}
         {(() => {
@@ -1580,9 +1530,7 @@ function WeightChart({
               fontWeight="800"
               fill="#DB2777"
               textAnchor="end"
-            >
-              🎯 goal {target}kg
-            </text>
+            >{tr("🎯 goal")}{" "}{trx(target)}{tr("kg")}</text>
           </>
         )}
         {/* Projected pace — dashed pink line to a hollow endpoint */}
@@ -1636,13 +1584,11 @@ function WeightChart({
           fill="#EC4899"
           textAnchor="start"
         >
-          {lastReal.kg}kg now
-        </text>
+          {trx(lastReal.kg)}{tr("kg now")}</text>
       </svg>
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] font-bold text-rose/60">
         <span className="inline-flex items-center gap-1">
-          <span className="h-2 w-2 rounded-full bg-[#EC4899]" /> You now · {lastReal.kg}kg
-        </span>
+          <span className="h-2 w-2 rounded-full bg-[#EC4899]" />{" "}{tr("You now ·")}{" "}{trx(lastReal.kg)}{tr("kg")}</span>
         {hasProj && (
           <span className="inline-flex items-center gap-1">
             <span
@@ -1651,13 +1597,10 @@ function WeightChart({
                 backgroundImage:
                   "repeating-linear-gradient(90deg,#DB2777 0 3px,transparent 3px 6px)",
               }}
-            />{" "}
-            Projected (~{Math.abs(projection!.weeklyRateKg)}kg/wk)
-          </span>
+            />{" "}{tr("Projected (~")}{Math.abs(projection!.weeklyRateKg)}{tr("kg/wk)")}</span>
         )}
         {target != null && (
-          <span className="inline-flex items-center gap-1">
-            🎯 Goal · {target}kg{" "}
+          <span className="inline-flex items-center gap-1">{tr("🎯 Goal ·")}{" "}{trx(target)}{tr("kg")}{" "}
             {target < lastReal.kg ? "(below)" : target > lastReal.kg ? "(above)" : ""}
           </span>
         )}
@@ -1850,7 +1793,7 @@ function ProfileTab({
              macros, goal timeline). Bloom+; free sees a teaser. ── */}
       <PlusLock
         feature="diet"
-        title="Your energy engine"
+        title={tr("Your energy engine")}
         blurb="Your real daily target, macros, eat-back & goal timeline."
         minH="min-h-[240px]"
       >
@@ -1907,9 +1850,7 @@ function ProfileTab({
       {/* ── Manage & track — the detail behind the numbers above ── */}
       <div className="flex items-center gap-2 pt-1">
         <div className="h-px flex-1 bg-petal/50" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-rose/40">
-          Manage &amp; track
-        </span>
+        <span className="text-[10px] font-bold uppercase tracking-widest text-rose/40">{tr("Manage & track")}</span>
         <div className="h-px flex-1 bg-petal/50" />
       </div>
 
@@ -1918,11 +1859,11 @@ function ProfileTab({
         <Glass className="relative isolate overflow-hidden p-4 sm:p-5 bg-gradient-to-br from-blush/50 via-white/70 to-petal/30">
           {/* soft floating motifs so the card isn't all-white */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-            <Flower2 className="absolute -right-3 -top-4 h-24 w-24 text-hotpink opacity-[0.06] animate-[spin_34s_linear_infinite]" strokeWidth={1.4} />
-            <Flower2 className="absolute -left-4 bottom-6 h-16 w-16 text-hotpink opacity-[0.07]" strokeWidth={1.4} />
-            <Heart className="absolute right-16 bottom-10 h-5 w-5 text-hotpink opacity-[0.10]" fill="currentColor" />
-            <Heart className="absolute left-1/3 top-6 h-3.5 w-3.5 text-hotpink opacity-[0.09]" fill="currentColor" />
-            <Sparkles className="absolute right-1/3 top-1/2 h-4 w-4 text-hotpink opacity-[0.08]" />
+            <Flower2 className="absolute -end-3 -top-4 h-24 w-24 text-hotpink opacity-[0.06] animate-[spin_34s_linear_infinite]" strokeWidth={1.4} />
+            <Flower2 className="absolute -start-4 bottom-6 h-16 w-16 text-hotpink opacity-[0.07]" strokeWidth={1.4} />
+            <Heart className="absolute end-16 bottom-10 h-5 w-5 text-hotpink opacity-[0.10]" fill="currentColor" />
+            <Heart className="absolute start-1/3 top-6 h-3.5 w-3.5 text-hotpink opacity-[0.09]" fill="currentColor" />
+            <Sparkles className="absolute end-1/3 top-1/2 h-4 w-4 text-hotpink opacity-[0.08]" />
           </div>
           <div className="relative flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -1930,12 +1871,8 @@ function ProfileTab({
                 <BookOpen className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="font-script text-2xl text-hotpink leading-none">
-                  Weight &amp; Progress
-                </p>
-                <p className="text-[11.5px] text-rose/65 leading-snug mt-1">
-                  Track your journey, see your progress
-                </p>
+                <p className="font-script text-2xl text-hotpink leading-none">{tr("Weight & Progress")}</p>
+                <p className="text-[11.5px] text-rose/65 leading-snug mt-1">{tr("Track your journey, see your progress")}</p>
               </div>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -1947,8 +1884,7 @@ function ProfileTab({
                 }
                 className="inline-flex items-center gap-1 rounded-full bg-white border border-hotpink/30 text-hotpink px-3 py-1.5 text-[11px] font-bold active:scale-95 transition"
               >
-                <BarChart3 className="h-3.5 w-3.5" /> View Insights
-              </button>
+                <BarChart3 className="h-3.5 w-3.5" />{" "}{tr("View Insights")}</button>
               {history.length > 1 && (
                 <span
                   className={[
@@ -1968,15 +1904,11 @@ function ProfileTab({
                     <Minus className="h-3 w-3" />
                   )}
                   {delta > 0 ? "+" : ""}
-                  {delta} kg
-                </span>
+                  {trx(delta)}{" "}{tr("kg")}</span>
               )}
             </div>
           </div>
-          <p className="mb-2 text-[11px] text-rose/55 leading-snug">
-            Log it daily — the dashed line projects the pace your calorie plan actually produces.
-            Set your goal weight from <b className="text-hotpink">your goal path</b> above.
-          </p>
+          <p className="mb-2 text-[11px] text-rose/55 leading-snug">{tr("Log it daily — the dashed line projects the pace your calorie plan actually produces. Set your goal weight from")}{" "}<b className="text-hotpink">{tr("your goal path")}</b>{" "}{tr("above.")}</p>
           <WeightChart history={history} target={target} projection={weightProjection} />
           {/* Pink coach note — feedback on the latest logged weight vs her goal,
               refreshed every time she logs. */}
@@ -1999,7 +1931,7 @@ function ProfileTab({
                 <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-white/70 text-hotpink animate-icon-breathe">
                   <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
                 </span>
-                <p className="text-[11.5px] font-semibold leading-snug text-hotpink">{wf.msg}</p>
+                <p className="text-[11.5px] font-semibold leading-snug text-hotpink">{trx(wf.msg)}</p>
               </div>
             );
           })()}
@@ -2019,7 +1951,7 @@ function ProfileTab({
                 inputMode="decimal"
                 className="flex-1 min-w-0 text-center text-sm font-bold text-rose outline-none"
               />
-              <span className="pr-1 text-[11px] font-bold text-rose/50">kg</span>
+              <span className="pe-1 text-[11px] font-bold text-rose/50">{tr("kg")}</span>
               <button
                 onClick={() => setWeightInput((w) => ((parseFloat(w) || 0) + 0.1).toFixed(1))}
                 className="px-3.5 py-2 text-hotpink font-bold"
@@ -2032,7 +1964,7 @@ function ProfileTab({
                 today" CTA when today isn't logged yet (returns tomorrow). */}
             <button
               onClick={logWeight}
-              title={todayLogged ? "Update today's weight" : "Log today's weight"}
+              title={todayLogged ? tr("Update today's weight") : tr("Log today's weight")}
               className={[
                 "inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-full transition active:scale-95",
                 logged != null
@@ -2046,48 +1978,36 @@ function ProfileTab({
                 <>
                   <span className="grid h-4 w-4 place-items-center rounded-full bg-white/25">
                     <Check className="h-3 w-3" strokeWidth={3.5} />
-                  </span>{" "}
-                  Saved!
-                </>
+                  </span>{" "}{tr("Saved!")}</>
               ) : todayLogged ? (
                 <>
                   <span className="grid h-4 w-4 place-items-center rounded-full bg-hotpink text-white">
                     <Check className="h-3 w-3" strokeWidth={3.5} />
-                  </span>{" "}
-                  Weight logged
-                </>
+                  </span>{" "}{tr("Weight logged")}</>
               ) : (
                 <>
-                  <Check className="h-4 w-4" /> Log today
-                </>
+                  <Check className="h-4 w-4" />{" "}{tr("Log today")}</>
               )}
             </button>
           </div>
           {/* Confirmation line — a fresh "Saved" flash, or a calm "already logged" note */}
           {logged != null ? (
             <p className="mt-2 flex items-center gap-1.5 text-[11.5px] font-bold text-hotpink animate-fade-in">
-              <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} /> Saved{" "}
-              <b className="tabular-nums">{logged} kg</b> for today — your graph &amp; trend just
-              updated ✿
-            </p>
+              <Sparkles className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />{" "}{tr("Saved")}{" "}
+              <b className="tabular-nums">{trx(logged)}{" "}{tr("kg")}</b>{" "}{tr("for today — your graph & trend just updated ✿")}</p>
           ) : todayLogged ? (
             <p className="mt-2 flex items-center gap-1.5 text-[11px] text-rose/55 leading-snug">
-              <Check className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={3} /> Today's
-              weight is logged. Change the number above to update it.
-            </p>
+              <Check className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={3} />{" "}{tr("Today's weight is logged. Change the number above to update it.")}</p>
           ) : null}
           {/* Motivational footer — matches the reference design */}
-          <div className="relative mt-3 overflow-hidden rounded-2xl border border-petal/50 bg-gradient-to-r from-blush/60 to-petal/30 p-3 pr-14">
+          <div className="relative mt-3 overflow-hidden rounded-2xl border border-petal/50 bg-gradient-to-r from-blush/60 to-petal/30 p-3 pe-14">
             <div className="flex items-start gap-2">
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm">
                 <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
               </span>
               <div>
-                <p className="text-[12.5px] font-bold text-hotpink leading-tight">
-                  Stay consistent and trust the process.
-                </p>
-                <p className="text-[11px] text-rose/70 leading-tight">
-                  Small steps = Big change <span className="text-hotpink">♥</span>
+                <p className="text-[12.5px] font-bold text-hotpink leading-tight">{tr("Stay consistent and trust the process.")}</p>
+                <p className="text-[11px] text-rose/70 leading-tight">{tr("Small steps = Big change")}{" "}<span className="text-hotpink">♥</span>
                 </p>
               </div>
             </div>
@@ -2095,7 +2015,7 @@ function ProfileTab({
               src="/images/landing-orb-flower.webp"
               alt=""
               aria-hidden
-              className="pointer-events-none absolute -bottom-3 -right-3 h-16 w-16 object-contain opacity-90"
+              className="pointer-events-none absolute -bottom-3 -end-3 h-16 w-16 object-contain opacity-90"
             />
           </div>
         </Glass>
@@ -2110,16 +2030,12 @@ function ProfileTab({
       )}
 
       <div className="flex items-center justify-center gap-4 pt-1">
-        <button onClick={onEdit} className="text-xs font-semibold text-rose/60 hover:text-hotpink">
-          Edit my diet setup ✿
-        </button>
+        <button onClick={onEdit} className="text-xs font-semibold text-rose/60 hover:text-hotpink">{tr("Edit my diet setup ✿")}</button>
         <span className="text-rose/30">·</span>
         <button
           onClick={onReplayTour}
           className="text-xs font-semibold text-rose/60 hover:text-hotpink"
-        >
-          Replay tour
-        </button>
+        >{tr("Replay tour")}</button>
       </div>
     </div>
   );
@@ -2129,8 +2045,8 @@ function ProfileTab({
 function CoachHeader({ title, sub }: { title: string; sub: string }) {
   return (
     <div className="mb-2.5 mt-1">
-      <h2 className="font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">{title}</h2>
-      <p className="mt-0.5 text-[12px] text-rose/55 leading-tight">{sub}</p>
+      <h2 className="font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">{trx(title)}</h2>
+      <p className="mt-0.5 text-[12px] text-rose/55 leading-tight">{trx(sub)}</p>
     </div>
   );
 }
@@ -2141,38 +2057,34 @@ function FreePhaseNutrition({ coach }: { coach: ReturnType<typeof buildDayCoach>
     <div className="rounded-[1.6rem] border border-petal/60 bg-white/90 backdrop-blur p-4 sm:p-5 animate-card-pop-in">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <p className="font-script text-2xl text-hotpink leading-none">{coach.phaseLabel} phase</p>
-          <p className="mt-0.5 text-[11px] font-semibold text-rose/60">
-            Day {coach.cycleDay} of your cycle
-          </p>
+          <p className="font-script text-2xl text-hotpink leading-none">{tr("{0} phase", { 0: coach.phaseLabel })}</p>
+          <p className="mt-0.5 text-[11px] font-semibold text-rose/60">{tr("Day")}{" "}{trx(coach.cycleDay)}{" "}{tr("of your cycle")}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-hotpink/10 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">
-          Today
-        </span>
+        <span className="shrink-0 rounded-full bg-hotpink/10 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">{tr("Today")}</span>
       </div>
       <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">Eat more</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">{tr("Eat more")}</p>
           <div className="mt-1 flex flex-wrap gap-1">
             {coach.eat.slice(0, 5).map((f) => (
               <span
                 key={f}
                 className="rounded-full bg-blush px-2 py-0.5 text-[11px] font-semibold text-magenta border border-petal/50"
               >
-                {f}
+                {trx(f)}
               </span>
             ))}
           </div>
         </div>
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">Ease up on</p>
+          <p className="text-[11px] font-bold uppercase tracking-wide text-rose/55">{tr("Ease up on")}</p>
           <div className="mt-1 flex flex-wrap gap-1">
             {coach.avoid.slice(0, 4).map((f) => (
               <span
                 key={f}
                 className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-rose/65 border border-petal/60"
               >
-                {f}
+                {trx(f)}
               </span>
             ))}
           </div>
@@ -2202,10 +2114,8 @@ function CycleNutritionTab({
           href="/app/tools/cycle"
           className="block rounded-[1.5rem] border border-hotpink/30 bg-white/85 p-5 text-center animate-card-pop-in"
         >
-          <p className="font-script text-2xl text-hotpink">Set up your cycle ✿</p>
-          <p className="mt-1 text-sm text-rose/70">
-            Then your Nutrition Cycle guide greets you every day — your body, your foods, your glow.
-          </p>
+          <p className="font-script text-2xl text-hotpink">{tr("Set up your cycle ✿")}</p>
+          <p className="mt-1 text-sm text-rose/70">{tr("Then your Nutrition Cycle guide greets you every day — your body, your foods, your glow.")}</p>
         </a>
       </div>
     );
@@ -2216,11 +2126,11 @@ function CycleNutritionTab({
   if (!premium) {
     return (
       <div className="space-y-6" id="diet-cycle">
-        <CoachHeader title="Your coach today" sub="how you feel, what you need, one little joy" />
+        <CoachHeader title={tr("Your coach today")} sub="how you feel, what you need, one little joy" />
         <FreePhaseNutrition coach={coach} />
         <PlusLock
           feature="coach"
-          title="Your full Nutrition Cycle"
+          title={tr("Your full Nutrition Cycle")}
           blurb="The whole phase guide — your body today, hero nutrients, your bloom plate & lifestyle tips, all synced to your cycle."
           minH="min-h-[220px]"
         />
@@ -2240,8 +2150,8 @@ function CycleNutritionTab({
       {phaseReads.length > 0 && (
         <div>
           <CoachHeader
-            title={`Reads for your ${coach.phaseLabel} phase`}
-            sub={`chosen for how you feel today · Day ${coach.cycleDay}`}
+            title={tr("Reads for your {0} phase", { 0: coach.phaseLabel })}
+            sub={tr("chosen for how you feel today · Day {0}", { 0: coach.cycleDay })}
           />
           <PhaseReads reads={phaseReads} />
         </div>
@@ -2331,7 +2241,7 @@ function MealSlot({
     <Glass className="p-3 sm:p-4">
       <p className="font-script text-lg text-hotpink leading-none mb-2 flex items-center gap-1.5">
         <MealIcon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
-        {MEAL_LABELS[type]}
+        {trx(MEAL_LABELS[type])}
       </p>
       {meal ? (
         (() => {
@@ -2341,7 +2251,7 @@ function MealSlot({
               {/* Tap the meal → open the full recipe, at its planned portion */}
               <button
                 onClick={() => r && onOpen(r, portionFor(todayWeekday(), type as PlanSlot))}
-                className="flex flex-1 items-center gap-3 text-left active:scale-[0.99] transition"
+                className="flex flex-1 items-center gap-3 text-start active:scale-[0.99] transition"
               >
                 <img
                   src={mealSlotPhoto(type, r)}
@@ -2354,10 +2264,10 @@ function MealSlot({
                 />
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-magenta leading-snug line-clamp-2">
-                    {meal.name}
+                    {trx(meal.name)}
                   </p>
                   <p className="text-[11px] text-rose/70 mt-0.5">{fmtMacroLine(meal.macros)}</p>
-                  <p className="text-[10px] font-bold text-hotpink/70 mt-0.5">Tap for recipe →</p>
+                  <p className="text-[10px] font-bold text-hotpink/70 mt-0.5">{tr("Tap for recipe →")}</p>
                 </div>
               </button>
               <button
@@ -2372,13 +2282,13 @@ function MealSlot({
       ) : searching ? (
         <div className="mt-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-rose/50" />
+            <Search className="absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-rose/50" />
             <input
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search recipe or food..."
-              className="w-full rounded-full border border-petal/60 bg-white py-1.5 pl-8 pr-3 text-xs text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
+              placeholder={tr("Search recipe or food...")}
+              className="w-full rounded-full border border-petal/60 bg-white py-1.5 ps-8 pe-3 text-xs text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
             />
           </div>
           <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
@@ -2390,22 +2300,20 @@ function MealSlot({
                   setSearching(false);
                   setQuery("");
                 }}
-                className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-blush"
+                className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-start text-xs hover:bg-blush"
               >
-                <span className="font-semibold text-magenta">{r.name}</span>
-                <span className="shrink-0 text-rose/60">{r.macros.calories} kcal</span>
+                <span className="font-semibold text-magenta">{trx(r.name)}</span>
+                <span className="shrink-0 text-rose/60">{trx(r.macros.calories)}{" "}{tr("kcal")}</span>
               </button>
             ))}
             {results.length === 0 && (
-              <p className="px-2 py-1 text-xs text-rose/50">No matches found.</p>
+              <p className="px-2 py-1 text-xs text-rose/50">{tr("No matches found.")}</p>
             )}
           </div>
           <button
             onClick={() => setSearching(false)}
             className="mt-1 text-xs text-rose/60 hover:underline"
-          >
-            Cancel
-          </button>
+          >{tr("Cancel")}</button>
         </div>
       ) : (
         <div className="mt-2 flex flex-wrap gap-2">
@@ -2414,15 +2322,13 @@ function MealSlot({
             className="text-xs px-3 py-1.5"
             onClick={() => candidates[0] && onAddRecipe(candidates[0])}
           >
-            <Plus className="h-3.5 w-3.5" /> From my plan
-          </PinkBtn>
+            <Plus className="h-3.5 w-3.5" />{" "}{tr("From my plan")}</PinkBtn>
           <PinkBtn
             variant="ghost"
             className="text-xs px-3 py-1.5"
             onClick={() => setSearching(true)}
           >
-            <Plus className="h-3.5 w-3.5" /> Add manually
-          </PinkBtn>
+            <Plus className="h-3.5 w-3.5" />{" "}{tr("Add manually")}</PinkBtn>
         </div>
       )}
     </Glass>
@@ -2545,40 +2451,39 @@ function TodayTab({
       {/* Macro rings — real targets are Bloom+; free sees a teaser. */}
       <PlusLock
         feature="diet"
-        title="Your macro targets"
+        title={tr("Your macro targets")}
         blurb="Calories, protein, carbs & fat — tracked against your real daily goal."
         minH="min-h-[190px]"
       >
         <Glass className="p-4 sm:p-5">
           <h3 className="font-script text-xl text-hotpink mb-3 flex items-center gap-1.5">
-            <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Today's Macros
-          </h3>
+            <Activity className="h-4 w-4 text-hotpink" strokeWidth={1.8} />{" "}{tr("Today's Macros")}</h3>
           <div className="grid grid-cols-4 gap-2 sm:gap-4">
             <RingProgress
               value={consumed.calories}
               target={targets.calories}
-              label="Calories"
+              label={tr("Calories")}
               sub=""
               colorClass={ringColor}
             />
             <RingProgress
               value={consumed.protein}
               target={targets.protein}
-              label="Protein"
+              label={tr("Protein")}
               sub="g"
               colorClass={ringColor}
             />
             <RingProgress
               value={consumed.carbs}
               target={targets.carbs}
-              label="Carbs"
+              label={tr("Carbs")}
               sub="g"
               colorClass={ringColor}
             />
             <RingProgress
               value={consumed.fat}
               target={targets.fat}
-              label="Fat"
+              label={tr("Fat")}
               sub="g"
               colorClass={ringColor}
             />
@@ -2589,8 +2494,7 @@ function TodayTab({
       {/* Micro bars */}
       <Glass className="p-4 sm:p-5 space-y-3">
         <h3 className="font-script text-xl text-hotpink flex items-center gap-1.5">
-          <Leaf className="h-4 w-4 text-hotpink" strokeWidth={1.8} /> Phase Nutrients
-        </h3>
+          <Leaf className="h-4 w-4 text-hotpink" strokeWidth={1.8} />{" "}{tr("Phase Nutrients")}</h3>
         {micros.map((m) => (
           <MicroBar
             key={m.key as string}
@@ -2606,44 +2510,35 @@ function TodayTab({
       {showPostWorkout && pwRecipe && workoutToday && (
         <Glass className="p-4 sm:p-5 border-hotpink/30">
           <p className="text-sm font-bold text-magenta flex items-center gap-1.5">
-            <Dumbbell className="h-4 w-4 text-hotpink" /> {workoutToday.sessionName} completed
-          </p>
+            <Dumbbell className="h-4 w-4 text-hotpink" /> {trx(workoutToday.sessionName)}{" "}{tr("completed")}</p>
           <p className="mt-1 text-xs text-rose/80">
-            {ZONE_MESSAGE[workoutToday.intention === "recover" ? "" : workoutToday.zone] ??
+            {trx(ZONE_MESSAGE[workoutToday.intention === "recover" ? "" : workoutToday.zone]) ??
               (workoutToday.intention === "recover"
-                ? "Gentle nourishment — anti-inflammatory focus"
-                : "Full recovery mode — complete macro balance")}
+                ? tr("Gentle nourishment — anti-inflammatory focus")
+                : tr("Full recovery mode — complete macro balance"))}
           </p>
-          <p className="mt-1 text-xs font-semibold text-hotpink">
-            Your protein target is now {proteinBoostTarget}g today
-          </p>
+          <p className="mt-1 text-xs font-semibold text-hotpink">{tr("Your protein target is now")}{" "}{trx(proteinBoostTarget)}{tr("g today")}</p>
 
           <div className="mt-3 flex gap-3">
             <RecipePlaceholder name={pwRecipe.name} className="w-24 shrink-0" />
             <div>
-              <p className="text-sm font-bold text-magenta">{pwRecipe.name}</p>
+              <p className="text-sm font-bold text-magenta">{trx(pwRecipe.name)}</p>
               <p className="text-xs text-rose/70">{fmtMacroLine(pwRecipe.macros)}</p>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
-            <PinkBtn className="text-xs px-3 py-1.5" onClick={() => assignMeal(mealType, pwRecipe)}>
-              Add to today
-            </PinkBtn>
+            <PinkBtn className="text-xs px-3 py-1.5" onClick={() => assignMeal(mealType, pwRecipe)}>{tr("Add to today")}</PinkBtn>
             <PinkBtn
               variant="outline"
               className="text-xs px-3 py-1.5"
               onClick={() => setPwIndex((i) => (i + 1) % Math.max(1, pwPool.length))}
-            >
-              See alternatives
-            </PinkBtn>
+            >{tr("See alternatives")}</PinkBtn>
             <PinkBtn
               variant="ghost"
               className="text-xs px-3 py-1.5"
               onClick={() => setDismissedPW((d) => ({ ...d, [todayISO()]: true }))}
-            >
-              Dismiss
-            </PinkBtn>
+            >{tr("Dismiss")}</PinkBtn>
           </div>
         </Glass>
       )}
@@ -2651,22 +2546,15 @@ function TodayTab({
       {/* Yoga-day recovery nudge — gentle, hydrating, anti-inflammatory (not protein) */}
       {yogaToday && !workoutToday && (
         <Glass className="p-4 border-violet-200/70">
-          <p className="text-sm font-bold text-violet-700 flex items-center gap-1.5">
-            🧘 Yoga day — recovery fuel
-          </p>
-          <p className="mt-1 text-xs text-rose/80 leading-snug">
-            Keep it light &amp; hydrating today. Lean into anti-inflammatory foods — berries, leafy
-            greens, omega-3s, ginger &amp; turmeric — and an extra glass of water. No need to load
-            protein for a gentle flow.
-          </p>
+          <p className="text-sm font-bold text-violet-700 flex items-center gap-1.5">{tr("🧘 Yoga day — recovery fuel")}</p>
+          <p className="mt-1 text-xs text-rose/80 leading-snug">{tr("Keep it light & hydrating today. Lean into anti-inflammatory foods — berries, leafy greens, omega-3s, ginger & turmeric — and an extra glass of water. No need to load protein for a gentle flow.")}</p>
         </Glass>
       )}
 
       {/* Meal slots — one per section */}
       <div>
         <h3 className="font-script text-2xl text-hotpink mb-3 flex items-center gap-2">
-          <UtensilsCrossed className="h-5 w-5 text-hotpink" strokeWidth={1.6} /> Your Meals Today
-        </h3>
+          <UtensilsCrossed className="h-5 w-5 text-hotpink" strokeWidth={1.6} />{" "}{tr("Your Meals Today")}</h3>
         <div className="space-y-3">
           {(["breakfast", "lunch", "dinner", "snack"] as MealType[]).map((type) => (
             <MealSlot
@@ -2690,25 +2578,25 @@ function TodayTab({
 const PHASE_FILTERS: DietPhase[] = ["menstrual", "follicular", "ovulatory", "luteal"];
 const MEAL_FILTERS: MealType[] = ["breakfast", "lunch", "dinner", "snack"];
 const TIME_FILTERS = [
-  { key: "15", label: "Under 15 min", max: 15 },
-  { key: "30", label: "Under 30 min", max: 30 },
-  { key: "60", label: "Under 60 min", max: 60 },
+  { key: "15", label: tr("Under 15 min"), max: 15 },
+  { key: "30", label: tr("Under 30 min"), max: 30 },
+  { key: "60", label: tr("Under 60 min"), max: 60 },
 ];
 const GOAL_FILTERS = [
-  { key: "protein", label: "High protein" },
-  { key: "iron", label: "High iron" },
-  { key: "omega3", label: "High omega-3" },
-  { key: "lowcarb", label: "Low carb" },
+  { key: "protein", label: tr("High protein") },
+  { key: "iron", label: tr("High iron") },
+  { key: "omega3", label: tr("High omega-3") },
+  { key: "lowcarb", label: tr("Low carb") },
 ];
 
 /** A small removable pill for an applied recipe filter. */
 function ActiveFilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-hotpink text-white px-2 py-0.5 text-[10.5px] font-bold">
-      {label}
+      {trx(label)}
       <button
         onClick={onRemove}
-        aria-label={`Remove ${label}`}
+        aria-label={tr("Remove {0}", { 0: label })}
         className="grid h-3.5 w-3.5 place-items-center rounded-full bg-white/25 hover:bg-white/40 transition active:scale-90"
       >
         <X className="h-2.5 w-2.5" strokeWidth={3} />
@@ -2819,24 +2707,23 @@ function RecipesTab({
           <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink text-white">
             <Leaf className="h-3 w-3" />
           </span>
-          <b className="text-hotpink">{regime.label}</b> plan ·{" "}
-          <b className="text-hotpink">{myRulesRecipes.length}</b> recipes matched
-          {profile.allergies.length ? " · allergy-safe" : ""}
+          <b className="text-hotpink">{trx(regime.label)}</b>{" "}{tr("plan ·")}{" "}
+          <b className="text-hotpink">{trx(myRulesRecipes.length)}</b>{" "}{tr("recipes matched")}{profile.allergies.length ? tr(" · allergy-safe") : ""}
         </p>
 
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
+            <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-rose/50" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search recipes or ingredients..."
-              className="w-full rounded-full border border-petal/60 bg-white py-2.5 pl-10 pr-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
+              placeholder={tr("Search recipes or ingredients...")}
+              className="w-full rounded-full border border-petal/60 bg-white py-2.5 ps-10 pe-4 text-sm text-rose focus:outline-none focus:ring-2 focus:ring-hotpink/30"
             />
           </div>
           <button
             onClick={() => setShowFilters((v) => !v)}
-            aria-label="Filters"
+            aria-label={tr("Filters")}
             aria-expanded={showFilters}
             className={[
               "relative grid h-10 w-10 shrink-0 place-items-center rounded-full border transition active:scale-95",
@@ -2847,8 +2734,8 @@ function RecipesTab({
           >
             <SlidersHorizontal className="h-4 w-4" />
             {activeCount > 0 && (
-              <span className="absolute -top-1 -right-1 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-white text-hotpink text-[9px] font-black border border-hotpink/40">
-                {activeCount}
+              <span className="absolute -top-1 -end-1 grid h-4 min-w-4 px-1 place-items-center rounded-full bg-white text-hotpink text-[9px] font-black border border-hotpink/40">
+                {trx(activeCount)}
               </span>
             )}
           </button>
@@ -2887,9 +2774,7 @@ function RecipesTab({
             <button
               onClick={clearAll}
               className="px-1.5 text-[10px] font-bold uppercase tracking-wide text-rose/50 underline hover:text-hotpink"
-            >
-              Clear
-            </button>
+            >{tr("Clear")}</button>
           </div>
         )}
 
@@ -2903,7 +2788,7 @@ function RecipesTab({
                   active={phaseFilters.includes(p)}
                   onClick={() => pick(() => toggle(phaseFilters, p, setPhaseFilters))}
                 >
-                  {PHASE_INFO[p].label}
+                  {trx(PHASE_INFO[p].label)}
                 </SelectPill>
               ))}
             </div>
@@ -2914,7 +2799,7 @@ function RecipesTab({
                   active={mealFilters.includes(m)}
                   onClick={() => pick(() => toggle(mealFilters, m, setMealFilters))}
                 >
-                  {MEAL_LABELS[m]}
+                  {trx(MEAL_LABELS[m])}
                 </SelectPill>
               ))}
             </div>
@@ -2925,7 +2810,7 @@ function RecipesTab({
                   active={timeFilter === t.key}
                   onClick={() => pick(() => setTimeFilter((cur) => (cur === t.key ? null : t.key)))}
                 >
-                  {t.label}
+                  {trx(t.label)}
                 </SelectPill>
               ))}
             </div>
@@ -2936,7 +2821,7 @@ function RecipesTab({
                   active={goalFilters.includes(g.key)}
                   onClick={() => pick(() => toggle(goalFilters, g.key, setGoalFilters))}
                 >
-                  {g.label}
+                  {trx(g.label)}
                 </SelectPill>
               ))}
             </div>
@@ -2947,9 +2832,7 @@ function RecipesTab({
       {!!pwRecipes.length && !filtersActive && (
         <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2 inline-flex items-center gap-1.5">
-            <Dumbbell className="h-4 w-4" strokeWidth={1.8} /> Post-workout recipes — high protein ·
-            phase matched
-          </p>
+            <Dumbbell className="h-4 w-4" strokeWidth={1.8} />{" "}{tr("Post-workout recipes — high protein · phase matched")}</p>
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             {pwRecipes.map((r) => (
               <div key={r.id} className="w-40 shrink-0">
@@ -2963,7 +2846,7 @@ function RecipesTab({
       {filtersActive ? (
         <Glass className="p-4">
           <p className="font-script text-lg text-hotpink mb-2">
-            {filtered.length} recipe{filtered.length === 1 ? "" : "s"}
+            {trx(filtered.length)}{" "}{tr("recipe")}{filtered.length === 1 ? "" : "s"}
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {filtered.map((r) => (
@@ -2971,13 +2854,13 @@ function RecipesTab({
             ))}
           </div>
           {filtered.length === 0 && (
-            <p className="text-sm text-rose/60">No recipes match — try fewer filters.</p>
+            <p className="text-sm text-rose/60">{tr("No recipes match — try fewer filters.")}</p>
           )}
         </Glass>
       ) : (
         <>
           <Glass className="p-4">
-            <p className="font-script text-lg text-hotpink mb-2">For your phase today</p>
+            <p className="font-script text-lg text-hotpink mb-2">{tr("For your phase today")}</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {forYourPhase.map((r) => (
                 <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />
@@ -2985,7 +2868,7 @@ function RecipesTab({
             </div>
           </Glass>
           <Glass className="p-4">
-            <p className="font-script text-lg text-hotpink mb-2">Quick this week</p>
+            <p className="font-script text-lg text-hotpink mb-2">{tr("Quick this week")}</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {quickThisWeek.map((r) => (
                 <RecipeCard key={r.id} recipe={r} onOpen={() => onOpenRecipe(r)} />
@@ -3002,16 +2885,16 @@ function RecipesTab({
 
 type TabKey = "profile" | "cycle" | "today" | "recipes";
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
-  { key: "profile", label: "My Diet", icon: Activity },
-  { key: "cycle", label: "Cycle Nutrition", icon: Moon },
-  { key: "today", label: "Today", icon: UtensilsCrossed },
-  { key: "recipes", label: "Recipes", icon: BookOpen },
+  { key: "profile", label: tr("My Diet"), icon: Activity },
+  { key: "cycle", label: tr("Cycle Nutrition"), icon: Moon },
+  { key: "today", label: tr("Today"), icon: UtensilsCrossed },
+  { key: "recipes", label: tr("Recipes"), icon: BookOpen },
 ];
 const TAB_HERO: Record<TabKey, { title: string; subtitle: string }> = {
-  profile: { title: "My Diet", subtitle: "your plan, your weight & your movement — all in one ✿" },
-  cycle: { title: "Cycle Nutrition", subtitle: "eat in tune with today's phase 🌙" },
-  today: { title: "Today's Meals", subtitle: "nourish your bloom, one bite at a time 🌸" },
-  recipes: { title: "Recipes", subtitle: "cook for your phase, glow all season 💫" },
+  profile: { title: tr("My Diet"), subtitle: tr("your plan, your weight & your movement — all in one ✿") },
+  cycle: { title: tr("Cycle Nutrition"), subtitle: tr("eat in tune with today's phase 🌙") },
+  today: { title: tr("Today's Meals"), subtitle: tr("nourish your bloom, one bite at a time 🌸") },
+  recipes: { title: tr("Recipes"), subtitle: tr("cook for your phase, glow all season 💫") },
 };
 
 export default function DietPage() {
@@ -3118,7 +3001,7 @@ export default function DietPage() {
 
   // Recipe modal "add to plan" → writes the plan for that date's weekday.
   const addToPlan = (date: string, recipe: Recipe) => {
-    const wd = new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" });
+    const wd = new Date(date + "T00:00:00").toLocaleDateString(DATE_LOCALE, { weekday: "short" });
     setMealPlanSlot(wd, recipe.mealType as PlanSlot, recipe.id);
     if (wd === todayWeekday()) refreshMeals();
   };
@@ -3334,20 +3217,18 @@ export default function DietPage() {
   if (isGuided() && guidedGoalKcal !== null) {
     return (
       <div className="relative animate-fade-in">
-        <GuidedFocusHero label="Diet" image="/images/meal-oats.webp" />
+        <GuidedFocusHero label={tr("Diet")} image="/images/meal-oats.webp" />
 
         <div id="diet-energy" className="rounded-2xl border border-petal/60 bg-white p-6 text-center shadow-sm animate-scale-in">
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-hotpink text-white shadow-md shadow-hotpink/30 animate-icon-breathe">
             <Sparkles className="h-6 w-6" strokeWidth={1.8} />
           </span>
-          <h2 className="mt-3 font-script text-3xl leading-tight text-hotpink">Your goal is set ✿</h2>
-          <p className="mt-1 text-[13px] text-rose/70">Your daily energy target</p>
+          <h2 className="mt-3 font-script text-3xl leading-tight text-hotpink">{tr("Your goal is set ✿")}</h2>
+          <p className="mt-1 text-[13px] text-rose/70">{tr("Your daily energy target")}</p>
           <p className="mt-1 text-4xl font-black tabular-nums text-rose">
-            {guidedGoalKcal.toLocaleString()} <span className="text-lg font-bold text-rose/55">kcal</span>
+            {guidedGoalKcal.toLocaleString()} <span className="text-lg font-bold text-rose/55">{tr("kcal")}</span>
           </p>
-          <p className="mt-2 text-[12px] leading-snug text-rose/70">
-            Everything — meals, movement, insights — tunes to it now.
-          </p>
+          <p className="mt-2 text-[12px] leading-snug text-rose/70">{tr("Everything — meals, movement, insights — tunes to it now.")}</p>
 
           {hasMealPlan() && (
             <button
@@ -3360,9 +3241,9 @@ export default function DietPage() {
               ].join(" ")}
             >
               {guidedSynced ? (
-                <><Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal</>
+                <><Check className="h-4 w-4" strokeWidth={3} />{" "}{tr("Meals synced to your goal")}</>
               ) : (
-                <><Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal</>
+                <><Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Sync my meals to this goal")}</>
               )}
             </button>
           )}
@@ -3372,8 +3253,7 @@ export default function DietPage() {
           onClick={() => { window.location.href = "/app/today"; }}
           className="bloom-luxury-btn hover-scale animate-cta-bounce mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-full py-3 text-sm font-bold text-white"
         >
-          <Sparkles className="h-4 w-4" strokeWidth={2} /> Continue on Today →
-        </button>
+          <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Continue on Today →")}</button>
       </div>
     );
   }
@@ -3396,16 +3276,15 @@ export default function DietPage() {
           targetId="diet-energy"
           step={3}
           total={5}
-          title="Your goal is set ✿"
+          title={tr("Your goal is set ✿")}
           message={`Your daily energy: about ${guidedGoalKcal.toLocaleString()} kcal — everything tunes to it now.`}
           extra={
             <div className="mt-3 space-y-3">
               {hasMealPlan() && (
                 <div>
                   {/* Clarify exactly what this button does before she taps it */}
-                  <p className="text-[11.5px] font-semibold leading-snug text-rose/75">
-                    Do you want to sync your goal to the meals you've{" "}
-                    <b className="text-hotpink">already planned</b>?
+                  <p className="text-[11.5px] font-semibold leading-snug text-rose/75">{tr("Do you want to sync your goal to the meals you've")}{" "}
+                    <b className="text-hotpink">{tr("already planned")}</b>?
                   </p>
                   <button
                     onClick={() => {
@@ -3423,20 +3302,16 @@ export default function DietPage() {
                   >
                     {guidedSynced ? (
                       <>
-                        <Check className="h-4 w-4" strokeWidth={3} /> Meals synced to your goal
-                      </>
+                        <Check className="h-4 w-4" strokeWidth={3} />{" "}{tr("Meals synced to your goal")}</>
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4" strokeWidth={2} /> Sync my meals to this goal
-                      </>
+                        <Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Sync my meals to this goal")}</>
                     )}
                   </button>
                 </div>
               )}
               {/* Clarify the primary CTA below (SpotlightCoach renders it next) */}
-              <p className="text-[11.5px] font-semibold leading-snug text-rose/75">
-                Or simply carry on and set up the rest of your day on Today ↓
-              </p>
+              <p className="text-[11.5px] font-semibold leading-snug text-rose/75">{tr("Or simply carry on and set up the rest of your day on Today ↓")}</p>
             </div>
           }
           primaryLabel="Continue to set up Today"
@@ -3481,13 +3356,13 @@ export default function DietPage() {
                 className="animate-fade-in font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]"
                 style={{ animationDelay: "0ms" }}
               >
-                {TAB_HERO[tab].title}
+                {trx(TAB_HERO[tab].title)}
               </h1>
               <p
                 className="animate-fade-in mt-0.5 font-script text-lg sm:text-2xl text-rose/90 leading-tight"
                 style={{ animationDelay: "200ms" }}
               >
-                {TAB_HERO[tab].subtitle}
+                {trx(TAB_HERO[tab].subtitle)}
               </p>
             </div>
             <CyclePhasePill className="mt-1.5" />
@@ -3514,7 +3389,7 @@ export default function DietPage() {
                     ].join(" ")}
                   >
                     <t.icon className="h-3 w-3 shrink-0" strokeWidth={1.8} />
-                    {t.label}
+                    {trx(t.label)}
                   </button>
                 );
               })}
@@ -3558,7 +3433,7 @@ export default function DietPage() {
         {tab === "today" && (
           <PlusLock
             feature="diet"
-            title="Your Diet · Today"
+            title={tr("Your Diet · Today")}
             blurb="Log meals, macro rings & your phase-nutrient balance — the full daily picture."
             minH="min-h-[420px]"
           >
@@ -3575,7 +3450,7 @@ export default function DietPage() {
         {tab === "recipes" && (
           <PlusLock
             feature="meals"
-            title="Your recipe library"
+            title={tr("Your recipe library")}
             blurb="Every recipe, filtered to your diet, allergies & phase — tap to cook."
             minH="min-h-[420px]"
           >

@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { Heart, Sparkles, Star, Flower2 } from "lucide-react";
+import { tr } from "@/i18n";
 
 /**
  * A one-shot "you fully bloomed today!" moment — a soft Barbie-pink burst of
@@ -76,8 +77,8 @@ export function BloomDayCelebration({ onDone }: { onDone: () => void }) {
           <div className="clay-blob animate-icon-breathe mx-auto mb-2 grid h-14 w-14 place-items-center rounded-full text-white">
             <Star className="h-7 w-7" fill="currentColor" strokeWidth={1.5} />
           </div>
-          <p className="font-script text-3xl text-hotpink leading-none">Day complete!</p>
-          <p className="mt-1.5 text-[12.5px] font-semibold text-rose/70">You fully bloomed today, gorgeous — every petal ticked ✿</p>
+          <p className="font-script text-3xl text-hotpink leading-none">{tr("Day complete!")}</p>
+          <p className="mt-1.5 text-[12.5px] font-semibold text-rose/70">{tr("You fully bloomed today, gorgeous — every petal ticked ✿")}</p>
         </div>
       </div>
     </div>,

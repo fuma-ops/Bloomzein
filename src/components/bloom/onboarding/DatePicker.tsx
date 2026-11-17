@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { tr, trx, DATE_LOCALE, localWeekdays } from "@/i18n";
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const WEEKDAYS = ["M", "T", "W", "T", "F", "S", "S"];
+const WEEKDAYS = localWeekdays(["M", "T", "W", "T", "F", "S", "S"], "narrow", true);
 
 /** Compact calendar grid date picker, styled to match the app's pearl/petal palette instead of the native browser picker. */
 export function DatePicker({ value, onChange, max }: { value: string | null; onChange: (iso: string) => void; max: string }) {
@@ -21,7 +22,7 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells: (number | null)[] = [...Array(startOffset).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
-  const monthLabel = viewDate.toLocaleDateString("en", { month: "long", year: "numeric" });
+  const monthLabel = viewDate.toLocaleDateString(DATE_LOCALE, { month: "long", year: "numeric" });
   const nextMonth = new Date(year, month + 1, 1);
 
   const isFuture = (day: number) => new Date(year, month, day) > maxDate;
@@ -36,25 +37,25 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
         <button
           type="button"
           onClick={() => setViewDate(new Date(year, month - 1, 1))}
-          aria-label="Previous month"
+          aria-label={tr("Previous month")}
           className="grid h-7 w-7 place-items-center rounded-full text-hotpink transition hover:bg-blush"
         >
-          <ChevronLeft className="h-3.5 w-3.5" />
+          <ChevronLeft className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </button>
-        <span className="text-xs font-medium text-rose">{monthLabel}</span>
+        <span className="text-xs font-medium text-rose">{trx(monthLabel)}</span>
         <button
           type="button"
           onClick={() => setViewDate(nextMonth)}
           disabled={nextMonth > maxDate}
-          aria-label="Next month"
+          aria-label={tr("Next month")}
           className="grid h-7 w-7 place-items-center rounded-full text-hotpink transition hover:bg-blush disabled:opacity-25"
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </button>
       </div>
       <div className="mt-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-medium text-rose/50">
         {WEEKDAYS.map((d, i) => (
-          <span key={i}>{d}</span>
+          <span key={i}>{trx(d)}</span>
         ))}
       </div>
       <div className="mt-0.5 grid grid-cols-7 gap-0.5">
@@ -75,7 +76,7 @@ export function DatePicker({ value, onChange, max }: { value: string | null; onC
                   : "text-rose hover:bg-blush"
               } disabled:pointer-events-none disabled:opacity-25`}
             >
-              {day}
+              {trx(day)}
             </button>
           )
         )}

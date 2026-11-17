@@ -37,6 +37,7 @@ import {
 } from "@/components/bloom/workout/programs";
 import { getCoaching } from "@/components/bloom/workout/coaching";
 import { BloomzeinIntro } from "@/components/bloom/BloomzeinIntro";
+import { tr, trx } from "@/i18n";
 
 // ===================== STORAGE =====================
 
@@ -288,8 +289,7 @@ export function generateWeeklyPlan(profile: WorkoutProfile, phase: CyclePhase, s
 function PlusTag() {
   return (
     <span className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide text-white" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
-      <Lock className="h-2 w-2" strokeWidth={3} /> Bloom+
-    </span>
+      <Lock className="h-2 w-2" strokeWidth={3} />{" "}{tr("Bloom+")}</span>
   );
 }
 
@@ -424,9 +424,9 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
         <img src={src} alt={title} className="absolute inset-0 h-full w-full object-cover object-top" onError={() => setBroken(true)} />
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-hotpink/65 via-hotpink/20 to-transparent" />
-      <div className="absolute top-0 left-0 p-3 sm:p-5">
-        <h2 className="font-script text-xl sm:text-3xl lg:text-4xl text-white leading-tight drop-shadow-md">{title}</h2>
-        {subtitle && <p className="mt-1 text-[10px] sm:text-xs italic leading-snug text-white/90 max-w-[7rem] sm:max-w-[9rem] drop-shadow">{subtitle}</p>}
+      <div className="absolute top-0 start-0 p-3 sm:p-5">
+        <h2 className="font-script text-xl sm:text-3xl lg:text-4xl text-white leading-tight drop-shadow-md">{trx(title)}</h2>
+        {subtitle && <p className="mt-1 text-[10px] sm:text-xs italic leading-snug text-white/90 max-w-[7rem] sm:max-w-[9rem] drop-shadow">{trx(subtitle)}</p>}
       </div>
     </div>
   );
@@ -435,20 +435,20 @@ function HeroBanner({ src, title, subtitle }: { src: string; title: string; subt
 // ===================== HERO HEADER (Workout Programs + tabs, on image) =====================
 
 const SECTION_META: Record<"discover" | "programs" | "program" | "library", { title: string; subtitle: string }> = {
-  program: { title: "My Plan", subtitle: "Your week, day by day." },
-  discover: { title: "Discover", subtitle: "A one-off session for today." },
-  programs: { title: "Programs", subtitle: "Structured multi-week journeys." },
-  library: { title: "Library", subtitle: "Every move, explained." },
+  program: { title: tr("My Plan"), subtitle: tr("Your week, day by day.") },
+  discover: { title: tr("Discover"), subtitle: tr("A one-off session for today.") },
+  programs: { title: tr("Programs"), subtitle: tr("Structured multi-week journeys.") },
+  library: { title: tr("Library"), subtitle: tr("Every move, explained.") },
 };
 
 type WorkoutTab = "discover" | "programs" | "program" | "library";
 
 const WORKOUT_PHASE_META: Record<Exclude<CyclePhase, "any">, { emoji: string; label: string }> = {
-  period: { emoji: "🌙", label: "Menstrual" },
-  follicular: { emoji: "🌱", label: "Follicular" },
-  fertile: { emoji: "🌷", label: "Fertile" },
-  ovulation: { emoji: "🌸", label: "Ovulatory" },
-  luteal: { emoji: "🍂", label: "Luteal" },
+  period: { emoji: "🌙", label: tr("Menstrual") },
+  follicular: { emoji: "🌱", label: tr("Follicular") },
+  fertile: { emoji: "🌷", label: tr("Fertile") },
+  ovulation: { emoji: "🌸", label: tr("Ovulatory") },
+  luteal: { emoji: "🍂", label: tr("Luteal") },
 };
 
 /** Hero pill: names the cycle phase and shows whether My Plan was built for the
@@ -483,7 +483,7 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
     } catch {}
     force((t) => t + 1);
   };
-  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? `In sync with your ${meta.label} phase ✿` : `Tap to sync your week to your ${meta.label} phase`;
+  const tTitle = !known ? "Set up your cycle to sync your plan" : synced ? tr("In sync with your {0} phase ✿", { 0: meta.label }) : tr("Tap to sync your week to your {0} phase", { 0: meta.label });
   if (variant === "tile") {
     return (
       <button onClick={onSync} disabled={synced} title={tTitle}
@@ -491,8 +491,8 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
         <span className={["grid h-8 w-8 place-items-center rounded-full", synced ? "bg-blush text-hotpink" : "bg-rose/10 text-rose/45"].join(" ")}>
           {synced ? <CircleCheck className="h-4 w-4" strokeWidth={2.4} /> : <Circle className="h-4 w-4" strokeWidth={2} />}
         </span>
-        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Sync</span>
-        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? "In sync" : "Sync now"}</span>
+        <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Sync")}</span>
+        <span className={["text-[12.5px] font-black leading-tight", synced ? "text-hotpink" : "text-rose/45"].join(" ")}>{synced ? tr("In sync") : tr("Sync now")}</span>
       </button>
     );
   }
@@ -501,11 +501,11 @@ function WorkoutPhaseSyncPill({ variant = "pill" }: { variant?: "pill" | "tile" 
       onClick={onSync}
       disabled={synced}
       title={tTitle}
-      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 pl-1.5 pr-2 py-1 text-[11px] font-bold leading-none transition",
+      className={["inline-flex shrink-0 items-center gap-1 rounded-full border border-petal/60 bg-white/85 ps-1.5 pe-2 py-1 text-[11px] font-bold leading-none transition",
         synced ? "text-hotpink" : "text-rose/45 hover:text-hotpink active:scale-95"].join(" ")}
     >
       {synced ? <CircleCheck className="h-3.5 w-3.5" strokeWidth={2.4} /> : <Circle className="h-3.5 w-3.5" strokeWidth={2} />}
-      {synced ? "In sync" : "Sync"}
+      {synced ? tr("In sync") : tr("Sync")}
     </button>
   );
 }
@@ -550,30 +550,28 @@ function HeroHeader({
         <div className="absolute inset-0 bg-gradient-to-r from-[#FFE4F1] via-[#FFE4F1]/55 to-transparent" />
       </div>
 
-      <div className="absolute top-1 right-0 z-[2] flex items-center gap-1.5">
+      <div className="absolute top-1 end-0 z-[2] flex items-center gap-1.5">
         {onReset && (
           <button
             onClick={onReset}
-            aria-label="Reset tool"
-            title="Reset — preview the first-time experience"
+            aria-label={tr("Reset tool")}
+            title={tr("Reset — preview the first-time experience")}
             className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-2.5 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
-            <RotateCcw className="h-3 w-3" /> Reset
-          </button>
+            <RotateCcw className="h-3 w-3" />{" "}{tr("Reset")}</button>
         )}
         {onGuide && (
           <button
             onClick={onGuide}
             className="inline-flex items-center gap-1 rounded-full bg-white/70 backdrop-blur border border-petal/60 px-3 py-1.5 text-[11px] sm:text-xs text-hotpink font-semibold transition hover:bg-white active:scale-95 shadow-sm shadow-hotpink/10"
           >
-            <Sparkles className="h-3 w-3" /> Guide
-          </button>
+            <Sparkles className="h-3 w-3" />{" "}{tr("Guide")}</button>
         )}
       </div>
       <div className="relative z-[1] flex flex-col gap-3 sm:gap-4 pt-1 pb-1">
         <div>
-          <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{sectionTitle}</h2>
-          <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{sectionSubtitle}</p>
+          <h2 className="font-script text-3xl sm:text-5xl lg:text-6xl text-hotpink leading-none drop-shadow-[0_2px_6px_oklch(1_0_0/0.55)]">{trx(sectionTitle)}</h2>
+          <p className="mt-0.5 font-script text-lg sm:text-2xl leading-tight text-rose/90">{trx(sectionSubtitle)}</p>
           <CyclePhasePill className="mt-1.5" />
         </div>
         <div className={onlyPlanTab ? "hidden" : "flex"}>
@@ -588,7 +586,7 @@ function HeroHeader({
                   tab === t ? "bg-hotpink text-white shadow-md shadow-hotpink/30" : "text-rose hover:text-hotpink",
                 ].join(" ")}
               >
-                {t === "program" ? "My Plan" : t === "discover" ? "Discover" : t === "programs" ? "Programs" : "Library"}
+                {t === "program" ? tr("My Plan") : t === "discover" ? tr("Discover") : t === "programs" ? tr("Programs") : tr("Library")}
               </button>
             ))}
           </div>
@@ -626,11 +624,11 @@ function CircularTimer({ totalSec, remainingSec, size = 96, rep, repTotal }: {
         {showReps ? (
           <div className="text-center">
             {/* keyed by rep so it POPS on every beat */}
-            <span key={rep} className="block font-black text-hotpink tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.34 }}>{rep}</span>
-            <span className="block font-bold text-rose/55 tabular-nums" style={{ fontSize: size * 0.13, marginTop: size * 0.01 }}>of {repTotal} reps</span>
+            <span key={rep} className="block font-black text-hotpink tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.34 }}>{trx(rep)}</span>
+            <span className="block font-bold text-rose/55 tabular-nums" style={{ fontSize: size * 0.13, marginTop: size * 0.01 }}>{tr("of")}{" "}{trx(repTotal)}{" "}{tr("reps")}</span>
           </div>
         ) : (
-          <span className="font-bold text-hotpink" style={{ fontSize: size * 0.32 }}>{remainingSec}</span>
+          <span className="font-bold text-hotpink" style={{ fontSize: size * 0.32 }}>{trx(remainingSec)}</span>
         )}
       </div>
     </div>
@@ -790,12 +788,10 @@ export default function WorkoutPage() {
         <SpotlightCoach
           targetId="workout-week-plan"
           step={4} total={5}
-          title="Your workout week ✿"
+          title={tr("Your workout week ✿")}
           message="Your strength week, day by day. Tap any day to tweak it."
           extra={
-            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">
-              Do you want to set up your <b className="text-hotpink">yoga flow</b> now to balance your training?
-            </p>
+            <p className="mt-3 text-[11.5px] font-semibold leading-snug text-rose/75">{tr("Do you want to set up your")}{" "}<b className="text-hotpink">{tr("yoga flow")}</b>{" "}{tr("now to balance your training?")}</p>
           }
           primaryLabel="Set up my yoga flow →"
           onPrimary={() => { window.location.href = "/app/tools/yoga?setup=1"; }}
@@ -814,14 +810,13 @@ export default function WorkoutPage() {
       {/* Redundant on phones (the bottom nav has "Tools"), and it left an empty
           band above the hero — show it only from tablet up. */}
       <a href="/app/tools" className="mb-3 hidden md:inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> All tools
-      </a>
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("All tools")}</a>
 
       {/* Guided setup → focused hero + ONE finish bar, no tool chrome. Once her
           week is set, "movement" hands off to Yoga (its other half) before Today. */}
       {guided && (view.kind === "discover" || view.kind === "programs" || view.kind === "program" || view.kind === "library") && (
         <>
-          <GuidedFocusHero label="Movement" phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
+          <GuidedFocusHero label={tr("Movement")} phaseLabel={guidedPhaseLabel} image={HERO_IMAGES.program} />
           <GuidedFinishBar
             toolLabel="Movement" phaseLabel={guidedPhaseLabel}
             hint={hasPlan ? "Your week is set — next, set up your yoga flow." : "Set up your week to finish this step."}
@@ -979,10 +974,7 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
   const guided = useGuided();
   return (
     <div className="animate-fade-in">
-      <p className="mb-3 text-sm text-rose/80">
-        Real coaching, not random sessions — each program builds week over week with
-        progressive overload, warm-ups, cool-downs and cycle-synced effort. ✿
-      </p>
+      <p className="mb-3 text-sm text-rose/80">{tr("Real coaching, not random sessions — each program builds week over week with progressive overload, warm-ups, cool-downs and cycle-synced effort. ✿")}</p>
       <div className="space-y-3">
         {PROGRAMS.map((p, i) => {
           const done = (progress[p.id] ?? []).length;
@@ -994,7 +986,7 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
               key={p.id}
               onClick={() => { if (guided) return guidedNudge(); onOpen(p.id); }}
               className={[
-                "group w-full text-left flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
+                "group w-full text-start flex items-stretch overflow-hidden rounded-3xl border bg-white/90 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition animate-scale-in",
                 isActive ? "border-hotpink/60 ring-1 ring-hotpink/30" : "border-petal/60",
               ].join(" ")}
               style={{ animationDelay: `${i * 70}ms` }}
@@ -1003,9 +995,8 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
               <div className="relative w-28 sm:w-40 shrink-0 overflow-hidden">
                 <img src={p.image} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-black/35" />
-                <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-hotpink/90 text-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm">
-                  <Sparkles className="h-2.5 w-2.5" /> Premium
-                </span>
+                <span className="absolute top-2 start-2 inline-flex items-center gap-1 rounded-full bg-hotpink/90 text-white px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow-sm">
+                  <Sparkles className="h-2.5 w-2.5" />{" "}{tr("Premium")}</span>
                 {pct > 0 && (
                   <div className="absolute bottom-0 inset-x-0 px-2 pb-2">
                     <div className="h-1.5 rounded-full bg-white/40 overflow-hidden">
@@ -1019,18 +1010,18 @@ function ProgramsView({ onOpen }: { onOpen: (programId: string) => void }) {
               <div className="flex-1 min-w-0 p-3 sm:p-3.5 flex flex-col">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex flex-wrap gap-1.5">
-                    <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{p.weeks} weeks</span>
-                    {p.phaseSynced && <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+                    <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{trx(p.weeks)}{" "}{tr("weeks")}</span>
+                    {p.phaseSynced && <span className="rounded-full bg-blush/70 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{tr("Cycle-synced")}</span>}
                   </div>
-                  {isActive && <span className="shrink-0 rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">Your plan</span>}
+                  {isActive && <span className="shrink-0 rounded-full bg-hotpink text-white text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{tr("Your plan")}</span>}
                 </div>
-                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{p.title}</h3>
-                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{p.tagline}</p>
+                <h3 className="mt-1 font-script text-2xl text-hotpink leading-none">{trx(p.title)}</h3>
+                <p className="mt-1 text-[11px] text-rose/75 leading-snug line-clamp-2">{trx(p.tagline)}</p>
                 <div className="mt-auto pt-2 flex flex-wrap items-center gap-1.5">
-                  <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[p.level]}</Tag>
-                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[p.equipment]}</Tag>
-                  <Tag icon={<CalendarHeart className="h-3 w-3" />}>{p.daysPerWeek}×/week</Tag>
-                  <ChevronRight className="h-4 w-4 text-rose/35 ml-auto shrink-0 group-hover:text-hotpink/70 transition" />
+                  <Tag icon={<Gauge className="h-3 w-3" />}>{trx(LEVEL_LABEL[p.level])}</Tag>
+                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{trx(EQUIP_LABEL[p.equipment])}</Tag>
+                  <Tag icon={<CalendarHeart className="h-3 w-3" />}>{trx(p.daysPerWeek)}{tr("×/week")}</Tag>
+                  <ChevronRight className="rtl:-scale-x-100 h-4 w-4 text-rose/35 ms-auto shrink-0 group-hover:text-hotpink/70 transition" />
                 </div>
               </div>
             </button>
@@ -1088,43 +1079,42 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
   return (
     <div className="relative animate-fade-in">
       <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> Programs
-      </button>
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("Programs")}</button>
 
       {/* Hero */}
       <div className="relative aspect-[16/9] sm:aspect-[2/1] rounded-3xl overflow-hidden border border-petal/60 shadow-xl mb-4">
         <img src={program.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-4">
+        <div className="absolute bottom-0 start-0 end-0 p-4">
           <div className="flex gap-1.5 mb-1.5">
-            <span className="rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">{program.weeks} weeks</span>
-            {program.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">Cycle-synced</span>}
+            <span className="rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">{trx(program.weeks)}{" "}{tr("weeks")}</span>
+            {program.phaseSynced && <span className="rounded-full bg-white/90 text-hotpink text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">{tr("Cycle-synced")}</span>}
           </div>
-          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow">{program.title}</h1>
-          <p className="mt-1 text-xs sm:text-sm text-white/90 italic max-w-md drop-shadow">{program.tagline}</p>
+          <h1 className="font-script text-3xl sm:text-5xl text-white leading-none drop-shadow">{trx(program.title)}</h1>
+          <p className="mt-1 text-xs sm:text-sm text-white/90 italic max-w-md drop-shadow">{trx(program.tagline)}</p>
         </div>
       </div>
 
       {/* What you'll get */}
       <div className="rounded-3xl bg-white/85 border border-petal/60 p-4 mb-3 shadow-sm">
-        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">What you'll get</h2>
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">{tr("What you'll get")}</h2>
         <ul className="space-y-1.5">
           {program.promise.map((b) => (
             <li key={b} className="flex items-start gap-2 text-sm text-rose/85">
-              <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {b}
+              <Check className="h-4 w-4 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {trx(b)}
             </li>
           ))}
         </ul>
         <div className="mt-3 flex flex-wrap gap-1.5">
-          <Tag icon={<Gauge className="h-3 w-3" />}>{LEVEL_LABEL[program.level]}</Tag>
-          <Tag icon={<Dumbbell className="h-3 w-3" />}>{EQUIP_LABEL[program.equipment]}</Tag>
-          <Tag icon={<CalendarHeart className="h-3 w-3" />}>{program.daysPerWeek}×/week</Tag>
+          <Tag icon={<Gauge className="h-3 w-3" />}>{trx(LEVEL_LABEL[program.level])}</Tag>
+          <Tag icon={<Dumbbell className="h-3 w-3" />}>{trx(EQUIP_LABEL[program.equipment])}</Tag>
+          <Tag icon={<CalendarHeart className="h-3 w-3" />}>{trx(program.daysPerWeek)}{tr("×/week")}</Tag>
         </div>
-        <p className="mt-3 text-xs text-rose/70"><span className="font-bold text-rose">Who it's for:</span> {program.whoFor}</p>
+        <p className="mt-3 text-xs text-rose/70"><span className="font-bold text-rose">{tr("Who it's for:")}</span> {trx(program.whoFor)}</p>
         {isMyPlan && (
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-blush/50 border border-petal/60 px-3 py-1">
             <Check className="h-3.5 w-3.5 text-hotpink shrink-0" strokeWidth={3} />
-            <p className="text-[11px] font-bold text-hotpink">This is your active plan ✿</p>
+            <p className="text-[11px] font-bold text-hotpink">{tr("This is your active plan ✿")}</p>
           </div>
         )}
       </div>
@@ -1132,12 +1122,11 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
       {/* Why it works */}
       <div className="rounded-3xl bg-blush/40 border border-petal/50 p-4 mb-4">
         <h2 className="font-script text-2xl text-hotpink leading-none mb-2 flex items-center gap-1.5">
-          <ShieldCheck className="h-5 w-5" strokeWidth={1.8} /> Why it works
-        </h2>
+          <ShieldCheck className="h-5 w-5" strokeWidth={1.8} />{" "}{tr("Why it works")}</h2>
         <ul className="space-y-1.5">
           {program.whyItWorks.map((b) => (
             <li key={b} className="flex items-start gap-2 text-xs sm:text-sm text-rose/80">
-              <Sparkles className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" /> {b}
+              <Sparkles className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" /> {trx(b)}
             </li>
           ))}
         </ul>
@@ -1145,7 +1134,7 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
 
       {/* Week selector */}
       <div className="mb-3">
-        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Your {program.weeks}-week journey</h2>
+        <h2 className="font-script text-2xl text-hotpink leading-none mb-2">{tr("Your")}{" "}{trx(program.weeks)}{tr("-week journey")}</h2>
         <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
           {Array.from({ length: program.weeks }, (_, i) => i + 1).map((w) => {
             const wmeta = weekMeta(program, w);
@@ -1159,9 +1148,9 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
                   active ? "bg-hotpink text-white border-hotpink shadow-md shadow-hotpink/30" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40",
                 ].join(" ")}
               >
-                <p className="text-[9px] font-bold uppercase tracking-wide opacity-80">Week</p>
-                <p className="font-script text-xl leading-none">{w}</p>
-                {wmeta.isDeload && <p className="text-[8px] font-bold uppercase">Deload</p>}
+                <p className="text-[9px] font-bold uppercase tracking-wide opacity-80">{tr("Week")}</p>
+                <p className="font-script text-xl leading-none">{trx(w)}</p>
+                {wmeta.isDeload && <p className="text-[8px] font-bold uppercase">{tr("Deload")}</p>}
               </button>
             );
           })}
@@ -1170,8 +1159,8 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
 
       {/* Week theme */}
       <div className="rounded-2xl bg-gradient-to-r from-petal/40 to-blush/40 border border-petal/50 p-3 mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{meta.theme}{meta.isDeload ? " · recovery week" : ""}</p>
-        <p className="text-xs text-rose/80 leading-snug mt-0.5">{meta.note}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{trx(meta.theme)}{meta.isDeload ? tr(" · recovery week") : ""}</p>
+        <p className="text-xs text-rose/80 leading-snug mt-0.5">{trx(meta.note)}</p>
       </div>
 
       {/* Sessions for the selected week */}
@@ -1184,7 +1173,7 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
             <button
               key={sIdx}
               onClick={() => onOpenSession(week, sIdx)}
-              className="w-full text-left rounded-3xl bg-white/85 border border-petal/60 p-3.5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition flex items-center gap-3"
+              className="w-full text-start rounded-3xl bg-white/85 border border-petal/60 p-3.5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition flex items-center gap-3"
             >
               <span className={[
                 "grid h-11 w-11 shrink-0 place-items-center rounded-full",
@@ -1193,16 +1182,16 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
                 {isDone ? <Check className="h-5 w-5" strokeWidth={3} /> : <Dumbbell className="h-5 w-5" strokeWidth={1.8} />}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose leading-tight">{s.title}</p>
-                <p className="text-[11px] text-rose/65 leading-snug">{s.focus}</p>
+                <p className="text-sm font-bold text-rose leading-tight">{trx(s.title)}</p>
+                <p className="text-[11px] text-rose/65 leading-snug">{trx(s.focus)}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                  <Tag icon={<Clock className="h-3 w-3" />}>{s.estMinutes} min</Tag>
-                  <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(s.title, s.focus)], s.estMinutes)} kcal</Tag>
-                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{sessionVolume(s)} sets</Tag>
-                  {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {PHASE_LABEL[phase]} tip</span>}
+                  <Tag icon={<Clock className="h-3 w-3" />}>{trx(s.estMinutes)}{" "}{tr("min")}</Tag>
+                  <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(s.title, s.focus)], s.estMinutes)}{" "}{tr("kcal")}</Tag>
+                  <Tag icon={<Dumbbell className="h-3 w-3" />}>{sessionVolume(s)}{" "}{tr("sets")}</Tag>
+                  {tip && <span className="text-[9px] font-bold uppercase tracking-wide text-hotpink">✿ {trx(PHASE_LABEL[phase])}{" "}{tr("tip")}</span>}
                 </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-rose/40 shrink-0" />
+              <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-rose/40 shrink-0" />
             </button>
           );
         })}
@@ -1212,12 +1201,10 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
       <div className="sticky bottom-3 z-20 mt-4 pb-1">
         {isMyPlan ? (
           <button onClick={onMakeMyPlan} className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-white shadow-xl shadow-hotpink/30">
-            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Go to My Plan
-          </button>
+            <CalendarHeart className="h-4 w-4" strokeWidth={2} />{" "}{tr("Go to My Plan")}</button>
         ) : (
           <button onClick={makeMyPlan} className="bloom-luxury-btn animate-cta-bounce w-full inline-flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-white shadow-xl shadow-hotpink/30">
-            <CalendarHeart className="h-4 w-4" strokeWidth={2} /> Make this my plan
-          </button>
+            <CalendarHeart className="h-4 w-4" strokeWidth={2} />{" "}{tr("Make this my plan")}</button>
         )}
       </div>
 
@@ -1226,11 +1213,11 @@ function ProgramDetail({ programId, onBack, onOpenSession, onMakeMyPlan }: {
       {confirmReplace && createPortal(
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmReplace(false)}>
           <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
-            <p className="text-sm text-rose/80 mb-4">Making <span className="font-bold">{program.title}</span> your plan will replace your current weekly plan.</p>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">{tr("Replace your plan?")}</p>
+            <p className="text-sm text-rose/80 mb-4">{tr("Making")}{" "}<span className="font-bold">{trx(program.title)}</span>{" "}{tr("your plan will replace your current weekly plan.")}</p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmReplace(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
-              <button onClick={commitPlan} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
+              <button onClick={() => setConfirmReplace(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">{tr("Cancel")}</button>
+              <button onClick={commitPlan} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">{tr("Replace")}</button>
             </div>
           </div>
         </div>,
@@ -1306,18 +1293,18 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
   return (
     <div className="relative animate-fade-in">
       <button onClick={onBack} className="mb-3 inline-flex items-center gap-1 text-sm text-rose hover:text-hotpink">
-        <ArrowLeft className="h-4 w-4" /> {program.title}
+        <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" /> {trx(program.title)}
       </button>
 
       {/* Session header */}
       <div className="rounded-3xl bg-gradient-to-br from-hotpink/15 to-petal/30 border border-petal/60 p-4 mb-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">Week {week} · {meta.theme}</p>
-        <h1 className="font-script text-3xl text-hotpink leading-none mt-0.5">{session.title}</h1>
-        <p className="text-xs text-rose/75 mt-1">{session.focus}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{tr("Week")}{" "}{trx(week)} · {trx(meta.theme)}</p>
+        <h1 className="font-script text-3xl text-hotpink leading-none mt-0.5">{trx(session.title)}</h1>
+        <p className="text-xs text-rose/75 mt-1">{trx(session.focus)}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          <Tag icon={<Clock className="h-3 w-3" />}>{session.estMinutes} min</Tag>
-          <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(session.title, session.focus)], session.estMinutes)} kcal</Tag>
-          <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(session)} working sets</Tag>
+          <Tag icon={<Clock className="h-3 w-3" />}>{trx(session.estMinutes)}{" "}{tr("min")}</Tag>
+          <Tag icon={<Flame className="h-3 w-3" />}>~{plannedCalories(MET_INTENTION_FOR_INTENSITY[workoutIntensity(session.title, session.focus)], session.estMinutes)}{" "}{tr("kcal")}</Tag>
+          <Tag icon={<Flame className="h-3 w-3" />}>{sessionVolume(session)}{" "}{tr("working sets")}</Tag>
         </div>
       </div>
 
@@ -1328,24 +1315,23 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
             <Sparkles className="h-4 w-4" strokeWidth={1.8} />
           </span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{PHASE_LABEL[phase]} phase tip</p>
-            <p className="text-xs text-rose/80 leading-snug">{tip}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{trx(PHASE_LABEL[phase])}{" "}{tr("phase tip")}</p>
+            <p className="text-xs text-rose/80 leading-snug">{trx(tip)}</p>
           </div>
         </div>
       )}
 
       {/* Blocks — free users see the program info above, but the actual session
           moves are teaser-locked (Bloom+ to see & do them). */}
-      <PlusLock feature="workout" title="This session's moves" blurb="Every exercise, set, tempo & cue — unlock the full program with Bloom+.">
+      <PlusLock feature="workout" title={tr("This session's moves")} blurb="Every exercise, set, tempo & cue — unlock the full program with Bloom+.">
       <div className="space-y-4">
         {session.blocks.map((block, bIdx) => (
           <div key={bIdx}>
             <div className="flex items-center justify-between mb-1.5">
-              <h2 className="font-script text-2xl text-hotpink leading-none">{block.label}</h2>
+              <h2 className="font-script text-2xl text-hotpink leading-none">{trx(block.label)}</h2>
               {(block.rounds ?? 1) > 1 && (
                 <span className="rounded-full bg-hotpink text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1">
-                  {block.rounds} rounds
-                </span>
+                  {trx(block.rounds)}{" "}{tr("rounds")}</span>
               )}
             </div>
             <div className="space-y-2">
@@ -1357,18 +1343,18 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
                       {meta?.image && <img src={meta.image} alt="" className="h-full w-full object-cover" loading="lazy" />}
                     </div>
                     <div className="flex-1 min-w-0 p-2.5">
-                      <p className="text-sm font-bold text-rose leading-tight">{meta?.name ?? ex.slug}</p>
+                      <p className="text-sm font-bold text-rose leading-tight">{trx(meta?.name) ?? trx(ex.slug)}</p>
                       <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-full bg-hotpink/90 text-white text-[10px] font-bold px-2 py-0.5">{ex.sets} × {ex.reps}</span>
-                        {ex.tempo && <Tag icon={<Gauge className="h-3 w-3" />}>tempo {ex.tempo}</Tag>}
-                        {ex.restSec > 0 && <Tag icon={<Timer className="h-3 w-3" />}>{ex.restSec}s rest</Tag>}
+                        <span className="rounded-full bg-hotpink/90 text-white text-[10px] font-bold px-2 py-0.5">{trx(ex.sets)} × {trx(ex.reps)}</span>
+                        {ex.tempo && <Tag icon={<Gauge className="h-3 w-3" />}>{tr("tempo")}{" "}{trx(ex.tempo)}</Tag>}
+                        {ex.restSec > 0 && <Tag icon={<Timer className="h-3 w-3" />}>{trx(ex.restSec)}{tr("s rest")}</Tag>}
                       </div>
-                      {ex.loadNote && <p className="mt-1 text-[10px] text-hotpink font-semibold leading-snug">⚖ {ex.loadNote}</p>}
+                      {ex.loadNote && <p className="mt-1 text-[10px] text-hotpink font-semibold leading-snug">⚖ {trx(ex.loadNote)}</p>}
                       {ex.cues.length > 0 && (
                         <ul className="mt-1 space-y-0.5">
                           {ex.cues.map((c) => (
                             <li key={c} className="text-[10px] text-rose/65 leading-snug flex items-start gap-1">
-                              <span className="text-hotpink">·</span> {c}
+                              <span className="text-hotpink">·</span> {trx(c)}
                             </li>
                           ))}
                         </ul>
@@ -1388,13 +1374,10 @@ function ProgramSessionView({ programId, week, sessionIndex, onBack, onStartTime
         onClick={startTimer}
         className="mt-5 w-full bloom-luxury-btn animate-cta-bounce rounded-full py-3.5 text-sm font-bold text-white flex items-center justify-center gap-2"
       >
-        <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start guided session
-      </button>
+        <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} />{" "}{tr("Start guided session")}</button>
 
       {completed && (
-        <button onClick={onBack} className="mt-2 w-full text-center text-sm font-semibold text-hotpink">
-          Back to my plan
-        </button>
+        <button onClick={onBack} className="mt-2 w-full text-center text-sm font-semibold text-hotpink">{tr("Back to my plan")}</button>
       )}
     </div>
   );
@@ -1419,7 +1402,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
         active ? "bg-hotpink text-white border-transparent shadow-md shadow-hotpink/30" : locked ? "bg-white/70 text-rose/45 border-petal/50" : "bg-white/85 text-rose border-petal/60 hover:border-hotpink/40 hover:shadow-md",
       ].join(" ")}
     >
-      {label}{locked && <Lock className="h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
+      {trx(label)}{locked && <Lock className="h-3 w-3 text-[#B76E79]" strokeWidth={2.4} />}
     </button>
   );
 
@@ -1432,17 +1415,16 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/80 via-hotpink/30 to-transparent" />
         <div className="relative z-10 px-4 py-4 sm:px-5 sm:py-5 max-w-[72%] min-h-[92px] sm:min-h-[110px] flex flex-col justify-center">
           <p className="mb-1 inline-flex w-fit items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-white backdrop-blur-sm" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.35)" }}>
-            <Dumbbell className="h-2.5 w-2.5" strokeWidth={2.5} /> Workout
-          </p>
-          <h1 className="font-script text-2xl sm:text-4xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>Let's set you up ✿</h1>
-          <p className="mt-1 text-[11px] sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>Four quick questions — editable anytime in Me.</p>
+            <Dumbbell className="h-2.5 w-2.5" strokeWidth={2.5} />{" "}{tr("Workout")}</p>
+          <h1 className="font-script text-2xl sm:text-4xl text-white leading-none" style={{ textShadow: "0 2px 8px rgba(0,0,0,0.28)" }}>{tr("Let's set you up ✿")}</h1>
+          <p className="mt-1 text-[11px] sm:text-sm font-medium text-white/95 leading-snug" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.35)" }}>{tr("Four quick questions — editable anytime in Me.")}</p>
         </div>
       </div>
 
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 shadow-xl shadow-rose/10">
         <div className="space-y-3.5">
           <div className="animate-card-pop-in" style={{ animationDelay: "60ms" }}>
-            <p className="text-[13px] font-bold text-rose mb-1.5">Your level</p>
+            <p className="text-[13px] font-bold text-rose mb-1.5">{tr("Your level")}</p>
             <div className="flex flex-wrap gap-1.5">
               {(["Beginner", "Intermediate", "Advanced"] as Level[]).map((l) => (
                 <Pill key={l} active={level === l} label={l} locked={!premium && l !== "Beginner"} onClick={() => setLevel(l)} />
@@ -1451,13 +1433,13 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
           </div>
 
           <div className="animate-card-pop-in" style={{ animationDelay: "120ms" }}>
-            <p className="text-[13px] font-bold text-rose mb-1.5">Your main goal</p>
+            <p className="text-[13px] font-bold text-rose mb-1.5">{tr("Your main goal")}</p>
             <div className="flex flex-wrap gap-1.5">
               {([
-                { key: "energy", label: "Energy" },
-                { key: "tonify", label: "Tonify" },
-                { key: "strengthen", label: "Strengthen" },
-                { key: "flexibility", label: "Flexibility" },
+                { key: "energy", label: tr("Energy") },
+                { key: "tonify", label: tr("Tonify") },
+                { key: "strengthen", label: tr("Strengthen") },
+                { key: "flexibility", label: tr("Flexibility") },
               ] as { key: Goal; label: string }[]).map((g) => (
                 <Pill key={g.key} active={goal === g.key} label={g.label} onClick={() => setGoal(g.key)} />
               ))}
@@ -1465,14 +1447,14 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
           </div>
 
           <div className="animate-card-pop-in" style={{ animationDelay: "180ms" }}>
-            <p className="text-[13px] font-bold text-rose mb-1.5">Equipment available</p>
+            <p className="text-[13px] font-bold text-rose mb-1.5">{tr("Equipment available")}</p>
             <div className="flex flex-wrap gap-1.5">
               {([
-                { key: "none", label: "Nothing" },
-                { key: "mat", label: "Mat only" },
-                { key: "bands", label: "Bands" },
-                { key: "dumbbells", label: "Dumbbells" },
-                { key: "gym", label: "Full gym" },
+                { key: "none", label: tr("Nothing") },
+                { key: "mat", label: tr("Mat only") },
+                { key: "bands", label: tr("Bands") },
+                { key: "dumbbells", label: tr("Dumbbells") },
+                { key: "gym", label: tr("Full gym") },
               ] as { key: Equipment; label: string }[]).map((e) => (
                 <Pill key={e.key} active={equipment === e.key} label={e.label} locked={!premium && !eqFree(e.key)} onClick={() => setEquipment(e.key)} />
               ))}
@@ -1480,7 +1462,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
           </div>
 
           <div className="animate-card-pop-in" style={{ animationDelay: "240ms" }}>
-            <p className="text-[13px] font-bold text-rose mb-1.5">Days available per week</p>
+            <p className="text-[13px] font-bold text-rose mb-1.5">{tr("Days available per week")}</p>
             <div className="flex flex-wrap gap-1.5">
               {([2, 3, 4, 5] as const).map((d) => (
                 <Pill key={d} active={days === d} label={d === 5 ? "5+" : String(d)} locked={!premium && d > 3} onClick={() => setDays(d)} />
@@ -1497,8 +1479,7 @@ function SetupProfile({ initial, onDone }: { initial: WorkoutProfile; onDone: (p
             onDone({ level: lv, goal, equipment: eq, daysPerWeek: dd });
           }}
           className="bloom-luxury-btn mt-5 inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white"
-        >
-          Start <ChevronRight className="h-4 w-4" />
+        >{tr("Start")}{" "}<ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
         </button>
       </section>
     </div>
@@ -1647,15 +1628,15 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
     <div className="space-y-2">
 
       {/* Quick context: this is a one-off; the plan lives in My Plan */}
-      <button onClick={onGoToPlan} className="w-full flex items-center gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 text-left transition hover:bg-blush/60 active:scale-[0.99]">
+      <button onClick={onGoToPlan} className="w-full flex items-center gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 text-start transition hover:bg-blush/60 active:scale-[0.99]">
         <CalendarHeart className="h-4 w-4 text-hotpink shrink-0" strokeWidth={1.8} />
-        <p className="flex-1 text-[11px] text-rose/75 leading-snug">A quick one-off session. Want your structured weekly plan instead?</p>
-        <span className="text-[11px] font-bold text-hotpink shrink-0">My Plan →</span>
+        <p className="flex-1 text-[11px] text-rose/75 leading-snug">{tr("A quick one-off session. Want your structured weekly plan instead?")}</p>
+        <span className="text-[11px] font-bold text-hotpink shrink-0">{tr("My Plan →")}</span>
       </button>
 
       {/* Energy Check */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
-        <h2 className="font-script text-xl text-hotpink leading-none mb-2 animate-text-pop">How's your energy today?</h2>
+        <h2 className="font-script text-xl text-hotpink leading-none mb-2 animate-text-pop">{tr("How's your energy today?")}</h2>
         <div className="grid grid-cols-4 gap-1.5">
           {ENERGY_OPTIONS.map((opt, i) => {
             const Icon = opt.icon;
@@ -1671,7 +1652,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                 ].join(" ")}
               >
                 <Icon className="h-4 w-4 text-hotpink" strokeWidth={1.8} />
-                <span className="text-[10px] font-semibold text-rose text-center leading-tight">{opt.label}</span>
+                <span className="text-[10px] font-semibold text-rose text-center leading-tight">{trx(opt.label)}</span>
               </button>
               </div>
             );
@@ -1681,17 +1662,15 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
           <div className="mt-3 rounded-2xl bg-blush/60 border border-petal/50 p-3">
             <p className="text-sm text-rose/85">
               {recoveryReason === "diary"
-                ? "We noticed you logged cramps, fatigue or bloating recently — want a gentler Recovery session today?"
-                : "Sounds like your body wants rest today — switch to a Recovery session?"}
+                ? tr("We noticed you logged cramps, fatigue or bloating recently — want a gentler Recovery session today?")
+                : tr("Sounds like your body wants rest today — switch to a Recovery session?")}
             </p>
             <div className="mt-2 flex gap-2">
               <button
                 onClick={() => zoneSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
                 className="bloom-luxury-btn px-4 py-1.5 text-xs font-bold text-white"
-              >
-                Yes, show recovery
-              </button>
-              <button onClick={() => setSuggestRecover(false)} className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">No, keep my plan</button>
+              >{tr("Yes, show recovery")}</button>
+              <button onClick={() => setSuggestRecover(false)} className="rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60">{tr("No, keep my plan")}</button>
             </div>
           </div>
         )}
@@ -1699,7 +1678,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
 
       {/* Body Focus */}
       <section ref={zoneSectionRef} className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4 scroll-mt-20">
-        <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none mb-2">What do you want to focus on?</h2>
+        <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none mb-2">{tr("What do you want to focus on?")}</h2>
         <div className="grid grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2 grid-flow-row-dense">
           {ZONES.map((z, i) => {
             const active = zone === z.key;
@@ -1724,9 +1703,9 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
                   {/* top edge highlight */}
                   <div className="absolute inset-x-0 top-0 h-px bg-white/60" />
-                  <span className="absolute bottom-1 left-0 right-0 text-center text-[9px] sm:text-[11px] font-bold text-white drop-shadow leading-tight px-0.5 break-words hyphens-auto">{z.label}</span>
+                  <span className="absolute bottom-1 start-0 end-0 text-center text-[9px] sm:text-[11px] font-bold text-white drop-shadow leading-tight px-0.5 break-words hyphens-auto">{trx(z.label)}</span>
                   {active && (
-                    <span className="absolute top-1.5 right-1.5 grid h-5 w-5 sm:h-6 sm:w-6 place-items-center rounded-full bg-gradient-to-br from-white to-blush text-hotpink shadow-md ring-1 ring-white/70">
+                    <span className="absolute top-1.5 end-1.5 grid h-5 w-5 sm:h-6 sm:w-6 place-items-center rounded-full bg-gradient-to-br from-white to-blush text-hotpink shadow-md ring-1 ring-white/70">
                       <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={3} />
                     </span>
                   )}
@@ -1738,7 +1717,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
 
         {zone && (
           <div ref={intentionSectionRef} className="mt-3 scroll-mt-20">
-            <p className="text-xs font-bold text-rose mb-1.5">Pick an intention</p>
+            <p className="text-xs font-bold text-rose mb-1.5">{tr("Pick an intention")}</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
               {WORKOUT_INTENTIONS.map((it) => {
                 const Icon = it.icon;
@@ -1749,7 +1728,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                     key={it.key}
                     onClick={() => setIntention(it.key)}
                     className={[
-                      "flex flex-col items-start gap-0.5 rounded-2xl border p-2 text-left shadow-sm transition active:scale-95",
+                      "flex flex-col items-start gap-0.5 rounded-2xl border p-2 text-start shadow-sm transition active:scale-95",
                       active
                         ? "bloom-shine bg-gradient-to-br from-hotpink to-magenta text-white border-transparent shadow-[0_8px_22px_-8px_oklch(0.65_0.27_350/0.6)] animate-selected-glow"
                         : "bg-white/70 border-petal/50 text-rose hover:border-hotpink/40 hover:shadow-md hover:-translate-y-0.5",
@@ -1758,14 +1737,14 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                   >
                     <span className="flex flex-wrap items-center gap-1 min-w-0">
                       <Icon className={["h-3.5 w-3.5 shrink-0", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />
-                      <span className="text-xs font-bold leading-tight">{it.label}</span>
+                      <span className="text-xs font-bold leading-tight">{trx(it.label)}</span>
                       {optimal && (
                         <span className={["shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide", active ? "bg-white/20 text-white" : "bg-blush/70 text-hotpink"].join(" ")}>
-                          {PHASE_LABEL[phase]}
+                          {trx(PHASE_LABEL[phase])}
                         </span>
                       )}
                     </span>
-                    <span className={["text-[11px] leading-snug", active ? "text-white/85" : "text-rose/75"].join(" ")}>{it.desc}</span>
+                    <span className={["text-[11px] leading-snug", active ? "text-white/85" : "text-rose/75"].join(" ")}>{trx(it.desc)}</span>
                   </button>
                 );
               })}
@@ -1775,7 +1754,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
 
         {zone && intention && (
           <div ref={sessionListRef} className="mt-3 space-y-2 scroll-mt-20">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/50">Pick your length</p>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-rose/50">{tr("Pick your length")}</p>
             {intentionList.map((session) => {
               const active = selectedSessionId === session.id;
               const optimal = phase !== "any" && session.phaseOptimal.includes(phase);
@@ -1785,28 +1764,27 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                 key={session.id}
                 onClick={() => onPickSession(session)}
                 className={[
-                  "w-full flex items-center gap-3 rounded-2xl bg-white/90 backdrop-blur border p-2.5 shadow-sm hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] transition text-left",
+                  "w-full flex items-center gap-3 rounded-2xl bg-white/90 backdrop-blur border p-2.5 shadow-sm hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99] transition text-start",
                   active ? "border-hotpink/60 ring-1 ring-hotpink/30 animate-selected-glow" : "border-petal/60",
                 ].join(" ")}
               >
                 {/* Duration badge — left */}
                 <div className="shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-blush/80 to-petal/60 grid place-content-center text-center border border-petal/50">
-                  <p className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{session.durationMin}</p>
-                  <p className="text-[8px] font-bold uppercase tracking-wider text-rose/60">min</p>
+                  <p className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{trx(session.durationMin)}</p>
+                  <p className="text-[8px] font-bold uppercase tracking-wider text-rose/60">{tr("min")}</p>
                 </div>
                 {/* Info — right */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="text-sm font-bold text-rose leading-tight">{session.name}</p>
-                    {optimal && <span className="rounded-full bg-blush/70 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-hotpink">{PHASE_LABEL[phase]} ✿</span>}
+                    <p className="text-sm font-bold text-rose leading-tight">{trx(session.name)}</p>
+                    {optimal && <span className="rounded-full bg-blush/70 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wide text-hotpink">{trx(PHASE_LABEL[phase])} ✿</span>}
                   </div>
-                  <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70 leading-snug">{session.structureNote}</p>
-                  <p className="text-[10px] text-rose/55">{session.level} · {session.workSec}s work / {session.restSec}s rest</p>
+                  <p className="mt-0.5 text-[11px] font-semibold text-hotpink/70 leading-snug">{trx(session.structureNote)}</p>
+                  <p className="text-[10px] text-rose/55">{trx(session.level)} · {trx(session.workSec)}{tr("s work /")}{" "}{trx(session.restSec)}{tr("s rest")}</p>
                 </div>
                 {locked ? (
                   <span className="shrink-0 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-sm" style={{ background: "linear-gradient(135deg,#B76E79,#EC4899)" }}>
-                    <Lock className="h-2.5 w-2.5" strokeWidth={2.6} /> Bloom+
-                  </span>
+                    <Lock className="h-2.5 w-2.5" strokeWidth={2.6} />{" "}{tr("Bloom+")}</span>
                 ) : (
                   <span className="shrink-0 grid h-9 w-9 place-items-center rounded-full bg-hotpink text-white shadow-sm shadow-hotpink/30">
                     <Play className="h-4 w-4" fill="currentColor" strokeWidth={0} />
@@ -1822,8 +1800,8 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
       {/* Streak & Badges */}
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-3 sm:p-4">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="font-script text-xl text-hotpink leading-none">Streak & badges</h2>
-          <p className="text-sm font-bold text-rose">{streak.count} day{streak.count === 1 ? "" : "s"} 🔥</p>
+          <h2 className="font-script text-xl text-hotpink leading-none">{tr("Streak & badges")}</h2>
+          <p className="text-sm font-bold text-rose">{trx(streak.count)}{" "}{tr("day")}{streak.count === 1 ? "" : "s"} 🔥</p>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {BADGES.map((b) => {
@@ -1837,7 +1815,7 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
                 ].join(" ")}
               >
                 <Trophy className={["h-5 w-5", unlocked ? "text-hotpink" : "text-rose/50"].join(" ")} strokeWidth={1.8} />
-                <span className="text-[10px] font-semibold text-rose leading-tight">{b.label}</span>
+                <span className="text-[10px] font-semibold text-rose leading-tight">{trx(b.label)}</span>
               </div>
             );
           })}
@@ -1847,20 +1825,19 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
       {/* Weekly Challenge */}
       {challengeData && (
         <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
-          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">Weekly challenge</h2>
-          <p className="text-sm text-rose/85 mb-3">{challengeData.title}</p>
+          <h2 className="font-script text-2xl text-hotpink leading-none mb-2">{tr("Weekly challenge")}</h2>
+          <p className="text-sm text-rose/85 mb-3">{trx(challengeData.title)}</p>
           <div className="flex items-center gap-2">
             <div className="h-2 flex-1 rounded-full bg-blush/60 overflow-hidden">
               <div className="h-full bg-hotpink rounded-full transition-all" style={{ width: `${Math.min(100, (challenge.done / challengeData.target) * 100)}%` }} />
             </div>
-            <span className="text-xs font-bold text-rose whitespace-nowrap">{challenge.done}/{challengeData.target}</span>
+            <span className="text-xs font-bold text-rose whitespace-nowrap">{trx(challenge.done)}/{trx(challengeData.target)}</span>
           </div>
           <button
             onClick={() => setChallenge((c) => ({ ...c, done: Math.min(challengeData.target, c.done + 1) }))}
             className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-1.5 text-xs font-semibold text-rose border border-petal/60"
           >
-            <Check className="h-3.5 w-3.5" /> Mark done
-          </button>
+            <Check className="h-3.5 w-3.5" />{" "}{tr("Mark done")}</button>
         </section>
       )}
 
@@ -1868,12 +1845,11 @@ function Discover({ profile, onStartSession, onBestShape, onGoToPlan }: {
       <section className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Best Shape Calculator</h2>
-            <p className="text-sm text-rose/80">Discover your natural strengths — not numbers.</p>
+            <h2 className="font-script text-2xl text-hotpink leading-none mb-1">{tr("Best Shape Calculator")}</h2>
+            <p className="text-sm text-rose/80">{tr("Discover your natural strengths — not numbers.")}</p>
           </div>
           <button onClick={onBestShape} className="bloom-luxury-btn shrink-0 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
-            <Wand2 className="h-3.5 w-3.5" /> Open
-          </button>
+            <Wand2 className="h-3.5 w-3.5" />{" "}{tr("Open")}</button>
         </div>
       </section>
     </div>
@@ -1922,24 +1898,22 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
     <div className="space-y-3">
       {/* Hero — same aspect as workout, title inside */}
       <div className="relative w-full aspect-[8/3] rounded-3xl overflow-hidden border border-petal/60 shadow-xl shadow-rose/10 animate-card-pop-in">
-        <img src={HERO_IMAGES.bestShape} alt="Best Shape Calculator" className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+        <img src={HERO_IMAGES.bestShape} alt={tr("Best Shape Calculator")} className="absolute inset-0 h-full w-full object-cover object-top" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
         <div className="absolute inset-0 bg-gradient-to-r from-hotpink/70 via-hotpink/20 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-3 sm:p-5">
           <div className="animate-scale-in">
-            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">Best Shape Calculator</h1>
-            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/85 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">Know your strengths. Find what already works for you.</p>
+            <h1 className="font-script text-2xl sm:text-4xl lg:text-5xl xl:text-6xl text-white leading-none drop-shadow-md">{tr("Best Shape Calculator")}</h1>
+            <p className="mt-0.5 text-xs sm:text-sm lg:text-base italic text-white/85 max-w-[10rem] sm:max-w-xs lg:max-w-sm drop-shadow leading-snug">{tr("Know your strengths. Find what already works for you.")}</p>
           </div>
-          <button onClick={onBack} className="self-end rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white transition active:scale-95">
-            ← Back
-          </button>
+          <button onClick={onBack} className="self-end rounded-full bg-white/20 backdrop-blur-md border border-white/40 px-3 py-1 text-xs font-semibold text-white transition active:scale-95">{tr("← Back")}</button>
         </div>
       </div>
 
       {/* Step 1 — basics */}
       <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 animate-scale-in">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Step 1</p>
-        <h2 className="font-script text-xl text-hotpink leading-none mb-3">Your basics</h2>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{tr("Step 1")}</p>
+        <h2 className="font-script text-xl text-hotpink leading-none mb-3">{tr("Your basics")}</h2>
 
         <div className="flex gap-2 mb-3">
           {(["metric", "imperial"] as const).map((u) => (
@@ -1947,39 +1921,38 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
               className={["rounded-full px-3 py-1 text-xs font-semibold border transition active:scale-95",
                 unit === u ? "bg-hotpink text-white border-transparent shadow-sm" : "bg-white/85 text-rose border-petal/60"].join(" ")}
             >
-              {u === "metric" ? "kg / cm" : "lb / in"}
+              {u === "metric" ? tr("kg / cm") : tr("lb / in")}
             </button>
           ))}
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
           <div>
-            <label className="text-xs font-bold text-rose">Weight ({unit === "metric" ? "kg" : "lb"})</label>
+            <label className="text-xs font-bold text-rose">{tr("Weight (")}{unit === "metric" ? "kg" : "lb"})</label>
             <input value={weight} onChange={(e) => setWeight(e.target.value)} type="number" inputMode="decimal"
               className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
           </div>
           <div>
-            <label className="text-xs font-bold text-rose">Height ({unit === "metric" ? "cm" : "in"})</label>
+            <label className="text-xs font-bold text-rose">{tr("Height (")}{unit === "metric" ? "cm" : "in"})</label>
             <input value={height} onChange={(e) => setHeight(e.target.value)} type="number" inputMode="decimal"
               className="mt-1 w-full rounded-xl bg-white/90 border border-petal/60 px-3 py-2 text-sm text-rose outline-none focus:ring-2 focus:ring-hotpink/30" />
           </div>
         </div>
 
         <button onClick={() => setStep(2)}
-          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
-          Next — pick your shape <ChevronRight className="h-3.5 w-3.5" />
+          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">{tr("Next — pick your shape")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </button>
       </div>
 
       {/* Step 2 — shape picker + inline proposition */}
       {step === 2 && (
         <div className="rounded-3xl bg-white/85 backdrop-blur border border-petal/60 p-4 animate-scale-in">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">Step 2</p>
-          <h2 className="font-script text-xl text-hotpink leading-none mb-1">Your shape</h2>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-rose/50 mb-0.5">{tr("Step 2")}</p>
+          <h2 className="font-script text-xl text-hotpink leading-none mb-1">{tr("Your shape")}</h2>
           <p className="text-xs text-rose/70 mb-3 leading-snug">
             {suggested
-              ? `Based on your numbers we suggest ${BODY_TYPES[suggested].label} — tap another if it feels more like you.`
-              : "Tap the shape that feels most like you."}
+              ? tr("Based on your numbers we suggest {0} — tap another if it feels more like you.", { 0: BODY_TYPES[suggested].label })
+              : tr("Tap the shape that feels most like you.")}
           </p>
 
           {(() => {
@@ -2001,7 +1974,7 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
                       <div className="w-full aspect-square overflow-hidden">
                         <img src={bt.photo} alt={bt.label} className="w-full h-full object-contain object-center" />
                       </div>
-                      <span className="text-[10px] font-semibold text-rose text-center leading-tight pb-2 px-1">{bt.label}</span>
+                      <span className="text-[10px] font-semibold text-rose text-center leading-tight pb-2 px-1">{trx(bt.label)}</span>
                     </button>
                   ];
                   if (isLastInRow && row === activeRow && data) {
@@ -2012,21 +1985,20 @@ function BestShapeCalculator({ onBack, onStartWith }: { onBack: () => void; onSt
                             <img src={data.photo} alt={data.label} className="w-full h-full object-contain object-center" />
                           </div>
                           <div className="flex flex-col justify-center min-w-0">
-                            <p className="font-bold text-rose mb-1">{data.label}</p>
-                            <p className="text-xs text-rose/85 mb-2 leading-snug">{data.strengths}</p>
-                            <p className="text-[10px] font-bold text-rose mb-1.5">Recommended</p>
+                            <p className="font-bold text-rose mb-1">{trx(data.label)}</p>
+                            <p className="text-xs text-rose/85 mb-2 leading-snug">{trx(data.strengths)}</p>
+                            <p className="text-[10px] font-bold text-rose mb-1.5">{tr("Recommended")}</p>
                             <div className="flex flex-wrap gap-1.5">
                               {data.recommended.map((rec) => (
                                 <span key={rec} className="rounded-full bg-white/90 border border-petal/60 px-2.5 py-0.5 text-[10px] font-semibold text-rose">
-                                  {WORKOUT_INTENTIONS.find((w) => w.key === rec)?.label}
+                                  {trx(WORKOUT_INTENTIONS.find((w) => w.key === rec)?.label)}
                                 </span>
                               ))}
                             </div>
                           </div>
                         </div>
                         <button onClick={() => onStartWith("full-body", data.recommended[0])}
-                          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">
-                          Start with this <ChevronRight className="h-3.5 w-3.5" />
+                          className="bloom-luxury-btn animate-cta-bounce inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white">{tr("Start with this")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
                         </button>
                       </div>
                     );
@@ -2172,8 +2144,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     if (activeProgram) { setConfirmFreestyle(true); return; }
     if (!program) { generateFreestyle(); return; } // no plan yet → just build it
     setConfirmChange({
-      title: "Regenerate your week?",
-      body: `This replaces your current plan with a fresh week tuned to your ${goalWord(readDietProfile().goal)} goal. Your Diet calorie target updates to match.`,
+      title: tr("Regenerate your week?"),
+      body: tr("This replaces your current plan with a fresh week tuned to your {0} goal. Your Diet calorie target updates to match.", { 0: goalWord(readDietProfile().goal) }),
       onYes: generateFreestyle,
     });
   };
@@ -2182,8 +2154,8 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
     if (!hasAccess("workout")) { openPaywall("workout"); return; } // editing the week is Bloom+
     if (tunedGoal) {
       setConfirmChange({
-        title: "Customise this week?",
-        body: `Editing makes it your own plan — it will no longer auto-follow your ${goalWord(tunedGoal)} goal, and your Diet calorie target updates to match your new week.`,
+        title: tr("Customise this week?"),
+        body: tr("Editing makes it your own plan — it will no longer auto-follow your {0} goal, and your Diet calorie target updates to match your new week.", { 0: goalWord(tunedGoal) }),
         onYes: () => { setEditing(true); clearTuned(); },
       });
     } else {
@@ -2219,13 +2191,13 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             </div>
             <div className="flex-1 min-w-0 p-3 sm:p-3.5 space-y-2">
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">My plan · Week {week} of {activeProgram.weeks}{wMeta?.isDeload ? " · recovery" : ""}</p>
-                <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{activeProgram.title}</h2>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink">{tr("My plan · Week")}{" "}{trx(week)}{" "}{tr("of")}{" "}{trx(activeProgram.weeks)}{wMeta?.isDeload ? tr(" · recovery") : ""}</p>
+                <h2 className="font-script text-xl sm:text-2xl text-hotpink leading-none">{trx(activeProgram.title)}</h2>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{wMeta?.theme}</p>
-                  <p className="text-[10px] font-semibold text-rose/60">{overallDone}/{overallTotal} done</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-rose/60">{trx(wMeta?.theme)}</p>
+                  <p className="text-[10px] font-semibold text-rose/60">{trx(overallDone)}/{trx(overallTotal)}{" "}{tr("done")}</p>
                 </div>
                 <div className="h-1.5 rounded-full bg-blush overflow-hidden">
                   <div className="h-full bg-hotpink transition-all" style={{ width: `${overallTotal ? Math.round((overallDone / overallTotal) * 100) : 0}%` }} />
@@ -2235,7 +2207,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {Array.from({ length: activeProgram.weeks }, (_, i) => i + 1).map((w) => (
                   <button key={w} onClick={() => { const next = { ...active!, week: w }; saveActiveProgram(next); setActive(next); }}
-                    className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{w}</button>
+                    className={["shrink-0 rounded-xl px-2.5 py-1 text-[11px] font-bold border transition", w === week ? "bg-hotpink text-white border-hotpink" : "bg-white/80 text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>W{trx(w)}</button>
                 ))}
               </div>
             </div>
@@ -2245,30 +2217,30 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             <div className="grid grid-cols-4 gap-2">
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Goal")}</span>
                 <span className="text-[12.5px] font-black text-hotpink leading-tight">{goalWord(readDietProfile().goal).charAt(0).toUpperCase() + goalWord(readDietProfile().goal).slice(1)}</span>
               </div>
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Level")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tr("Lvl")}{" "}{trx(readMovementLevel().level)}</span>
               </div>
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Streak")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{trx(readWorkoutStreak().count)}{readWorkoutStreak().count === 1 ? tr(" day") : tr(" days")}</span>
               </div>
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Trophy className="h-4 w-4" strokeWidth={2} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Progress</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">{overallDone}/{overallTotal}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Progress")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{trx(overallDone)}/{trx(overallTotal)}</span>
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <button onClick={onBrowsePrograms} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Change program</button>
-              <button onClick={buildMyOwn} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">Build my own</button>
-              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="rounded-full border border-petal/50 bg-white/70 px-3 py-1.5 text-[11px] font-bold text-rose/50 transition hover:text-hotpink active:scale-95">Leave</button>
-              <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["ml-auto grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
+              <button onClick={onBrowsePrograms} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">{tr("Change program")}</button>
+              <button onClick={buildMyOwn} className="rounded-full border border-petal/60 bg-white/90 px-3 py-1.5 text-[11px] font-bold text-hotpink transition hover:border-hotpink/40 active:scale-95">{tr("Build my own")}</button>
+              <button onClick={() => { saveActiveProgram(null); setActive(null); }} className="rounded-full border border-petal/50 bg-white/70 px-3 py-1.5 text-[11px] font-bold text-rose/50 transition hover:text-hotpink active:scale-95">{tr("Leave")}</button>
+              <button onClick={toggleFuel} title={fuelInPlan ? tr("Recovery meals shown in plan") : tr("Show recovery meals in the plan")} className={["ms-auto grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
             </div>
           </div>
         </section>
@@ -2280,20 +2252,20 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           <div className="flex items-center gap-2">
             <span className="clay-blob grid h-8 w-8 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-4 w-4" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-rose leading-tight truncate">My plan · {editing ? "Edit your week" : tunedGoal ? "Goal-tuned week" : "Custom week"}</p>
-              <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? "Pick a zone, feel & length for each day." : phase !== "any" ? `${PHASE_LABEL[phase]} phase` : "Your weekly plan"}</p>
+              <p className="text-[13px] font-bold text-rose leading-tight truncate">{tr("My plan ·")}{" "}{editing ? tr("Edit your week") : tunedGoal ? tr("Goal-tuned week") : tr("Custom week")}</p>
+              <p className="text-[10.5px] text-rose/65 leading-snug truncate">{editing ? tr("Pick a zone, feel & length for each day.") : phase !== "any" ? tr("{0} phase", { 0: PHASE_LABEL[phase] }) : tr("Your weekly plan")}</p>
             </div>
             {editing ? (
               <div className="flex items-center gap-1.5 shrink-0">
-                <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">Clear</button>
-                <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">Done</button>
+                <button onClick={clearWeek} className="rounded-full bg-white/90 border border-petal/60 px-3 py-1 text-[11px] font-bold text-rose/60 hover:text-hotpink">{tr("Clear")}</button>
+                <button onClick={() => setEditing(false)} className="rounded-full bg-hotpink text-white px-3.5 py-1 text-[11px] font-bold shadow-sm">{tr("Done")}</button>
               </div>
             ) : guided ? null : (
               <div className="flex items-center gap-1 shrink-0">
-                <button onClick={onEditClick} title="Edit your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><Pencil className="h-3.5 w-3.5" /></button>
-                <button onClick={onGenerateClick} title="Regenerate your week" className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><RotateCcw className="h-3.5 w-3.5" /></button>
-                <button onClick={resetWorkoutTool} title="Reset — preview the first-time experience" className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
-                <button onClick={toggleFuel} title={fuelInPlan ? "Recovery meals shown in plan" : "Show recovery meals in the plan"} className={["grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
+                <button onClick={onEditClick} title={tr("Edit your week")} className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><Pencil className="h-3.5 w-3.5" /></button>
+                <button onClick={onGenerateClick} title={tr("Regenerate your week")} className="grid h-8 w-8 place-items-center rounded-full border border-petal/60 bg-white/85 text-hotpink transition hover:border-hotpink/40 active:scale-90"><RotateCcw className="h-3.5 w-3.5" /></button>
+                <button onClick={resetWorkoutTool} title={tr("Reset — preview the first-time experience")} className="grid h-8 w-8 place-items-center rounded-full border border-petal/50 bg-white/70 text-rose/45 transition hover:text-hotpink active:scale-90"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button onClick={toggleFuel} title={fuelInPlan ? tr("Recovery meals shown in plan") : tr("Show recovery meals in the plan")} className={["grid h-8 w-8 place-items-center rounded-full border transition active:scale-90", fuelInPlan ? "bg-hotpink border-hotpink text-white" : "border-petal/60 bg-white/85 text-rose/45 hover:text-hotpink"].join(" ")}><Utensils className="h-3.5 w-3.5" /></button>
               </div>
             )}
           </div>
@@ -2302,18 +2274,18 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
             <div className="mt-3 grid grid-cols-4 gap-2">
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Sparkles className="h-4 w-4" strokeWidth={2.2} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Goal</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : "Free"}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Goal")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tunedGoal ? (goalWord(tunedGoal).charAt(0).toUpperCase() + goalWord(tunedGoal).slice(1)) : tr("Free")}</span>
               </div>
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-hotpink to-rose text-white"><BloomFlower size={15} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Level</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">Lvl {readMovementLevel().level}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Level")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{tr("Lvl")}{" "}{trx(readMovementLevel().level)}</span>
               </div>
               <div className="rounded-2xl border border-petal/60 bg-white/95 p-2.5 flex flex-col items-center justify-center text-center gap-1">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-blush text-hotpink"><Flame className="h-4 w-4" fill={readWorkoutStreak().count > 0 ? "currentColor" : "none"} strokeWidth={2} /></span>
-                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">Streak</span>
-                <span className="text-[12.5px] font-black text-hotpink leading-tight">{readWorkoutStreak().count}{readWorkoutStreak().count === 1 ? " day" : " days"}</span>
+                <span className="text-[8.5px] font-bold uppercase tracking-wider text-rose/55 leading-none">{tr("Streak")}</span>
+                <span className="text-[12.5px] font-black text-hotpink leading-tight">{trx(readWorkoutStreak().count)}{readWorkoutStreak().count === 1 ? tr(" day") : tr(" days")}</span>
               </div>
               <WorkoutPhaseSyncPill variant="tile" />
             </div>
@@ -2326,50 +2298,50 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
         <section className={["rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5 space-y-3", isGuided() ? "animate-section-attention" : ""].join(" ")}>
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h2 className="font-script text-2xl text-hotpink leading-none mb-1">Set up your weekly plan ✿</h2>
-              <p className="text-sm text-rose/80">Choose one — your sessions appear day by day below, ready to start.</p>
+              <h2 className="font-script text-2xl text-hotpink leading-none mb-1">{tr("Set up your weekly plan ✿")}</h2>
+              <p className="text-sm text-rose/80">{tr("Choose one — your sessions appear day by day below, ready to start.")}</p>
             </div>
             <LevelStreak variant="chip" streak={readWorkoutStreak().count} />
           </div>
           {/* FREE Bloom plan — a gentle 2-day, 10-min week so free users can
               finish setup without hitting the wall. (Premium has the full set.) */}
           {!hasAccess("workout") && (
-            <button onClick={generateFreeWeek} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
+            <button onClick={generateFreeWeek} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-hotpink/45 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99] animate-selected-glow">
               <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Sparkles className="h-5 w-5" strokeWidth={1.8} /></span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-rose flex items-center gap-1.5">Free starter week <span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">Free</span></p>
-                <p className="text-[11px] text-rose/70 leading-snug">A gentle 2-day · 10-min week — yours on Bloom, ready to start.</p>
+                <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Free starter week")}{" "}<span className="rounded-full bg-hotpink/15 text-hotpink text-[8px] font-black uppercase tracking-wide px-1.5 py-0.5">{tr("Free")}</span></p>
+                <p className="text-[11px] text-rose/70 leading-snug">{tr("A gentle 2-day · 10-min week — yours on Bloom, ready to start.")}</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+              <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
             </button>
           )}
           {/* Flagship programs are a post-setup, premium journey — hidden during
               guided setup so she completes her week here instead of hitting a wall. */}
           {!guided && (
-          <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+          <button onClick={onBrowsePrograms} className="w-full rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white animate-icon-breathe"><Trophy className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Follow a flagship program {!hasAccess("workout") && <PlusTag />}</p>
-              <p className="text-[11px] text-rose/70 leading-snug">A structured multi-week journey, spread smartly across your week.</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Follow a flagship program")}{" "}{!hasAccess("workout") && <PlusTag />}</p>
+              <p className="text-[11px] text-rose/70 leading-snug">{tr("A structured multi-week journey, spread smartly across your week.")}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
           </button>
           )}
-          <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+          <button onClick={onGenerateClick} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><CalendarHeart className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Generate a freestyle week {!hasAccess("workout") && <PlusTag />}</p>
-              <p className="text-[11px] text-rose/70 leading-snug">One-tap auto plan from your level, goal, days/week and phase.</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Generate a freestyle week")}{" "}{!hasAccess("workout") && <PlusTag />}</p>
+              <p className="text-[11px] text-rose/70 leading-snug">{tr("One-tap auto plan from your level, goal, days/week and phase.")}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
           </button>
-          <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-left transition hover:-translate-y-0.5 active:scale-[0.99]">
+          <button onClick={buildMyOwn} className="w-full rounded-2xl bg-white/90 border border-petal/60 p-3.5 flex items-center gap-3 text-start transition hover:-translate-y-0.5 active:scale-[0.99]">
             <span className="clay-blob grid h-10 w-10 shrink-0 place-items-center rounded-full text-white"><Dumbbell className="h-5 w-5" strokeWidth={1.8} /></span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-rose flex items-center gap-1.5">Build my own week {!hasAccess("workout") && <PlusTag />}</p>
-              <p className="text-[11px] text-rose/70 leading-snug">Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.</p>
+              <p className="text-sm font-bold text-rose flex items-center gap-1.5">{tr("Build my own week")}{" "}{!hasAccess("workout") && <PlusTag />}</p>
+              <p className="text-[11px] text-rose/70 leading-snug">{tr("Hand-pick each day — e.g. glutes Mon, legs Wed, abs Fri.")}</p>
             </div>
-            <ChevronRight className="h-5 w-5 text-hotpink shrink-0" />
+            <ChevronRight className="rtl:-scale-x-100 h-5 w-5 text-hotpink shrink-0" />
           </button>
         </section>
       )}
@@ -2381,9 +2353,7 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           {editing && source === "freestyle" && (
             <div className="mb-2.5 flex items-start gap-2 rounded-2xl bg-blush/50 border border-petal/60 px-3.5 py-2.5 animate-fade-in">
               <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-              <p className="text-[11px] text-rose/80 leading-snug">
-                Tap any day to pick its <b className="font-bold text-hotpink">zone</b>, <b className="font-bold text-hotpink">feel</b> &amp; <b className="font-bold text-hotpink">length</b>. Choose <b className="font-bold text-hotpink">Rest day</b> to clear one. Tap <b className="font-bold text-hotpink">Done</b> when it's yours.
-              </p>
+              <p className="text-[11px] text-rose/80 leading-snug">{tr("Tap any day to pick its")}{" "}<b className="font-bold text-hotpink">{tr("zone")}</b>, <b className="font-bold text-hotpink">{tr("feel")}</b> &amp; <b className="font-bold text-hotpink">{tr("length")}</b>{tr(". Choose")}{" "}<b className="font-bold text-hotpink">{tr("Rest day")}</b>{" "}{tr("to clear one. Tap")}{" "}<b className="font-bold text-hotpink">{tr("Done")}</b>{" "}{tr("when it's yours.")}</p>
             </div>
           )}
           <div className="flex flex-col gap-2.5">
@@ -2400,10 +2370,10 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                   <div key={d} className="rounded-2xl border border-petal/50 bg-white/70 p-2.5">
                     <div className="flex items-center gap-2">
                       <div className="w-9 shrink-0 text-center">
-                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
+                        <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{trx(d)}</p>
                       </div>
                       <PickerField
-                        title="Choose a zone"
+                        title={tr("Choose a zone")}
                         className="flex-1 min-w-0"
                         value={fp?.zone ?? "rest"}
                         options={[{ value: "rest", label: "Rest day" }, ...ZONES.map((z) => ({ value: z.key, label: z.label }))]}
@@ -2414,16 +2384,16 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                       />
                     </div>
                     {fp && (
-                      <div className="mt-1.5 flex items-center gap-2 pl-11">
+                      <div className="mt-1.5 flex items-center gap-2 ps-11">
                         <PickerField
-                          title="How should it feel?"
+                          title={tr("How should it feel?")}
                           className="flex-1 min-w-0"
                           value={fp.intention}
                           options={WORKOUT_INTENTIONS.map((i) => ({ value: i.key, label: i.label }))}
                           onChange={(v) => setDayPlan(d, { ...fp, intention: v as WorkoutIntention })}
                         />
                         <PickerField
-                          title="How long?"
+                          title={tr("How long?")}
                           className="w-[5.6rem] shrink-0"
                           value={String(fp.durationMin)}
                           options={[10, 20, 30].map((m) => ({ value: String(m), label: `${m} min` }))}
@@ -2465,10 +2435,10 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                 return (
                   <div key={d} className="flex items-center gap-3 rounded-2xl border border-petal/50 bg-white/60 p-2.5">
                     <div className="w-11 shrink-0 text-center">
-                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{d}</p>
-                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">Today</p>}
+                      <p className={["text-[10px] font-bold uppercase tracking-wide", isToday ? "text-hotpink" : "text-rose/50"].join(" ")}>{trx(d)}</p>
+                      {isToday && <p className="text-[8px] font-bold uppercase text-hotpink">{tr("Today")}</p>}
                     </div>
-                    <div className="flex-1 text-[12px] font-semibold text-rose/45">Rest day ✿</div>
+                    <div className="flex-1 text-[12px] font-semibold text-rose/45">{tr("Rest day ✿")}</div>
                   </div>
                 );
               }
@@ -2478,20 +2448,20 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
                 <div key={d} className={["flex rounded-2xl border overflow-hidden transition",
                   isToday ? "border-hotpink/60 shadow-md shadow-hotpink/10" : "border-petal/50"].join(" ")}>
                   {/* LEFT — session vignette (full height), tappable to start */}
-                  <button onClick={onTap ?? undefined} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-left active:scale-[0.99] transition">
+                  <button onClick={onTap ?? undefined} className="relative w-24 sm:w-28 shrink-0 self-stretch overflow-hidden text-start active:scale-[0.99] transition">
                     <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover object-center" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
-                    <span className="absolute top-1.5 left-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{d}{isToday ? " ·today" : ""}</span>
-                    <span className={["absolute bottom-1.5 right-1.5 grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow", isToday && !done ? "animate-soft-zoom" : ""].join(" ")}>
+                    <span className="absolute top-1.5 start-1.5 text-[9px] font-bold uppercase tracking-wide text-white/95 bg-black/35 rounded-full px-1.5 py-0.5">{trx(d)}{isToday ? tr(" ·today") : ""}</span>
+                    <span className={["absolute bottom-1.5 end-1.5 grid h-7 w-7 place-items-center rounded-full bg-white text-hotpink shadow", isToday && !done ? "animate-soft-zoom" : ""].join(" ")}>
                       {done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Play className="h-3.5 w-3.5" fill="currentColor" strokeWidth={0} />}
                     </span>
                   </button>
 
                   {/* RIGHT — session title + (optional) meals */}
                   <div className="flex-1 min-w-0 bg-white/70">
-                    <button onClick={onTap ?? undefined} className="block w-full text-left px-3 py-2.5 active:scale-[0.99] transition">
-                      <p className={["text-sm font-bold leading-tight text-rose truncate", done ? "line-through text-rose/45" : ""].join(" ")}>{title}</p>
-                      <p className="text-[11px] text-rose/60 leading-snug truncate">{sub}{mins ? ` · ${mins} min` : ""}{mins ? <> · <span className="font-semibold text-hotpink/80">~{plannedCalories(burnIntention, mins)} kcal</span></> : ""}</p>
+                    <button onClick={onTap ?? undefined} className="block w-full text-start px-3 py-2.5 active:scale-[0.99] transition">
+                      <p className={["text-sm font-bold leading-tight text-rose truncate", done ? "line-through text-rose/45" : ""].join(" ")}>{trx(title)}</p>
+                      <p className="text-[11px] text-rose/60 leading-snug truncate">{trx(sub)}{mins ? tr(" · {0} min", { 0: mins }) : ""}{mins ? <> · <span className="font-semibold text-hotpink/80">~{plannedCalories(burnIntention, mins)}{" "}{tr("kcal")}</span></> : ""}</p>
                     </button>
                     {showFuel && (
                       <div className="border-t border-petal/50 bg-gradient-to-br from-blush/45 to-petal/20 p-2">
@@ -2513,13 +2483,13 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
           {source === "program" && activeProgram && weekComplete && week < activeProgram.weeks && (
             <button onClick={() => { const next = { ...active!, week: week + 1 }; saveActiveProgram(next); setActive(next); }}
               className="bloom-luxury-btn animate-cta-bounce mt-3 w-full inline-flex items-center justify-center gap-2 py-3 text-sm font-bold text-white">
-              <Trophy className="h-4 w-4" strokeWidth={2} /> Week {week} done — start Week {week + 1}
+              <Trophy className="h-4 w-4" strokeWidth={2} />{" "}{tr("Week")}{" "}{trx(week)}{" "}{tr("done — start Week")}{" "}{week + 1}
             </button>
           )}
           {source === "program" && activeProgram && weekComplete && week === activeProgram.weeks && (
             <div className="mt-3 rounded-2xl bg-gradient-to-r from-hotpink/15 to-petal/30 border border-petal/60 p-3 text-center">
-              <p className="font-script text-xl text-hotpink leading-none">Program complete ✿</p>
-              <p className="text-xs text-rose/75 mt-1">You finished all {activeProgram.weeks} weeks. Incredible work.</p>
+              <p className="font-script text-xl text-hotpink leading-none">{tr("Program complete ✿")}</p>
+              <p className="text-xs text-rose/75 mt-1">{tr("You finished all")}{" "}{trx(activeProgram.weeks)}{" "}{tr("weeks. Incredible work.")}</p>
             </div>
           )}
         </section>
@@ -2529,11 +2499,11 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       {confirmChange && createPortal(
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmChange(null)}>
           <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <p className="font-script text-2xl text-hotpink leading-none mb-2">{confirmChange.title}</p>
-            <p className="text-sm text-rose/80 mb-4">{confirmChange.body}</p>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">{trx(confirmChange.title)}</p>
+            <p className="text-sm text-rose/80 mb-4">{trx(confirmChange.body)}</p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmChange(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
-              <button onClick={() => { const a = confirmChange.onYes; setConfirmChange(null); a(); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Continue</button>
+              <button onClick={() => setConfirmChange(null)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">{tr("Cancel")}</button>
+              <button onClick={() => { const a = confirmChange.onYes; setConfirmChange(null); a(); }} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">{tr("Continue")}</button>
             </div>
           </div>
         </div>,
@@ -2542,11 +2512,11 @@ function MyProgram({ profile, onStartSession, onOpenProgramSession, onBrowseProg
       {confirmFreestyle && activeProgram && createPortal(
         <div className="fixed inset-0 z-[80] bg-black/40 backdrop-blur-sm grid place-items-center overflow-y-auto p-4 animate-fade-in" onClick={() => setConfirmFreestyle(false)}>
           <div className="w-full max-w-xs my-auto rounded-3xl bg-white/97 border border-petal/60 shadow-2xl p-5 text-center animate-scale-in" onClick={(e) => e.stopPropagation()}>
-            <p className="font-script text-2xl text-hotpink leading-none mb-2">Replace your plan?</p>
-            <p className="text-sm text-rose/80 mb-4">A freestyle week will replace your <span className="font-bold">{activeProgram.title}</span> plan. Your program progress is kept if you come back to it.</p>
+            <p className="font-script text-2xl text-hotpink leading-none mb-2">{tr("Replace your plan?")}</p>
+            <p className="text-sm text-rose/80 mb-4">{tr("A freestyle week will replace your")}{" "}<span className="font-bold">{trx(activeProgram.title)}</span>{" "}{tr("plan. Your program progress is kept if you come back to it.")}</p>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmFreestyle(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">Cancel</button>
-              <button onClick={generateFreestyle} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">Replace</button>
+              <button onClick={() => setConfirmFreestyle(false)} className="flex-1 rounded-full bg-white/90 border border-petal/60 py-2.5 text-sm font-semibold text-rose">{tr("Cancel")}</button>
+              <button onClick={generateFreestyle} className="flex-1 bloom-luxury-btn py-2.5 text-sm font-bold text-white">{tr("Replace")}</button>
             </div>
           </div>
         </div>,
@@ -2571,12 +2541,10 @@ function Library() {
         {/* Header */}
         <div className="flex items-end justify-between gap-3 mb-3">
           <div>
-            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">Move Library ✿</h2>
-            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">
-              Tap any move for a how-to, form cues &amp; the mistake to avoid.
-            </p>
+            <h2 className="font-script text-2xl sm:text-3xl text-hotpink leading-none">{tr("Move Library ✿")}</h2>
+            <p className="text-[11px] sm:text-xs text-rose/60 mt-0.5">{tr("Tap any move for a how-to, form cues & the mistake to avoid.")}</p>
           </div>
-          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{exercises.length} moves</span>
+          <span className="shrink-0 rounded-full bg-blush/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-hotpink">{trx(exercises.length)}{" "}{tr("moves")}</span>
         </div>
 
         {/* Zone chips with icons */}
@@ -2597,13 +2565,13 @@ function Library() {
                 {locked
                   ? <Lock className="h-3.5 w-3.5 text-[#B76E79]" strokeWidth={2.4} />
                   : <Icon className={["h-3.5 w-3.5", active ? "text-white" : "text-hotpink"].join(" ")} strokeWidth={1.8} />}
-                {z.label}
+                {trx(z.label)}
               </button>
             );
           })}
         </div>
 
-        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-hotpink/60">{zoneMeta?.label}</p>
+        <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-hotpink/60">{trx(zoneMeta?.label)}</p>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {exercises.map((ex, i) => (
@@ -2632,23 +2600,23 @@ function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zo
       ].join(" ")}
       style={{ animationDelay: `${index * 0.05}s` }}
     >
-      <button onClick={() => setOpen((v) => !v)} className="block w-full text-left active:scale-[0.99] transition">
+      <button onClick={() => setOpen((v) => !v)} className="block w-full text-start active:scale-[0.99] transition">
         <div className={open ? "flex items-stretch gap-3" : ""}>
           <div className={open ? "w-32 sm:w-44 shrink-0" : ""}>
             <ExercisePhoto exercise={exercise} zone={zone} staticOnly preferImage className="aspect-square w-full object-cover" />
           </div>
-          <div className={open ? "flex-1 min-w-0 py-3 pr-3 flex flex-col justify-center" : "p-2.5"}>
+          <div className={open ? "flex-1 min-w-0 py-3 pe-3 flex flex-col justify-center" : "p-2.5"}>
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-sm font-bold text-rose leading-tight">{exercise.name}</p>
-                <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{exercise.muscles}</p>
+                <p className="text-sm font-bold text-rose leading-tight">{trx(exercise.name)}</p>
+                <p className="mt-0.5 text-[11px] text-rose/70 leading-snug">{trx(exercise.muscles)}</p>
               </div>
               {open
                 ? <ChevronDown className="h-4 w-4 text-hotpink shrink-0 rotate-180 transition" strokeWidth={2.5} />
                 : <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blush/70 text-hotpink"><ChevronDown className="h-3.5 w-3.5" strokeWidth={2.5} /></span>}
             </div>
             {open && coaching && (
-              <p className="mt-2 hidden sm:block text-xs text-rose/85 leading-snug">{coaching.howTo}</p>
+              <p className="mt-2 hidden sm:block text-xs text-rose/85 leading-snug">{trx(coaching.howTo)}</p>
             )}
           </div>
         </div>
@@ -2656,20 +2624,20 @@ function ExerciseLibraryCard({ exercise, zone, index }: { exercise: Exercise; zo
 
       {open && coaching && (
         <div className="border-t border-petal/40 px-3 sm:px-4 py-3 animate-fade-in space-y-3">
-          <p className="sm:hidden text-xs text-rose/85 leading-snug">{coaching.howTo}</p>
+          <p className="sm:hidden text-xs text-rose/85 leading-snug">{trx(coaching.howTo)}</p>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">Form cues</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-1">{tr("Form cues")}</p>
             <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1">
               {coaching.cues.map((c) => (
                 <li key={c} className="flex items-start gap-2 text-xs text-rose/85 leading-snug">
-                  <Check className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {c}
+                  <Check className="h-3.5 w-3.5 text-hotpink shrink-0 mt-0.5" strokeWidth={3} /> {trx(c)}
                 </li>
               ))}
             </ul>
           </div>
           <div className="rounded-2xl bg-blush/50 border border-petal/50 px-3 py-2">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">Avoid this</p>
-            <p className="text-xs text-rose/80 leading-snug">{coaching.mistake}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-hotpink mb-0.5">{tr("Avoid this")}</p>
+            <p className="text-xs text-rose/80 leading-snug">{trx(coaching.mistake)}</p>
           </div>
         </div>
       )}
@@ -2701,71 +2669,70 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
   return (
     <div className="fixed inset-0 z-[60] bg-blush/95 backdrop-blur grid place-items-start sm:place-items-center p-3 sm:p-4 overflow-y-auto" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
       <div className="relative w-full max-w-md lg:max-w-4xl rounded-3xl bg-white/97 border border-petal/60 shadow-2xl overflow-hidden my-4 sm:my-8 animate-scale-in lg:grid lg:grid-cols-2 lg:items-stretch">
-        <button onClick={onExit} aria-label="Close" className="absolute right-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
+        <button onClick={onExit} aria-label={tr("Close")} className="absolute end-3 top-3 z-20 rounded-full bg-white/90 p-2 text-rose border border-petal/60 active:scale-90 shadow-sm"><X className="h-4 w-4" /></button>
         {/* Hero — full-height left column on desktop */}
         <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[32rem] overflow-hidden">
           <ExercisePhoto exercise={first} zone={session.zone} staticOnly preferImage className="absolute inset-0 h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-black/10" />
           {phase !== "any" && session.phaseOptimal.includes(phase) && (
-            <span className="absolute top-3 left-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {PHASE_LABEL[phase]} optimized</span>
+            <span className="absolute top-3 start-3 rounded-full bg-hotpink/90 text-white text-[9px] font-bold uppercase tracking-wide px-2.5 py-1 shadow-sm">✿ {trx(PHASE_LABEL[phase])}{" "}{tr("optimized")}</span>
           )}
           <div className="absolute bottom-0 inset-x-0 p-4 lg:p-6">
             <div className="flex flex-wrap gap-1.5 mb-1.5">
-              {zone && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{zone.label}</span>}
-              {intention && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{intention.label}</span>}
+              {zone && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{trx(zone.label)}</span>}
+              {intention && <span className="rounded-full bg-white/90 text-hotpink text-[9px] font-bold uppercase tracking-wide px-2 py-0.5">{trx(intention.label)}</span>}
             </div>
-            <h1 className="font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none drop-shadow">{session.name}</h1>
-            <p className="text-[11px] sm:text-xs lg:text-sm text-white/90 mt-1 drop-shadow">{session.durationMin} min · {session.level} · {session.structureNote}</p>
+            <h1 className="font-script text-3xl sm:text-4xl lg:text-5xl text-white leading-none drop-shadow">{trx(session.name)}</h1>
+            <p className="text-[11px] sm:text-xs lg:text-sm text-white/90 mt-1 drop-shadow">{trx(session.durationMin)}{" "}{tr("min ·")}{" "}{trx(session.level)} · {trx(session.structureNote)}</p>
           </div>
         </div>
 
         <div className="p-4 sm:p-5 lg:p-6 space-y-4 lg:space-y-5 lg:overflow-y-auto lg:max-h-[85vh]">
           {/* What's inside */}
-          <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 text-left">
-            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">What's inside</p>
+          <div className="rounded-2xl bg-blush/40 border border-petal/50 p-3 text-start">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">{tr("What's inside")}</p>
             <ul className="space-y-1 text-xs text-rose/80">
-              {warmCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">1</span> Warm-up · {warmCount} move{warmCount > 1 ? "s" : ""}</li>}
-              <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold">{warmCount > 0 ? 2 : 1}</span> {session.rounds} round{session.rounds > 1 ? "s" : ""} × {session.exercises.length} moves · {session.workSec}s work / {session.restSec}s rest</li>
-              {coolCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">{warmCount > 0 ? 3 : 2}</span> Cool-down · {coolCount} stretch{coolCount > 1 ? "es" : ""}</li>}
+              {warmCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">1</span>{" "}{tr("Warm-up ·")}{" "}{trx(warmCount)}{" "}{tr("move")}{warmCount > 1 ? "s" : ""}</li>}
+              <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-hotpink text-white text-[10px] font-bold">{warmCount > 0 ? 2 : 1}</span> {trx(session.rounds)}{" "}{tr("round")}{session.rounds > 1 ? "s" : ""} × {trx(session.exercises.length)}{" "}{tr("moves ·")}{" "}{trx(session.workSec)}{tr("s work /")}{" "}{trx(session.restSec)}{tr("s rest")}</li>
+              {coolCount > 0 && <li className="flex items-center gap-2"><span className="grid h-5 w-5 place-items-center rounded-full bg-petal/60 text-hotpink text-[10px] font-bold">{warmCount > 0 ? 3 : 2}</span>{" "}{tr("Cool-down ·")}{" "}{trx(coolCount)}{" "}{tr("stretch")}{coolCount > 1 ? "es" : ""}</li>}
             </ul>
           </div>
 
           {/* Moves preview */}
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-2">The moves · {uniqueMoves.length}</p>
+            <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-2">{tr("The moves ·")}{" "}{trx(uniqueMoves.length)}</p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none lg:flex-wrap lg:overflow-visible">
               {uniqueMoves.map((s, i) => (
                 <div key={`${s.exercise.slug}-${i}`} className="shrink-0 w-20 text-center">
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden border border-petal/50">
                     <ExercisePhoto exercise={s.exercise} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
                     {s.kind !== "work" && (
-                      <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? "Warm-up" : "Cool-down"}</span>
+                      <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white text-[7px] font-bold uppercase tracking-wide py-0.5">{s.kind === "warmup" ? tr("Warm-up") : tr("Cool-down")}</span>
                     )}
                   </div>
-                  <p className="mt-1 text-[9px] font-semibold text-rose/75 leading-tight line-clamp-2">{s.exercise.name}</p>
+                  <p className="mt-1 text-[9px] font-semibold text-rose/75 leading-tight line-clamp-2">{trx(s.exercise.name)}</p>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Sound — choose the background music and turn voice coaching on/off */}
-          <div className="rounded-2xl bg-white border border-petal/50 p-3 text-left space-y-2.5">
+          <div className="rounded-2xl bg-white border border-petal/50 p-3 text-start space-y-2.5">
             <button onClick={() => setVoice((v) => !v)} className="w-full flex items-center justify-between gap-3 active:scale-[0.99] transition">
               <span className="flex items-center gap-2 text-xs font-bold text-rose">
-                {voice ? <Volume2 className="h-4 w-4 text-hotpink" /> : <VolumeX className="h-4 w-4 text-rose/40" />} Voice coaching cues
-              </span>
+                {voice ? <Volume2 className="h-4 w-4 text-hotpink" /> : <VolumeX className="h-4 w-4 text-rose/40" />}{" "}{tr("Voice coaching cues")}</span>
               <span className={["relative h-5 w-9 shrink-0 rounded-full transition-colors", voice ? "bg-hotpink" : "bg-rose/25"].join(" ")}>
                 <span className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: voice ? "1.125rem" : "0.125rem" }} />
               </span>
             </button>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wide text-rose/45 mb-1.5">Background music</p>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-rose/45 mb-1.5">{tr("Background music")}</p>
               <div className="flex flex-wrap gap-1.5">
                 {MUSIC_LABELS.map((label, i) => (
                   <button key={i} onClick={() => setMusicTrack(i)}
                     className={["rounded-full px-2.5 py-1 text-[11px] font-bold border transition active:scale-95",
                       i === musicTrack ? "bg-hotpink text-white border-hotpink shadow-sm shadow-hotpink/30" : "bg-white text-rose border-petal/60 hover:border-hotpink/40"].join(" ")}>
-                    {label}
+                    {trx(label)}
                   </button>
                 ))}
               </div>
@@ -2774,16 +2741,14 @@ function SessionStart({ session, onStart, onExit }: { session: WorkoutSession; o
 
           <div className="flex items-center gap-2">
             <button onClick={() => onStart(false)} className="bloom-luxury-btn animate-cta-bounce flex-1 inline-flex items-center justify-center gap-2 py-3.5 text-base font-bold text-white">
-              <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} /> Start session
-            </button>
+              <Play className="h-5 w-5" fill="currentColor" strokeWidth={0} />{" "}{tr("Start session")}</button>
             {/* REC — owner-only clean capture: launches straight onto the first move
                 with a 5·4·3 get-ready chrono and every control hidden, to screen-record
                 for the channel (mirrors the yoga REC launcher). */}
             {isOwner && (
-              <button onClick={() => onStart(true)} aria-label="Record this session (clean capture)" title="Record — clean capture with a 5·4·3 get-ready chrono"
+              <button onClick={() => onStart(true)} aria-label={tr("Record this session (clean capture)")} title={tr("Record — clean capture with a 5·4·3 get-ready chrono")}
                 className="shrink-0 inline-flex items-center gap-2 rounded-2xl bg-red-500 text-white font-extrabold py-3.5 px-4 shadow-lg shadow-red-500/30 active:scale-95 transition">
-                <span className="block h-3.5 w-3.5 rounded-full bg-white animate-pulse" /> REC
-              </button>
+                <span className="block h-3.5 w-3.5 rounded-full bg-white animate-pulse" />{" "}{tr("REC")}</button>
             )}
           </div>
         </div>
@@ -2812,7 +2777,7 @@ function PetalBurst({ count = 18, z = 70 }: { count?: number; z?: number }) {
           left: `${p.left}%`, fontSize: p.size, color: p.color, lineHeight: 1,
           transform: `rotate(${p.rot}deg)`,
           animation: `wk-petal-fall ${p.dur}s linear ${p.delay}s forwards`,
-        }}>{p.char}</span>
+        }}>{trx(p.char)}</span>
       ))}
     </div>
   );
@@ -2845,7 +2810,7 @@ function EndCelebration({ active, z = 52 }: { active: boolean; z?: number }) {
                 animation: `wk-petal-drift ${b.dur}s linear ${b.delay}s infinite` }
             : { transform: `rotate(${b.rot}deg)`,
                 animation: `wk-petal-fall ${b.dur}s linear ${b.delay}s infinite` }),
-        }}>{b.char}</span>
+        }}>{trx(b.char)}</span>
       ))}
     </div>
   );
@@ -2868,7 +2833,7 @@ function SparkleField({ active, z = 53 }: { active: boolean; z?: number }) {
         <span key={i} className="absolute animate-wk-twinkle" style={{
           top: `${s.top}%`, left: `${s.left}%`, fontSize: s.size, color: s.color, lineHeight: 1,
           animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s`,
-        }}>{s.char}</span>
+        }}>{trx(s.char)}</span>
       ))}
     </div>
   );
@@ -2900,7 +2865,7 @@ function PinkExplosion({ z = 56 }: { z?: number }) {
           fontSize: b.size, color: b.color, lineHeight: 1,
           ["--x" as any]: b.x, ["--y" as any]: b.y, ["--r" as any]: b.r,
           animationDelay: `${b.delay}s`,
-        }}>{b.char}</span>
+        }}>{trx(b.char)}</span>
       ))}
     </div>
   );
@@ -2952,7 +2917,7 @@ function StagePetals({ paused }: { paused: boolean }) {
           ["--tw-translate-x" as any]: `${p.drift}px`,
           animationDuration: `${p.dur}s`, animationDelay: `${p.delay}s`,
           animationPlayState: paused ? "paused" : "running",
-        }}>{p.char}</span>
+        }}>{trx(p.char)}</span>
       ))}
     </div>
   );
@@ -2967,13 +2932,13 @@ function BloomIntro({ title, count }: { title: string; count: number | "go" | nu
           <span className="clay-blob mx-auto grid h-24 w-24 sm:h-28 sm:w-28 place-items-center rounded-[1.75rem] text-white shadow-2xl">
             <BloomFlower size={54} />
           </span>
-          <p className="mt-4 font-script text-4xl sm:text-5xl text-white leading-none drop-shadow">Let's bloom ✿</p>
-          <p className="mt-1.5 text-sm sm:text-base font-bold text-white/90 drop-shadow">{title}</p>
+          <p className="mt-4 font-script text-4xl sm:text-5xl text-white leading-none drop-shadow">{tr("Let's bloom ✿")}</p>
+          <p className="mt-1.5 text-sm sm:text-base font-bold text-white/90 drop-shadow">{trx(title)}</p>
         </div>
       ) : (
         <span key={String(count)} className="animate-wk-count-in font-script text-white leading-none drop-shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
           style={{ fontSize: count === "go" ? "6rem" : "9rem" }}>
-          {count === "go" ? "GO ✿" : count}
+          {count === "go" ? tr("GO ✿") : trx(count)}
         </span>
       )}
     </div>
@@ -3029,7 +2994,7 @@ function GlassCard({ icon: Icon, title, children, className = "", delay = 0, ico
               <Icon className={["h-3.5 w-3.5", iconVibe ? "animate-wk-icon-vibe" : ""].join(" ")} style={iconVibe ? { animationDelay: `${iconVibeDelay}s` } : undefined} />
             </span>
           )}
-          {title}
+          {trx(title)}
         </p>
       )}
       {children}
@@ -3064,33 +3029,33 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
       <div className="absolute inset-0 grid place-items-center text-center leading-none" style={{ padding: "15%" }}>
         {speaking ? (
           <div>
-            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">Coach</p>
+            <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">{tr("Coach")}</p>
             <div className="mt-2 flex items-end justify-center gap-1" style={{ height: size * 0.16 }}>
               {[0, 1, 2, 3, 4].map((i) => (
                 <span key={i} className="w-1.5 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />
               ))}
             </div>
-            <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.12em] text-hotpink/70">listen ✿</p>
+            <p className="mt-2 text-[9px] font-extrabold uppercase tracking-[0.12em] text-hotpink/70">{tr("listen ✿")}</p>
           </div>
         ) : (
           <div>
-            <p className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">{showReps ? "Rep" : label}</p>
+            <p className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">{showReps ? tr("Rep") : trx(label)}</p>
             {showReps ? (
               <p className="mt-0.5 whitespace-nowrap">
-                <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.26 }}>{rep}</span>
-                <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.14 }}> / {total}</span>
+                <span key={rep} className="font-black text-rose tabular-nums animate-wk-rep-pop" style={{ fontSize: size * 0.26 }}>{trx(rep)}</span>
+                <span className="font-bold text-rose/45 tabular-nums" style={{ fontSize: size * 0.14 }}> / {trx(total)}</span>
               </p>
             ) : (
-              <p className="mt-0.5 font-black text-rose tabular-nums" style={{ fontSize: size * 0.28 }}>{seconds}</p>
+              <p className="mt-0.5 font-black text-rose tabular-nums" style={{ fontSize: size * 0.28 }}>{trx(seconds)}</p>
             )}
-            <p className="mt-0.5 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.1em] text-hotpink">{Math.round(percent * 100)}%{big && <span className="text-hotpink/55"> complete</span>}</p>
+            <p className="mt-0.5 text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.1em] text-hotpink">{Math.round(percent * 100)}%{big && <span className="text-hotpink/55">{" "}{tr("complete")}</span>}</p>
           </div>
         )}
       </div>
       {/* "GO" bursting out from the centre when the coach finishes speaking */}
       {goKey > 0 && (
         <div key={goKey} aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
-          <span className="animate-wk-go-ring font-script text-hotpink drop-shadow-[0_2px_10px_oklch(0.7_0.24_350/0.6)]" style={{ fontSize: size * 0.4 }}>GO ✿</span>
+          <span className="animate-wk-go-ring font-script text-hotpink drop-shadow-[0_2px_10px_oklch(0.7_0.24_350/0.6)]" style={{ fontSize: size * 0.4 }}>{tr("GO ✿")}</span>
         </div>
       )}
     </div>
@@ -3101,12 +3066,12 @@ function RepRing({ rep, total, seconds, percent, size = 168, label, speaking, go
  *  desktop, tablet and phone layouts all read from one place). */
 function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; delay?: number }) {
   return (
-    <GlassCard icon={Target} title="Today's focus" delay={delay} iconVibe iconVibeDelay={0}>
+    <GlassCard icon={Target} title={tr("Today's focus")} delay={delay} iconVibe iconVibeDelay={0}>
       <div className="flex items-center gap-2.5">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-petal to-hotpink/70 text-white shadow-sm"><Flame className="h-4 w-4" /></span>
         <div className="min-w-0">
           <p className="font-script text-xl text-hotpink leading-none truncate">{cap(primary)}</p>
-          <p className="text-[10px] font-semibold text-rose/60">Primary muscles</p>
+          <p className="text-[10px] font-semibold text-rose/60">{tr("Primary muscles")}</p>
         </div>
       </div>
     </GlassCard>
@@ -3115,13 +3080,13 @@ function FocusCard({ primary, zone, delay }: { primary: string; zone?: Zone; del
 function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: number }) {
   const list = (muscles.length ? muscles : ["Full body"]).slice(0, 4);
   return (
-    <GlassCard icon={Activity} title="Muscle target" delay={delay} iconVibe iconVibeDelay={0.5}>
+    <GlassCard icon={Activity} title={tr("Muscle target")} delay={delay} iconVibe iconVibeDelay={0.5}>
       <div className="space-y-2">
         {list.map((m, i) => (
           <div key={m + i}>
             <div className="flex items-center justify-between text-[11px] font-bold text-rose mb-1">
               <span className="truncate">{cap(m)}</span>
-              <span className="text-hotpink tabular-nums">{WK_MT_PCT[i] ?? 30}%</span>
+              <span className="text-hotpink tabular-nums">{trx(WK_MT_PCT[i]) ?? 30}%</span>
             </div>
             <div className="h-2 rounded-full bg-hotpink/10 overflow-hidden">
               <div className="relative h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-700 animate-wk-bar-pulse overflow-hidden"
@@ -3138,22 +3103,22 @@ function MuscleTargetCard({ muscles, delay }: { muscles: string[]; delay?: numbe
 function CoachTipCard({ tip, delay }: { tip: string; delay?: number }) {
   if (!tip) return null;
   return (
-    <GlassCard icon={Lightbulb} title="Coach tip" delay={delay} iconVibe iconVibeDelay={1}>
-      <p className="text-[13px] leading-snug font-medium text-rose/85">{tip}</p>
+    <GlassCard icon={Lightbulb} title={tr("Coach tip")} delay={delay} iconVibe iconVibeDelay={1}>
+      <p className="text-[13px] leading-snug font-medium text-rose/85">{trx(tip)}</p>
     </GlassCard>
   );
 }
 function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; reps?: string; delay?: number }) {
   return (
-    <GlassCard icon={ChevronRight} title="Next up" delay={delay} titleAttn>
+    <GlassCard icon={ChevronRight} title={tr("Next up")} delay={delay} titleAttn>
       {/* Bigger preview — the whole move is shown (contain, never cropped), with
           the name below. */}
       <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden border border-petal/60 shadow-sm bg-blush/40">
         <ExercisePhoto exercise={next} zone={zone} staticOnly preferImage className="w-full h-full object-contain" />
       </div>
       <div className="mt-2 min-w-0">
-        <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{next.name}</p>
-        {reps && <p className="text-[11px] font-semibold text-hotpink mt-0.5">{reps}</p>}
+        <p className="text-sm sm:text-base font-bold text-rose leading-tight truncate">{trx(next.name)}</p>
+        {reps && <p className="text-[11px] font-semibold text-hotpink mt-0.5">{trx(reps)}</p>}
       </div>
     </GlassCard>
   );
@@ -3161,12 +3126,12 @@ function NextUpCard({ next, zone, reps, delay }: { next: Exercise; zone?: Zone; 
 function FormReminderCard({ cues, delay }: { cues: string[]; delay?: number }) {
   if (!cues.length) return null;
   return (
-    <GlassCard icon={ShieldCheck} title="Form reminder" delay={delay}>
+    <GlassCard icon={ShieldCheck} title={tr("Form reminder")} delay={delay}>
       <ul className="space-y-2">
         {cues.map((c, i) => (
           <li key={i} className="flex items-start gap-2 text-[12px] font-medium text-rose/85 leading-snug">
             <span className="mt-0.5 grid h-4 w-4 shrink-0 place-items-center rounded-full bg-hotpink text-white"><Check className="h-2.5 w-2.5" strokeWidth={3} /></span>
-            {c}
+            {trx(c)}
           </li>
         ))}
       </ul>
@@ -3220,7 +3185,7 @@ function WkCtrl({ icon: Icon, label, onClick, active, disabled }: {
         active ? "wk-lux-btn-on text-white animate-soft-glow" : "wk-lux-btn text-rose"].join(" ")}>
         <Icon className={["relative z-[2] h-5 w-5", active && label === "Favorite" ? "fill-current" : ""].join(" ")} />
       </span>
-      <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{label}</span>
+      <span className="text-[10px] sm:text-[11px] font-semibold text-rose/80">{trx(label)}</span>
     </button>
   );
 }
@@ -3262,8 +3227,8 @@ function RestBreatheStage({ videoSrc, paused, remaining, ringPct, next, nextReps
             style={{ background: "radial-gradient(circle at 50% 40%, oklch(1 0 0 / 0.3), oklch(0.86 0.12 345 / 0.18))",
               boxShadow: "0 0 44px oklch(0.8 0.16 345 / 0.5), inset 0 0 34px oklch(1 0 0 / 0.32)" }} />
           <div className="relative text-center px-4">
-            <p className="font-script text-white leading-none drop-shadow-[0_2px_14px_oklch(0.5_0.26_350/0.75)]" style={{ fontSize: "clamp(2rem, 6vw, 3.75rem)" }}>Rest</p>
-            <p className="mt-1 font-semibold tracking-wide text-white/90 drop-shadow" style={{ fontSize: "clamp(0.7rem, 1.7vw, 0.95rem)" }}>Breathe in… and out ✿</p>
+            <p className="font-script text-white leading-none drop-shadow-[0_2px_14px_oklch(0.5_0.26_350/0.75)]" style={{ fontSize: "clamp(2rem, 6vw, 3.75rem)" }}>{tr("Rest")}</p>
+            <p className="mt-1 font-semibold tracking-wide text-white/90 drop-shadow" style={{ fontSize: "clamp(0.7rem, 1.7vw, 0.95rem)" }}>{tr("Breathe in… and out ✿")}</p>
           </div>
         </div>
       </div>
@@ -3679,7 +3644,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
   const coachLine = WK_COACH_LINES[index % WK_COACH_LINES.length];
   const affirmation = WK_AFFIRMATIONS[index % WK_AFFIRMATIONS.length];
   const nextReps = nextStepObj
-    ? (nextStepObj.reps ? `${nextStepObj.reps} reps` : nextStepObj.repTarget ?? nextStepObj.exercise.muscles)
+    ? (nextStepObj.reps ? tr("{0} reps", { 0: nextStepObj.reps }) : nextStepObj.repTarget ?? nextStepObj.exercise.muscles)
     : "";
   // Ring fill: rep progress on a rep move, else time elapsed on holds / rest.
   const ringPct = phase === "exercise" && stepReps > 0
@@ -3693,16 +3658,16 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
   // the "music vibe" lives on the left-rail icons instead.
   const controlBar = (
     <div className="mx-auto w-full max-w-xl flex items-center justify-around gap-1 rounded-[1.6rem] bg-white/65 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-2 sm:px-4 py-2 sm:py-2.5">
-      <WkCtrl icon={SkipBack} label="Previous" onClick={prev} disabled={index === 0 && phase === "exercise"} />
-      <button onClick={() => setPaused((p) => !p)} aria-label={paused ? "Resume" : "Pause"} className="flex flex-col items-center gap-1 active:scale-95 transition">
+      <WkCtrl icon={SkipBack} label={tr("Previous")} onClick={prev} disabled={index === 0 && phase === "exercise"} />
+      <button onClick={() => setPaused((p) => !p)} aria-label={paused ? tr("Resume") : tr("Pause")} className="flex flex-col items-center gap-1 active:scale-95 transition">
         <span className="relative grid h-14 w-14 sm:h-16 sm:w-16 place-items-center rounded-full wk-lux-btn-on text-white animate-soft-glow">
           {paused ? <Play className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" /> : <Pause className="relative z-[2] h-7 w-7 sm:h-8 sm:w-8 fill-current" />}
         </span>
-        <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? "Resume" : "Pause"}</span>
+        <span className="text-[10px] sm:text-[11px] font-bold text-hotpink">{paused ? tr("Resume") : tr("Pause")}</span>
       </button>
-      <WkCtrl icon={SkipForward} label="Skip" onClick={phase === "rest" ? skipRest : skip} />
-      <WkCtrl icon={voice ? Volume2 : VolumeX} label="Voice" active={voice} onClick={() => setVoice((v) => !v)} />
-      <WkCtrl icon={Heart} label="Favorite" active={isFav} onClick={toggleFav} />
+      <WkCtrl icon={SkipForward} label={tr("Skip")} onClick={phase === "rest" ? skipRest : skip} />
+      <WkCtrl icon={voice ? Volume2 : VolumeX} label={tr("Voice")} active={voice} onClick={() => setVoice((v) => !v)} />
+      <WkCtrl icon={Heart} label={tr("Favorite")} active={isFav} onClick={toggleFav} />
     </div>
   );
 
@@ -3726,14 +3691,14 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
       {/* Brand logo — no frame, part of the background: strong-pink flower (white
           centre) ABOVE the wordmark, both in the same pink. It just turns gently
           and breathes — no flash / light-sweep. */}
-      <div aria-hidden className="hidden lg:block pointer-events-none absolute bottom-3 left-3 z-[15]">
+      <div aria-hidden className="hidden lg:block pointer-events-none absolute bottom-3 start-3 z-[15]">
         <div className="inline-flex flex-col items-center gap-1">
           <span className="animate-wk-flower-spin drop-shadow-sm">
             <span className="block animate-wk-logo-breathe">
               <BloomFlower size={64} petal="var(--hotpink)" center="#FFFFFF" />
             </span>
           </span>
-          <span className="font-script text-3xl sm:text-4xl text-hotpink leading-none">Bloomzein</span>
+          <span className="font-script text-3xl sm:text-4xl text-hotpink leading-none">{tr("Bloomzein")}</span>
         </div>
       </div>
 
@@ -3741,20 +3706,20 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
       {/* Capped to a centred ~104rem frame so ultra-wide / foldable screens keep
           the dashboard grouped instead of stretching edge-to-edge. */}
       <header className="relative z-10 hidden md:flex items-center gap-3 px-5 py-2.5 shrink-0 w-full max-w-[104rem] mx-auto">
-        <button onClick={onExit} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+        <button onClick={onExit} aria-label={tr("Close")} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
         <div className="flex-1 min-w-0">
-          <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">Session progress</p>
+          <p className="text-center text-[10px] font-extrabold uppercase tracking-[0.22em] text-hotpink/70 mb-1">{tr("Session progress")}</p>
           <div className="flex items-center gap-2.5">
             <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
               <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
-            <span className="text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {steps.length}</span>
+            <span className="text-sm font-extrabold text-rose tabular-nums shrink-0">{index + 1} / {trx(steps.length)}</span>
           </div>
         </div>
-        {!recording && <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
+        {!recording && <button onClick={shareToTV} aria-label={tr("Cast to TV")} title={tr("Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)")} className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border border-white/70 shadow-sm active:scale-90 transition">
           <Tv className="h-5 w-5" />
         </button>}
-        {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+        {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label={tr("Sound levels")} title={tr("Sound — music & voice")}
           className={["grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/70 backdrop-blur-md text-rose border shadow-sm active:scale-90 transition",
             showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/70"].join(" ")}>
           {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -3765,12 +3730,12 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
              below — pushes the whole session down a notch. ── */}
       <header className="relative z-10 md:hidden shrink-0 px-3 pt-2.5 pb-1.5 flex flex-col gap-2.5">
         <div className="flex items-center justify-between gap-3">
-          <button onClick={onExit} aria-label="Close" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
+          <button onClick={onExit} aria-label={tr("Close")} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition"><X className="h-5 w-5" /></button>
           <div className="flex items-center gap-2.5">
-            {!recording && <button onClick={shareToTV} aria-label="Cast to TV" title="Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
+            {!recording && <button onClick={shareToTV} aria-label={tr("Cast to TV")} title={tr("Plein écran — puis recopie l'onglet sur la TV (Chromecast / AirPlay)")} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border border-white/60 shadow-sm active:scale-90 transition">
               <Tv className="h-5 w-5" />
             </button>}
-            {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label="Sound levels" title="Sound — music & voice"
+            {!recording && <button onClick={() => setShowVolume((v) => !v)} aria-label={tr("Sound levels")} title={tr("Sound — music & voice")}
               className={["grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/55 backdrop-blur-2xl text-rose border shadow-sm active:scale-90 transition",
                 showVolume ? "border-hotpink/60 ring-2 ring-hotpink/40" : "border-white/60"].join(" ")}>
               {!sound || (musicVol === 0 && voiceVol === 0) ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
@@ -3778,12 +3743,12 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
           </div>
         </div>
         <div className="px-1">
-          <p className="text-center font-script text-hotpink text-xl leading-none mb-1.5">Session progress</p>
+          <p className="text-center font-script text-hotpink text-xl leading-none mb-1.5">{tr("Session progress")}</p>
           <div className="flex items-center gap-2.5">
             <div className="h-2 flex-1 rounded-full bg-white/60 overflow-hidden shadow-inner">
               <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-500" style={{ width: `${finished ? 100 : ((index + (phase === "rest" ? 1 : 0)) / steps.length) * 100}%` }} />
             </div>
-            <span className="text-sm font-extrabold text-hotpink tabular-nums shrink-0">{index + 1} / {steps.length}</span>
+            <span className="text-sm font-extrabold text-hotpink tabular-nums shrink-0">{index + 1} / {trx(steps.length)}</span>
           </div>
         </div>
       </header>
@@ -3796,23 +3761,22 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
             .wk-vol-slider::-webkit-slider-thumb:active{transform:scale(1.18)}
             .wk-vol-slider::-moz-range-thumb{height:16px;width:16px;border-radius:9999px;background:#EC4899;border:3px solid #fff;box-shadow:0 2px 8px rgba(236,72,153,0.45);cursor:pointer}`}</style>
           <div className="fixed inset-0 z-40" onClick={() => setShowVolume(false)} />
-          <div className="absolute right-3 sm:right-5 top-16 sm:top-20 z-50 w-64 rounded-2xl p-4 bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_16px_44px_rgba(236,72,153,0.22)] animate-scale-in">
+          <div className="absolute end-3 sm:end-5 top-16 sm:top-20 z-50 w-64 rounded-2xl p-4 bg-white/85 backdrop-blur-md border border-white/70 shadow-[0_16px_44px_rgba(236,72,153,0.22)] animate-scale-in">
             <div className="flex items-center justify-between mb-3">
               <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-hotpink/70">
-                <Music className="h-3.5 w-3.5" /> Sound
-              </p>
+                <Music className="h-3.5 w-3.5" />{" "}{tr("Sound")}</p>
               <button onClick={() => setSound((s) => !s)}
                 className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wide bg-white/70 border border-white/70 text-rose active:scale-95 transition">
-                {sound ? <><Volume2 className="h-3 w-3" /> On</> : <><VolumeX className="h-3 w-3" /> Muted</>}
+                {sound ? <><Volume2 className="h-3 w-3" />{" "}{tr("On")}</> : <><VolumeX className="h-3 w-3" />{" "}{tr("Muted")}</>}
               </button>
             </div>
             {([
-              { label: "Music", Icon: Music, val: musicVol, set: setMusicVol },
-              { label: "Voice", Icon: Mic, val: voiceVol, set: setVoiceVol },
+              { label: tr("Music"), Icon: Music, val: musicVol, set: setMusicVol },
+              { label: tr("Voice"), Icon: Mic, val: voiceVol, set: setVoiceVol },
             ] as const).map(({ label, Icon, val, set }) => (
               <div key={label} className="mb-3 last:mb-0">
                 <div className="flex items-center justify-between text-[11px] font-semibold text-rose mb-1">
-                  <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5 text-hotpink" /> {label}</span>
+                  <span className="flex items-center gap-1.5"><Icon className="h-3.5 w-3.5 text-hotpink" /> {trx(label)}</span>
                   <span className="tabular-nums text-rose/60">{Math.round(val * 100)}%</span>
                 </div>
                 <input type="range" min={0} max={1} step={0.01} value={val}
@@ -3830,11 +3794,8 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
           <div onClick={() => setTvHint(false)}
             className="pointer-events-auto max-w-sm rounded-2xl bg-white/95 backdrop-blur-md px-4 py-3 shadow-lg border border-white/70 text-center cursor-pointer">
             <p className="flex items-center justify-center gap-1.5 text-sm font-bold text-rose">
-              <Tv className="h-4 w-4" /> Sur la TV
-            </p>
-            <p className="mt-1 text-xs leading-snug text-rose/70">
-              Recopie l'onglet / l'écran (Chromecast · AirPlay) — toute la séance <em>et le son</em> passent sur ta TV.
-            </p>
+              <Tv className="h-4 w-4" />{" "}{tr("Sur la TV")}</p>
+            <p className="mt-1 text-xs leading-snug text-rose/70">{tr("Recopie l'onglet / l'écran (Chromecast · AirPlay) — toute la séance")}{" "}<em>{tr("et le son")}</em>{" "}{tr("passent sur ta TV.")}</p>
           </div>
         </div>
       )}
@@ -3845,7 +3806,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
       <main className="relative z-10 w-full max-w-[104rem] mx-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-[1fr_13.5rem] lg:grid-cols-[11.5rem_1fr_14rem] gap-2.5 px-3 sm:px-4 pb-2 overflow-y-auto md:overflow-hidden [grid-template-rows:minmax(0,1fr)]">
 
         {/* LEFT RAIL — desktop only */}
-        <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
+        <aside className="hidden lg:flex flex-col gap-3 min-h-0 overflow-y-auto pe-0.5">
           <FocusCard primary={primaryMuscle} zone={session.zone} delay={40} />
           <MuscleTargetCard muscles={muscleList} delay={120} />
           <CoachTipCard tip={coachTip} delay={200} />
@@ -3859,7 +3820,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
           <div className="shrink-0 flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2 lg:gap-4">
             <div className="min-w-0">
               <h2 className="font-script leading-[0.95] text-hotpink text-[2.6rem] sm:text-5xl lg:text-6xl">
-                {phase === "rest" ? "Rest & Breathe" : isSwitch ? "Switch sides" : exercise.name}
+                {phase === "rest" ? tr("Rest & Breathe") : isSwitch ? tr("Switch sides") : exercise.name}
               </h2>
               <div className="mt-2 flex items-center gap-2">
                 <BloomFlower size={15} />
@@ -3867,7 +3828,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
               </div>
               {(phase === "rest" || isSwitch) && (
                 <p className="mt-1.5 text-sm text-rose/75 leading-snug max-w-xs">
-                  {phase === "rest" ? "Take a moment to rest, breathe in… and out. ✿" : "Ease gently over to the other side ✿"}
+                  {phase === "rest" ? tr("Take a moment to rest, breathe in… and out. ✿") : tr("Ease gently over to the other side ✿")}
                 </p>
               )}
               {/* muscle tags — sit right under the title */}
@@ -3878,7 +3839,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
                   ))}
                   {step.side && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/12 border border-hotpink/25 px-2.5 py-0.5 text-[11px] font-bold text-hotpink">
-                      <RotateCcw className="h-3 w-3" /> {step.side === "first" ? "1st side" : "2nd side"}
+                      <RotateCcw className="h-3 w-3" /> {step.side === "first" ? tr("1st side") : tr("2nd side")}
                     </span>
                   )}
                 </div>
@@ -3886,13 +3847,12 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
             </div>
             {!isSwitch && phase === "exercise" && (
               <div className="hidden md:flex lg:max-w-sm w-full lg:w-auto flex-col items-start gap-1.5">
-                <div className={["w-full rounded-2xl rounded-tr-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in transition-transform",
+                <div className={["w-full rounded-2xl rounded-se-md bg-white/68 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.16)] px-3.5 py-2 animate-fade-in transition-transform",
                   briefing ? "animate-card-breathe" : ""].join(" ")}>
                   <p className="flex items-center gap-1.5 text-[11px] font-extrabold text-hotpink">
-                    <span className="inline-block animate-wk-icon-vibe"><BloomFlower size={13} /></span> Bloom Coach
-                    {briefing && <span className="ml-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
+                    <span className="inline-block animate-wk-icon-vibe"><BloomFlower size={13} /></span>{" "}{tr("Bloom Coach")}{briefing && <span className="ms-auto inline-flex items-end gap-0.5" style={{ height: 10 }}>{[0, 1, 2].map((i) => <span key={i} className="w-1 rounded-full bg-hotpink animate-wk-eq" style={{ height: "100%", animationDelay: `${i * 0.12}s` }} />)}</span>}
                   </p>
-                  <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{coachLine}</p>
+                  <p className="mt-0.5 text-xs sm:text-[13px] font-medium text-rose/85 leading-snug">{trx(coachLine)}</p>
                 </div>
               </div>
             )}
@@ -3948,9 +3908,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
                   <div className="pointer-events-none absolute inset-0 z-[22] grid place-items-center animate-fade-in">
                     <div className="absolute inset-0" style={{ background: "linear-gradient(160deg, oklch(0.88 0.1 350 / 0.14), oklch(0.82 0.13 345 / 0.2))" }} />
                     <p className="relative animate-wk-hold-breathe font-script text-white/95 leading-tight text-center px-6 drop-shadow-[0_3px_14px_oklch(0.55_0.26_350/0.7)]"
-                      style={{ fontSize: "clamp(1.5rem, 5.5vw, 3.25rem)" }}>
-                      Hold &amp; breathe&nbsp;✿
-                    </p>
+                      style={{ fontSize: "clamp(1.5rem, 5.5vw, 3.25rem)" }}>{tr("Hold & breathe ✿")}</p>
                   </div>
                 )}
 
@@ -3959,8 +3917,8 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
                   <div className="absolute inset-0 z-20 grid place-items-center bg-hotpink/45 backdrop-blur-[2px]">
                     <div className="text-center px-4 animate-scale-in">
                       <RotateCcw className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-white animate-spin drop-shadow" strokeWidth={2.6} style={{ animationDuration: "1.4s" }} />
-                      <p className="mt-2 font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">Switch sides!</p>
-                      <p className="mt-1 text-sm sm:text-lg font-bold text-white/95 drop-shadow">Now the other side ✿</p>
+                      <p className="mt-2 font-script text-3xl sm:text-5xl text-white leading-none drop-shadow-[0_2px_6px_rgba(0,0,0,0.35)]">{tr("Switch sides!")}</p>
+                      <p className="mt-1 text-sm sm:text-lg font-bold text-white/95 drop-shadow">{tr("Now the other side ✿")}</p>
                     </div>
                   </div>
                 )}
@@ -3982,11 +3940,11 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
                 {/* Energy arrows — gentle marching glide so the photo feels alive */}
                 {!paused && !isSwitch && (
                   <>
-                    <div aria-hidden className="pointer-events-none absolute left-1.5 sm:left-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
-                      {[0, 1, 2].map((i) => <ChevronRight key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                    <div aria-hidden className="pointer-events-none absolute start-1.5 sm:start-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                      {[0, 1, 2].map((i) => <ChevronRight key={i} className="rtl:-scale-x-100 h-6 w-6 sm:h-8 sm:w-8 animate-arrow-r" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
                     </div>
-                    <div aria-hidden className="pointer-events-none absolute right-1.5 sm:right-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
-                      {[0, 1, 2].map((i) => <ChevronLeft key={i} className="h-6 w-6 sm:h-8 sm:w-8 animate-arrow-l" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
+                    <div aria-hidden className="pointer-events-none absolute end-1.5 sm:end-3 top-1/2 -translate-y-1/2 flex flex-col gap-1 text-hotpink/80 drop-shadow-[0_0_6px_oklch(0.72_0.26_350/0.6)]">
+                      {[0, 1, 2].map((i) => <ChevronLeft key={i} className="rtl:-scale-x-100 h-6 w-6 sm:h-8 sm:w-8 animate-arrow-l" style={{ animationDelay: `${i * 0.22}s` }} strokeWidth={2.6} />)}
                     </div>
                   </>
                 )}
@@ -3998,7 +3956,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
               {goBurst > 0 && !isSwitch && (
                 <div key={`go-center-${goBurst}`} aria-hidden className="pointer-events-none absolute inset-0 z-[24] grid place-items-center">
                   <span className="animate-wk-go-center font-script text-white leading-none drop-shadow-[0_4px_22px_oklch(0.58_0.28_350/0.9)]"
-                    style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>GO ✿</span>
+                    style={{ fontSize: "clamp(3.5rem, 16vw, 8rem)" }}>{tr("GO ✿")}</span>
                 </div>
               )}
 
@@ -4030,19 +3988,19 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
                       <ExercisePhoto exercise={next} zone={session.zone} staticOnly preferImage className="h-full w-full object-cover" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">Coming up next</p>
-                      <p className="font-bold text-rose text-sm leading-tight truncate">{next.name}</p>
-                      <p className="text-[11px] text-rose/70 leading-tight truncate">{nextStepObj?.label ?? "Hold & breathe"}{nextReps ? ` · ${nextReps}` : ""}</p>
+                      <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-hotpink/70">{tr("Coming up next")}</p>
+                      <p className="font-bold text-rose text-sm leading-tight truncate">{trx(next.name)}</p>
+                      <p className="text-[11px] text-rose/70 leading-tight truncate">{trx(nextStepObj?.label) ?? tr("Hold & breathe")}{nextReps ? ` · ${nextReps}` : ""}</p>
                     </div>
                   </div>
                 ) : (
                   <div className="flex-1 rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/55 shadow-[0_14px_36px_rgba(236,72,153,0.16)] p-3 grid place-items-center animate-fade-in">
-                    <p className="text-center text-xs font-bold text-rose/75 leading-snug">Last one — finish strong ✿</p>
+                    <p className="text-center text-xs font-bold text-rose/75 leading-snug">{tr("Last one — finish strong ✿")}</p>
                   </div>
                 )}
                 <div className="shrink-0 grid place-items-center rounded-3xl bg-white/45 backdrop-blur-2xl border border-white/55 shadow-[0_14px_36px_rgba(236,72,153,0.16)] px-3 animate-scale-in">
                   <RepRing size={124} percent={ringPct}
-                    label={phase === "rest" ? "Rest" : ringLabel}
+                    label={phase === "rest" ? tr("Rest") : ringLabel}
                     speaking={phase === "exercise" && briefing} goKey={goRing}
                     rep={phase === "exercise" && stepReps > 0 ? currentRep : undefined}
                     total={phase === "exercise" && stepReps > 0 ? stepReps : undefined}
@@ -4063,7 +4021,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
             return (
               <div className="md:hidden shrink-0 animate-fade-in">
                 <div className="rounded-full bg-white/40 backdrop-blur-2xl border border-white/55 shadow-[0_8px_24px_rgba(236,72,153,0.12)] px-3 py-1.5 flex items-center gap-2.5">
-                  <span className="inline-flex items-center gap-1 shrink-0 text-hotpink font-bold text-[11px] tabular-nums whitespace-nowrap"><Flame className="h-3.5 w-3.5" strokeWidth={2.4} />~{kcal} kcal</span>
+                  <span className="inline-flex items-center gap-1 shrink-0 text-hotpink font-bold text-[11px] tabular-nums whitespace-nowrap"><Flame className="h-3.5 w-3.5" strokeWidth={2.4} />~{trx(kcal)}{" "}{tr("kcal")}</span>
                   <div className="h-1 flex-1 rounded-full bg-white/60 overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-petal to-hotpink transition-all duration-1000" style={{ width: `${pct}%` }} />
                   </div>
@@ -4079,11 +4037,11 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
               top band on tablet/desktop. */}
 
           {/* Control bar — inside the centre column on tablet/desktop */}
-          {!recording && <div className="hidden md:block shrink-0 pt-1">{controlBar}</div>}
+          {!recording && <div className="hidden md:block shrink-0 pt-1">{trx(controlBar)}</div>}
         </section>
 
         {/* RIGHT RAIL — tablet + desktop */}
-        <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pr-0.5">
+        <aside className="hidden md:flex flex-col gap-3 min-h-0 overflow-y-auto pe-0.5">
           <GlassCard className="!py-2.5" delay={40}>
             <RepRing size={122} percent={ringPct} label={ringLabel} speaking={briefing} goKey={goRing}
               rep={stepReps > 0 && !isSwitch && phase === "exercise" ? currentRep : undefined}
@@ -4094,7 +4052,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
           {/* Affirmation sits above Form Reminder so Next up keeps the space. */}
           {phase === "exercise" && !isSwitch && (
             <div className="rounded-[1.5rem] bg-white/62 backdrop-blur-md border border-white/70 shadow-[0_10px_30px_rgba(236,72,153,0.13)] px-4 py-3 text-center animate-fade-in" style={{ animationDelay: "260ms" }}>
-              <p className="text-[13px] font-semibold text-rose/85 leading-snug">{affirmation}</p>
+              <p className="text-[13px] font-semibold text-rose/85 leading-snug">{trx(affirmation)}</p>
             </div>
           )}
           {/* Form Reminder — moved down so Next up gets the room above it. */}
@@ -4108,7 +4066,7 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
       </main>
 
       {/* Control bar — pinned to the bottom on phones */}
-      {!recording && <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{controlBar}</div>}
+      {!recording && <div className="md:hidden relative z-10 shrink-0 px-3 pb-2 pt-1">{trx(controlBar)}</div>}
 
       {/* Session complete — no page switch. Phase A: "The End" breathes over the
           pink veil while the music fades out (~5s). Phase B: the congratulation
@@ -4117,8 +4075,8 @@ function SessionActive({ session, programRef, record, onExit, onDone, musicRef }
         <div aria-hidden className="pointer-events-none fixed inset-0 z-[61] grid place-items-center animate-fade-in"
           style={{ background: "linear-gradient(160deg, oklch(0.9 0.1 350 / 0.72), oklch(0.82 0.13 345 / 0.68))", backdropFilter: "blur(4px)" }}>
           <div className="text-center">
-            <p className="animate-wk-end-breathe font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.85)]" style={{ fontSize: "clamp(5rem, 22vw, 13rem)" }}>The&nbsp;End&nbsp;✿</p>
-            <p className="mt-3 font-extrabold uppercase tracking-[0.34em] text-rose/70 text-xs sm:text-sm">You made it</p>
+            <p className="animate-wk-end-breathe font-script text-hotpink leading-none drop-shadow-[0_6px_34px_oklch(0.6_0.28_350/0.85)]" style={{ fontSize: "clamp(5rem, 22vw, 13rem)" }}>{tr("The End ✿")}</p>
+            <p className="mt-3 font-extrabold uppercase tracking-[0.34em] text-rose/70 text-xs sm:text-sm">{tr("You made it")}</p>
           </div>
         </div>
       )}
@@ -4232,8 +4190,8 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
       const notes = raw ? JSON.parse(raw) : [];
       notes.unshift({
         id: `workout-${Date.now()}`,
-        title: `${session.name} — completed`,
-        text: `${session.durationMin} min · ${session.exercises.length} exercises · ~${calories} kcal · ${minutes}:${String(seconds).padStart(2, "0")}`,
+        title: tr("{0} — completed", { 0: session.name }),
+        text: tr("{0} min · {1} exercises · ~{2} kcal · {3}:{4}", { 0: session.durationMin, 1: session.exercises.length, 2: calories, 3: minutes, 4: String(seconds).padStart(2, "0") }),
         color: "sakura", tag: "Self-care", pinned: false, createdAt: new Date().toISOString(),
       });
       localStorage.setItem("bloom:notes", JSON.stringify(notes));
@@ -4242,7 +4200,7 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
   };
 
   const share = () => {
-    const text = `I just completed "${session.name}" on Bloomzein 🌸 ${session.durationMin} min · ~${calories} kcal`;
+    const text = tr("I just completed \"{0}\" on Bloomzein 🌸 {1} min · ~{2} kcal", { 0: session.name, 1: session.durationMin, 2: calories });
     if (navigator.share) {
       navigator.share({ text }).catch(() => {});
     } else {
@@ -4293,57 +4251,55 @@ function SessionEnd({ session, elapsedSec, programRef, onDone, overlay = false, 
           </span>
         </div>
 
-        <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none mb-1 animate-text-pop">You bloomed today ✿</h1>
-        <p className="text-sm text-rose/80">{session.name}</p>
-        <p className="mt-1 text-xs text-rose/60 italic">{cheer}</p>
+        <h1 className="font-script text-4xl sm:text-5xl text-hotpink leading-none mb-1 animate-text-pop">{tr("You bloomed today ✿")}</h1>
+        <p className="text-sm text-rose/80">{trx(session.name)}</p>
+        <p className="mt-1 text-xs text-rose/60 italic">{trx(cheer)}</p>
         {(totalReps > 0 || hadSwitches) && (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-hotpink/10 border border-hotpink/20 px-3 py-1 text-[11px] font-bold text-hotpink">
-            {hadSwitches && <>Both sides trained ✓</>}{hadSwitches && totalReps > 0 && " · "}{totalReps > 0 && <>~{totalReps} reps done</>}
+            {hadSwitches && <>{tr("Both sides trained ✓")}</>}{hadSwitches && totalReps > 0 && " · "}{totalReps > 0 && <>~{trx(totalReps)}{" "}{tr("reps done")}</>}
           </p>
         )}
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-2.5 my-5">
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3">
-            <p className="font-script text-2xl text-hotpink leading-none">{minutes}:{String(seconds).padStart(2, "0")}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">Time</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(minutes)}:{String(seconds).padStart(2, "0")}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("Time")}</p>
           </div>
           <div className="rounded-2xl bg-blush/60 border border-petal/50 p-3">
-            <p className="font-script text-2xl text-hotpink leading-none">~{calories}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">kcal</p>
+            <p className="font-script text-2xl text-hotpink leading-none">~{trx(calories)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("kcal")}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-hotpink/15 to-petal/40 border border-petal/60 p-3 animate-selected-glow">
-            <p className="font-script text-2xl text-hotpink leading-none">{displayStreak}</p>
-            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">day streak</p>
+            <p className="font-script text-2xl text-hotpink leading-none">{trx(displayStreak)}</p>
+            <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-rose/60">{tr("day streak")}</p>
           </div>
         </div>
 
         {unlockedNew.length > 0 && (
           <div className="mb-4 rounded-2xl bg-blush/70 border border-hotpink/30 p-3 animate-fade-in">
-            <p className="text-xs font-bold uppercase tracking-wide text-hotpink mb-1">New badge unlocked! ✨</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-hotpink mb-1">{tr("New badge unlocked! ✨")}</p>
             {unlockedNew.map((id) => (
               <p key={id} className="text-sm font-semibold text-rose flex items-center justify-center gap-1.5">
-                <Trophy className="h-4 w-4 text-hotpink" /> {BADGES.find((b) => b.id === id)?.label}
+                <Trophy className="h-4 w-4 text-hotpink" /> {trx(BADGES.find((b) => b.id === id)?.label)}
               </p>
             ))}
           </div>
         )}
 
         <p className="mb-4 inline-flex items-center gap-1.5 text-xs font-semibold text-rose/70">
-          <CalendarHeart className="h-3.5 w-3.5 text-hotpink" /> Logged to your Bloom Calendar{programRef ? " & program" : ""}
+          <CalendarHeart className="h-3.5 w-3.5 text-hotpink" />{" "}{tr("Logged to your Bloom Calendar")}{programRef ? tr(" & program") : ""}
         </p>
 
         <div className="flex flex-wrap justify-center gap-2 mb-4">
           <button onClick={addToJournal} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60 active:scale-95 transition">
-            <BookHeart className="h-3.5 w-3.5" /> Add to journal
-          </button>
+            <BookHeart className="h-3.5 w-3.5" />{" "}{tr("Add to journal")}</button>
           <button onClick={share} className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-rose border border-petal/60 active:scale-95 transition">
-            <Share2 className="h-3.5 w-3.5" /> Share
-          </button>
+            <Share2 className="h-3.5 w-3.5" />{" "}{tr("Share")}</button>
         </div>
 
         <button onClick={onDone} className="bloom-luxury-btn w-full inline-flex items-center justify-center gap-2 py-3.5 text-sm font-bold text-white">
-          {programRef ? "Back to my plan" : "Done"} <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+          {programRef ? tr("Back to my plan") : tr("Done")} <ChevronRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>

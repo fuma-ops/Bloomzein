@@ -1,6 +1,7 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { Flower2, RotateCcw } from "lucide-react";
 import { logError } from "@/lib/errorLog";
+import { tr, trx } from "@/i18n";
 
 interface Props { children: ReactNode }
 interface State { error: Error | null }
@@ -32,18 +33,15 @@ export class ErrorBoundary extends Component<Props, State> {
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full clay-blob animate-icon-breathe text-white">
             <Flower2 className="h-6 w-6" strokeWidth={1.6} />
           </span>
-          <h1 className="mt-4 font-script text-3xl text-hotpink leading-none">A little hiccup ✿</h1>
-          <p className="mt-2 text-sm text-rose/80">
-            This corner didn't bloom quite right. A quick refresh usually sets it back.
-          </p>
+          <h1 className="mt-4 font-script text-3xl text-hotpink leading-none">{tr("A little hiccup ✿")}</h1>
+          <p className="mt-2 text-sm text-rose/80">{tr("This corner didn't bloom quite right. A quick refresh usually sets it back.")}</p>
           <button
             onClick={() => window.location.reload()}
             className="bloom-luxury-btn mt-5 inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-white"
           >
-            <RotateCcw className="h-4 w-4" strokeWidth={2.2} /> Refresh
-          </button>
+            <RotateCcw className="h-4 w-4" strokeWidth={2.2} />{" "}{tr("Refresh")}</button>
           {this.state.error?.message && (
-            <p className="mt-4 text-[10px] text-rose/50 break-words">{this.state.error.message}</p>
+            <p className="mt-4 text-[10px] text-rose/50 break-words">{trx(this.state.error.message)}</p>
           )}
         </div>
       </div>

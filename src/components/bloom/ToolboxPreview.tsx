@@ -3,6 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Sparkles, Droplet, Sprout, Flowe
 import { CuteToolIcon } from "./CuteToolIcon";
 import { DEFAULT_CYCLE_SETTINGS, phaseForDay, type CyclePhase } from "./cyclePhase";
 import type { CycleSettings } from "./PeriodSetup";
+import { tr, trx, DATE_LOCALE } from "@/i18n";
 
 type Phase = Exclude<CyclePhase, "any">;
 
@@ -13,13 +14,13 @@ interface SidebarTool {
 }
 
 const SIDEBAR_TOOLS: SidebarTool[] = [
-  { slug: "cycle", label: "Cycle", href: "/app/tools/cycle" },
-  { slug: "yoga", label: "Yoga", href: "/app/tools/yoga" },
-  { slug: "workout", label: "Workout", href: "/app/tools/workout" },
-  { slug: "diary", label: "Journal", href: "/app/tools/diary" },
-  { slug: "notes", label: "Reminders", href: "/app/tools/notes" },
-  { slug: "budget", label: "Budget", href: "/app/tools/budget" },
-  { slug: "meals", label: "Meals", href: "/app/tools/meals" },
+  { slug: "cycle", label: tr("Cycle"), href: "/app/tools/cycle" },
+  { slug: "yoga", label: tr("Yoga"), href: "/app/tools/yoga" },
+  { slug: "workout", label: tr("Workout"), href: "/app/tools/workout" },
+  { slug: "diary", label: tr("Journal"), href: "/app/tools/diary" },
+  { slug: "notes", label: tr("Reminders"), href: "/app/tools/notes" },
+  { slug: "budget", label: tr("Budget"), href: "/app/tools/budget" },
+  { slug: "meals", label: tr("Meals"), href: "/app/tools/meals" },
 ];
 
 // Same pink/rose/magenta palette + icons as the real Cycle tracker (CycleTracker.tsx PHASE_META) — no extra hues, softened for the calendar grid.
@@ -56,38 +57,38 @@ const PHASE_LABEL_SHORT: Record<Phase, string> = {
 };
 
 const PHASE_YOGA: Record<Phase, { title: string; poses: [string, string]; blurb: string }> = {
-  period: { title: "Gentle Restorative Flow", poses: ["pose-childs-pose", "pose-legs-up-wall"], blurb: "Soft, grounding poses to ease cramps and restore energy." },
-  follicular: { title: "Energising Morning Flow", poses: ["pose-mountain", "pose-warrior-1"], blurb: "Build strength and momentum as your energy starts to rise." },
-  fertile: { title: "Power & Balance Flow", poses: ["pose-tree", "pose-half-moon"], blurb: "Channel your peak energy into balance and core work." },
-  ovulation: { title: "Dynamic Flow", poses: ["pose-warrior-2", "pose-triangle"], blurb: "You're at your strongest — push a little further today." },
-  luteal: { title: "Calming Wind-Down Flow", poses: ["pose-cat-cow", "pose-seated-forward-fold"], blurb: "Slow things down and soothe tension as your body prepares to rest." },
+  period: { title: tr("Gentle Restorative Flow"), poses: ["pose-childs-pose", "pose-legs-up-wall"], blurb: tr("Soft, grounding poses to ease cramps and restore energy.") },
+  follicular: { title: tr("Energising Morning Flow"), poses: ["pose-mountain", "pose-warrior-1"], blurb: tr("Build strength and momentum as your energy starts to rise.") },
+  fertile: { title: tr("Power & Balance Flow"), poses: ["pose-tree", "pose-half-moon"], blurb: tr("Channel your peak energy into balance and core work.") },
+  ovulation: { title: tr("Dynamic Flow"), poses: ["pose-warrior-2", "pose-triangle"], blurb: tr("You're at your strongest — push a little further today.") },
+  luteal: { title: tr("Calming Wind-Down Flow"), poses: ["pose-cat-cow", "pose-seated-forward-fold"], blurb: tr("Slow things down and soothe tension as your body prepares to rest.") },
 };
 
 const PHASE_WORKOUT: Record<Phase, { title: string; zone: string; blurb: string }> = {
-  period: { title: "Light Mobility & Core", zone: "zone-core", blurb: "Easy movement to relieve bloating and tension." },
-  follicular: { title: "Full-Body Strength", zone: "zone-full-body", blurb: "Your energy is climbing — a great time to build strength." },
-  fertile: { title: "Glutes & Legs Burn", zone: "zone-glutes", blurb: "Peak energy days are perfect for a strong leg day." },
-  ovulation: { title: "High-Intensity Session", zone: "zone-arms", blurb: "Push your hardest — your body is primed for it." },
-  luteal: { title: "Gentle Toning", zone: "zone-back", blurb: "Lower-impact toning to match your slowing energy." },
+  period: { title: tr("Light Mobility & Core"), zone: "zone-core", blurb: tr("Easy movement to relieve bloating and tension.") },
+  follicular: { title: tr("Full-Body Strength"), zone: "zone-full-body", blurb: tr("Your energy is climbing — a great time to build strength.") },
+  fertile: { title: tr("Glutes & Legs Burn"), zone: "zone-glutes", blurb: tr("Peak energy days are perfect for a strong leg day.") },
+  ovulation: { title: tr("High-Intensity Session"), zone: "zone-arms", blurb: tr("Push your hardest — your body is primed for it.") },
+  luteal: { title: tr("Gentle Toning"), zone: "zone-back", blurb: tr("Lower-impact toning to match your slowing energy.") },
 };
 
 const TEASERS: Record<string, { title: string; text: string }> = {
-  diary: { title: "Dreamy Diary", text: "A cosy place to write down your day, your feelings, and the little wins worth remembering." },
-  notes: { title: "Reminders", text: "Never miss a date night, appointment, or anniversary — Bloomzein keeps gentle nudges on track." },
+  diary: { title: tr("Dreamy Diary"), text: tr("A cosy place to write down your day, your feelings, and the little wins worth remembering.") },
+  notes: { title: tr("Reminders"), text: tr("Never miss a date night, appointment, or anniversary — Bloomzein keeps gentle nudges on track.") },
 };
 
 const MEAL_PREVIEWS: { src: string; label: string }[] = [
-  { src: "/images/meal-buddha.webp", label: "Buddha Bowl" },
-  { src: "/images/meal-lunchbox.webp", label: "Cute Lunchbox" },
-  { src: "/images/meal-oats.webp", label: "Cozy Oats" },
-  { src: "/images/meal-stew.webp", label: "Warm Stew" },
+  { src: "/images/meal-buddha.webp", label: tr("Buddha Bowl") },
+  { src: "/images/meal-lunchbox.webp", label: tr("Cute Lunchbox") },
+  { src: "/images/meal-oats.webp", label: tr("Cozy Oats") },
+  { src: "/images/meal-stew.webp", label: tr("Warm Stew") },
 ];
 
 const BUDGET_SEGMENTS = [
-  { label: "Self-care", value: 34, color: "var(--hotpink)" },
-  { label: "Food", value: 26, color: "var(--rose)" },
-  { label: "Wellness", value: 22, color: "var(--petal)" },
-  { label: "Savings", value: 18, color: "var(--blush)" },
+  { label: tr("Self-care"), value: 34, color: "var(--hotpink)" },
+  { label: tr("Food"), value: 26, color: "var(--rose)" },
+  { label: tr("Wellness"), value: 22, color: "var(--petal)" },
+  { label: tr("Savings"), value: 18, color: "var(--blush)" },
 ];
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -143,7 +144,7 @@ export function ToolboxPreview() {
 
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
   const cells = useMemo(() => buildMonthGrid(viewDate.getFullYear(), viewDate.getMonth()), [viewDate]);
-  const monthLabel = viewDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthLabel = viewDate.toLocaleDateString(DATE_LOCALE, { month: "long", year: "numeric" });
 
   const previewSettings = cycleSettings ?? DEFAULT_CYCLE_SETTINGS;
   const previewPhase = phaseForDay(today, previewSettings);
@@ -181,37 +182,35 @@ export function ToolboxPreview() {
             {showCalendar ? (
               <div className="animate-fade-in relative z-10 flex flex-1 flex-col">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="font-script text-xl text-hotpink sm:text-2xl">{monthLabel}</h3>
+                  <h3 className="font-script text-xl text-hotpink sm:text-2xl">{trx(monthLabel)}</h3>
                   <div className="flex items-center gap-1.5">
-                    <button type="button" aria-label="Previous month" onClick={() => setMonthOffset((m) => m - 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
-                      <ChevronLeft className="h-4 w-4" />
+                    <button type="button" aria-label={tr("Previous month")} onClick={() => setMonthOffset((m) => m - 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
+                      <ChevronLeft className="rtl:-scale-x-100 h-4 w-4" />
                     </button>
-                    <button type="button" aria-label="Next month" onClick={() => setMonthOffset((m) => m + 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
-                      <ChevronRight className="h-4 w-4" />
+                    <button type="button" aria-label={tr("Next month")} onClick={() => setMonthOffset((m) => m + 1)} className="grid h-7 w-7 place-items-center rounded-full bg-white/60 text-rose shadow-sm backdrop-blur-md">
+                      <ChevronRight className="rtl:-scale-x-100 h-4 w-4" />
                     </button>
                     {monthOffset !== 0 && (
-                      <button type="button" onClick={() => setMonthOffset(0)} className="rounded-full bg-white/60 px-2.5 py-1 text-[10px] font-bold text-rose shadow-sm backdrop-blur-md sm:text-xs">
-                        Today
-                      </button>
+                      <button type="button" onClick={() => setMonthOffset(0)} className="rounded-full bg-white/60 px-2.5 py-1 text-[10px] font-bold text-rose shadow-sm backdrop-blur-md sm:text-xs">{tr("Today")}</button>
                     )}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-magenta/60 sm:text-xs">
                   {WEEKDAYS.map((d) => (
-                    <div key={d} className="py-1">{d}</div>
+                    <div key={d} className="py-1">{trx(d)}</div>
                   ))}
                   {cells.map((date, i) => {
                     if (!date) return <div key={i} />;
                     const phase = activeTool === "cycle" ? phaseForDay(date, previewSettings) : null;
-                    const colorClass = phase ? PHASE_CELL[phase] : "bg-white/40 text-magenta";
+                    const colorClass = phase ? PHASE_CELL[phase] : tr("bg-white/40 text-magenta");
                     const PhaseIcon = phase ? PHASE_ICON[phase] : null;
                     return (
                       <div
                         key={i}
                         className={`relative flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg text-[10px] font-bold transition-all duration-500 sm:text-sm ${colorClass} ${isToday(date) ? "shadow-[0_0_0_2px_oklch(1_0_0/0.9),0_2px_8px_-1px_oklch(0.62_0.24_0/0.45)]" : ""}`}
                       >
-                        {PhaseIcon && <PhaseIcon className="absolute right-0.5 top-0.5 h-2 w-2 opacity-60 sm:h-2.5 sm:w-2.5" aria-hidden />}
+                        {PhaseIcon && <PhaseIcon className="absolute end-0.5 top-0.5 h-2 w-2 opacity-60 sm:h-2.5 sm:w-2.5" aria-hidden />}
                         {date.getDate()}
                       </div>
                     );
@@ -227,7 +226,7 @@ export function ToolboxPreview() {
                           <span className={`grid h-4 w-4 place-items-center rounded-full ${PHASE_DOT[p]}`} aria-hidden>
                             <Icon className="h-2.5 w-2.5 text-white" />
                           </span>
-                          {PHASE_LABEL_SHORT[p]}
+                          {trx(PHASE_LABEL_SHORT[p])}
                         </span>
                       );
                     })}
@@ -237,16 +236,12 @@ export function ToolboxPreview() {
                 <div className="mt-3 flex-1">
                   {!activeTool && (
                     <p className="flex items-center justify-center gap-1.5 rounded-2xl bg-white/40 px-3 py-2.5 text-center text-xs font-semibold text-magenta/70 backdrop-blur-md sm:text-sm">
-                      <Sparkles className="h-3.5 w-3.5 text-hotpink" aria-hidden />
-                      Tap a tool to see your Bloom Calendar light up
-                    </p>
+                      <Sparkles className="h-3.5 w-3.5 text-hotpink" aria-hidden />{tr("Tap a tool to see your Bloom Calendar light up")}</p>
                   )}
 
                   {activeTool === "cycle" && cycleSettings && (
                     <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/85 px-3 py-2.5 text-center shadow-lg backdrop-blur-md sm:flex-row sm:justify-between sm:gap-3">
-                      <p className="text-xs font-bold text-[#831843] sm:text-sm">
-                        Your Bloom Calendar just colored itself — today is your <span className="text-hotpink">{PHASE_LABEL_SHORT[phaseForDay(today, cycleSettings)]}</span> phase.
-                      </p>
+                      <p className="text-xs font-bold text-[#831843] sm:text-sm">{tr("Your Bloom Calendar just colored itself — today is your")}{" "}<span className="text-hotpink">{trx(PHASE_LABEL_SHORT[phaseForDay(today, cycleSettings)])}</span>{" "}{tr("phase.")}</p>
                       <DiscoverButton href="/app/tools/cycle" />
                     </div>
                   )}
@@ -280,26 +275,24 @@ export function ToolboxPreview() {
                   >
                     <CuteToolIcon slug={tool.slug} className="relative z-10 h-5 w-5 sm:h-6 sm:w-6" />
                     {autoplay && activeTool === tool.slug && (
-                      <Sparkles className="animate-icon-wiggle absolute -right-1 -top-1 h-3.5 w-3.5 text-hotpink drop-shadow" aria-hidden />
+                      <Sparkles className="animate-icon-wiggle absolute -end-1 -top-1 h-3.5 w-3.5 text-hotpink drop-shadow" aria-hidden />
                     )}
                   </span>
-                  <span className="whitespace-nowrap text-[9px] font-bold text-rose sm:text-[11px]">{tool.label}</span>
+                  <span className="whitespace-nowrap text-[9px] font-bold text-rose sm:text-[11px]">{trx(tool.label)}</span>
                 </button>
 
                 {/* Date-setup guide pops up directly under the Cycle icon */}
                 {tool.slug === "cycle" && activeTool === "cycle" && !cycleSettings && (
-                  <div className="pearl-frame animate-bloom-bounce absolute left-0 top-full z-30 mt-2 w-60 rounded-2xl border-none bg-white/90 sm:left-auto sm:right-0 p-3 text-center shadow-xl backdrop-blur-md">
+                  <div className="pearl-frame animate-bloom-bounce absolute start-0 top-full z-30 mt-2 w-60 rounded-2xl border-none bg-white/90 sm:start-auto sm:end-0 p-3 text-center shadow-xl backdrop-blur-md">
                     <p className="flex items-center justify-center gap-1 text-[11px] font-bold text-[#831843] sm:text-xs">
-                      <Sparkles className="animate-icon-wiggle h-3.5 w-3.5 text-hotpink" aria-hidden />
-                      When did your last period start?
-                    </p>
+                      <Sparkles className="animate-icon-wiggle h-3.5 w-3.5 text-hotpink" aria-hidden />{tr("When did your last period start?")}</p>
                     <div className="relative mt-2 flex items-center justify-center gap-2">
                       <button
                         type="button"
                         onClick={() => setPickerOpen((o) => !o)}
                         className="rounded-full border border-petal/60 bg-white px-3 py-1 text-xs font-semibold text-[#831843] shadow-sm"
                       >
-                        {periodDate ? periodDate.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : "Pick a date"}
+                        {periodDate ? periodDate.toLocaleDateString(DATE_LOCALE, { day: "numeric", month: "short", year: "numeric" }) : tr("Pick a date")}
                       </button>
                       <input
                         type="number"
@@ -308,7 +301,7 @@ export function ToolboxPreview() {
                         value={cycleLengthInput}
                         onChange={(e) => setCycleLengthInput(e.target.value)}
                         className="w-12 rounded-full border border-petal/60 bg-white px-2 py-1 text-xs font-semibold text-[#831843] outline-none"
-                        aria-label="Cycle length in days"
+                        aria-label={tr("Cycle length in days")}
                       />
                       {pickerOpen && (
                         <DatePickerPopover
@@ -323,9 +316,7 @@ export function ToolboxPreview() {
                       onClick={handleCycleApply}
                       disabled={!periodDate}
                       className="mt-2 rounded-full bg-hotpink px-4 py-1 text-xs font-bold text-white shadow-md disabled:opacity-40"
-                    >
-                      Apply
-                    </button>
+                    >{tr("Apply")}</button>
                   </div>
                 )}
               </div>
@@ -342,7 +333,7 @@ function DatePickerPopover({ value, onSelect, onClose }: { value: Date | null; o
   const [viewYear, setViewYear] = useState(base.getFullYear());
   const [viewMonth, setViewMonth] = useState(base.getMonth());
   const cells = useMemo(() => buildMonthGrid(viewYear, viewMonth), [viewYear, viewMonth]);
-  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(DATE_LOCALE, { month: "long", year: "numeric" });
 
   const shift = (delta: number) => {
     const d = new Date(viewYear, viewMonth + delta, 1);
@@ -351,19 +342,19 @@ function DatePickerPopover({ value, onSelect, onClose }: { value: Date | null; o
   };
 
   return (
-    <div className="pearl-frame animate-bloom-bounce absolute left-0 top-full z-40 mt-2 w-60 rounded-2xl border-none bg-white/95 sm:left-auto sm:right-0 p-3 shadow-xl backdrop-blur-md">
+    <div className="pearl-frame animate-bloom-bounce absolute start-0 top-full z-40 mt-2 w-60 rounded-2xl border-none bg-white/95 sm:start-auto sm:end-0 p-3 shadow-xl backdrop-blur-md">
       <div className="mb-2 flex items-center justify-between">
-        <button type="button" aria-label="Previous month" onClick={() => shift(-1)} className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink">
-          <ChevronLeft className="h-3.5 w-3.5" />
+        <button type="button" aria-label={tr("Previous month")} onClick={() => shift(-1)} className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink">
+          <ChevronLeft className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </button>
-        <p className="text-xs font-bold text-hotpink">{monthLabel}</p>
-        <button type="button" aria-label="Next month" onClick={() => shift(1)} className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink">
-          <ChevronRight className="h-3.5 w-3.5" />
+        <p className="text-xs font-bold text-hotpink">{trx(monthLabel)}</p>
+        <button type="button" aria-label={tr("Next month")} onClick={() => shift(1)} className="grid h-6 w-6 place-items-center rounded-full bg-blush text-hotpink">
+          <ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
         </button>
       </div>
       <div className="grid grid-cols-7 gap-1 text-center text-[9px] font-bold text-magenta/60">
         {WEEKDAYS.map((d) => (
-          <div key={d} className="py-0.5">{d[0]}</div>
+          <div key={d} className="py-0.5">{trx(d[0])}</div>
         ))}
         {cells.map((date, i) => {
           if (!date) return <div key={i} />;
@@ -384,9 +375,7 @@ function DatePickerPopover({ value, onSelect, onClose }: { value: Date | null; o
         })}
       </div>
       <p className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-magenta/60">
-        <Sparkles className="animate-icon-wiggle h-3 w-3 text-hotpink" aria-hidden />
-        Tap the day your last period began
-      </p>
+        <Sparkles className="animate-icon-wiggle h-3 w-3 text-hotpink" aria-hidden />{tr("Tap the day your last period began")}</p>
     </div>
   );
 }
@@ -396,9 +385,7 @@ function DiscoverButton({ href, className = "" }: { href: string; className?: st
     <a
       href={href}
       className={`hover-scale animate-cta-bounce inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full bg-hotpink px-4 py-1.5 text-xs font-bold text-white shadow-md sm:text-sm ${className}`}
-    >
-      Discover more
-      <ArrowRight className="animate-arrow-nudge h-3.5 w-3.5" />
+    >{tr("Discover more")}<ArrowRight className="rtl:-scale-x-100 animate-arrow-nudge h-3.5 w-3.5" />
     </a>
   );
 }
@@ -408,16 +395,16 @@ function PreviewShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="animate-fade-in relative flex flex-1 items-center justify-center overflow-hidden">
       {/* Animated background blobs */}
-      <span aria-hidden className="pointer-events-none absolute -top-10 -right-10 h-48 w-48 rounded-full"
+      <span aria-hidden className="pointer-events-none absolute -top-10 -end-10 h-48 w-48 rounded-full"
         style={{ background: 'radial-gradient(circle,rgba(236,72,153,.22) 0%,transparent 68%)', animation: 'ctaBreathe 5s ease-in-out infinite' }} />
-      <span aria-hidden className="pointer-events-none absolute -bottom-8 -left-12 h-44 w-44 rounded-full"
+      <span aria-hidden className="pointer-events-none absolute -bottom-8 -start-12 h-44 w-44 rounded-full"
         style={{ background: 'radial-gradient(circle,rgba(219,39,119,.16) 0%,transparent 68%)', animation: 'ctaBreathe 7s ease-in-out infinite 1.6s' }} />
-      <span aria-hidden className="pointer-events-none absolute top-1/3 left-1/3 h-28 w-28 rounded-full"
+      <span aria-hidden className="pointer-events-none absolute top-1/3 start-1/3 h-28 w-28 rounded-full"
         style={{ background: 'radial-gradient(circle,rgba(249,168,212,.18) 0%,transparent 68%)', animation: 'ctaBreathe 6s ease-in-out infinite 3.2s' }} />
       {/* Tiny sparkle dots */}
-      <span aria-hidden className="pointer-events-none absolute top-4 left-8 h-1.5 w-1.5 rounded-full bg-hotpink/30" style={{ animation: 'ctaBreathe 3s ease-in-out infinite' }} />
-      <span aria-hidden className="pointer-events-none absolute bottom-6 right-10 h-1 w-1 rounded-full bg-rose/40" style={{ animation: 'ctaBreathe 4s ease-in-out infinite 1s' }} />
-      <span aria-hidden className="pointer-events-none absolute top-1/2 right-6 h-2 w-2 rounded-full bg-petal/50" style={{ animation: 'ctaBreathe 5s ease-in-out infinite 2s' }} />
+      <span aria-hidden className="pointer-events-none absolute top-4 start-8 h-1.5 w-1.5 rounded-full bg-hotpink/30" style={{ animation: 'ctaBreathe 3s ease-in-out infinite' }} />
+      <span aria-hidden className="pointer-events-none absolute bottom-6 end-10 h-1 w-1 rounded-full bg-rose/40" style={{ animation: 'ctaBreathe 4s ease-in-out infinite 1s' }} />
+      <span aria-hidden className="pointer-events-none absolute top-1/2 end-6 h-2 w-2 rounded-full bg-petal/50" style={{ animation: 'ctaBreathe 5s ease-in-out infinite 2s' }} />
       {/* Tightly grouped content */}
       <div className="relative z-10 flex w-full flex-col items-center gap-3 text-center lg:gap-4">
         {children}
@@ -430,13 +417,13 @@ function YogaPreview({ phase }: { phase: Phase }) {
   const data = PHASE_YOGA[phase];
   return (
     <PreviewShell>
-      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{trx(data.title)}</p>
       <div className="flex items-center justify-center gap-3 lg:gap-5">
         {data.poses.map((slug) => (
           <img key={slug} src={`/images/${slug}.webp`} alt="" loading="lazy" className="h-24 w-24 rounded-2xl object-cover shadow-md sm:h-28 sm:w-28 lg:h-40 lg:w-40" />
         ))}
       </div>
-      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{trx(data.blurb)}</p>
       <DiscoverButton href="/app/tools/yoga" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
   );
@@ -446,9 +433,9 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
   const data = PHASE_WORKOUT[phase];
   return (
     <PreviewShell>
-      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{trx(data.title)}</p>
       <img src={`/images/${data.zone}.webp`} alt="" loading="lazy" className="h-28 w-44 rounded-2xl object-cover shadow-md sm:h-32 sm:w-52 lg:h-44 lg:w-72" />
-      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{data.blurb}</p>
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-sm lg:text-base">{trx(data.blurb)}</p>
       <DiscoverButton href="/app/tools/workout" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
   );
@@ -457,16 +444,16 @@ function WorkoutPreview({ phase }: { phase: Phase }) {
 function MealsPreview() {
   return (
     <PreviewShell>
-      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Meal Planner</p>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{tr("Meal Planner")}</p>
       <div className="grid grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
         {MEAL_PREVIEWS.map((meal) => (
           <div key={meal.src} className="flex flex-col items-center gap-1 lg:gap-2">
             <img src={meal.src} alt="" loading="lazy" className="h-14 w-14 rounded-2xl object-cover shadow-md sm:h-20 sm:w-20 lg:h-28 lg:w-28" />
-            <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:text-sm">{meal.label}</span>
+            <span className="text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:text-sm">{trx(meal.label)}</span>
           </div>
         ))}
       </div>
-      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">Recipes and meal plans that adapt to your cycle, your cravings, and your goals.</p>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-lg lg:text-base">{tr("Recipes and meal plans that adapt to your cycle, your cravings, and your goals.")}</p>
       <DiscoverButton href="/app/tools/meals" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
   );
@@ -485,23 +472,21 @@ function BudgetPreview() {
 
   return (
     <PreviewShell>
-      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">Budget Planner</p>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{tr("Budget Planner")}</p>
       <div className="flex items-center justify-center gap-4 lg:gap-8">
         <div className="animate-bloom-pulse relative grid h-24 w-24 shrink-0 place-items-center rounded-full shadow-md sm:h-28 sm:w-28 lg:h-36 lg:w-36" style={{ background: gradient }}>
-          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs lg:h-18 lg:w-18 lg:text-sm">
-            Budget
-          </div>
+          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[10px] font-bold text-hotpink shadow-inner sm:h-14 sm:w-14 sm:text-xs lg:h-18 lg:w-18 lg:text-sm">{tr("Budget")}</div>
         </div>
         <div className="flex flex-col gap-1.5 lg:gap-2.5">
           {BUDGET_SEGMENTS.map((seg) => (
             <span key={seg.label} className="flex items-center gap-1.5 text-[9px] font-bold text-magenta/70 sm:text-[11px] lg:gap-2 lg:text-sm">
               <span className="h-2 w-2 rounded-full lg:h-3 lg:w-3" style={{ background: seg.color }} aria-hidden />
-              {seg.label}
+              {trx(seg.label)}
             </span>
           ))}
         </div>
       </div>
-      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.</p>
+      <p className="max-w-xs text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{tr("See exactly where your money goes with a cute, colorful dashboard — your spending, beautifully organized.")}</p>
       <DiscoverButton href="/app/tools/budget" className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
   );
@@ -511,11 +496,11 @@ function TeaserPreview({ slug, href }: { slug: string; href: string }) {
   const data = TEASERS[slug];
   return (
     <PreviewShell>
-      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{data.title}</p>
+      <p className="text-lg font-bold text-hotpink sm:text-2xl lg:text-3xl">{trx(data.title)}</p>
       <span className="animate-icon-wiggle grid h-24 w-24 shrink-0 place-items-center rounded-full text-white shadow-md sm:h-32 sm:w-32 lg:h-44 lg:w-44" style={{ background: "radial-gradient(circle at 30% 25%, oklch(0.82 0.22 350 / 0.95), oklch(0.7 0.26 350) 45%, oklch(0.58 0.28 0) 90%)" }}>
         <CuteToolIcon slug={slug} className="h-14 w-14 sm:h-16 sm:w-16 lg:h-24 lg:w-24" />
       </span>
-      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{data.text}</p>
+      <p className="max-w-sm text-xs font-medium text-magenta/70 sm:text-sm lg:max-w-md lg:text-base">{trx(data.text)}</p>
       <DiscoverButton href={href} className="lg:px-6 lg:py-2.5 lg:text-base" />
     </PreviewShell>
   );

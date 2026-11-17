@@ -19,6 +19,7 @@ import {
 import { useInView, useCountUp } from "@/lib/useScrollReveal";
 import { RECIPES, recipeImageSrc, type Recipe } from "@/components/bloom/recipes/data";
 import { BloomPlanSetup } from "@/components/bloom/diet/BloomPlanSetup";
+import { tr, trx } from "@/i18n";
 
 const go = (href: string) => () => { window.location.href = href; };
 
@@ -57,8 +58,8 @@ function MacroBar({ label, eaten, target, cls }: { label: string; eaten: number;
   return (
     <div>
       <div className="flex items-center justify-between text-[10px] font-bold mb-0.5">
-        <span className="uppercase tracking-wide text-rose/50">{label}</span>
-        <span className="tabular-nums text-rose/70">{eaten}<span className="text-rose/35">/{target}g</span></span>
+        <span className="uppercase tracking-wide text-rose/50">{trx(label)}</span>
+        <span className="tabular-nums text-rose/70">{trx(eaten)}<span className="text-rose/35">/{trx(target)}g</span></span>
       </div>
       <div className="h-1.5 rounded-full bg-petal/40 overflow-hidden"><div className={`h-full rounded-full ${cls} transition-all`} style={{ width: `${pct}%` }} /></div>
     </div>
@@ -122,33 +123,31 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
     <div id="diet-energy" className="rounded-3xl bg-white/95 backdrop-blur-md border border-petal/60 shadow-sm shadow-hotpink/10 p-4 sm:p-5 animate-fade-in">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="font-script text-2xl text-hotpink leading-none">Today's fuel</p>
+          <p className="font-script text-2xl text-hotpink leading-none">{tr("Today's fuel")}</p>
           {/* Your plan, always remembered — eating regime + body goal as soft pills. */}
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {regimeLabel && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2 py-0.5 text-[10px] font-bold text-hotpink">
-                <Leaf className="h-3 w-3" strokeWidth={2.2} /> {regimeLabel}
+                <Leaf className="h-3 w-3" strokeWidth={2.2} /> {trx(regimeLabel)}
               </span>
             )}
             <span className="inline-flex items-center gap-1 rounded-full bg-hotpink/10 border border-hotpink/25 px-2 py-0.5 text-[10px] font-bold text-hotpink">
               {coach.goal === "lose" ? <TrendingDown className="h-3 w-3" strokeWidth={2.4} /> : coach.goal === "gain" ? <TrendingUp className="h-3 w-3" strokeWidth={2.4} /> : <Minus className="h-3 w-3" strokeWidth={2.4} />}
-              {coach.goal === "lose" ? "Lose" : coach.goal === "gain" ? "Gain & tone" : "Maintain"}
+              {coach.goal === "lose" ? tr("Lose") : coach.goal === "gain" ? tr("Gain & tone") : tr("Maintain")}
             </span>
           </div>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {recalcFlash && (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2.5 py-1 text-[10px] font-black animate-fade-in">
-              <Check className="h-3 w-3" strokeWidth={3} /> Recalculated
-            </span>
+              <Check className="h-3 w-3" strokeWidth={3} />{" "}{tr("Recalculated")}</span>
           )}
           {onEditPlan && (
-            <button onClick={onEditPlan} title="Edit my eating plan" aria-label="Edit my eating plan" className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2.5 py-1 text-[10.5px] font-bold text-hotpink active:scale-95 transition hover:bg-blush">
-              <Pencil className="h-3 w-3" /> Edit plan
-            </button>
+            <button onClick={onEditPlan} title={tr("Edit my eating plan")} aria-label={tr("Edit my eating plan")} className="inline-flex items-center gap-1 rounded-full bg-blush/70 border border-petal/60 px-2.5 py-1 text-[10.5px] font-bold text-hotpink active:scale-95 transition hover:bg-blush">
+              <Pencil className="h-3 w-3" />{" "}{tr("Edit plan")}</button>
           )}
           {onReset && (
-            <button onClick={onReset} title="Reset (preview first-time setup)" aria-label="Reset the Diet tool" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 border border-petal/60 text-rose/50 active:scale-90 transition hover:text-hotpink">
+            <button onClick={onReset} title={tr("Reset (preview first-time setup)")} aria-label={tr("Reset the Diet tool")} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 border border-petal/60 text-rose/50 active:scale-90 transition hover:text-hotpink">
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
           )}
@@ -158,39 +157,39 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
         <Ring pct={eatenPct}>
           <div>
             <p className="text-2xl sm:text-[26px] font-black leading-none text-hotpink tabular-nums">{Math.max(0, e.remaining).toLocaleString()}</p>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-rose/45 mt-0.5">kcal left</p>
+            <p className="text-[8px] font-bold uppercase tracking-widest text-rose/45 mt-0.5">{tr("kcal left")}</p>
           </div>
         </Ring>
         <div className="flex-1 min-w-0 space-y-2">
           <div className="grid grid-cols-3 gap-1.5 text-center">
-            <div className="rounded-xl bg-blush/60 py-1.5"><p className="text-sm font-black text-rose tabular-nums leading-none">{e.goal.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Goal</p></div>
-            <div className="rounded-xl bg-emerald-50 py-1.5"><p className="text-sm font-black text-emerald-600 tabular-nums leading-none">+{e.burned}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Burned</p></div>
-            <div className="rounded-xl bg-amber-50 py-1.5"><p className="text-sm font-black text-amber-600 tabular-nums leading-none">{e.eaten.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">Planned</p></div>
+            <div className="rounded-xl bg-blush/60 py-1.5"><p className="text-sm font-black text-rose tabular-nums leading-none">{e.goal.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{tr("Goal")}</p></div>
+            <div className="rounded-xl bg-emerald-50 py-1.5"><p className="text-sm font-black text-emerald-600 tabular-nums leading-none">+{trx(e.burned)}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{tr("Burned")}</p></div>
+            <div className="rounded-xl bg-amber-50 py-1.5"><p className="text-sm font-black text-amber-600 tabular-nums leading-none">{e.eaten.toLocaleString()}</p><p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{tr("Planned")}</p></div>
           </div>
-          <MacroBar label="Protein" eaten={e.protein.eaten} target={e.protein.target} cls="bg-amber-400" />
+          <MacroBar label={tr("Protein")} eaten={e.protein.eaten} target={e.protein.target} cls="bg-amber-400" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 mt-2.5">
-        <MacroBar label="Carbs" eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
-        <MacroBar label="Fat" eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
+        <MacroBar label={tr("Carbs")} eaten={e.carbs.eaten} target={e.carbs.target} cls="bg-rose-400" />
+        <MacroBar label={tr("Fat")} eaten={e.fat.eaten} target={e.fat.target} cls="bg-violet-400" />
       </div>
       {/* Only once meals are planned: the friendly 'kcal left' line */}
       {mealsPlanned && (
         <p className="mt-2 flex items-center gap-1.5 text-[11px] leading-snug text-rose/70">
           <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} />
-          <span><b className="text-hotpink">{Math.max(0, e.remaining).toLocaleString()} kcal</b> left from today's planned meals.</span>
+          <span><b className="text-hotpink">{Math.max(0, e.remaining).toLocaleString()}{" "}{tr("kcal")}</b>{" "}{tr("left from today's planned meals.")}</span>
         </p>
       )}
       {/* Coach in one line — the calorie target. Movement guidance lives in the
           'Plan my movement' CTA, so we don't state a workout/yoga count here. */}
       <p className="mt-2.5 flex items-start gap-1.5 text-[11.5px] leading-snug text-rose/80">
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <span>{hasEta && <b className="text-hotpink">{coach.headline}. </b>}Aim for ~{coach.targetCalories.toLocaleString()} kcal a day.</span>
+        <span>{hasEta && <b className="text-hotpink">{trx(coach.headline)}. </b>}{tr("Aim for ~")}{coach.targetCalories.toLocaleString()}{" "}{tr("kcal a day.")}</span>
       </p>
       {/* Movement → food: shows the yoga/workout plan's effect on the target */}
       {moveLine && (
         <p className="mt-1.5 flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/70 px-2.5 py-1 text-[10.5px] font-bold text-emerald-700 w-fit">
-          <Dumbbell className="h-3 w-3 shrink-0" /> {moveLine}
+          <Dumbbell className="h-3 w-3 shrink-0" /> {trx(moveLine)}
         </p>
       )}
       {/* ── Create your personalized plans — the photo-rich Bloom Plan setup.
@@ -222,7 +221,7 @@ export function EnergyTodayCard({ e, mealsPlanned, mealsFromDiet, movementPlanne
       {/* Once she's eating, the daily verdict — a soft on-brand pill */}
       {e.logged && (
         <p className={["mt-2.5 flex items-center gap-1.5 rounded-2xl border px-3 py-2 text-[11.5px] font-semibold leading-snug", verdictCls].join(" ")}>
-          <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {verdictText}
+          <Sparkles className="h-3.5 w-3.5 shrink-0 text-hotpink" strokeWidth={2} /> {trx(verdictText)}
         </p>
       )}
     </div>
@@ -235,7 +234,7 @@ function GoalBloomBg() {
   return (
     <img
       src="/images/goal-path-bloom.webp" alt="" aria-hidden loading="lazy"
-      className="pointer-events-none absolute right-0 top-0 h-full w-[52%] object-cover select-none"
+      className="pointer-events-none absolute end-0 top-0 h-full w-[52%] object-cover select-none"
       style={{ objectPosition: "right center", maskImage: "linear-gradient(to right, transparent, #000 34%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 34%)" }}
     />
   );
@@ -245,15 +244,13 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
   const p = goalProjection();
   if (!p) {
     return (
-      <button onClick={onEdit ?? go("/app/tools/diet#diet-weight")} className="relative w-full overflow-hidden text-left rounded-3xl border border-petal/60 shadow-sm animate-fade-in active:scale-[0.99] transition bg-gradient-to-br from-blush/70 via-white to-petal/30">
+      <button onClick={onEdit ?? go("/app/tools/diet#diet-weight")} className="relative w-full overflow-hidden text-start rounded-3xl border border-petal/60 shadow-sm animate-fade-in active:scale-[0.99] transition bg-gradient-to-br from-blush/70 via-white to-petal/30">
         <GoalBloomBg />
         <div className="relative p-4 sm:p-5">
           <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>
-            Your goal path
-          </p>
-          <p className="mt-2 max-w-[62%] text-[12.5px] text-rose/75 leading-snug">Set a <b className="text-hotpink">goal weight</b> to see your timeline and how your plan gets you there.</p>
-          <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-3.5 py-1.5 text-[11px] font-bold shadow-md shadow-hotpink/30">Set my goal <ChevronRight className="h-3.5 w-3.5" /></span>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>{tr("Your goal path")}</p>
+          <p className="mt-2 max-w-[62%] text-[12.5px] text-rose/75 leading-snug">{tr("Set a")}{" "}<b className="text-hotpink">{tr("goal weight")}</b>{" "}{tr("to see your timeline and how your plan gets you there.")}</p>
+          <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] text-white px-3.5 py-1.5 text-[11px] font-bold shadow-md shadow-hotpink/30">{tr("Set my goal")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></span>
         </div>
       </button>
     );
@@ -267,17 +264,15 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>
-              Your goal path
-            </p>
-            <p className="mt-1 pl-10 text-[11.5px] text-rose/70 leading-snug">You've got this, we'll guide you ✿</p>
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Target className="h-4 w-4" strokeWidth={2.2} /></span>{tr("Your goal path")}</p>
+            <p className="mt-1 ps-10 text-[11.5px] text-rose/70 leading-snug">{tr("You've got this, we'll guide you ✿")}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
             <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wide border ${losing ? "bg-white/85 text-hotpink border-hotpink/30" : "bg-white/85 text-rose-500 border-rose-200"}`}>
-              {losing ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />} {Math.abs(p.toGo)} kg to {losing ? "lose" : "gain"}
+              {losing ? <TrendingDown className="h-3 w-3" /> : <TrendingUp className="h-3 w-3" />} {Math.abs(p.toGo)}{" "}{tr(losing ? "kg to lose" : "kg to gain")}
             </span>
             {onEdit && (
-              <button onClick={onEdit} title="Edit weight & height" aria-label="Edit weight & goal" className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 text-hotpink border border-petal/50 active:scale-90 transition"><Pencil className="h-3.5 w-3.5" /></button>
+              <button onClick={onEdit} title={tr("Edit weight & height")} aria-label={tr("Edit weight & goal")} className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/85 text-hotpink border border-petal/50 active:scale-90 transition"><Pencil className="h-3.5 w-3.5" /></button>
             )}
           </div>
         </div>
@@ -285,13 +280,13 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
         {/* now → goal */}
         <div className="mt-3 flex items-center gap-3">
           <div>
-            <p className="text-4xl font-black text-hotpink leading-none tabular-nums">{p.current}<span className="text-lg font-bold text-hotpink/70"> kg</span></p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">now</p>
+            <p className="text-4xl font-black text-hotpink leading-none tabular-nums">{trx(p.current)}<span className="text-lg font-bold text-hotpink/70">{" "}{tr("kg")}</span></p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">{tr("now")}</p>
           </div>
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><ChevronRight className="h-4 w-4" strokeWidth={2.5} /></span>
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><ChevronRight className="rtl:-scale-x-100 h-4 w-4" strokeWidth={2.5} /></span>
           <div>
-            <p className="text-3xl font-black text-[#DB2777] leading-none tabular-nums">{p.target}<span className="text-base font-bold text-[#DB2777]/70"> kg</span></p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">goal</p>
+            <p className="text-3xl font-black text-[#DB2777] leading-none tabular-nums">{trx(p.target)}<span className="text-base font-bold text-[#DB2777]/70">{" "}{tr("kg")}</span></p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-rose/45 mt-1">{tr("goal")}</p>
           </div>
         </div>
 
@@ -299,7 +294,7 @@ export function GoalPathCard({ onEdit }: { onEdit?: () => void }) {
         <div className="mt-3 h-2 rounded-full bg-white/70 border border-hotpink/20 shadow-sm shadow-hotpink/15 overflow-hidden"><div className="h-full rounded-full bg-gradient-to-r from-hotpink to-[#DB2777] transition-all" style={{ width: `${p.pct}%` }} /></div>
         <p className="mt-2 flex items-start gap-1.5 max-w-[58%] text-[11px] leading-snug text-rose/80">
           <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-          <span><b className="text-hotpink">{p.pct}% there!</b>{p.etaWeeks != null && p.etaWeeks > 0 ? ` At ~${Math.abs(p.weeklyRateKg)}kg/week you'll reach ${p.target}kg in about ${p.etaWeeks} week${p.etaWeeks > 1 ? "s" : ""}.` : " Keep logging your weight daily to track the trend."}</span>
+          <span><b className="text-hotpink">{trx(p.pct)}{tr("% there!")}</b>{p.etaWeeks != null && p.etaWeeks > 0 ? tr(" At ~{0}kg/week you'll reach {1}kg in about {2} week{3}.", { 0: Math.abs(p.weeklyRateKg), 1: p.target, 2: p.etaWeeks, 3: p.etaWeeks > 1 ? "s" : "" }) : tr(" Keep logging your weight daily to track the trend.")}</span>
         </p>
       </div>
     </div>
@@ -323,41 +318,39 @@ export function WeekBalanceCard() {
   const w = weekSnapshot();
   const done = w.sessionsDone;
   const tip = done === 0
-    ? <>No sessions logged yet this week — <b className="text-hotpink">start one</b> to build momentum! ✿</>
+    ? <>{tr("No sessions logged yet this week —")}{" "}<b className="text-hotpink">{tr("start one")}</b>{" "}{tr("to build momentum! ✿")}</>
     : done >= w.plannedTraining && w.plannedTraining > 0
-      ? <>You've hit your movement goal this week — <b className="text-hotpink">beautiful work</b> ✿</>
-      : <>{w.plannedTraining ? <><b className="text-hotpink">{Math.max(0, w.plannedTraining - done)} more</b> to hit your weekly plan.</> : "Keep it going ✿"}</>;
+      ? <>{tr("You've hit your movement goal this week —")}{" "}<b className="text-hotpink">{tr("beautiful work")}</b> ✿</>
+      : <>{w.plannedTraining ? <><b className="text-hotpink">{Math.max(0, w.plannedTraining - done)}{" "}{tr("more")}</b>{" "}{tr("to hit your weekly plan.")}</> : tr("Keep it going ✿")}</>;
   const stats = [
-    { Icon: Dumbbell, value: w.workoutsDone, label: "Workouts" },
-    { Icon: LotusIcon, value: w.yogaDone,    label: "Yoga flows" },
+    { Icon: Dumbbell, value: w.workoutsDone, label: tr("Workouts") },
+    { Icon: LotusIcon, value: w.yogaDone,    label: tr("Yoga flows") },
   ];
   return (
     <div className="rounded-3xl bg-gradient-to-br from-blush/50 via-white to-petal/25 border border-petal/60 shadow-sm p-4 sm:p-5 animate-fade-in">
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>
           <p className="flex items-center gap-2 font-script text-2xl text-hotpink leading-none">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Activity className="h-4 w-4" strokeWidth={2.2} /></span>
-            This week
-          </p>
-          <p className="mt-1 pl-10 text-[11.5px] text-rose/70 leading-snug">Little steps, big changes</p>
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/80 text-hotpink shadow-sm"><Activity className="h-4 w-4" strokeWidth={2.2} /></span>{tr("This week")}</p>
+          <p className="mt-1 ps-10 text-[11.5px] text-rose/70 leading-snug">{tr("Little steps, big changes")}</p>
         </div>
-        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/85 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20"><Trophy className="h-3 w-3" /> {done}/{w.plannedTraining || done} done</span>
+        <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/85 text-hotpink text-[10px] font-black uppercase tracking-wide px-2.5 py-1 border border-hotpink/20"><Trophy className="h-3 w-3" /> {trx(done)}/{trx(w.plannedTraining) || trx(done)}{" "}{tr("done")}</span>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
         {stats.map((s) => (
           <div key={s.label} className="flex items-center gap-3 rounded-2xl bg-white/70 border border-petal/50 px-3.5 py-3">
             <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gradient-to-br from-blush to-petal/60 text-hotpink shadow-inner"><s.Icon className="h-5 w-5" strokeWidth={2} /></span>
             <div className="min-w-0">
-              <p className="text-2xl font-black text-[#831843] leading-none tabular-nums">{s.value}</p>
-              <p className="text-[10px] font-black uppercase tracking-wide text-rose/55 mt-0.5">{s.label}</p>
-              <p className="text-[9.5px] text-rose/45 leading-tight">{s.value} session{s.value === 1 ? "" : "s"} logged</p>
+              <p className="text-2xl font-black text-[#831843] leading-none tabular-nums">{trx(s.value)}</p>
+              <p className="text-[10px] font-black uppercase tracking-wide text-rose/55 mt-0.5">{trx(s.label)}</p>
+              <p className="text-[9.5px] text-rose/45 leading-tight">{trx(s.value)}{" "}{tr("session")}{s.value === 1 ? "" : "s"}{" "}{tr("logged")}</p>
             </div>
           </div>
         ))}
       </div>
       <div className="mt-3 flex items-start gap-2 rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2.5">
         <Lightbulb className="h-4 w-4 shrink-0 mt-0.5 text-hotpink" strokeWidth={2} />
-        <p className="text-[11.5px] leading-snug text-rose/75">{tip}</p>
+        <p className="text-[11.5px] leading-snug text-rose/75">{trx(tip)}</p>
       </div>
     </div>
   );
@@ -368,19 +361,19 @@ export function CoachCard({ onSetupWorkouts, onPlanMeals }: { onSetupWorkouts?: 
   const c = coachRecommendation();
   return (
     <div className="rounded-3xl border-2 border-hotpink/25 bg-gradient-to-br from-blush/60 to-petal/25 shadow-sm p-4 sm:p-5 animate-fade-in">
-      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-hotpink mb-1"><Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} /> Your coach</p>
-      <p className="font-script text-2xl text-hotpink leading-tight mb-2">{c.headline}</p>
+      <p className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-hotpink mb-1"><Sparkles className="h-3.5 w-3.5" strokeWidth={2.2} />{" "}{tr("Your coach")}</p>
+      <p className="font-script text-2xl text-hotpink leading-tight mb-2">{trx(c.headline)}</p>
       <ol className="space-y-1.5 mb-3">
         {c.steps.map((s, i) => (
           <li key={i} className="flex items-start gap-2 text-[12px] leading-snug text-rose/80">
             <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-hotpink text-white text-[10px] font-black">{i + 1}</span>
-            <span>{s}</span>
+            <span>{trx(s)}</span>
           </li>
         ))}
       </ol>
       <div className="grid grid-cols-2 gap-2">
-        <button onClick={onSetupWorkouts ?? go("/app/tools/workout")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-hotpink text-white px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Dumbbell className="h-3.5 w-3.5" /> Set my workouts</button>
-        <button onClick={onPlanMeals ?? go("/app/tools/meals")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white/90 border border-hotpink/40 text-hotpink px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Utensils className="h-3.5 w-3.5" /> Plan my meals</button>
+        <button onClick={onSetupWorkouts ?? go("/app/tools/workout")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-hotpink text-white px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Dumbbell className="h-3.5 w-3.5" />{" "}{tr("Set my workouts")}</button>
+        <button onClick={onPlanMeals ?? go("/app/tools/meals")} className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white/90 border border-hotpink/40 text-hotpink px-3 py-2 text-[11px] font-bold active:scale-95 transition"><Utensils className="h-3.5 w-3.5" />{" "}{tr("Plan my meals")}</button>
       </div>
     </div>
   );
@@ -402,9 +395,9 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
   // The three honest numbers, each a bar scaled against her goal.
   const scale = Math.max(1, e.goal, e.eaten, e.burned);
   const rows = [
-    { key: "goal",     Icon: Target,   label: "Goal",            sub: "Daily calories needed",     value: e.goal,   tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
-    { key: "movement", Icon: Activity, label: "Planned movement", sub: "Calories to burn",          value: e.burned, tint: "bg-violet-100 text-violet-500", bar: "from-violet-300 to-violet-400" },
-    { key: "meals",    Icon: Leaf,     label: "Planned meals",    sub: "Calories in your meal plan", value: e.eaten,  tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
+    { key: "goal",     Icon: Target,   label: tr("Goal"),            sub: tr("Daily calories needed"),     value: e.goal,   tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
+    { key: "movement", Icon: Activity, label: tr("Planned movement"), sub: tr("Calories to burn"),          value: e.burned, tint: "bg-violet-100 text-violet-500", bar: "from-violet-300 to-violet-400" },
+    { key: "meals",    Icon: Leaf,     label: tr("Planned meals"),    sub: tr("Calories in your meal plan"), value: e.eaten,  tint: "bg-blush text-hotpink",        bar: "from-[#F472B6] to-[#DB2777]" },
   ];
   // A gentle verdict for the tip.
   const tip = eatenPct >= 95 ? "Nice! You're almost perfectly on track today."
@@ -426,17 +419,16 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
         <div className="flex items-start gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-hotpink to-magenta text-white shadow-sm shadow-hotpink/30"><Flame className="h-5 w-5" strokeWidth={2} /></span>
           <div className="min-w-0 flex-1">
-            <p className="inline-flex items-center gap-1.5 font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">Today's Fuel <Sparkles className="h-4 w-4" strokeWidth={2} /></p>
-            <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug max-w-md">
-              According to your goal, movement and meal plan, you still have room for a <span className="font-bold text-hotpink">little something good.</span>
+            <p className="inline-flex items-center gap-1.5 font-script text-[1.7rem] sm:text-3xl text-hotpink leading-none">{tr("Today's Fuel")}{" "}<Sparkles className="h-4 w-4" strokeWidth={2} /></p>
+            <p className="mt-1 text-[12px] sm:text-[13px] text-rose/70 leading-snug max-w-md">{tr("According to your goal, movement and meal plan, you still have room for a")}{" "}<span className="font-bold text-hotpink">{tr("little something good.")}</span>
             </p>
           </div>
           {/* kcal-left pill */}
           <div className="hidden sm:flex shrink-0 items-center gap-2 rounded-2xl bg-white/85 border border-petal/60 px-3.5 py-2 shadow-sm">
             <Flame className="h-5 w-5 text-hotpink" strokeWidth={2} />
             <div className="leading-tight">
-              <p className="font-black text-hotpink text-lg tabular-nums leading-none">{g(remaining).toLocaleString()} <span className="text-[12px] font-bold text-rose/70">kcal left</span></p>
-              <p className="text-[10px] font-semibold text-rose/55 inline-flex items-center gap-1">to enjoy today <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
+              <p className="font-black text-hotpink text-lg tabular-nums leading-none">{g(remaining).toLocaleString()} <span className="text-[12px] font-bold text-rose/70">{tr("kcal left")}</span></p>
+              <p className="text-[10px] font-semibold text-rose/55 inline-flex items-center gap-1">{tr("to enjoy today")}{" "}<Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
             </div>
           </div>
         </div>
@@ -449,15 +441,15 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
               <div key={r.key} className="flex items-center gap-3 rounded-2xl bg-white/70 border border-petal/40 px-3 py-2.5">
                 <span className={["grid h-10 w-10 shrink-0 place-items-center rounded-full", r.tint].join(" ")}><r.Icon className="h-5 w-5" strokeWidth={2} /></span>
                 <div className="w-[92px] shrink-0">
-                  <p className="text-[11px] font-black uppercase tracking-wide text-[#831843] leading-tight">{r.label}</p>
-                  <p className="text-[9.5px] font-semibold text-rose/50 leading-tight">{r.sub}</p>
+                  <p className="text-[11px] font-black uppercase tracking-wide text-[#831843] leading-tight">{trx(r.label)}</p>
+                  <p className="text-[9.5px] font-semibold text-rose/50 leading-tight">{trx(r.sub)}</p>
                 </div>
                 <span className="relative h-2.5 flex-1 rounded-full bg-petal/25 overflow-hidden">
-                  <span className={["absolute inset-y-0 left-0 rounded-full bg-gradient-to-r transition-all duration-700", r.bar].join(" ")} style={{ width: `${cardInView ? Math.max(2, Math.round((r.value / scale) * 100)) : 0}%` }} />
+                  <span className={["absolute inset-y-0 start-0 rounded-full bg-gradient-to-r transition-all duration-700", r.bar].join(" ")} style={{ width: `${cardInView ? Math.max(2, Math.round((r.value / scale) * 100)) : 0}%` }} />
                 </span>
-                <span className="w-14 shrink-0 text-right leading-none">
+                <span className="w-14 shrink-0 text-end leading-none">
                   <span className="block font-black text-hotpink tabular-nums text-[15px]">{g(r.value).toLocaleString()}</span>
-                  <span className="block text-[9px] font-bold uppercase tracking-wide text-rose/45">kcal</span>
+                  <span className="block text-[9px] font-bold uppercase tracking-wide text-rose/45">{tr("kcal")}</span>
                 </span>
               </div>
             ))}
@@ -468,15 +460,15 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
             <div className="relative">
               <Ring pct={cardInView ? eatenPct : 0} size={132} stroke={10}>
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50">You have</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-rose/50">{tr("You have")}</p>
                   <p className="font-black text-hotpink leading-none text-4xl tabular-nums">{g(remaining).toLocaleString()}</p>
-                  <p className="text-[10px] font-bold text-rose/60 inline-flex items-center gap-1 justify-center">kcal left <Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
+                  <p className="text-[10px] font-bold text-rose/60 inline-flex items-center gap-1 justify-center">{tr("kcal left")}{" "}<Heart className="h-2.5 w-2.5 fill-hotpink text-hotpink" /></p>
                 </div>
               </Ring>
             </div>
             <div className="w-full rounded-2xl bg-blush/40 border border-petal/50 px-3 py-2 flex items-start gap-2">
               <Lightbulb className="h-4 w-4 shrink-0 text-hotpink mt-0.5" strokeWidth={2} />
-              <p className="text-[11px] leading-snug text-[#831843]"><span className="font-bold text-hotpink">Tip:</span> {tip}</p>
+              <p className="text-[11px] leading-snug text-[#831843]"><span className="font-bold text-hotpink">{tr("Tip:")}</span> {trx(tip)}</p>
             </div>
           </div>
         </div>
@@ -486,8 +478,8 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
           <div className="mt-4 rounded-2xl bg-white/70 border border-petal/50 p-3.5 flex items-start gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-petal to-hotpink text-white shadow-md shadow-hotpink/25"><Heart className="h-5 w-5 fill-white" /></span>
             <div className="min-w-0">
-              <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} /> You're right on track</p>
-              <p className="mt-1 text-[11.5px] text-rose/70 leading-snug">Only <span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()} kcal</span> left — best to gently close the day here 🌸 If you're peckish, water or a warm herbal tea keeps you cozy for almost no calories.</p>
+              <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("You're right on track")}</p>
+              <p className="mt-1 text-[11.5px] text-rose/70 leading-snug">{tr("Only")}{" "}<span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()}{" "}{tr("kcal")}</span>{" "}{tr("left — best to gently close the day here 🌸 If you're peckish, water or a warm herbal tea keeps you cozy for almost no calories.")}</p>
             </div>
           </div>
         )}
@@ -497,8 +489,8 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
           <div className="mt-4 rounded-2xl bg-white/70 border border-petal/50 p-3 sm:p-3.5">
             <div className="flex flex-col sm:flex-row sm:items-start gap-3">
               <div className="sm:w-40 shrink-0">
-                <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} /> Smart idea</p>
-                <p className="mt-1 text-[11px] text-rose/65 leading-snug">You still have <span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()} kcal</span> available. Here are some light &amp; delicious options:</p>
+                <p className="inline-flex items-center gap-1.5 font-script text-xl text-hotpink leading-none"><Sparkles className="h-4 w-4" strokeWidth={2} />{" "}{tr("Smart idea")}</p>
+                <p className="mt-1 text-[11px] text-rose/65 leading-snug">{tr("You still have")}{" "}<span className="font-bold text-hotpink tabular-nums">{remaining.toLocaleString()}{" "}{tr("kcal")}</span>{" "}{tr("available. Here are some light & delicious options:")}</p>
               </div>
               {/* snack cards — tapping one pops the recipe open, right here on Today */}
               <div className="min-w-0 flex-1 grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -506,8 +498,8 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                   <button
                     key={s.id}
                     onClick={() => setActiveSnack(s)}
-                    title={`View ${s.name}`}
-                    className="group text-left rounded-xl bg-white border border-petal/50 overflow-hidden shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
+                    title={tr("View {0}", { 0: s.name })}
+                    className="group text-start rounded-xl bg-white border border-petal/50 overflow-hidden shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]"
                   >
                     <div className="relative h-16 w-full overflow-hidden bg-blush">
                       <img
@@ -516,8 +508,8 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                       />
                     </div>
                     <div className="p-1.5">
-                      <p className="text-[10.5px] font-bold text-[#831843] leading-tight line-clamp-2 min-h-[26px]">{s.name}</p>
-                      <span className="mt-1 inline-block rounded-full bg-blush px-1.5 py-0.5 text-[9px] font-bold text-hotpink tabular-nums">{s.macros.calories} kcal</span>
+                      <p className="text-[10.5px] font-bold text-[#831843] leading-tight line-clamp-2 min-h-[26px]">{trx(s.name)}</p>
+                      <span className="mt-1 inline-block rounded-full bg-blush px-1.5 py-0.5 text-[9px] font-bold text-hotpink tabular-nums">{trx(s.macros.calories)}{" "}{tr("kcal")}</span>
                     </div>
                   </button>
                 ))}
@@ -530,7 +522,7 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
                 onClick={go("/app/tools/diet?tab=recipes")}
                 className="inline-flex items-center gap-1.5 rounded-full bg-blush/60 border border-petal/60 px-4 py-1.5 text-[11.5px] font-semibold text-hotpink transition hover:bg-blush active:scale-95"
               >
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Discover more snack ideas <ChevronRight className="h-3.5 w-3.5" />
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Discover more snack ideas")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
               </button>
             </div>
           </div>
@@ -538,8 +530,8 @@ export function TodayEnergyStrip({ e }: { e: EnergyBalance }) {
 
         {/* ── FOOTER ─────────────────────────────────────────────── */}
         <div className="mt-3 flex items-center justify-between gap-2 border-t border-petal/40 pt-2.5">
-          <p className="inline-flex items-center gap-1.5 text-[11px] text-rose/60 leading-snug"><Leaf className="h-3.5 w-3.5 text-hotpink/60" strokeWidth={2} /> Every choice you make today is a step towards your best self.</p>
-          <button onClick={go("/app/tools/diet")} className="shrink-0 inline-flex items-center gap-1 text-[12px] font-bold text-hotpink animate-soft-glow">Open Diet <ChevronRight className="h-3.5 w-3.5" /></button>
+          <p className="inline-flex items-center gap-1.5 text-[11px] text-rose/60 leading-snug"><Leaf className="h-3.5 w-3.5 text-hotpink/60" strokeWidth={2} />{" "}{tr("Every choice you make today is a step towards your best self.")}</p>
+          <button onClick={go("/app/tools/diet")} className="shrink-0 inline-flex items-center gap-1 text-[12px] font-bold text-hotpink animate-soft-glow">{tr("Open Diet")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" /></button>
         </div>
       </div>
 
@@ -561,17 +553,16 @@ function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => 
             src={recipeImageSrc(recipe)} alt={recipe.name} className="w-full aspect-[16/10] object-cover bg-blush"
             onError={(ev) => { const el = ev.currentTarget as HTMLImageElement; if (!el.src.endsWith("/images/read-recipes.webp")) el.src = "/images/read-recipes.webp"; }}
           />
-          <button onClick={onClose} aria-label="Close" className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-hotpink shadow-md transition hover:bg-white active:scale-90">
+          <button onClick={onClose} aria-label={tr("Close")} className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-hotpink shadow-md transition hover:bg-white active:scale-90">
             <X className="h-4 w-4" />
           </button>
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink shadow-sm">
-            <Sparkles className="h-3 w-3" strokeWidth={2} /> Snack idea
-          </span>
+          <span className="absolute start-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-hotpink shadow-sm">
+            <Sparkles className="h-3 w-3" strokeWidth={2} />{" "}{tr("Snack idea")}</span>
         </div>
 
         <div className="p-4 sm:p-5">
-          <h2 className="font-script text-2xl text-hotpink leading-tight">{recipe.name}</h2>
-          <p className="text-[12px] text-rose/60">{recipe.cuisine} · {recipe.prepTime + (recipe.cookTime || 0)} min</p>
+          <h2 className="font-script text-2xl text-hotpink leading-tight">{trx(recipe.name)}</h2>
+          <p className="text-[12px] text-rose/60">{trx(recipe.cuisine)} · {recipe.prepTime + (recipe.cookTime || 0)}{" "}{tr("min")}</p>
 
           {/* macro chips */}
           <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
@@ -582,8 +573,8 @@ function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => 
               { k: "fat", v: `${m.fat}g`, cls: "text-violet-500" },
             ].map((x) => (
               <div key={x.k} className="rounded-xl bg-blush/50 py-1.5">
-                <p className={["text-sm font-black tabular-nums leading-none", x.cls].join(" ")}>{x.v}</p>
-                <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{x.k}</p>
+                <p className={["text-sm font-black tabular-nums leading-none", x.cls].join(" ")}>{trx(x.v)}</p>
+                <p className="text-[8px] font-bold uppercase tracking-wide text-rose/45 mt-0.5">{trx(x.k)}</p>
               </div>
             ))}
           </div>
@@ -591,13 +582,13 @@ function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => 
           {/* ingredients */}
           {recipe.ingredients?.length > 0 && (
             <div className="mt-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">Ingredients</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">{tr("Ingredients")}</p>
               <ul className="space-y-1">
                 {recipe.ingredients.map((ing, i) => (
                   <li key={i} className="flex items-baseline gap-2 text-[12.5px] text-[#831843]">
                     <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-hotpink" />
-                    <span className="flex-1">{ing.name}</span>
-                    <span className="text-rose/55 tabular-nums">{ing.quantity}</span>
+                    <span className="flex-1">{trx(ing.name)}</span>
+                    <span className="text-rose/55 tabular-nums">{trx(ing.quantity)}</span>
                   </li>
                 ))}
               </ul>
@@ -607,7 +598,7 @@ function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => 
           {/* steps */}
           {recipe.steps?.length > 0 && (
             <div className="mt-4">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">Make it</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-hotpink/70 mb-1.5">{tr("Make it")}</p>
               <ol className="space-y-1.5">
                 {recipe.steps.map((step, i) => (
                   <li key={i} className="flex gap-2 text-[12.5px] text-[#831843] leading-snug">
@@ -620,7 +611,7 @@ function SnackRecipePopup({ recipe, onClose }: { recipe: Recipe; onClose: () => 
           )}
 
           <button onClick={go("/app/tools/diet?tab=recipes")} className="mt-5 w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-blush/60 border border-petal/60 px-4 py-2 text-[12px] font-semibold text-hotpink transition hover:bg-blush active:scale-95">
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} /> Discover more snack ideas <ChevronRight className="h-3.5 w-3.5" />
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />{" "}{tr("Discover more snack ideas")}{" "}<ChevronRight className="rtl:-scale-x-100 h-3.5 w-3.5" />
           </button>
         </div>
       </div>

@@ -69,6 +69,7 @@ import { ArrowLeft } from "lucide-react";
 import { ComingSoonCard, PageHeader } from "./components/bloom/PageHeader";
 import { TOOLS } from "./components/bloom/tools";
 import { markToolVisited } from "./components/bloom/visitedTools";
+import { tr, trx } from "@/i18n";
 
 /** Soft loading placeholder shown while a lazy page chunk loads. */
 function PageLoader() {
@@ -78,7 +79,7 @@ function PageLoader() {
         <span className="animate-spin" style={{ animationDuration: "2.4s" }}>
           <BloomFlower size={44} petal="#EC4899" center="#FFFFFF" />
         </span>
-        <span className="font-script text-lg text-hotpink/80">blooming…</span>
+        <span className="font-script text-lg text-hotpink/80">{tr("blooming…")}</span>
       </div>
     </div>
   );
@@ -306,8 +307,7 @@ function AppContent() {
       content = (
         <div className="animate-fade-in">
           <a href="/app/tools" className="mb-4 inline-flex items-center gap-1 text-sm text-[#831843] hover:text-[#EC4899] font-semibold">
-            <ArrowLeft className="h-4 w-4" /> All tools
-          </a>
+            <ArrowLeft className="rtl:-scale-x-100 h-4 w-4" />{" "}{tr("All tools")}</a>
           <PageHeader title={tool.label} emoji="✿">
             <span className="grid h-12 w-12 place-items-center rounded-full bg-[#EC4899] text-white shadow-md">
               <Icon className="h-5 w-5" />
@@ -351,7 +351,7 @@ function AppContent() {
           {/* key={path} resets the boundary on navigation so one bad page never traps the user */}
           <ErrorBoundary key={path}>
             <Suspense fallback={<PageLoader />}>
-              {isProtected ? <AuthGate>{content}</AuthGate> : content}
+              {isProtected ? <AuthGate>{trx(content)}</AuthGate> : content}
             </Suspense>
           </ErrorBoundary>
         </AppShell>
@@ -363,11 +363,9 @@ function AppContent() {
   // Fallback 404 screen
   return (
     <div className="min-h-screen bg-[#FFF0F6] flex flex-col items-center justify-center p-4 text-center">
-      <h1 className="font-script text-4xl text-[#EC4899] mb-4">404 - Not Found</h1>
-      <p className="text-[#831843] mb-6">Oops! We couldn't find this soft corner of our app.</p>
-      <a href="/" className="px-6 py-2.5 bg-[#EC4899] text-white rounded-full font-semibold shadow-md shadow-[#EC4899]/30 transition hover:bg-[#DB2777]">
-        Go Home
-      </a>
+      <h1 className="font-script text-4xl text-[#EC4899] mb-4">{tr("404 - Not Found")}</h1>
+      <p className="text-[#831843] mb-6">{tr("Oops! We couldn't find this soft corner of our app.")}</p>
+      <a href="/" className="px-6 py-2.5 bg-[#EC4899] text-white rounded-full font-semibold shadow-md shadow-[#EC4899]/30 transition hover:bg-[#DB2777]">{tr("Go Home")}</a>
     </div>
   );
 }
