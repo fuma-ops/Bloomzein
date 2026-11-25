@@ -22,3 +22,9 @@
     ]
   }
 }
+      "Bash(node scripts/social/page-week.mjs planifier:*)",
+      "Bash(node scripts/social/page-week.mjs instagram:*)",
+      "Bash(pip install:*)"
+    ]
+  }
+}
